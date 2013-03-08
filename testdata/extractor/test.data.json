@@ -1,0 +1,20 @@
+{ 
+	  "person_info": {
+		  "name": "Bilbo",
+		  "age": "111",
+		  "country": "Hobbiton",
+		  "friends": [{
+			  "name": "Frodo",
+			  "race": "hobbit"
+		  	},
+		  	{
+			  "name": "Thorin",
+			  "race": "dwarf"
+		  	}
+		  ]
+		},
+	  "job": {
+		   "place": "Misty mountain",
+		   "earnings": "up to 1/14 of findings"
+	  }
+	} 

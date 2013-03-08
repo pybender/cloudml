@@ -1,0 +1,32 @@
+{
+  "schema-name":"test",
+  "classifier":{
+    "type":"support vector regression"
+  },
+  "features":[
+    {
+      "name":"hire_outcome",
+      "type":"int",
+      "is-target-variable":true
+    },
+    {
+      "name":"contractor.dev_adj_score_recent",
+      "type":"float",
+      "is-required":true
+    },
+    {
+      "name":"contractor.dev_is_looking",
+      "type":"boolean",
+      "is-required":false
+    },
+    {
+      "name":"contractor.dev_title",
+      "transformer":{
+        "type":"Tfidf",
+        "ngram_range_min":1,
+        "ngram_range_max":1,
+        "min_df":3
+      }
+    }
+  ]
+}

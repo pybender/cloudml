@@ -1,0 +1,19 @@
+{
+  "target-schema":"bestmatch",
+  "queries":[
+    {
+      "name":"retrieve",
+      "sql": "SELECT * FROM data",
+      "items": [
+        {
+          "source": "higher_outcome",
+          "process-as": "string",
+          "is-required": true,
+          "target-features": [
+            { "name": "higher_outcome" }
+          ]
+        }
+      ]
+    }
+  ]
+}

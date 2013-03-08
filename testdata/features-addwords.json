@@ -1,0 +1,23 @@
+{
+  "schema-name": "addwords",
+  "classifier": {
+    "type": "logistic regression",
+    "penalty": "l1"
+  },
+  "features":[
+    {
+      "name":"keyword",
+      "transformer":{
+        "type":"Tfidf",
+        "ngram_range_min":1,
+        "ngram_range_max":1,
+        "min_df":15
+      }
+    },
+    {
+      "name":"total_spend",
+      "type":"float",
+      "is-target-variable":true
+    }
+  ]
+}

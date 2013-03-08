@@ -1,0 +1,36 @@
+{
+  "target-schema":"addwords",
+  "datasource":[
+    {
+      "name":"odw",
+      "type":"sql",
+      "db":{
+        "conn":"host='dbs16.odesk.com' dbname='odw' user='odw' password='odw' port='12000'",
+        "vendor":"postgres"
+      }
+    }
+  ],
+  "queries":[
+    {
+      "name":"retrieve",
+      "sql": "SELECT vlt.vt_kw as keyword, sum(coalesce(ass.total_charge,0)) as total_spend FROM  agg.a_assignment as ass    right outer join agg.b_employer as emp    on  (ass.employer = emp.employer and   ass.date < emp.signup_date + interval '1 year')    inner join  vt.vt_logs_tagged as vlt    on  (vlt.username = emp.uid) WHERE true   AND vt_kw is not null   AND vt_kw != ''   AND extract (year from emp.signup_date) in (2010,2011)   AND emp.first_job_post_date is not null GROUP BY   vlt.vt_kw, vlt.username, emp.first_job_post_date,  emp.corrected_first_job_post_date,  emp.first_start_date ORDER BY vt_kw asc, total_spend asc",
+      "items": [
+        {
+          "source": "keyword",
+          "process-as": "string",
+          "is-required": true,
+          "target-features": [
+            { "name": "keyword" }
+          ]
+        },
+        { "source": "total_spend",
+          "is-required": true,
+          "process-as": "string",
+          "target-features": [
+            { "name": "total_spend"}       
+          ]
+        }
+      ]
+    }
+  ]
+}

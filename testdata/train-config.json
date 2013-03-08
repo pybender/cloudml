@@ -1,0 +1,58 @@
+{
+  "target-schema":"bestmatch",
+  "datasource":[
+    {
+      "name":"odw",
+      "type":"sql",
+      "db":{
+        "conn":"host='localhost' dbname='odw' user='postgres' password='postgres'",
+        "vendor":"postgres"
+      }
+    }
+  ],
+  "queries":[
+    {
+      "name":"retrieve",
+      "sql": "SELECT qi.*, 'accept' as hire_outcome FROM public.ja_quick_info qi where qi.file_provenance_date >= '%(start)s' AND qi.file_provenance_date < '%(end)s' limit 10000;",
+      "items": [
+        {
+          "source": "hire_outcome",
+          "process-as": "string",
+          "is-required": true,
+          "target-features": [
+            { "name": "hire_outcome" }
+          ]
+        },
+        { "source": "employer_info",
+          "is-required": true,
+          "process-as": "json",
+          "target-features": [
+            { "name": "employer.op_timezone", "jsonpath": "$.op_timezone"},
+            { "name": "employer.op_country_tz", "jsonpath": "$.op_country_tz" },
+            { "name": "employer.op_tot_jobs_filled", "jsonpath": "$.op_tot_jobs_filled" },
+            { "name": "employer.country", "jsonpath": "$.country" }
+          ]
+        },
+        { "source": "contractor_info",
+          "is-required": true,
+          "process-as": "json",
+          "target-features": [
+            { "name": "contractor.skills", "jsonpath": "$.skills.*.skl_name", "to-csv": true},
+            { "name": "tsexams", "jsonpath": "$.tsexams", "key-path": "$.ts_name", "value-path": "$.ts_score" },
+            { "name": "contractor.dev_is_looking", "jsonpath": "$.dev_is_looking" },
+            { "name": "contractor.dev_recent_rank_percentile", "jsonpath": "$.dev_recent_rank_percentile" },
+            { "name": "contractor.dev_recent_fp_jobs", "jsonpath": "$.dev_recent_fp_jobs" },
+            { "name": "contractor.dev_blurb", "jsonpath": "$.dev_blurb" },
+            { "name": "contractor.dev_country", "jsonpath": "$.dev_country" }
+          ]
+        },
+        {
+          "process-as": "expression",
+          "target-features": [
+            { "name": "country_pair", "expression": "%(employer.country)s,%(contractor.country)s"}
+          ]
+        }
+      ]
+    }
+  ]
+}

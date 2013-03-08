@@ -1,0 +1,46 @@
+{
+  "target-schema":"bestmatch",
+  "datasource":[
+    {
+      "name":"odw",
+      "type":"sql",
+      "db":{
+        "conn":"host='localhost' dbname='odw' user='postgres' password='postgres'",
+        "vendor":"postgres"
+      }
+    }
+  ],
+  "queries":[
+    {
+      "name":"retrieve",
+      "sql": "SELECT * FROM data WHERE creation_time > '%(start)s' and creation_time < '%(end)s'",
+      "items": [
+        {
+          "source": "higher_outcome",
+          "process-as": "string",
+          "is-required": true,
+          "target-features": [
+            { "name": "higher_outcome" }
+          ]
+        },
+        { "source": "employer_info",
+          "is-required": true,
+          "process-as": "json",
+          "target-features": [
+            { "name": "employer.op_timezone", "jsonpath": "$.op_timezone"},
+            { "name": "employer.op_country_tz", "jsonpath": "$.op_country_tz" },
+            { "name": "tsexams", "jsonpath": "$.tsexams", "key-path": "$.ts_name", "value-path": "$.ts_score" },
+            { "name": "employer.op_tot_jobs_filled", "jsonpath": "$.op_tot_jobs_filled" },
+            { "name": "employer.country", "jsonpath": "$.country" }
+          ]
+        },
+        {
+          "process-as": "expression",
+          "target-features": [
+            { "name": "country_pair", "expression": "%(employer.country)s,%(contractor.country)s"}
+          ]
+        }
+      ]
+    }
+  ]
+}

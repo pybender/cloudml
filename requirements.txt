@@ -1,0 +1,12 @@
+Flask==0.9
+Flask-SQLAlchemy
+flask-restful
+Jinja2==2.6
+SQLAlchemy
+Werkzeug==0.8.3
+numpy
+scipy
+scikit-learn
+
+-e git+https://github.com/tobiasandtobias/flask-alembic.git
+Flask-Script

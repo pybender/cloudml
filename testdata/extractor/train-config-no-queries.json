@@ -1,0 +1,14 @@
+{
+  "target-schema":"bestmatch",
+  "datasource":[
+    {
+      "name":"odw",
+      "type":"sql",
+      "db":{
+        "conn":"host='localhost' dbname='odw' user='postgres' password='postgres'",
+        "vendor":"postgres"
+      }
+    }
+  ],
+  "queries":[]
+}

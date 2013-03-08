@@ -1,0 +1,24 @@
+{
+    "contractor.dev_adj_score_recent": [
+        {
+            "weight": 0.33776172635078966, 
+            "value": "contractor.dev_adj_score_recent"
+        }
+    ], 
+    "contractor.dev_title": [
+        {
+            "weight": 0.037141642846617882, 
+            "value": "engineer"
+        }, 
+        {
+            "weight": -0.24406575119184098, 
+            "value": "python"
+        }
+    ], 
+    "contractor.dev_is_looking": [
+        {
+            "weight": 0.21112658227502526, 
+            "value": "contractor.dev_is_looking"
+        }
+    ]
+}

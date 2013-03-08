@@ -1,0 +1,100 @@
+<breadcrumb path="path"></breadcrumb>
+<h2>
+    {{ test.name|capfirst }} Details
+    <div class="actions">
+        <a class="btn" href="#/models/{{ model.name }}/tests/{{ test.name }}/examples">
+            <i class="status-icon icon-search"></i><small> Browse examples</small>
+          </a>
+    </div>
+</h2>
+{{ error }}
+
+<div>
+    <ul class="nav nav-tabs" id="tabs">
+      <li><a href="#details">Details</a></li>
+      <li class="active"><a href="#metrics">ROC and Precision-Recall</a></li>
+      <li><a href="#confusion">Confusion Matrix</a></li>
+    </ul>
+     
+    <div class="tab-content">
+      <div class="tab-pane" id="details">
+        <div class="row">
+            <div class="span6">
+                <div>
+                    Trained Model:
+                    <a class="value" href="#/models/{{ model.name }}">{{ model.name }}</a>
+                </div>
+                <div>
+                    Import parameters:
+                    <span class="value">{{ test.parameters }}</span>
+                </div>
+                <div>
+                    Classes Set:
+                    <span class="value">
+                        <span ng-repeat='cls in test.classes_set'><span class="label">{{ cls }}</span> 
+                        </span> 
+                    </span>
+                </div>
+                <div>
+                    Created at:
+                    <span class="value">
+                        {{ test.created_on|format_date }}
+                    </span>
+                </div>
+            </div>
+        </div>
+      </div>
+      <div class="tab-pane active" id="metrics">
+        <div class="row">
+          <div class="span6">
+            <h4>Receiver operating characteristic</h4>
+            <p>The Area Under an ROC Curve: 
+                <span>{{ test.metrics.roc_auc.toFixed(4) }}</span>
+            </p>
+            <sc-roc-curve metrics="test.metrics.roc_curve"></sc-roc-curve>
+          </div>
+          <div class="span6">
+            <h4>Precision-Recall</h4>
+            <sc-precision-recall-curve metrics="test.metrics.precision_recall_curve"></sc-precision-recall-curve>
+          </div>
+        </div>
+
+      </div>
+
+    <div class="tab-pane" id="confusion">
+        <div class="row">
+            <div class="span6">
+                <div>
+                    Classification Accuracy: <span class="value">{{ test.metrics.accuracy.toFixed(4) }}</span>
+                </div>
+                <h4>Confusion Matrix</h4>
+                <table class="table">
+                <thead>
+                <tr>
+                    <th></th>
+                    <th ng-repeat="row in test.metrics.confusion_matrix">
+                      {{ row.0 }}
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="row in test.metrics.confusion_matrix">
+                        <th>{{ row.0 }}</th>
+                        <td ng-repeat="cell in row.1">{{ cell }}</td>
+                    </tr>
+                </tbody>
+                </table>
+            </div>
+        </div>
+      </div>
+
+    </div>
+</div>
+<script>
+  $(function () {
+    $('#tabs a').click(function (e) {
+      e.preventDefault();
+      $(this).tab('show');
+    })
+  })
+</script>

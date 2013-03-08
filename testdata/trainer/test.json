@@ -1,0 +1,36 @@
+[
+  {
+    "hire_outcome": 1,
+    "contractor.dev_adj_score_recent": 3.2,
+    "contractor.dev_is_looking": "1",
+    "contractor.dev_title": "Python engineer working full time"
+  },
+  {
+    "hire_outcome": 0,
+    "contractor.dev_is_looking": "1",
+    "contractor.dev_title": "Python developer"
+  },
+  {
+    "contractor.dev_adj_score_recent": 4,
+    "contractor.dev_title": "PHP engineer front-end"
+  },
+  {
+    "hire_outcome": 1,
+    "contractor.dev_adj_score_recent": 3,
+    "contractor.dev_is_looking": "1",
+    "contractor.dev_title": "best python engineer you've ever heard of",
+    "contractor.dev_recent_hours_fp": 12
+  },
+  {
+    "hire_outcome": 0,
+    "contractor.dev_adj_score_recent": 0,
+    "contractor.dev_is_looking": "1",
+    "contractor.dev_title": "Python developer"
+  },
+  {
+    "hire_outcome": 3,
+    "contractor.dev_adj_score_recent": 4,
+    "contractor.dev_is_looking": "0",
+    "contractor.dev_title": "PHP engineer front-end"
+  }
+]
