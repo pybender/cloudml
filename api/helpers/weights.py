@@ -1,4 +1,5 @@
 import math
+import re
 
 
 def calc_weights_css(weights, css_cls):
@@ -91,9 +92,11 @@ def get_weighted_data(model, row):
                     result[key]['css_class'] = wdict['css_class']
                 else:
                     # try to find each word from the value
-                    splitted = value.split(' ')
-                    for word in splitted:
-                        word = word.lower()
+                    rgx = re.compile("(\w[\w']*)")
+                    words = rgx.findall(value)
+                    result[key]['type'] = 'List'
+                    for word in words:
+                        word = word.lower().strip()
                         if not 'weights' in result[key]:
                             result[key]['weights'] = {}
                         concated_key = "%s.%s" % (key, word)
@@ -103,10 +106,14 @@ def get_weighted_data(model, row):
                                            'css_class': wdict['css_class']}
                             result[key]['weights'][word] = word_weight
             elif isinstance(value, dict):
+                result[key]['type'] = 'Dictionary'
                 for dkey, dvalue in value.iteritems():
                     concated_key = ("%s.%s=%s" % (key, dkey, dvalue))
+                    if not 'weights' in result[key]:
+                        result[key]['weights'] = {}
                     if concated_key in weights:
                         wdict = weights[concated_key]
-                        result[key]['weight'] = wdict['weight']
-                        result[key]['css_class'] = wdict['css_class']
+                        result[key]['weights'][dkey] = {'weight': wdict['weight'],
+                                                        'css_class': wdict['css_class'],
+                                                        'value': dvalue}
     return result

@@ -18,6 +18,13 @@ angular.module('app.filters', [])
     return t[0].toUpperCase() + t.slice(1)
 ])
 
+.filter('words', [() ->
+  (text) ->
+    t = String(text)
+    return t.split(/\W+/)
+])
+
+
 .filter('format_date', [() ->
   (text) ->
     dt = new Date(text)
