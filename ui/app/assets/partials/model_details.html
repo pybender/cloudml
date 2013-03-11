@@ -11,7 +11,7 @@
 
 <ul class="nav nav-tabs" id="tabs">
   <li class="active"><a href="#details">Details</a></li>
-  <li><a href="#weights">Parameters Weights</a></li>
+  <li><a href="#weights" ng-click="showWeightsTab()">Parameters Weights</a></li>
   <li><a href="#tests">Tests</a></li>
 </ul>
  
@@ -23,6 +23,12 @@
                 Created at:
                 <span class="value">
                     {{ model.created_on|format_date }}
+                </span>
+            </div>
+            <div>
+                Latest Test:
+                <span><a class="value"  href="#/models/{{ model.name }}/tests/{{ tests[tests.length-1].name }}">{{ tests[tests.length-1].name }}</a> | 
+                  <a class="value"  href="#/models/{{ model.name }}/tests/{{ tests[tests.length-1].name }}/examples">examples</a>
                 </span>
             </div>
         </div>
@@ -38,11 +44,11 @@
             <th>Created</th>
             <th>Filter Parameters</th>
             <th>Accuracy</th>
-            <th>Exemples count</th>
+            <th>Examples count</th>
           </tr>
       </thead>
       <tbody>
-        <tr ng-repeat="test in tests | filter:search | orderBy:'name'">
+        <tr ng-repeat="test in tests | filter:search | orderBy:'-id'">
           <td><a href="#/models/{{ model.name }}/tests/{{ test.name }}">{{ test.name }}</a></td>
           <td>{{ test.created_on|format_date }}</td>
           <td>{{ test.parameters }}</td>
@@ -59,13 +65,13 @@
                   <div class="span5">
                     <h4>Positive Weights</h4>
                     <div><a><b>List</b></a> | <a>Tree - todo</a></div>
-                    <weights-table weights="model.positive_weights">
+                    <weights-table weights="weights.positive">
                     </weights-table>
                   </div>
                   <div class="offset1 span5">
                     <h4>Negative Weights</h4>
                     <div><a><b>List</b></a> | <a>Tree - todo</a></div>
-                    <weights-table weights="model.negative_weights">
+                    <weights-table weights="weights.negative">
                     </weights-table>
                   </div>
                 </div>

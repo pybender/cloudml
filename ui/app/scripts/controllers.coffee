@@ -147,7 +147,12 @@ angular.module('app.controllers', [])
       $scope.tests = data.tests
   ).error((data, status, headers, config) ->
       $scope.error = data
+      $scope.httpError = true
   )
+
+  $scope.showWeightsTab = () ->
+    $scope.weights = {positive: $scope.model.positive_weights,
+    negative: $scope.model.negative_weights}
 ])
 
 .controller('TestDetailsCtrl', [

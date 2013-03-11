@@ -28,14 +28,15 @@ angular.module('app.filters', [])
 .filter('format_date', [() ->
   (text) ->
     dt = new Date(text)
-    d = dt.getDate()
-    if d < 10
-        d = '0' + d
-    m = dt.getMonth() + 1
-    if m < 10
-        m = '0' + m
+    d = add_zero(dt.getDate())
+    m = add_zero(dt.getMonth() + 1)
     y = dt.getFullYear()
-    h = dt.getHours()
-    mm = dt.getMinutes()
+    h = add_zero(dt.getHours())
+    mm = add_zero(dt.getMinutes())
     return d + "-" + m + "-" + y + ' ' + h + ':' + mm
 ])
+
+add_zero = (val) ->
+  if val < 10
+    val = '0' + val
+  return val
