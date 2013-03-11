@@ -11,6 +11,7 @@
 
 <ul class="nav nav-tabs" id="tabs">
   <li class="active"><a href="#details">Details</a></li>
+  <li><a href="#weights">Parameters Weights</a></li>
   <li><a href="#tests">Tests</a></li>
 </ul>
  
@@ -37,6 +38,7 @@
             <th>Created</th>
             <th>Filter Parameters</th>
             <th>Accuracy</th>
+            <th>Exemples count</th>
           </tr>
       </thead>
       <tbody>
@@ -45,10 +47,32 @@
           <td>{{ test.created_on|format_date }}</td>
           <td>{{ test.parameters }}</td>
           <td>{{ test.accuracy.toFixed(4) }}</td>
+          <td>{{ test.data_count }}</td>
         </tr>
       </tbody>
     </table>
   </div>
+  <div class="tab-pane" id="weights">
+        <div class="row">
+            <div class="span12">
+                  <div class="row">
+                  <div class="span5">
+                    <h4>Positive Weights</h4>
+                    <div><a><b>List</b></a> | <a>Tree - todo</a></div>
+                    <weights-table weights="model.positive_weights">
+                    </weights-table>
+                  </div>
+                  <div class="offset1 span5">
+                    <h4>Negative Weights</h4>
+                    <div><a><b>List</b></a> | <a>Tree - todo</a></div>
+                    <weights-table weights="model.negative_weights">
+                    </weights-table>
+                  </div>
+                </div>
+            </div>
+        </div>
+      </div>
+
 </div>
 <script>
   $(function () {

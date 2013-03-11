@@ -185,14 +185,50 @@ angular.module('app.controllers', [])
                  {label: 'Model Details', url: ''},
                  {label: 'Test Details', url: ''},
                  {label: 'Test Examples', url: ''}]
+  $scope.currentPage = 1
+  $scope.$watch('data.page',
+    (currentPage, oldVal, scope) ->
+      if currentPage
+        alert(currentPage)
+      $http(
+        method: 'GET'
+        url: API_URL +
+          "model/#{$routeParams.name}/test/#{$routeParams.test_name}/data"
+        headers: {'X-Requested-With': null}
+      ).success((data, status, headers, config) ->
+          $scope.data = data.data
+          $scope.test = data.test
+          $scope.model = data.model
+      ).error((data, status, headers, config) ->
+          $scope.error = data
+      )
+    , true)
+
+])
+
+.controller('ExampleDetailsCtrl', [
+  '$scope'
+  '$http'
+  '$routeParams'
+
+($scope, $http, $routeParams) ->
+  $scope.path = [{label: 'Home', url: '#/'},
+                 {label: 'Models', url: '#/models'},
+                 {label: 'Model Details', url: ''},
+                 {label: 'Test Details', url: ''},
+                 {label: 'Test Examples', url: ''},
+                 {label: 'Example Details', url: ''}]
   $http(
     method: 'GET'
-    url: API_URL + "model/#{$routeParams.name}/test/#{$routeParams.test_name}"
+    url: API_URL +
+      "model/#{$routeParams.name}/test/#{$routeParams.test_name}/" +
+      "data/#{$routeParams.data_id}"
     headers: {'X-Requested-With': null}
   ).success((data, status, headers, config) ->
+      $scope.data = data.data
       $scope.test = data.test
-      $scope.metrics = data.metrics
       $scope.model = data.model
+
   ).error((data, status, headers, config) ->
       $scope.error = data
   )

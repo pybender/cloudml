@@ -30,6 +30,76 @@ angular.module('app.directives', [
   }
 )
 
+.directive('weightsTable', () ->
+  return {
+    restrict: 'E',
+    template: '<table>
+                      <thead>
+                        <tr>
+                          <th>Paremeter</th>
+                          <th>Weight</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr ng-repeat="row in weights">
+                          <td>{{ row.name }}</td>
+                          <td>
+                            <div class="badge" ng-class="row.css_class">
+                              {{ row.weight }}</div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>',
+    replace: true,
+    transclude : true,
+    scope: { weights: '=' }
+  }
+)
+
+.directive("recursive", [
+  '$compile'
+
+($compile) ->
+  return {
+    restrict: "EACM"
+    priority: 100000
+    compile: (tElement, tAttr) ->
+      contents = tElement.contents().remove()
+      compiledContents = undefined
+      return (scope, iElement, iAttr) ->
+        if scope.row.full_name
+          return
+        if not compiledContents
+          compiledContents = $compile(contents)
+        iElement.append(
+          compiledContents(scope, (clone) -> return clone))
+  }
+])
+
+.directive("tree", [ ->
+  return {
+    scope: {tree: '='}
+    # replace: true
+    #restrict: 'E'
+    transclude : true
+    template: '''<ul>
+                <li ng-repeat="(key, row) in tree" >
+                  {{ key }}
+                  <a ng-show="!row.value" ng-click="show=!show"
+                    ng-init="show=false">
+      <i ng-class="{false:'icon-arrow-right',true:'icon-arrow-down'}[show]"></i>
+                  </a>
+                  <span class="{{ row.css_class }}">{{ row.value }}</span>
+                  <recursive ng-show="show">
+                    <span tree="row"></span>
+                  </recursive>
+                </li>
+              </ul>'''
+    compile: () ->
+      return () ->
+  }
+])
+
 .directive('scRocCurve', [ ->
   return {
     restrict: 'E',

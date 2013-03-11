@@ -19,7 +19,7 @@
     <div class="tab-content">
       <div class="tab-pane" id="details">
         <div class="row">
-            <div class="span6">
+            <div class="span12">
                 <div>
                     Trained Model:
                     <a class="value" href="#/models/{{ model.name }}">{{ model.name }}</a>
@@ -40,6 +40,12 @@
                     <span class="value">
                         {{ test.created_on|format_date }}
                     </span>
+                </div>
+                <div>
+                    Classification Accuracy: <span class="value">{{ test.metrics.accuracy.toFixed(4) }}</span>
+                </div>
+                <div>
+                    Examples count: <span class="value">{{ test.data_count }}</span>
                 </div>
             </div>
         </div>
@@ -64,9 +70,6 @@
     <div class="tab-pane" id="confusion">
         <div class="row">
             <div class="span6">
-                <div>
-                    Classification Accuracy: <span class="value">{{ test.metrics.accuracy.toFixed(4) }}</span>
-                </div>
                 <h4>Confusion Matrix</h4>
                 <table class="table">
                 <thead>

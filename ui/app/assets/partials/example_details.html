@@ -1,0 +1,27 @@
+<breadcrumb path="path"></breadcrumb>
+<h2>{{ test.name|capfirst }}:{{ data.id }} Example</h2>
+<table class="table">
+    <thead>
+        <tr>
+          <th class="span2">Parameter</th>
+          <th class="span7">Weight</th>
+          <th class="span3">Value</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr ng-repeat="(title, val) in data.weighted_data_input" ng-class="val.2">
+          <td>{{ title }}</td>
+          <td>
+            <span ng-show="!val.weights" title="weight={{ val.weight }}" class="badge {{ val.css_class }}">{{ val.value }}</span>
+
+            <div ng-show="val.weights">
+              <span ng-repeat="word in val.value.split(' ')"> 
+                <span ng-show="val.weights[word].weight" title="weight={{ val.weights[word].weight }}" class="badge {{ val.weights[word].css_class }}">{{ word }}</span>
+                <span ng-show="!val.weights[word].weight">{{ word }}</span>
+              </span>
+            </div>
+          </td>
+          <td></td>
+        </tr>
+    </tbody>
+</table>

@@ -38,7 +38,7 @@ class Models(restful.Resource):
                                         "Model %s doesn't exist" % model)
         #import pdb; pdb.set_trace()
         tests = model.tests.all()
-        return SWJsonify({'model': model, 'tests': tests})
+        return SWJsonify({'model': model, 'tests': tests}, all_fields=True)
 
     def delete(self, model):
         model = Model.query.filter(Model.name == model).first()
@@ -54,6 +54,7 @@ class Models(restful.Resource):
         model = Model(model)
         trainer = load_trainer(file)
         model.trainer = trainer
+        model.set_weights(**trainer.get_weights())
         model.import_handler = import_handler_local.read()
         plan = ExtractionPlan(model.import_handler, is_file=False)
         model.import_params = plan.input_params
@@ -123,22 +124,50 @@ class Tests(restful.Resource):
         db.session.add(test)
         db.session.commit()
         # store test data in db
-        Data.loads_from_raw_data(test, raw_data)
+        Data.loads_from_raw_data(model, test, raw_data)
 
         return SWJsonify({'test': test}), 201
 
 api.add_resource(Tests, '/cloudml/b/v1/model/<regex("[\w\.]+"):model>/test/<regex("[\w\.\-]+"):test_name>')
 
 
+class Datas(restful.Resource):
+    decorators = [crossdomain(origin='*')]
+
+    def get(self, model, test_name, data_id):
+        # TODO:
+        model = Model.query.filter(Model.name == model).first()
+        test = model.tests.filter(Test.name == test_name).first()
+        data = test.data.filter(Data.id == data_id).first()
+        if test is None:
+            return odesk_error_response(404, ERR_NO_SUCH_MODEL,
+                                        'Test %s doesn\'t exist' % test_name)
+        return SWJsonify({'test': test,
+                          'model': model,
+                          'data': data},
+                          all_fields=True)
+
+
 class DatalList(restful.Resource):
     decorators = [crossdomain(origin='*')]
 
     def get(self, model, test_name):
-        test = Test.query.filter(Test.name == test_name).first()
-        data = test.data.all()
-        return SWJsonify({'data': data})
+        model = Model.query.filter(Model.name == model).first()
+        test = model.tests.filter(Test.name == test_name).first()
+        data_paginated = test.data.paginate(1, 3, False)
+        return SWJsonify({'model': model,
+                          'data': {'items': data_paginated.items,
+                                   'pages': data_paginated.pages,
+                                   'total': data_paginated.total,
+                                   'page': data_paginated.page,
+                                   'has_next': data_paginated.has_next,
+                                   'has_prev': data_paginated.has_prev,
+                                   'per_page': data_paginated.per_page},
+                          'test': test})
 
 api.add_resource(DatalList, '/cloudml/b/v1/model/<regex("[\w\.]+"):model>/test/<regex("[\w\.\-]+"):test_name>/data')
+api.add_resource(Datas,
+ '/cloudml/b/v1/model/<regex("[\w\.]+"):model>/test/<regex("[\w\.\-]+"):test_name>/data/<regex("[\w\.\-]+"):data_id>')
 
 # @app.route('/cloudml/b/v1/model/<regex("[\w\.]+"):model>/evaluate',
 #            methods=['POST'])
