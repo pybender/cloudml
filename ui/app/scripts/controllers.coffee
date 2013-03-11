@@ -106,6 +106,7 @@ angular.module('app.controllers', [])
     fd = new FormData()
     fd.append("file", $scope.file)
     fd.append("import_handler_local", $scope.import_handler_local)
+    fd.append("features", $scope.features)
     $http(
       method: "POST"
       url: "http://127.0.0.1:5000/cloudml/b/v1/model/#{$scope.name}"
@@ -127,6 +128,12 @@ angular.module('app.controllers', [])
         $scope.msg = ""
         $scope.error = ""
         $scope.import_handler_local = element.files[0]
+
+  $scope.setFeaturesFile = (element) ->
+      $scope.$apply ($scope) ->
+        $scope.msg = ""
+        $scope.error = ""
+        $scope.features = element.files[0]
 ])
 
 .controller('ModelDetailsCtrl', [
@@ -187,18 +194,18 @@ angular.module('app.controllers', [])
 ($scope, $http, $routeParams) ->
   $scope.path = [{label: 'Home', url: '#/'},
                  {label: 'Models', url: '#/models'},
-                 {label: 'Model Details', url: ''},
-                 {label: 'Test Details', url: ''},
+                 {label: 'Model Details', url: "#/models/#{$routeParams.name}"},
+                 {label: 'Test Details', url: "#/models/#{$routeParams.name}/\
+tests/#{$routeParams.test_name}"},
                  {label: 'Test Examples', url: ''}]
   $scope.currentPage = 1
-  $scope.$watch('data.page',
+  $scope.$watch('currentPage',
     (currentPage, oldVal, scope) ->
-      if currentPage
-        alert(currentPage)
       $http(
         method: 'GET'
         url: API_URL +
-          "model/#{$routeParams.name}/test/#{$routeParams.test_name}/data"
+          "model/#{$routeParams.name}/test/#{$routeParams.test_name}\
+/data?page=#{currentPage}"
         headers: {'X-Requested-With': null}
       ).success((data, status, headers, config) ->
           $scope.data = data.data

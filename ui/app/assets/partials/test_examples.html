@@ -1,6 +1,7 @@
 <breadcrumb path="path"></breadcrumb>
 <h2>{{ test.name|capfirst }} Examples List</h2>
-
+<pagination boundary-links="true" num-pages="data.pages" current-page="currentPage"></pagination>
+<p>Total items : {{ data.total }}</p>
 <table class="table table-striped">
     <thead>
       <tr>
@@ -19,6 +20,4 @@
       </tr>
     </tbody>
 </table>
-<div>
-  <pagination num-pages="data.per_page" current-page="currentPage"></pagination>
-</div>
+<pagination boundary-links="true" num-pages="data.pages" current-page="currentPage"></pagination>

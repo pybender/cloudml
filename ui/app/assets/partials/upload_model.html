@@ -35,6 +35,15 @@
           Required</span>
     </div>
   </div>
+  <div class="control-group" ng-class="{error: !features}">
+    <label class="control-label">Features</label>
+    <div class="controls">
+      <input type="file" name="features" ng-model="model.features" onchange="angular.element(this).scope().setFeaturesFile(this)">
+      {{ features }}
+      <span ng-show="!features" class="help-inline">
+          Required</span>
+    </div>
+  </div>
 
   <br />
   <a href="#/models" class="btn">Cancel</a>

@@ -19,6 +19,8 @@ from api.utils import crossdomain, odesk_error_response, consumes, SWJsonify
 model_parser = reqparse.RequestParser()
 model_parser.add_argument('name', type=str)
 
+page_parser = reqparse.RequestParser()
+page_parser.add_argument('page', type=int)
 
 ERR_INVALID_CONTENT_TYPE = 1000
 ERR_NO_SUCH_MODEL = 1001
@@ -51,10 +53,12 @@ class Models(restful.Resource):
     def post(self, model):
         file = request.files['file']
         import_handler_local = request.files['import_handler_local']
+        features = request.files['features']
         model = Model(model)
         trainer = load_trainer(file)
         model.trainer = trainer
         model.set_weights(**trainer.get_weights())
+        model.features = features.read()
         model.import_handler = import_handler_local.read()
         plan = ExtractionPlan(model.import_handler, is_file=False)
         model.import_params = plan.input_params
@@ -152,9 +156,10 @@ class DatalList(restful.Resource):
     decorators = [crossdomain(origin='*')]
 
     def get(self, model, test_name):
+        param = page_parser.parse_args()
         model = Model.query.filter(Model.name == model).first()
         test = model.tests.filter(Test.name == test_name).first()
-        data_paginated = test.data.paginate(1, 3, False)
+        data_paginated = test.data.paginate(param['page'], 20, False)
         return SWJsonify({'model': model,
                           'data': {'items': data_paginated.items,
                                    'pages': data_paginated.pages,

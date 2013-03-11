@@ -5,10 +5,12 @@ from api.utils import Serializer, JSONEncodedDict
 
 
 class Model(db.Model, Serializer):
-    __public__ = ['id', 'name', 'created_on', 'import_params']
+    __public__ = ['id', 'name', 'created_on', 'import_params',
+                  'import_handler']
     __all_public__ = ('id', 'name', 'created_on', 'import_params',
                       'positive_weights', 'negative_weights',
-                      'positive_weights_tree', 'negative_weights_tree')
+                      'positive_weights_tree', 'negative_weights_tree',
+                      'import_handler', 'features')
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50))
     features = db.Column(db.Text)
