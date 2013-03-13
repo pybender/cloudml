@@ -7,7 +7,8 @@ Werkzeug==0.8.3
 numpy
 scipy
 scikit-learn
-
--e git+https://github.com/tobiasandtobias/flask-alembic.git
+-e git+https://github.com/tobiasandtobias/flask-alembic.git#egg=flask-alembic
 Flask-Script
 django-fabdeploy-plus==0.3.6
+psycopg2
+jsonpath
