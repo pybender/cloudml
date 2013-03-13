@@ -4,15 +4,16 @@
 
 API_URL = 'http://127.0.0.1:5000/cloudml/b/v1/'
 
-angular.module('app.controllers', [])
+angular.module('app.controllers', ['app.config'])
 
 .controller('AppCtrl', [
   '$scope'
   '$location'
   '$resource'
   '$rootScope'
+  'settings'
 
-($scope, $location, $resource, $rootScope) ->
+($scope, $location, $resource, $rootScope, settings) ->
 
   # Uses the url to determine if the selected
   # menu item should have the class active.
@@ -40,8 +41,9 @@ angular.module('app.controllers', [])
   '$scope'
   '$http'
   'dialog'
+  'settings'
 
-($scope, $http, dialog) ->
+($scope, $http, dialog, settings) ->
 
   model = dialog.model
   $scope.params = model.import_params # list of parameters names
@@ -57,7 +59,7 @@ angular.module('app.controllers', [])
 
     $http(
       method: "POST"
-      url: "http://127.0.0.1:5000/cloudml/b/v1/model/#{model.name}/test/test"
+      url: settings.apiUrl + "model/#{model.name}/test/test"
       data: form_data
       headers: {'Content-Type':undefined, 'X-Requested-With': null}
       transformRequest: angular.identity
@@ -74,12 +76,13 @@ angular.module('app.controllers', [])
   '$scope'
   '$http'
   '$dialog'
+  'settings'
 
-($scope, $http, $dialog) ->
+($scope, $http, $dialog, settings) ->
   $scope.path = [{label: 'Home', url: '#/'}, {label: 'Models', url: '#/models'}]
   $http(
     method: 'GET'
-    url: "http://127.0.0.1:5000/cloudml/b/v1/model"
+    url: settings.apiUrl + "model"
     headers: {'X-Requested-With': null}
   ).success((data, status, headers, config) ->
       $scope.models = data.models
@@ -98,8 +101,9 @@ angular.module('app.controllers', [])
   '$scope'
   '$http'
   '$location'
+  'settings'
 
-($scope, $http, $location) ->
+($scope, $http, $location, settings) ->
   $scope.path = [{label: 'Home', url: '#/'},
   {label: 'Train Model', url: '#/add_model'}]
   $scope.upload = ->
@@ -108,7 +112,7 @@ angular.module('app.controllers', [])
     fd.append("features", $scope.features)
     $http(
       method: "POST"
-      url: "http://127.0.0.1:5000/cloudml/b/v1/model/train/#{$scope.name}"
+      url: settings.apiUrl + "model/train/#{$scope.name}"
       data: fd
       headers: {'Content-Type':undefined, 'X-Requested-With': null}
       transformRequest: angular.identity
@@ -133,8 +137,9 @@ angular.module('app.controllers', [])
   '$scope'
   '$http'
   '$location'
+  'settings'
 
-($scope, $http, $location) ->
+($scope, $http, $location, settings) ->
   $scope.path = [{label: 'Home', url: '#/'},
   {label: 'Upload Trained Model', url: '#/upload_model'}]
   $scope.upload = ->
@@ -144,7 +149,7 @@ angular.module('app.controllers', [])
     fd.append("features", $scope.features)
     $http(
       method: "POST"
-      url: "http://127.0.0.1:5000/cloudml/b/v1/model/#{$scope.name}"
+      url: settings.apiUrl + "model/#{$scope.name}"
       data: fd
       headers: {'Content-Type':undefined, 'X-Requested-With': null}
       transformRequest: angular.identity
@@ -176,14 +181,15 @@ angular.module('app.controllers', [])
   '$http'
   '$routeParams'
   '$dialog'
+  'settings'
 
-($scope, $http, $routeParams, $dialog) ->
+($scope, $http, $routeParams, $dialog, settings) ->
   $scope.path = [{label: 'Home', url: '#/'},
                  {label: 'Models', url: '#/models'},
                  {label: 'Model Details', url: ''}]
   $http(
     method: 'GET'
-    url: "http://127.0.0.1:5000/cloudml/b/v1/model/#{$routeParams.name}"
+    url: settings.apiUrl + "model/#{$routeParams.name}"
     headers: {'X-Requested-With': null}
   ).success((data, status, headers, config) ->
       $scope.model = data.model
@@ -209,15 +215,17 @@ angular.module('app.controllers', [])
   '$scope'
   '$http'
   '$routeParams'
+  'settings'
 
-($scope, $http, $routeParams) ->
+($scope, $http, $routeParams, settings) ->
   $scope.path = [{label: 'Home', url: '#/'},
                  {label: 'Models', url: '#/models'},
                  {label: 'Model Details', url: ''},
                  {label: 'Test Details', url: ''}]
   $http(
     method: 'GET'
-    url: API_URL + "model/#{$routeParams.name}/test/#{$routeParams.test_name}"
+    url: settings.apiUrl +
+      "model/#{$routeParams.name}/test/#{$routeParams.test_name}"
     headers: {'X-Requested-With': null}
   ).success((data, status, headers, config) ->
       $scope.test = data.test
@@ -233,8 +241,9 @@ angular.module('app.controllers', [])
   '$scope'
   '$http'
   '$routeParams'
+  'settings'
 
-($scope, $http, $routeParams) ->
+($scope, $http, $routeParams, settings) ->
   $scope.path = [{label: 'Home', url: '#/'},
                  {label: 'Models', url: '#/models'},
                  {label: 'Model Details', url: "#/models/#{$routeParams.name}"},
@@ -246,7 +255,7 @@ tests/#{$routeParams.test_name}"},
     (currentPage, oldVal, scope) ->
       $http(
         method: 'GET'
-        url: API_URL +
+        url: settings.apiUrl +
           "model/#{$routeParams.name}/test/#{$routeParams.test_name}\
 /data?page=#{currentPage}"
         headers: {'X-Requested-With': null}
@@ -265,8 +274,9 @@ tests/#{$routeParams.test_name}"},
   '$scope'
   '$http'
   '$routeParams'
+  'settings'
 
-($scope, $http, $routeParams) ->
+($scope, $http, $routeParams, settings) ->
   $scope.path = [{label: 'Home', url: '#/'},
                  {label: 'Models', url: '#/models'},
                  {label: 'Model Details', url: ''},
@@ -275,7 +285,7 @@ tests/#{$routeParams.test_name}"},
                  {label: 'Example Details', url: ''}]
   $http(
     method: 'GET'
-    url: API_URL +
+    url: settings.apiUrl +
       "model/#{$routeParams.name}/test/#{$routeParams.test_name}/" +
       "data/#{$routeParams.data_id}"
     headers: {'X-Requested-With': null}

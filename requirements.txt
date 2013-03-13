@@ -8,6 +8,6 @@ numpy
 scipy
 scikit-learn
 
--e git+https://github.com/tobiasandtobias/flask-alembic.git
+-e git+https://github.com/tobiasandtobias/flask-alembic.git#egg=flask-alembic
 Flask-Script
 django-fabdeploy-plus==0.3.6
