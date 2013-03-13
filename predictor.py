@@ -17,10 +17,11 @@ import sklearn.metrics as metrics
 import sys
 import csv
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
-from importhandler.importhandler import ImportHandlerException,\
+from core.importhandler.importhandler import ImportHandlerException,\
     ExtractionPlan, ImportHandler
-from trainer.streamutils import streamingiterload
-from trainer.trainer import load_trainer, list_to_dict, Trainer
+from core.trainer.streamutils import streamingiterload
+from core.trainer.store import load_trainer
+from core.trainer.trainer import list_to_dict, Trainer
 
 
 def roc(iterator, trainer, params):
