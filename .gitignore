@@ -8,7 +8,9 @@
 _build
 *.bak
 *.dat
+local_config.coffee
 ve
+
 
 **/.DS_Store
 nbproject
