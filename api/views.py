@@ -9,6 +9,8 @@ from flask.views import MethodView
 from flask.ext.restful import reqparse
 
 from trainer.store import load_trainer
+from trainer.trainer import Trainer
+from trainer.config import FeatureModel
 from importhandler.importhandler import ExtractionPlan, ImportHandler
 
 from api import app, db, api
@@ -77,6 +79,29 @@ class ModelList(restful.Resource):
 api.add_resource(ModelList, '/cloudml/b/v1/model')
 api.add_resource(Models, '/cloudml/b/v1/model/<regex("[\w\.]+"):model>')
 
+class Train(restful.Resource):
+    decorators = [crossdomain(origin='*')]
+
+    def post(self, model):
+        import_handler_local = request.files['import_handler_local']
+        features = request.files['features']
+        model = Model(model)
+        model = FeatureModel(args.path)
+        trainer = Trainer(model)
+        plan = ExtractionPlan(model.import_handler, is_file=False)
+        test_handler = ImportHandler(plan, param)
+        trainer.train(train_handler)
+        model.trainer = trainer
+        model.set_weights(**trainer.get_weights())
+        model.features = features.read()
+        model.import_handler = import_handler_local.read()
+        plan = ExtractionPlan(model.import_handler, is_file=False)
+        model.import_params = plan.input_params
+        db.session.add(model)
+        db.session.commit()
+        return SWJsonify({'model': model}), 201
+
+api.add_resource(Train, '/cloudml/b/v1/model/train/<regex("[\w\.]+"):model>')
 
 class Tests(restful.Resource):
     decorators = [crossdomain(origin='*')]

@@ -94,6 +94,41 @@ angular.module('app.controllers', [])
     d.open('partials/modal.html', 'TestDialogController')
 ])
 
+.controller('AddModelCtl', [
+  '$scope'
+  '$http'
+  '$location'
+
+($scope, $http, $location) ->
+  $scope.path = [{label: 'Home', url: '#/'},
+  {label: 'Train Model', url: '#/add_model'}]
+  $scope.upload = ->
+    fd = new FormData()
+    fd.append("import_handler_local", $scope.import_handler_local)
+    fd.append("features", $scope.features)
+    $http(
+      method: "POST"
+      url: "http://127.0.0.1:5000/cloudml/b/v1/model/train/#{$scope.name}"
+      data: fd
+      headers: {'Content-Type':undefined, 'X-Requested-With': null}
+      transformRequest: angular.identity
+    ).success((data, status, headers, config) ->
+      $scope.msg = data.name
+      $location.path '/models'
+    )
+  $scope.setImportHandlerLocalFile = (element) ->
+      $scope.$apply ($scope) ->
+        $scope.msg = ""
+        $scope.error = ""
+        $scope.import_handler_local = element.files[0]
+
+  $scope.setFeaturesFile = (element) ->
+      $scope.$apply ($scope) ->
+        $scope.msg = ""
+        $scope.error = ""
+        $scope.features = element.files[0]
+])
+
 .controller('UploadModelCtl', [
   '$scope'
   '$http'
@@ -140,8 +175,9 @@ angular.module('app.controllers', [])
   '$scope'
   '$http'
   '$routeParams'
+  '$dialog'
 
-($scope, $http, $routeParams) ->
+($scope, $http, $routeParams, $dialog) ->
   $scope.path = [{label: 'Home', url: '#/'},
                  {label: 'Models', url: '#/models'},
                  {label: 'Model Details', url: ''}]
@@ -160,6 +196,13 @@ angular.module('app.controllers', [])
   $scope.showWeightsTab = () ->
     $scope.weights = {positive: $scope.model.positive_weights,
     negative: $scope.model.negative_weights}
+
+  $scope.test = (model)->
+    d = $dialog.dialog(
+      modalFade: false
+    )
+    d.model = model
+    d.open('partials/modal.html', 'TestDialogController')
 ])
 
 .controller('TestDetailsCtrl', [

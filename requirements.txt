@@ -10,3 +10,4 @@ scikit-learn
 
 -e git+https://github.com/tobiasandtobias/flask-alembic.git
 Flask-Script
+django-fabdeploy-plus==0.3.6

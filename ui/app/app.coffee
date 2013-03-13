@@ -43,6 +43,10 @@ App.config([
       templateUrl: '/partials/upload_model.html'
       controller: 'UploadModelCtl'
     })
+    .when('/add_model', {
+      templateUrl: '/partials/add_model.html'
+      controller: 'AddModelCtl'
+    })
 
     # Catch all
     .otherwise({redirectTo: '/models'})
