@@ -5,6 +5,8 @@ except ImportError:
 
 from fabdeploy import monkey
 monkey.patch_all()
+import os
+import posixpath
 from fabric.api import task, env, settings, local, run, sudo
 from fabric.contrib import files
 from fabdeploy.api import *
@@ -88,6 +90,8 @@ def deploy():
 
     
     #run('cd %(project_path)s/ui; ./scripts/production.sh')
+    run('%(env_path)s/bin/python %(project_path)s/manage.py '
+         'createdb;' % env.conf)
 
     version.activate.run()
 
