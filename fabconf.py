@@ -72,7 +72,7 @@ class StagingConf(BaseConf):
     # For Apache ServerAdmin directive
     server_admin = 'nmelnik@odesk.com'
     # Apache will serve WSGI on this port. (Nginx is front-end.)
-    apache_port = 50005
+    apache_port = 5000
     gunicorn_port = 8020
 
     # For pip extra index url config

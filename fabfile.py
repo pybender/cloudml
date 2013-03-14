@@ -5,7 +5,7 @@ except ImportError:
 
 from fabdeploy import monkey
 monkey.patch_all()
-from fabric.api import task, env, settings, local, run
+from fabric.api import task, env, settings, local, run, sudo
 from fabric.contrib import files
 from fabdeploy.api import *
 
@@ -33,7 +33,7 @@ def install():
 
     #rabbitmq.install()
     #nginx.install.run()
-    #apache.install.run()
+    apache.install.run()
     #postgres.install.run()
 
     for app in ['supervisor']:
@@ -41,7 +41,7 @@ def install():
 
 @task
 def setup():
-    fabd.mkdirs.run()
+    #fabd.mkdirs.run()
 #
 #    with settings(warn_only=True):
 #        postgres.create_user.run()
@@ -54,10 +54,8 @@ def setup():
     # rabbitmq.set_permissions.run()
 
     # apache.wsgi_push.run()
-    # apache.push_config.run()
-    # apache.push_nginx_config.run()
-    # nginx.restart.run()
-    # apache.graceful.run()
+    push_apache_config.run()
+    apache.graceful.run()
 
    # pip.push_config.run()
 
@@ -73,7 +71,7 @@ def deploy():
     git.push.run()
     
     #supervisor.push_configs.run()
-    #apache.wsgi_push.run()
+    apache.wsgi_push.run()
 
     virtualenv.create.run()
     virtualenv.pip_install_req.run()
@@ -97,3 +95,25 @@ def deploy():
     #gunicorn.reload_with_supervisor.run()
 
     #apache.wsgi_touch.run()
+
+from fabdeploy.apache import PushConfig as StockPushApacheConfig
+from fabdeploy.utils import upload_config_template
+
+class PushApacheConfig(StockPushApacheConfig):
+    def do(self):
+        # Instead of appending Listen directive, just upload the whole
+        # ports.conf template to make sure it has the right contents.
+        # We assume it doesn't contain anything useful anyway.
+        upload_config_template(
+            'apache_ports.config',
+            self.conf.ports_filepath,
+            context=self.conf,
+            use_sudo=True)
+        upload_config_template(
+            'apache.config',
+            self.conf.config_filepath,
+            context=self.conf,
+            use_sudo=True)
+        sudo('a2ensite %(instance_name)s' % self.conf)
+
+push_apache_config = PushApacheConfig()
