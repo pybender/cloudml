@@ -10,6 +10,6 @@ scikit-learn
 -e git+https://github.com/tobiasandtobias/flask-alembic.git#egg=flask-alembic
 Flask-Script
 django-fabdeploy-plus==0.3.6
-#psycopg2
+psycopg2
 jsonpath
 fabric==1.4

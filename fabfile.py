@@ -53,7 +53,7 @@ def setup():
     #     rabbitmq.add_vhost.run()
     # rabbitmq.set_permissions.run()
 
-    apache.wsgi_push.run()
+    #apache.wsgi_push.run()
     push_apache_config.run()
     apache.graceful.run()
 
@@ -65,13 +65,7 @@ def setup():
 @task
 def qdeploy():
     version.work_on.run(0)
-    git.push.run()
-    virtualenv.create.run()
-    virtualenv.pip_install_req.run()
-    virtualenv.make_relocatable.run()
-    version.activate.run()
-    apache.wsgi_touch.run()
-    #deploy.run()
+    deploy.run()
 
 @task
 def deploy():
@@ -103,9 +97,7 @@ def deploy():
     # supervisor.restart_program.run(program='celerybeat')
     # supervisor.reload.run()
 
-    #gunicorn.reload_with_supervisor.run()
-
-    #apache.wsgi_touch.run()
+    apache.wsgi_touch.run()
 
 from fabdeploy.apache import PushConfig as StockPushApacheConfig
 from fabdeploy.utils import upload_config_template

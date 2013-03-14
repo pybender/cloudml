@@ -8,10 +8,10 @@ from flask.ext import restful
 from flask.views import MethodView
 from flask.ext.restful import reqparse
 
-from trainer.store import load_trainer
-from trainer.trainer import Trainer
-from trainer.config import FeatureModel
-from importhandler.importhandler import ExtractionPlan, ImportHandler
+from core.trainer.store import load_trainer
+from core.trainer.trainer import Trainer
+from core.trainer.config import FeatureModel
+from core.importhandler.importhandler import ExtractionPlan, ImportHandler
 
 from api import app, db, api
 from api.models import Model, Test, Data
