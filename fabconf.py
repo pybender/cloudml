@@ -61,14 +61,14 @@ class BaseConf(DefaultConf):
 class StagingConf(BaseConf):
     """Settings specific to production environment."""
 
-    address = 'cloudml@backend.jobstream.dev.odeskps.com'
+    address = 'cloudml@172.27.67.106'
 
     sudo_user = 'nmelnik'
 
     # Code from this branch will be deployed.
-    branch = 'staging'
+    branch = 'master'
 
-    server_name = 'cloudml.dev.odeskps.com'
+    server_name = 'cloudml.staging.match.odesk.com'
     # For Apache ServerAdmin directive
     server_admin = 'nmelnik@odesk.com'
     # Apache will serve WSGI on this port. (Nginx is front-end.)
