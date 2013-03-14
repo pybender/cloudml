@@ -77,6 +77,7 @@ def deploy():
     
     #supervisor.push_configs.run()
     apache.wsgi_push.run()
+    push_flask_config.run()
 
     virtualenv.create.run()
     virtualenv.pip_install_req.run()
@@ -100,6 +101,46 @@ def deploy():
 
 from fabdeploy.apache import PushConfig as StockPushApacheConfig
 from fabdeploy.utils import upload_config_template
+
+class PushAnjularConfig(Task):
+    @conf
+    def from_file(self):
+        return os.path.join(
+            self.conf.django_dir, self.conf.remote_anjsettings_lfile)
+
+    @conf
+    def to_file(self):
+        return posixpath.join(
+            self.conf.django_path, self.conf.local_anjsettings_file)
+
+    def do(self):
+        files.upload_template(
+            self.conf.from_file,
+            self.conf.to_file,
+            context=self.conf,
+            use_jinja=True)
+
+push_anj_config = PushAnjularConfig()
+
+class PushFlaskConfig(Task):
+    @conf
+    def from_file(self):
+        return os.path.join(
+            self.conf.django_dir, self.conf.remote_settings_lfile)
+
+    @conf
+    def to_file(self):
+        return posixpath.join(
+            self.conf.django_path, self.conf.local_settings_file)
+
+    def do(self):
+        files.upload_template(
+            self.conf.from_file,
+            self.conf.to_file,
+            context=self.conf,
+            use_jinja=True)
+
+push_flask_config = PushFlaskConfig()
 
 class PushApacheConfig(StockPushApacheConfig):
     def do(self):
