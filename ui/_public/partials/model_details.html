@@ -1,0 +1,105 @@
+<breadcrumb path="path"></breadcrumb>
+<h2>
+  {{ model.name|capfirst }} Details
+  <a class="actions">
+    <span ng-click="test(model)" class="btn">
+      <i title="Apply the classifier to the input provided by the data import handler"  class="status-icon icon-play"></i>
+      <small> TODO: run test</small>
+    </span>
+</a>
+</h2>
+
+<ul class="nav nav-tabs" id="tabs">
+  <li class="active"><a href="#details">Details</a></li>
+  <li><a href="#weights" ng-click="showWeightsTab()">Parameters Weights</a></li>
+  <li><a href="#tests">Tests</a></li>
+  <li><a href="#features">Features</a></li>
+  <li><a href="#import_handler">Import Handler</a></li>
+</ul>
+ 
+<div class="tab-content">
+  <div class="tab-pane active" id="details">
+    <div class="row">
+        <div class="span6">
+            <div>
+                Created at:
+                <span class="value">
+                    {{ model.created_on|format_date }}
+                </span>
+            </div>
+            <div>
+                Latest Test:
+                <span><a class="value"  href="#/models/{{ model.name }}/tests/{{ tests[tests.length-1].name }}">{{ tests[tests.length-1].name }}</a> | 
+                  <a class="value"  href="#/models/{{ model.name }}/tests/{{ tests[tests.length-1].name }}/examples">examples</a>
+                </span>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <div class="tab-pane" id="tests">
+    <h3>Tests</h3>
+    <table class="table table-striped">
+      <thead>
+          <tr>
+            <th>Name</th>
+            <th>Created</th>
+            <th>Filter Parameters</th>
+            <th>Accuracy</th>
+            <th>Examples count</th>
+          </tr>
+      </thead>
+      <tbody>
+        <tr ng-repeat="test in tests | filter:search | orderBy:'-id'">
+          <td><a href="#/models/{{ model.name }}/tests/{{ test.name }}">{{ test.name }}</a></td>
+          <td>{{ test.created_on|format_date }}</td>
+          <td>{{ test.parameters }}</td>
+          <td>{{ test.accuracy.toFixed(4) }}</td>
+          <td>{{ test.data_count }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="tab-pane" id="weights">
+    <div class="row">
+        <div class="span12">
+              <div class="row">
+              <div class="span5">
+                <h4>Positive Weights</h4>
+                <div><a><b>List</b></a> | <a>Tree - todo</a></div>
+                <weights-table weights="weights.positive">
+                </weights-table>
+              </div>
+              <div class="offset1 span5">
+                <h4>Negative Weights</h4>
+                <div><a><b>List</b></a> | <a>Tree - todo</a></div>
+                <weights-table weights="weights.negative">
+                </weights-table>
+              </div>
+            </div>
+        </div>
+    </div>
+  </div>
+  <div class="tab-pane" id="import_handler">
+    <div class="row">
+        <div class="span12">
+          <textarea ui-codemirror="{theme:'monokai', mode: {name: 'javascript', json: true} }" ng-model="model.import_handler"></textarea>
+        </div>
+    </div>
+  </div>
+  <div class="tab-pane" id="features">
+    <div class="row">
+        <div class="span12">
+          <textarea ui-codemirror="{theme:'monokai', mode: {name: 'javascript', json: true} }" ng-model="model.features"></textarea>
+        </div>
+    </div>
+  </div>
+</div>
+<script>
+  $(function () {
+    $('#tabs a').click(function (e) {
+      e.preventDefault();
+      $(this).tab('show');
+    })
+  })
+</script>

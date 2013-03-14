@@ -28,7 +28,7 @@ class BaseConf(DefaultConf):
     django_dir = 'api'
     home_path = '/webapps/cloudml'
     
-    active_public_link = ['%(active_django_link)s', 'public']
+    active_public_link = ['%(active_src_link)s', 'ui', '_public']
 
     pip_req_path = ''
     pip_req_name = 'requirements.txt'

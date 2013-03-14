@@ -86,8 +86,7 @@ def deploy():
     # django.migrate.run()
 
     
-    #run('%(env_path)s/bin/python %(django_path)s/manage.py '
-    #     'collectstatic --noinput;' % env.conf)
+    #run('cd %(project_path)s/ui; ./scripts/production.sh')
 
     version.activate.run()
 
