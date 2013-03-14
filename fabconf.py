@@ -26,6 +26,7 @@ class BaseConf(DefaultConf):
     # - Django settings and manage.py files
     # - 500/50x/404 HTML pages (see nginx_apache.config and apache.config).
     django_dir = 'api'
+    home_path = '/webapps/cloudml'
     
     active_public_link = ['%(active_django_link)s', 'public']
 

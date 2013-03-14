@@ -41,7 +41,7 @@ def install():
 
 @task
 def setup():
-    #fabd.mkdirs.run()
+    fabd.mkdirs.run()
 #
 #    with settings(warn_only=True):
 #        postgres.create_user.run()
@@ -53,7 +53,7 @@ def setup():
     #     rabbitmq.add_vhost.run()
     # rabbitmq.set_permissions.run()
 
-    # apache.wsgi_push.run()
+    apache.wsgi_push.run()
     push_apache_config.run()
     apache.graceful.run()
 
@@ -61,6 +61,17 @@ def setup():
 
     #supervisor.push_configs.run()
     #supervisor.d.run()
+
+@task
+def qdeploy():
+    version.work_on.run(0)
+    git.push.run()
+    virtualenv.create.run()
+    virtualenv.pip_install_req.run()
+    virtualenv.make_relocatable.run()
+    version.activate.run()
+    apache.wsgi_touch.run()
+    #deploy.run()
 
 @task
 def deploy():
