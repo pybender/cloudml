@@ -11,6 +11,8 @@ App = angular.module('app', [
   'app.filters'
   'app.services'
   'ui.bootstrap'
+  'app.models.model'
+  'app.models.testresults'
 ])
 App.config([
   '$routeProvider'
@@ -21,8 +23,8 @@ App.config([
   $routeProvider
 
     .when('/models', {
+      controller: "Model_list"
       templateUrl: '/partials/model_list.html'
-      controller: 'Model_list'
     })
     .when('/models/:name', {
       controller: 'ModelDetailsCtrl'

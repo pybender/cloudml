@@ -1,4 +1,4 @@
-from datetime import timedelta, datetime
+from datetime import timedelta
 from functools import update_wrapper, wraps
 import json
 import pickle
@@ -9,6 +9,14 @@ from sqlalchemy.types import TypeDecorator, VARCHAR
 
 from flask import make_response, request, current_app, jsonify
 from api import app
+
+
+ERR_INVALID_CONTENT_TYPE = 1000
+ERR_NO_SUCH_MODEL = 1001
+ERR_NO_MODELS = 1002
+ERR_STORING_MODEL = 1003
+ERR_LOADING_MODEL = 1004
+ERR_INVALID_DATA = 1005
 
 
 class JSONEncodedDict(TypeDecorator):
@@ -61,52 +69,6 @@ class PickledValue(TypeDecorator):
             value = pickle.loads(value)
         return value
 
-
-class Serializer(object):
-    __public__ = None
-    __all_public__ = None
-    "Must be implemented by implementors"
-
-    def to_serializable_dict(self):
-        return self._to_dict(self.__public__)
-
-    def to_serializable_all_dict(self):
-        return self._to_dict(self.__all_public__ or self.__public__)
-
-    def _to_dict(self, fields):
-        dict = {}
-        for public_key in fields:
-            value = getattr(self, public_key)
-            if value:
-                dict[public_key] = value
-        return dict
-
-
-class SWEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, Serializer):
-            return obj.to_serializable_dict()
-        if isinstance(obj, (datetime)):
-            return obj.isoformat()
-        if hasattr('to_serializable_dict'):
-            return obj.to_serializable_dict()
-        return json.JSONEncoder.default(self, obj)
-
-
-class SWAllEncoder(SWEncoder):
-    def default(self, obj):
-        if isinstance(obj, Serializer):
-            return obj.to_serializable_all_dict()
-        super(SWAllEncoder, self).default(obj)
-
-
-def SWJsonify(*args, **kwargs):
-    all_fields = kwargs.pop('all_fields', False)
-    encoder = SWAllEncoder if all_fields else SWEncoder
-    return app.response_class(json.dumps(dict(*args, **kwargs),
-                              cls=encoder,
-                              indent=None if request.is_xhr else 2),
-                              mimetype='application/json')
 
 
 def consumes(content_type=None):

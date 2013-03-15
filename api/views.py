@@ -1,22 +1,16 @@
-from datetime import datetime
-import json
-import pickle
-
-from flask import render_template, url_for, redirect
-from flask import request, jsonify
 from flask.ext import restful
-from flask.views import MethodView
 from flask.ext.restful import reqparse
+from flask import request
+
+from api.decorators import render
+from api import db, api
+from api.utils import crossdomain, ERR_NO_SUCH_MODEL, odesk_error_response
+from api.models import Model, Test, Data
 
 from core.trainer.store import load_trainer
 from core.trainer.trainer import Trainer
 from core.trainer.config import FeatureModel
 from core.importhandler.importhandler import ExtractionPlan, ImportHandler
-
-from api import app, db, api
-from api.models import Model, Test, Data
-from api.utils import crossdomain, odesk_error_response, consumes, SWJsonify
-
 
 model_parser = reqparse.RequestParser()
 model_parser.add_argument('name', type=str)
@@ -24,25 +18,37 @@ model_parser.add_argument('name', type=str)
 page_parser = reqparse.RequestParser()
 page_parser.add_argument('page', type=int)
 
-ERR_INVALID_CONTENT_TYPE = 1000
-ERR_NO_SUCH_MODEL = 1001
-ERR_NO_MODELS = 1002
-ERR_STORING_MODEL = 1003
-ERR_LOADING_MODEL = 1004
-ERR_INVALID_DATA = 1005
-
 
 class Models(restful.Resource):
     decorators = [crossdomain(origin='*')]
 
-    def get(self, model):
-        model = Model.query.filter(Model.name == model).first()
+    def get(self, model=None, action=None):
         if model is None:
-            return odesk_error_response(404, ERR_NO_SUCH_MODEL,
-                                        "Model %s doesn't exist" % model)
-        #import pdb; pdb.set_trace()
+            return self._list()
+        else:
+            model = Model.query.filter(Model.name == model).first()
+            if model is None:
+                return odesk_error_response(404, ERR_NO_SUCH_MODEL,
+                                            "Model %s doesn't exist" % model)
+            if action == 'tests':
+                return self._load_tests(model)
+            else:
+                return self._details(model)
+
+    @render()
+    def _list(self):
+        models = Model.query.all()
+        found = models.count(Model.id)
+        return {'models': models, 'found': found}
+
+    @render(brief=False)
+    def _details(self, model):
+        return {'model': model}
+
+    @render()
+    def _load_tests(self, model):
         tests = model.tests.all()
-        return SWJsonify({'model': model, 'tests': tests}, all_fields=True)
+        return {'model': model, 'tests': tests}
 
     def delete(self, model):
         model = Model.query.filter(Model.name == model).first()
@@ -52,6 +58,7 @@ class Models(restful.Resource):
         model.delete()
         return '', 204
 
+    @render(code=201)
     def post(self, model):
         file = request.files['file']
         import_handler_local = request.files['import_handler_local']
@@ -66,22 +73,21 @@ class Models(restful.Resource):
         model.import_params = plan.input_params
         db.session.add(model)
         db.session.commit()
-        return SWJsonify({'model': model}), 201
+        return {'model': model}
 
+    def put(self, model):
+        model = Model.query.filter(Model.name == model).one()
+        return {'model': model}
 
-class ModelList(restful.Resource):
-    decorators = [crossdomain(origin='*')]
-
-    def get(self):
-        models = Model.query.all()
-        return SWJsonify({'models': models})
-
-api.add_resource(ModelList, '/cloudml/b/v1/model')
+api.add_resource(Models, '/cloudml/b/v1/model')
 api.add_resource(Models, '/cloudml/b/v1/model/<regex("[\w\.]+"):model>')
+api.add_resource(Models, '/cloudml/b/v1/model/<regex("[\w\.]+"):model>/<regex("[\w\.]+"):action>')
+
 
 class Train(restful.Resource):
     decorators = [crossdomain(origin='*')]
 
+    @render(code=201)
     def post(self, model):
         import_handler_local = request.files['import_handler_local']
         features = request.files['features']
@@ -99,13 +105,15 @@ class Train(restful.Resource):
         model.import_params = plan.input_params
         db.session.add(model)
         db.session.commit()
-        return SWJsonify({'model': model}), 201
+        return {'model': model}
 
 api.add_resource(Train, '/cloudml/b/v1/model/train/<regex("[\w\.]+"):model>')
+
 
 class Tests(restful.Resource):
     decorators = [crossdomain(origin='*')]
 
+    @render(brief=False)
     def get(self, model, test_name):
         # TODO:
         model = Model.query.filter(Model.name == model).first()
@@ -113,7 +121,7 @@ class Tests(restful.Resource):
         if test is None:
             return odesk_error_response(404, ERR_NO_SUCH_MODEL,
                                         'Test %s doesn\'t exist' % test_name)
-        return SWJsonify({'test': test, 'model': model}, all_fields=True)
+        return {'test': test, 'model': model}
 
     def delete(self, model, test_name):
         test = Test.query.filter(Test.name == test_name).first()
@@ -123,6 +131,7 @@ class Tests(restful.Resource):
         test.delete()
         return '', 204
 
+    @render(code=201)
     def post(self, model, test_name):
         # TODO: save parameters to Test model
         test_parser = reqparse.RequestParser()
@@ -155,7 +164,7 @@ class Tests(restful.Resource):
         # store test data in db
         Data.loads_from_raw_data(model, test, raw_data)
 
-        return SWJsonify({'test': test}), 201
+        return {'test': test}
 
 api.add_resource(Tests, '/cloudml/b/v1/model/<regex("[\w\.]+"):model>/test/<regex("[\w\.\-]+"):test_name>')
 
@@ -163,6 +172,7 @@ api.add_resource(Tests, '/cloudml/b/v1/model/<regex("[\w\.]+"):model>/test/<rege
 class Datas(restful.Resource):
     decorators = [crossdomain(origin='*')]
 
+    @render(brief=False)
     def get(self, model, test_name, data_id):
         # TODO:
         model = Model.query.filter(Model.name == model).first()
@@ -171,21 +181,19 @@ class Datas(restful.Resource):
         if test is None:
             return odesk_error_response(404, ERR_NO_SUCH_MODEL,
                                         'Test %s doesn\'t exist' % test_name)
-        return SWJsonify({'test': test,
-                          'model': model,
-                          'data': data},
-                          all_fields=True)
+        return {'test': test, 'model': model, 'data': data}
 
 
 class DatalList(restful.Resource):
     decorators = [crossdomain(origin='*')]
 
+    @render()
     def get(self, model, test_name):
         param = page_parser.parse_args()
         model = Model.query.filter(Model.name == model).first()
         test = model.tests.filter(Test.name == test_name).first()
         data_paginated = test.data.paginate(param['page'], 20, False)
-        return SWJsonify({'model': model,
+        return {'model': model,
                           'data': {'items': data_paginated.items,
                                    'pages': data_paginated.pages,
                                    'total': data_paginated.total,
@@ -193,7 +201,7 @@ class DatalList(restful.Resource):
                                    'has_next': data_paginated.has_next,
                                    'has_prev': data_paginated.has_prev,
                                    'per_page': data_paginated.per_page},
-                          'test': test})
+                          'test': test}
 
 api.add_resource(DatalList, '/cloudml/b/v1/model/<regex("[\w\.]+"):model>/test/<regex("[\w\.\-]+"):test_name>/data')
 api.add_resource(Datas,

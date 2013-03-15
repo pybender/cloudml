@@ -10,27 +10,31 @@
   </a>
   </div>
 </h2>
-</h2>
-<div ng-app="ng-app">
-    <p>{{ error.response.error.message }}</p>
-    <p>{{ msg }}</p>
-    <table class="table table-striped">
-      <thead>
+
+<div ng-app="ng-app" ng-controller="ObjectListCtrl">
+  <div ng-init="init({objectLoader: loadModels()})">
+    <div ng-show="objects.length == 0">
+      <p>No models to display.</p>
+    </div>
+
+    <table class="table table-hover">
+    <thead>
       <tr>
         <th>Name</th>
         <th>Created</th>
         <th>Params</th>
         <th>Actions</th>
       </tr>
-      </thead>
-      <tbody>
-      <tr ng-repeat="model in models | filter:search | orderBy:'name'">
+    </thead>
+    <tbody>
+      <tr ng-repeat="model in objects">
         <td><a href="#/models/{{ model.name }}">{{ model.name }}</a></td>
         <td>{{ model.created_on|format_date }}</td>
         <td><span ng-repeat="param in model.import_params">{{ param|capfirst }} </span></td>
         <td><i title="Apply the classifier to the input provided by the data import handler" class="status-icon icon-play btn" ng-click="test(model)"></i>
         </td>
       </tr>
-      </tbody>
-    </table>
+    </tbody>
+  </table>
+  </div>
 </div>

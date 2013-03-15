@@ -2,13 +2,13 @@
 
 var App;
 
-App = angular.module('app', ['ui', 'ngCookies', 'ngResource', 'app.config', 'app.controllers', 'app.directives', 'app.filters', 'app.services', 'ui.bootstrap']);
+App = angular.module('app', ['ui', 'ngCookies', 'ngResource', 'app.config', 'app.controllers', 'app.directives', 'app.filters', 'app.services', 'ui.bootstrap', 'app.models.model', 'app.models.testresults']);
 
 App.config([
   '$routeProvider', '$locationProvider', function($routeProvider, $locationProvider, config) {
     $routeProvider.when('/models', {
-      templateUrl: '/partials/model_list.html',
-      controller: 'Model_list'
+      controller: "Model_list",
+      templateUrl: '/partials/model_list.html'
     }).when('/models/:name', {
       controller: 'ModelDetailsCtrl',
       templateUrl: '/partials/model_details.html'
@@ -86,7 +86,50 @@ var API_URL;
 
 API_URL = 'http://127.0.0.1:5000/cloudml/b/v1/';
 
-angular.module('app.controllers', ['app.config']).controller('AppCtrl', [
+angular.module('app.controllers', ['app.config']).controller('ObjectListCtrl', [
+  '$scope', function($scope) {
+    var _this = this;
+    $scope.objNumTotal = 0;
+    $scope.objNumDisplayed = 0;
+    $scope.objects = [];
+    $scope.objPerLoad = 10;
+    $scope.haveMoreToLoad = true;
+    $scope.loadingMore = false;
+    $scope.init = function(opts) {
+      if (opts == null) {
+        opts = {};
+      }
+      if (!_.isFunction(opts.objectLoader)) {
+        throw new Error("Invalid object loader supplied to ObjectListCtrl");
+      }
+      $scope.objectLoader = opts.objectLoader;
+      return $scope.loadMore();
+    };
+    return $scope.loadMore = function() {
+      if ($scope.loadingMore) {
+        return false;
+      }
+      $scope.loadingMore = true;
+      return $scope.objectLoader({
+        count: $scope.objPerLoad,
+        offset: $scope.objNumDisplayed
+      }).then((function(opts) {
+        var objNumDisplayedBeforeUpdate;
+        $scope.loadingMore = false;
+        $scope.objNumTotal = opts.total;
+        $scope.objects.push.apply($scope.objects, opts.objects);
+        objNumDisplayedBeforeUpdate = $scope.objNumDisplayed;
+        $scope.objNumDisplayed = $scope.objects.length;
+        if ($scope.objNumDisplayed === objNumDisplayedBeforeUpdate) {
+          $scope.haveMoreToLoad = false;
+        }
+        return $scope.$broadcast('ObjectListCtrl:load:success', $scope.objects);
+      }), (function(opts) {
+        return $scope.$broadcast('ObjectListCtrl:load:error', opts);
+      }));
+    };
+  }
+]).controller('AppCtrl', [
   '$scope', '$location', '$resource', '$rootScope', 'settings', function($scope, $location, $resource, $rootScope, settings) {
     $scope.$location = $location;
     $scope.$watch('$location.path()', function(path) {
@@ -134,7 +177,7 @@ angular.module('app.controllers', ['app.config']).controller('AppCtrl', [
     };
   }
 ]).controller('Model_list', [
-  '$scope', '$http', '$dialog', 'settings', function($scope, $http, $dialog, settings) {
+  '$scope', '$http', '$dialog', 'settings', 'Model', function($scope, $http, $dialog, settings, Model) {
     $scope.path = [
       {
         label: 'Home',
@@ -144,17 +187,11 @@ angular.module('app.controllers', ['app.config']).controller('AppCtrl', [
         url: '#/models'
       }
     ];
-    $http({
-      method: 'GET',
-      url: settings.apiUrl + "model",
-      headers: {
-        'X-Requested-With': null
-      }
-    }).success(function(data, status, headers, config) {
-      return $scope.models = data.models;
-    }).error(function(data, status, headers, config) {
-      return $scope.error = data;
-    });
+    $scope.loadModels = function() {
+      return function(pagination_opts) {
+        return Model.$loadAll();
+      };
+    };
     return $scope.test = function(model) {
       var d;
       d = $dialog.dialog({
@@ -263,7 +300,7 @@ angular.module('app.controllers', ['app.config']).controller('AppCtrl', [
     };
   }
 ]).controller('ModelDetailsCtrl', [
-  '$scope', '$http', '$location', '$routeParams', '$dialog', 'settings', function($scope, $http, $location, $routeParams, $dialog, settings) {
+  '$scope', '$http', '$location', '$routeParams', '$dialog', 'settings', 'Model', 'TestResult', function($scope, $http, $location, $routeParams, $dialog, settings, Model, Test) {
     var DEFAULT_ACTION,
       _this = this;
     $scope.path = [
@@ -278,19 +315,21 @@ angular.module('app.controllers', ['app.config']).controller('AppCtrl', [
         url: ''
       }
     ];
-    $http({
-      method: 'GET',
-      url: settings.apiUrl + ("model/" + $routeParams.name),
-      headers: {
-        'X-Requested-With': null
+    if (!$scope.model) {
+      if (!$routeParams.name) {
+        throw new Error("Can't initialize model detail controller      without model name");
       }
-    }).success(function(data, status, headers, config) {
-      $scope.model = data.model;
-      return $scope.tests = data.tests;
-    }).error(function(data, status, headers, config) {
+      $scope.model = new Model({
+        name: $routeParams.name
+      });
+    }
+    $scope.model.$load().then((function() {
+      return $scope.latest_test = new Test($scope.model.latest_test);
+    }), (function() {
+      console.error("Couldn't get model");
       $scope.error = data;
       return $scope.httpError = true;
-    });
+    }));
     DEFAULT_ACTION = 'model:details';
     $scope.action = ($routeParams.action || DEFAULT_ACTION).split(':');
     $scope.$watch('action', function(action) {
@@ -301,6 +340,28 @@ angular.module('app.controllers', ['app.config']).controller('AppCtrl', [
     $scope.toggleAction = function(action) {
       return $scope.action = action;
     };
+    $scope.loadTests = function() {
+      return function(pagination_opts) {
+        return Test.$loadTests($scope.model.name);
+      };
+    };
+    $scope.saveImportHandlerChanges = function() {
+      if (!$scope.importHandlerChanged) {
+        return false;
+      }
+      return $scope.model.$save({
+        only: ['import_handler']
+      }).then((function() {
+        return $scope.importHandlerChanged = false;
+      }), (function() {
+        throw new Error("Unable to save import handler");
+      }));
+    };
+    $scope.$watch('model.import_handler', function(newVal, oldVal) {
+      if ((newVal != null) && (oldVal != null) && newVal !== "" && oldVal !== "") {
+        return $scope.importHandlerChanged = true;
+      }
+    });
     return $scope.test = function(model) {
       var d;
       d = $dialog.dialog({
@@ -311,7 +372,7 @@ angular.module('app.controllers', ['app.config']).controller('AppCtrl', [
     };
   }
 ]).controller('TestDetailsCtrl', [
-  '$scope', '$http', '$routeParams', 'settings', function($scope, $http, $routeParams, settings) {
+  '$scope', '$http', '$routeParams', 'settings', 'TestResult', function($scope, $http, $routeParams, settings, Test) {
     $scope.path = [
       {
         label: 'Home',
@@ -327,19 +388,20 @@ angular.module('app.controllers', ['app.config']).controller('AppCtrl', [
         url: ''
       }
     ];
-    return $http({
-      method: 'GET',
-      url: settings.apiUrl + ("model/" + $routeParams.name + "/test/" + $routeParams.test_name),
-      headers: {
-        'X-Requested-With': null
+    if (!$scope.test) {
+      if (!$routeParams.name) {
+        throw new Error("Can't initialize test detail controller      without test name");
       }
-    }).success(function(data, status, headers, config) {
-      $scope.test = data.test;
-      $scope.metrics = data.metrics;
-      return $scope.model = data.model;
-    }).error(function(data, status, headers, config) {
-      return $scope.error = data;
-    });
+      $scope.test = new Test({
+        model_name: $routeParams.name,
+        name: $routeParams.test_name
+      });
+    }
+    return $scope.test.$load().then((function() {}), (function() {
+      console.error("Couldn't get test");
+      $scope.error = data;
+      return $scope.httpError = true;
+    }));
   }
 ]).controller('TestExamplesCtrl', [
   '$scope', '$http', '$routeParams', 'settings', function($scope, $http, $routeParams, settings) {
@@ -717,6 +779,321 @@ LOCAL_SETTINGS = {
 };
 
 angular.module('app.local_config', []).constant('settings', LOCAL_SETTINGS);
+var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
+  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+
+angular.module('app.models.model', ['app.config']).factory('Model', [
+  '$http', '$q', 'settings', function($http, $q, settings) {
+    var Model, trimTrailingWhitespace;
+    trimTrailingWhitespace = function(val) {
+      return val.replace(/^\s+|\s+$/g, '');
+    };
+    /*
+        Trained Model
+    */
+
+    Model = (function() {
+
+      function Model(opts) {
+        this.$save = __bind(this.$save, this);
+
+        this.$load = __bind(this.$load, this);
+
+        this.loadFromJSON = __bind(this.loadFromJSON, this);
+
+        this.toJSON = __bind(this.toJSON, this);
+        this.loadFromJSON(opts);
+      }
+
+      Model.prototype.id = null;
+
+      Model.prototype.created_on = null;
+
+      Model.prototype.name = null;
+
+      Model.prototype.import_params = null;
+
+      Model.prototype.negative_weights = null;
+
+      Model.prototype.negative_weights_tree = null;
+
+      Model.prototype.positive_weights = null;
+
+      Model.prototype.positive_weights_tree = null;
+
+      Model.prototype.latest_test = null;
+
+      /* API methods
+      */
+
+
+      Model.prototype.isNew = function() {
+        if (this.slug === null) {
+          return true;
+        } else {
+          return false;
+        }
+      };
+
+      Model.prototype.toJSON = function() {
+        return {
+          name: this.name
+        };
+      };
+
+      Model.prototype.loadFromJSON = function(origData) {
+        var data;
+        data = _.extend({}, origData);
+        return _.extend(this, data);
+      };
+
+      Model.prototype.$load = function() {
+        var _this = this;
+        if (this.name === null) {
+          throw new Error("Can't load model without name");
+        }
+        return $http({
+          method: 'GET',
+          url: settings.apiUrl + ("model/" + this.name),
+          headers: {
+            'X-Requested-With': null
+          }
+        }).then((function(resp) {
+          _this.loaded = true;
+          _this.loadFromJSON(resp.data['model']);
+          return resp;
+        }), (function(resp) {
+          return resp;
+        }));
+      };
+
+      Model.prototype.$save = function(opts) {
+        var fields, key, saveData, _i, _len, _ref,
+          _this = this;
+        if (opts == null) {
+          opts = {};
+        }
+        saveData = this.toJSON();
+        fields = opts.only || [];
+        if (fields.length > 0) {
+          _ref = _.keys(saveData);
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            key = _ref[_i];
+            if (__indexOf.call(fields, key) < 0) {
+              delete saveData[key];
+            }
+          }
+        }
+        saveData = this.prepareSaveJSON(saveData);
+        return $http({
+          method: this.isNew() ? 'POST' : 'PUT',
+          headers: settings.apiRequestDefaultHeaders,
+          url: "" + settings.apiUrl + "/jobs/" + (this.id || ""),
+          params: {
+            access_token: user.access_token
+          },
+          data: $.param(saveData)
+        }).then(function(resp) {
+          return _this.loadFromJSON(resp.data);
+        });
+      };
+
+      Model.$loadAll = function(opts) {
+        var dfd,
+          _this = this;
+        dfd = $q.defer();
+        $http({
+          method: 'GET',
+          url: "" + settings.apiUrl + "model",
+          headers: settings.apiRequestDefaultHeaders
+        }).then((function(resp) {
+          var obj;
+          return dfd.resolve({
+            total: resp.data.found,
+            objects: (function() {
+              var _i, _len, _ref, _results;
+              _ref = resp.data.models;
+              _results = [];
+              for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+                obj = _ref[_i];
+                _results.push(new this(_.extend(obj, {
+                  loaded: true
+                })));
+              }
+              return _results;
+            }).call(_this),
+            _resp: resp
+          });
+        }), (function() {
+          return dfd.reject.apply(this, arguments);
+        }));
+        return dfd.promise;
+      };
+
+      return Model;
+
+    })();
+    return Model;
+  }
+]);
+var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
+  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+
+angular.module('app.models.testresults', ['app.config']).factory('TestResult', [
+  '$http', '$q', 'settings', 'Model', function($http, $q, settings, Model) {
+    var TestResult, trimTrailingWhitespace;
+    trimTrailingWhitespace = function(val) {
+      return val.replace(/^\s+|\s+$/g, '');
+    };
+    /*
+        Trained Model
+    */
+
+    TestResult = (function() {
+
+      function TestResult(opts) {
+        this.$save = __bind(this.$save, this);
+
+        this.$load = __bind(this.$load, this);
+
+        this.loadFromJSON = __bind(this.loadFromJSON, this);
+
+        this.toJSON = __bind(this.toJSON, this);
+        this.loadFromJSON(opts);
+      }
+
+      TestResult.prototype.id = null;
+
+      TestResult.prototype.accuracy = null;
+
+      TestResult.prototype.created_on = null;
+
+      TestResult.prototype.data_count = null;
+
+      TestResult.prototype.name = null;
+
+      TestResult.prototype.parameters = null;
+
+      TestResult.prototype.model = null;
+
+      TestResult.prototype.model_name = null;
+
+      /* API methods
+      */
+
+
+      TestResult.prototype.isNew = function() {
+        if (this.slug === null) {
+          return true;
+        } else {
+          return false;
+        }
+      };
+
+      TestResult.prototype.toJSON = function() {
+        return {
+          name: this.name
+        };
+      };
+
+      TestResult.prototype.loadFromJSON = function(origData) {
+        var data;
+        data = _.extend({}, origData);
+        return _.extend(this, data);
+      };
+
+      TestResult.prototype.$load = function() {
+        var _this = this;
+        if (this.name === null) {
+          throw new Error("Can't load model without name");
+        }
+        return $http({
+          method: 'GET',
+          url: settings.apiUrl + ("model/" + this.model_name + "/test/" + this.name),
+          headers: {
+            'X-Requested-With': null
+          }
+        }).then((function(resp) {
+          _this.loaded = true;
+          _this.loadFromJSON(resp.data['test']);
+          _this.model = new Model(resp.data['model']);
+          return resp;
+        }), (function(resp) {
+          return resp;
+        }));
+      };
+
+      TestResult.prototype.$save = function(opts) {
+        var fields, key, saveData, _i, _len, _ref,
+          _this = this;
+        if (opts == null) {
+          opts = {};
+        }
+        saveData = this.toJSON();
+        fields = opts.only || [];
+        if (fields.length > 0) {
+          _ref = _.keys(saveData);
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            key = _ref[_i];
+            if (__indexOf.call(fields, key) < 0) {
+              delete saveData[key];
+            }
+          }
+        }
+        saveData = this.prepareSaveJSON(saveData);
+        return $http({
+          method: this.isNew() ? 'POST' : 'PUT',
+          headers: settings.apiRequestDefaultHeaders,
+          url: "" + settings.apiUrl + "/jobs/" + (this.id || ""),
+          params: {
+            access_token: user.access_token
+          },
+          data: $.param(saveData)
+        }).then(function(resp) {
+          return _this.loadFromJSON(resp.data);
+        });
+      };
+
+      TestResult.$loadTests = function(modelName, opts) {
+        var dfd,
+          _this = this;
+        dfd = $q.defer();
+        if (!modelName) {
+          throw new Error("Model is required to load tests");
+        }
+        $http({
+          method: 'GET',
+          url: "" + settings.apiUrl + "model/" + modelName + "/tests",
+          headers: settings.apiRequestDefaultHeaders,
+          params: _.extend({}, opts)
+        }).then((function(resp) {
+          var obj;
+          return dfd.resolve({
+            total: resp.data.found,
+            objects: (function() {
+              var _i, _len, _ref, _results;
+              _ref = resp.data.tests;
+              _results = [];
+              for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+                obj = _ref[_i];
+                _results.push(new this(obj));
+              }
+              return _results;
+            }).call(_this),
+            _resp: resp
+          });
+        }), (function() {
+          return dfd.reject.apply(this, arguments);
+        }));
+        return dfd.promise;
+      };
+
+      return TestResult;
+
+    })();
+    return TestResult;
+  }
+]);
 'use strict';
 
 /* Sevices

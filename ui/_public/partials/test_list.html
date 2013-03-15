@@ -1,0 +1,22 @@
+<div ng-init="init({objectLoader: loadTests()})">
+<table class="table table-striped">
+  <thead>
+      <tr>
+        <th>Name</th>
+        <th>Created</th>
+        <th>Filter Parameters</th>
+        <th>Accuracy</th>
+        <th>Examples count</th>
+      </tr>
+  </thead>
+  <tbody>
+    <tr ng-repeat="test in objects | filter:search | orderBy:'-id'">
+      <td><a href="#/models/{{ model.name }}/tests/{{ test.name }}">{{ test.name }}</a></td>
+      <td>{{ test.created_on|format_date }}</td>
+      <td><span class="value" ng-repeat="(key, val) in test.parameters">{{ key }}={{ val }}</span></td>
+      <td>{{ test.accuracy.toFixed(4) }}</td>
+      <td>{{ test.data_count }}</td>
+    </tr>
+  </tbody>
+</table>
+</div>

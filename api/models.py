@@ -1,8 +1,10 @@
 from datetime import datetime
 
 from api import db
-from api.utils import Serializer, JSONEncodedDict
+from api.utils import JSONEncodedDict
+from api.serialization import Serializer
 from core.trainer.trainer import Trainer
+
 
 class Model(db.Model, Serializer):
     __public__ = ['id', 'name', 'created_on', 'import_params',
@@ -10,7 +12,7 @@ class Model(db.Model, Serializer):
     __all_public__ = ('id', 'name', 'created_on', 'import_params',
                       'positive_weights', 'negative_weights',
                       'positive_weights_tree', 'negative_weights_tree',
-                      'import_handler', 'features')
+                      'import_handler', 'features', 'latest_test')
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50))
     features = db.Column(db.Text)
@@ -36,6 +38,11 @@ class Model(db.Model, Serializer):
         self.negative_weights.reverse()
         self.positive_weights_tree = weights2tree(self.positive_weights)
         self.negative_weights_tree = weights2tree(self.negative_weights)
+
+    @property
+    def latest_test(self):
+        test = self.tests.order_by('-id').first()
+        return test.to_brief_dict()
 
     def __repr__(self):
         return '<Model %r>' % self.name
