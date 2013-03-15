@@ -60,7 +60,7 @@ def setup():
     # rabbitmq.set_permissions.run()
 
     apache.wsgi_push.run()
-    push_apache_config.run()
+    apache.push_config.run()
     apache.graceful.run()
 
    # pip.push_config.run()
@@ -81,7 +81,7 @@ def deploy():
     git.init.run()
     git.push.run()
 
-    #push_apache_config.run()
+
     
     #supervisor.push_configs.run()
     apache.wsgi_push.run()
@@ -96,8 +96,8 @@ def deploy():
 
     
     #run('cd %(project_path)s/ui; ./scripts/production.sh')
-    run('%(env_path)s/bin/python %(project_path)s/manage.py '
-         'createdb;' % env.conf)
+    #run('%(env_path)s/bin/python %(project_path)s/manage.py '
+    #     'createdb;' % env.conf)
 
     version.activate.run()
 

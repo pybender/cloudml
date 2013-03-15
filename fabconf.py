@@ -111,5 +111,5 @@ class ProductionConf(BaseConf):
     # Once on production, this file will replace %(local_settings_file)s
     # It should be a Jinja2 template, and can make use of fabdeploy config
     # variables.
-    remote_settings_lfile = 'staging_config.py.tpl'
+    remote_settings_lfile = 'prod_config.py.tpl'
 
