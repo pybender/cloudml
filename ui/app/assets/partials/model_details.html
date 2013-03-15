@@ -10,15 +10,15 @@
 </h2>
 
 <ul class="nav nav-tabs" id="tabs">
-  <li class="active"><a href="#details">Details</a></li>
-  <li><a href="#weights" ng-click="showWeightsTab()">Parameters Weights</a></li>
-  <li><a href="#tests">Tests</a></li>
-  <li><a href="#features">Features</a></li>
-  <li><a href="#import_handler">Import Handler</a></li>
+  <li  ng-class="{active: action[0] == 'model'}"><a ng-click="action = ['model', 'details']">Details</a></li>
+  <li ng-class="{active: action[0] == 'weights'}"><a  ng-click="action = ['weights', 'file']">Parameters Weights</a></li>
+  <li ng-class="{active: action[0] == 'test'}"><a  ng-click="action = ['test', 'list']">Tests</a></li>
+  <li ng-class="{active: action[0] == 'features'}"><a ng-click="action = ['features', 'file']">Features</a></li>
+  <li ng-class="{active: action[0] == 'import_handler'}"><a  ng-click="action = ['import_handler', 'file']">Import Handler</a></li>
 </ul>
  
 <div class="tab-content">
-  <div class="tab-pane active" id="details">
+  <div ng-show="action[0] == 'model'" id="details">
     <div class="row">
         <div class="span6">
             <div>
@@ -37,7 +37,7 @@
     </div>
   </div>
 
-  <div class="tab-pane" id="tests">
+  <div ng-show="action[0] == 'test'" id="tests">
     <h3>Tests</h3>
     <table class="table table-striped">
       <thead>
@@ -60,46 +60,30 @@
       </tbody>
     </table>
   </div>
-  <div class="tab-pane" id="weights">
+  <div  ng-show="action[0] == 'weights'" id="weights">
     <div class="row">
         <div class="span12">
               <div class="row">
               <div class="span5">
                 <h4>Positive Weights</h4>
                 <div><a><b>List</b></a> | <a>Tree - todo</a></div>
-                <weights-table weights="weights.positive">
+                <weights-table weights="model.positive_weights">
                 </weights-table>
               </div>
               <div class="offset1 span5">
                 <h4>Negative Weights</h4>
                 <div><a><b>List</b></a> | <a>Tree - todo</a></div>
-                <weights-table weights="weights.negative">
+                <weights-table weights="model.negative_weights">
                 </weights-table>
               </div>
             </div>
         </div>
     </div>
   </div>
-  <div class="tab-pane" id="import_handler">
-    <div class="row">
-        <div class="span12">
-          <textarea ui-codemirror="{theme:'monokai', mode: {name: 'javascript', json: true} }" ng-model="model.import_handler"></textarea>
-        </div>
-    </div>
+  <div ng-show="action[0] == 'import_handler'" id="import_handler">
+    <textarea ui-codemirror="{ mode: {name: 'javascript', json: true} }" ng-model="model.import_handler"> </textarea>
   </div>
-  <div class="tab-pane" id="features">
-    <div class="row">
-        <div class="span12">
-          <textarea ui-codemirror="{theme:'monokai', mode: {name: 'javascript', json: true} }" ng-model="model.features"></textarea>
-        </div>
-    </div>
+  <div ng-show="action[0] == 'features'"  id="features">
+    <textarea ui-codemirror="{ mode: {name: 'javascript', json: true} }" ng-model="model.features"> </textarea>
   </div>
 </div>
-<script>
-  $(function () {
-    $('#tabs a').click(function (e) {
-      e.preventDefault();
-      $(this).tab('show');
-    })
-  })
-</script>

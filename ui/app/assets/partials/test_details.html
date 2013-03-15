@@ -11,9 +11,9 @@
 
 <div>
     <ul class="nav nav-tabs" id="tabs">
-      <li><a href="#details">Details</a></li>
-      <li class="active"><a href="#metrics">ROC and Precision-Recall</a></li>
-      <li><a href="#confusion">Confusion Matrix</a></li>
+      <li><a showtab="" href="#details">Details</a></li>
+      <li class="active"><a showtab="" href="#metrics">ROC and Precision-Recall</a></li>
+      <li><a showtab="" href="#confusion">Confusion Matrix</a></li>
     </ul>
      
     <div class="tab-content">
@@ -93,11 +93,3 @@
 
     </div>
 </div>
-<script>
-  $(function () {
-    $('#tabs a').click(function (e) {
-      e.preventDefault();
-      $(this).tab('show');
-    })
-  })
-</script>

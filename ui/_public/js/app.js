@@ -263,7 +263,9 @@ angular.module('app.controllers', ['app.config']).controller('AppCtrl', [
     };
   }
 ]).controller('ModelDetailsCtrl', [
-  '$scope', '$http', '$routeParams', '$dialog', 'settings', function($scope, $http, $routeParams, $dialog, settings) {
+  '$scope', '$http', '$location', '$routeParams', '$dialog', 'settings', function($scope, $http, $location, $routeParams, $dialog, settings) {
+    var DEFAULT_ACTION,
+      _this = this;
     $scope.path = [
       {
         label: 'Home',
@@ -289,11 +291,15 @@ angular.module('app.controllers', ['app.config']).controller('AppCtrl', [
       $scope.error = data;
       return $scope.httpError = true;
     });
-    $scope.showWeightsTab = function() {
-      return $scope.weights = {
-        positive: $scope.model.positive_weights,
-        negative: $scope.model.negative_weights
-      };
+    DEFAULT_ACTION = 'model:details';
+    $scope.action = ($routeParams.action || DEFAULT_ACTION).split(':');
+    $scope.$watch('action', function(action) {
+      var actionString;
+      actionString = action.join(':');
+      return $location.search(actionString === DEFAULT_ACTION ? "" : "action=" + actionString);
+    });
+    $scope.toggleAction = function(action) {
+      return $scope.action = action;
     };
     return $scope.test = function(model) {
       var d;
@@ -431,6 +437,15 @@ angular.module('app.directives', ['app.services']).directive('appVersion', [
     transclude: true,
     scope: {
       path: '='
+    }
+  };
+}).directive('showtab', function() {
+  return {
+    link: function(scope, element, attrs) {
+      return element.click(function(e) {
+        e.preventDefault();
+        return $(element).tab('show');
+      });
     }
   };
 }).directive('weightsTable', function() {
@@ -698,7 +713,7 @@ add_zero = function(val) {
 var LOCAL_SETTINGS;
 
 LOCAL_SETTINGS = {
-  apiUrl: 'http://172.27.77.242/api/cloudml/b/v1/'
+  apiUrl: 'http://127.0.0.1:5000/cloudml/b/v1/'
 };
 
 angular.module('app.local_config', []).constant('settings', LOCAL_SETTINGS);

@@ -179,11 +179,12 @@ angular.module('app.controllers', ['app.config'])
 .controller('ModelDetailsCtrl', [
   '$scope'
   '$http'
+  '$location'
   '$routeParams'
   '$dialog'
   'settings'
 
-($scope, $http, $routeParams, $dialog, settings) ->
+($scope, $http, $location, $routeParams, $dialog, settings) ->
   $scope.path = [{label: 'Home', url: '#/'},
                  {label: 'Models', url: '#/models'},
                  {label: 'Model Details', url: ''}]
@@ -199,9 +200,16 @@ angular.module('app.controllers', ['app.config'])
       $scope.httpError = true
   )
 
-  $scope.showWeightsTab = () ->
-    $scope.weights = {positive: $scope.model.positive_weights,
-    negative: $scope.model.negative_weights}
+  DEFAULT_ACTION = 'model:details'
+  $scope.action = ($routeParams.action or DEFAULT_ACTION).split ':'
+  $scope.$watch 'action', (action) ->
+    actionString = action.join(':')
+    $location.search(
+      if actionString == DEFAULT_ACTION then ""
+      else "action=#{actionString}")
+
+  $scope.toggleAction = (action) =>
+    $scope.action = action
 
   $scope.test = (model)->
     d = $dialog.dialog(

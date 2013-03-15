@@ -2,7 +2,7 @@ from datetime import datetime
 
 from api import db
 from api.utils import Serializer, JSONEncodedDict
-
+from core.trainer.trainer import Trainer
 
 class Model(db.Model, Serializer):
     __public__ = ['id', 'name', 'created_on', 'import_params',
