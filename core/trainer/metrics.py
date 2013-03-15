@@ -63,7 +63,7 @@ class Metrics(object):
         metrics = self._get_metrics_names()
         for metric_name, descr in metrics.iteritems():
             value = getattr(self, metric_name)
-            logging.info('%s: %f': (descr, value))
+            logging.info('%s: %s', descr, str(value))
 
     def _get_metrics_names(self):
         return self.METRICS_TO_CALC
