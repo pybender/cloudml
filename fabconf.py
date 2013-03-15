@@ -26,7 +26,7 @@ class BaseConf(DefaultConf):
     # - Django settings and manage.py files
     # - 500/50x/404 HTML pages (see nginx_apache.config and apache.config).
     django_dir = 'api'
-    home_path = '/webapps/cloudml'
+
     ui_scripts_dir = ['home_path', 'ui', 'app', 'scripts']
     active_public_link = ['%(active_src_link)s', 'ui', '_public']
 
@@ -66,6 +66,7 @@ class StagingConf(BaseConf):
     address = 'cloudml@172.27.67.106'
 
     sudo_user = 'nmelnik'
+    home_path = '/webapps/cloudml'
 
     # Code from this branch will be deployed.
     branch = 'master'
@@ -86,5 +87,29 @@ class StagingConf(BaseConf):
     # variables.
     remote_settings_lfile = 'staging_config.py.tpl'
 
-    # ADMINS / MANAGERS (traces will be sent there)
-    django_admins = (('Nikolay melnik', 'nmelnik@odesk.com'), )
+
+class ProductionConf(BaseConf):
+    """Settings specific to production environment."""
+
+    address = 'cloudml@172.27.77.242'
+
+    sudo_user = 'nmelnik'
+
+    # Code from this branch will be deployed.
+    branch = 'master'
+
+    server_name = 'cloudml.match.odesk.com'
+    # For Apache ServerAdmin directive
+    server_admin = 'nmelnik@odesk.com'
+    # Apache will serve WSGI on this port. (Nginx is front-end.)
+    apache_port = 80
+
+    # For pip extra index url config
+    odeskps_pypi_user = 'nmelnik@odesk.com'
+    odeskps_pypi_password = 'nmelnik'
+
+    # Once on production, this file will replace %(local_settings_file)s
+    # It should be a Jinja2 template, and can make use of fabdeploy config
+    # variables.
+    remote_settings_lfile = 'staging_config.py.tpl'
+
