@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from api import db
-from api.fields import ChoiceType
 from api.utils import JSONEncodedDict
 from api.serialization import Serializer
 
@@ -18,15 +17,15 @@ class Model(db.Model, Serializer):
     STATUS_TRAINED = 'Trained'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50))
+    name = db.Column(db.String(50), unique=True)
     created_on = db.Column(db.DateTime)
     status = db.Column(db.String(10), default=STATUS_NEW)
 
     features = db.Column(db.Text)
+    import_params = db.Column(JSONEncodedDict)
     # Import handler for tests
     importhandler = db.Column(db.Text)
     train_importhandler = db.Column(db.Text)
-    train_params = db.Column(JSONEncodedDict)
 
     # Trainer specific fields
     trainer = db.Column(db.PickleType)
@@ -36,14 +35,25 @@ class Model(db.Model, Serializer):
     positive_weights_tree = db.Column(JSONEncodedDict)
     negative_weights_tree = db.Column(JSONEncodedDict)
 
-    # Running tests parameters
-    import_params = db.Column(JSONEncodedDict)
     tests = db.relationship('Test', backref='model',
                             lazy='dynamic')
 
     def __init__(self, name):
         self.name = name
         self.created_on = datetime.now()
+
+    def get_import_handler(self, parameters=None, is_test=False):
+        from core.importhandler.importhandler import ExtractionPlan, ImportHandler
+        plan = ExtractionPlan(self.importhandler if is_test
+                              else self.train_importhandler, is_file=False)
+        handler = ImportHandler(plan, parameters)
+        return handler
+
+    def run_test(self, parameters=True):
+        test_handler = self.get_import_handler(parameters, is_test=True)
+        metrics = self.trainer.test(test_handler)
+        raw_data = self.trainer._raw_data
+        return metrics, raw_data
 
     def set_trainer(self, trainer):
         self.trainer = trainer
@@ -69,27 +79,39 @@ class Model(db.Model, Serializer):
 
 class Test(db.Model, Serializer):
     __public__ = ('id', 'name', 'created_on', 'accuracy',
-                  'parameters', 'data_count', )
+                  'parameters', 'data_count', 'status')
     __all_public__ = ('id', 'name', 'created_on', 'accuracy', 'parameters',
-                      'classes_set', 'metrics', 'data_count', )
+                      'classes_set', 'metrics', 'data_count',
+                      'status')
+    STATUS_IN_PROGRESS = 'In Progress'
+    STATUS_COMPLETED = 'Completed'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50))
-    parameters = db.Column(JSONEncodedDict)
+    status = db.Column(db.String(10), default=STATUS_IN_PROGRESS)
     created_on = db.Column(db.DateTime)
     model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
-    data = db.relationship('Data', backref='test', lazy='dynamic')
 
-    metrics = db.Column(JSONEncodedDict)
-    accuracy = db.Column(db.Float)
+    # Import params
+    parameters = db.Column(JSONEncodedDict)
+    data = db.relationship('Data', backref='test', lazy='dynamic')
     classes_set = db.Column(JSONEncodedDict)
 
-    def __init__(self, name):
-        self.name = name
+    accuracy = db.Column(db.Float)
+    metrics = db.Column(JSONEncodedDict)
+
+    def __init__(self, model):
+        self.model_id = model.id
+        self.name = Test.generate_name(model)
         self.created_on = datetime.now()
 
     def __repr__(self):
         return '<Test %r>' % self.name
+
+    @classmethod
+    def generate_name(cls, model, base_name='Test'):
+        count = model.tests.count()
+        return "%s-%s" % (base_name, count + 1)
 
     @property
     def data_count(self):

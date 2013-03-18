@@ -4,3 +4,10 @@ STATIC_ROOT = None
 UPLOAD_FOLDER = 'models'
 MAX_CONTENT_LENGTH = 128 * 1024 * 1024
 DEBUG = True
+
+# Celery specific settings
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_ENABLE_UTC = True
+BROKER_URL = 'sqla+sqlite:///celerydb.sqlite'
+CELERY_RESULT_BACKEND = ''

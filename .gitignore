@@ -10,7 +10,7 @@ _build
 *.dat
 local_config.coffee
 ve
-
+*.sqlite
 
 **/.DS_Store
 nbproject

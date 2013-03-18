@@ -8,6 +8,7 @@ from api.decorators import render
 from api import db, api
 from api.utils import crossdomain, ERR_NO_SUCH_MODEL, odesk_error_response
 from api.models import Model, Test, Data
+from api.tasks import train_model, run_test
 
 from core.trainer.store import load_trainer
 from core.trainer.trainer import Trainer
@@ -141,55 +142,18 @@ class Models(restful.Resource):
         return {'model': model}
 
     def _train(self, model):
-        parser = reqparse.RequestParser()
-        parser.add_argument('start', type=str)
-        parser.add_argument('end', type=str)
-        param = parser.parse_args()
+        parser = populate_parser(model)
+        parameters = parser.parse_args()
 
         model.status = Model.STATUS_TRAINING
-        feature_model = FeatureModel(model.features, is_file=False)
-        trainer = Trainer(feature_model)
-        plan = ExtractionPlan(model.train_importhandler, is_file=False)
-        train_handler = ImportHandler(plan, param)
-        trainer.train(train_handler)
-        model.set_trainer(trainer)
-        model.status = Model.STATUS_TRAINED
         db.session.commit()
+
+        train_model.delay(model, parameters)
         return {'model': model}
 
 
 api.add_resource(Models, '/cloudml/b/v1/model/<regex("[\w\.]*"):model>',
-    '/cloudml/b/v1/model/<regex("[\w\.]+"):model>/<regex("[\w\.]+"):action>')
-
-
-class Train(restful.Resource):
-    decorators = [crossdomain(origin='*')]
-
-    @render(code=201)
-    def post(self, model):
-        #train_handler = ImportHandler(plan, param)
-        
-        #trainer.train(train_handler)
-        
-        import_handler_local = request.files['import_handler_local']
-        features = request.files['features']
-        model = Model(model)
-        model = FeatureModel(args.path)
-        trainer = Trainer(model)
-        plan = ExtractionPlan(model.import_handler, is_file=False)
-        test_handler = ImportHandler(plan, param)
-        trainer.train(train_handler)
-        model.trainer = trainer
-        model.set_weights(**trainer.get_weights())
-        model.features = features.read()
-        model.import_handler = import_handler_local.read()
-        plan = ExtractionPlan(model.import_handler, is_file=False)
-        model.import_params = plan.input_params
-        db.session.add(model)
-        db.session.commit()
-        return {'model': model}
-
-api.add_resource(Train, '/cloudml/b/v1/model/train/<regex("[\w\.]+"):model>')
+                 '/cloudml/b/v1/model/<regex("[\w\.]+"):model>/<regex("[\w\.]+"):action>')
 
 
 class Tests(restful.Resource):
@@ -212,36 +176,19 @@ class Tests(restful.Resource):
 
     @render(code=201)
     def post(self, model, test_name):
-        # TODO: save parameters to Test model
-        test_parser = reqparse.RequestParser()
-        test_parser.add_argument('start', type=str)
-        test_parser.add_argument('end', type=str)
-        param = test_parser.parse_args()
-        model = Model.query.filter(Model.name == model).first()
-        count = model.tests.count()
-        test = Test("%s-%s" % (test_name, count + 1))
-        test.model_id = model.id
-        test.parameters = param
-        plan = ExtractionPlan(model.importhandler, is_file=False)
-        test_handler = ImportHandler(plan, param)
+        model = Model.query.filter(Model.name == model,
+                                   Model.status == Model.STATUS_TRAINED)\
+            .first()
 
-        metrics = model.trainer.test(test_handler)
-        raw_data = model.trainer._raw_data
-        test.accuracy = metrics.accuracy
-        metrics_dict = metrics.get_metrics_dict()
+        parser = populate_parser(model)
+        parameters = parser.parse_args()
 
-        confusion_matrix = metrics_dict['confusion_matrix']
-        confusion_matrix_ex = []
-        for i, val in enumerate(metrics.classes_set):
-            confusion_matrix_ex.append((val, confusion_matrix[i]))
-        metrics_dict['confusion_matrix'] = confusion_matrix_ex
-
-        test.metrics = metrics_dict
-        test.classes_set = list(metrics.classes_set)
+        test = Test(model)
+        test.parameters = parameters
         db.session.add(test)
         db.session.commit()
-        # store test data in db
-        Data.loads_from_raw_data(model, test, raw_data)
+
+        run_test.delay(test, test.model)
 
         return {'test': test}
 
@@ -281,33 +228,11 @@ class DataList(restful.Resource):
 
 api.add_resource(DataList, '/cloudml/b/v1/model/<regex("[\w\.]+"):model>/test/<regex("[\w\.\-]+"):test_name>/data')
 api.add_resource(Datas,
- '/cloudml/b/v1/model/<regex("[\w\.]+"):model>/test/<regex("[\w\.\-]+"):test_name>/data/<regex("[\w\.\-]+"):data_id>')
+                 '/cloudml/b/v1/model/<regex("[\w\.]+"):model>/test/<regex("[\w\.\-]+"):test_name>/data/<regex("[\w\.\-]+"):data_id>')
 
-# @app.route('/cloudml/b/v1/model/<regex("[\w\.]+"):model>/evaluate',
-#            methods=['POST'])
-# @consumes('application/json')
-# def evaluate(model):
-#     """
-#     Evaluates the given data and returns the probabilities for possible
-#     classes.
 
-#     Keyword arguments:
-#     model -- The id of the model to use for evaluating the data.
-
-#     """
-#     global models
-#     logging.info('Request to evaluate using model %s' % model)
-#     if model not in models:
-#         return odesk_error_response(404, ERR_NO_SUCH_MODEL,
-#                                     'Model %s doesn\'t exist' % model)
-
-#     trainer = models[model]
-#     data = request.json
-#     result = trainer.predict(data)
-#     response = {'probabilities': []}
-#     count = 0
-#     for item in result['probs']:
-#         response['probabilities'].append({'item': count,
-#                                           'probs': item.tolist()})
-#         count += 1
-#     return jsonify(response)
+def populate_parser(model):
+    parser = reqparse.RequestParser()
+    for param in model.import_params:
+        parser.add_argument(param, type=str)
+    return parser
