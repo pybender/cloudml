@@ -593,7 +593,7 @@ updateGraphPrecisionRecallCurve = function(metrics, oldVal, scope) {
   if (!metrics) {
     return;
   }
-  data = zip(metrics[0], metrics[1]);
+  data = zip(metrics[1], metrics[0]);
   chart = nv.models.lineChart();
   chart.xAxis.axisLabel('Recall').tickFormat(d3.format(',r'));
   chart.yAxis.axisLabel('Precision').tickFormat(d3.format(',.2f'));
@@ -693,13 +693,21 @@ angular.module('app.models.controllers', ['app.config']).controller('ModelListCt
         return Model.$loadAll();
       };
     };
-    return $scope.test = function(model) {
+    $scope.test = function(model) {
       var d;
       d = $dialog.dialog({
         modalFade: false
       });
       d.model = model;
       return d.open('partials/modal.html', 'TestDialogController');
+    };
+    return $scope.train = function(model) {
+      var d;
+      d = $dialog.dialog({
+        modalFade: false
+      });
+      d.model = model;
+      return d.open('partials/model_train_popup.html', 'TrainModelCtrl');
     };
   }
 ]).controller('AddModelCtl', [
@@ -738,6 +746,21 @@ angular.module('app.models.controllers', ['app.config']).controller('ModelListCt
           return $scope.model.importhandler = str;
         };
         return reader.readAsText($scope.import_handler);
+      });
+    };
+    $scope.setTrainImportHandlerFile = function(element) {
+      return $scope.$apply(function($scope) {
+        var reader;
+        $scope.msg = "";
+        $scope.error = "";
+        $scope.train_import_handler = element.files[0];
+        reader = new FileReader();
+        reader.onload = function(e) {
+          var str;
+          str = e.target.result;
+          return $scope.model.train_importhandler = str;
+        };
+        return reader.readAsText($scope.train_import_handler);
       });
     };
     return $scope.setFeaturesFile = function(element) {
@@ -862,124 +885,21 @@ angular.module('app.models.controllers', ['app.config']).controller('ModelListCt
       return d.open('partials/modal.html', 'TestDialogController');
     };
   }
-]);
-var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
-
-angular.module('app.models.data', ['app.config']).factory('Data', [
-  '$http', '$q', 'settings', function($http, $q, settings) {
-    var Data;
-    Data = (function() {
-
-      function Data(opts) {
-        this.$load = __bind(this.$load, this);
-
-        this.loadFromJSON = __bind(this.loadFromJSON, this);
-
-        this.toJSON = __bind(this.toJSON, this);
-        this.loadFromJSON(opts);
-      }
-
-      Data.prototype.id = null;
-
-      Data.prototype.created_on = null;
-
-      Data.prototype.model_name = null;
-
-      Data.prototype.test_name = null;
-
-      Data.prototype.data_input = null;
-
-      Data.prototype.weighted_data_input = null;
-
-      /* API methods
-      */
-
-
-      Data.prototype.isNew = function() {
-        if (this.slug === null) {
-          return true;
-        } else {
-          return false;
-        }
-      };
-
-      Data.prototype.toJSON = function() {
-        return {
-          name: this.name
-        };
-      };
-
-      Data.prototype.loadFromJSON = function(origData) {
-        var data;
-        data = _.extend({}, origData);
-        return _.extend(this, data);
-      };
-
-      Data.prototype.$load = function() {
-        var _this = this;
-        if (this.name === null) {
-          throw new Error("Can't load model without name");
-        }
-        return $http({
-          method: 'GET',
-          url: settings.apiUrl + ("model/" + this.model_name + "/test/" + this.test_name + "/data/" + this.id),
-          headers: {
-            'X-Requested-With': null
-          }
-        }).then((function(resp) {
-          _this.loaded = true;
-          _this.loadFromJSON(resp.data['data']);
-          return resp;
-        }), (function(resp) {
-          return resp;
-        }));
-      };
-
-      Data.$loadAll = function(opts) {
-        var dfd, model_name, test_name,
-          _this = this;
-        dfd = $q.defer();
-        model_name = opts.model_name;
-        test_name = opts.test_name;
-        $http({
-          method: 'GET',
-          url: "" + settings.apiUrl + "model/" + model_name + "/test/" + test_name + "/data",
-          headers: settings.apiRequestDefaultHeaders,
-          params: opts
-        }).then((function(resp) {
-          var extra, obj;
-          extra = {
-            loaded: true,
-            model_name: model_name,
-            test_name: test_name
-          };
-          return dfd.resolve({
-            pages: resp.data['data'].pages,
-            page: resp.data['data'].page,
-            total: resp.data['data'].total,
-            per_page: resp.data['data'].per_page,
-            objects: (function() {
-              var _i, _len, _ref, _results;
-              _ref = resp.data['data'].items;
-              _results = [];
-              for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-                obj = _ref[_i];
-                _results.push(new this(_.extend(obj, extra)));
-              }
-              return _results;
-            }).call(_this),
-            _resp: resp
-          });
-        }), (function() {
-          return dfd.reject.apply(this, arguments);
-        }));
-        return dfd.promise;
-      };
-
-      return Data;
-
-    })();
-    return Data;
+]).controller('TrainModelCtrl', [
+  '$scope', '$http', 'dialog', 'settings', function($scope, $http, dialog, settings) {
+    $scope.model = dialog.model;
+    $scope.params = $scope.model.import_params;
+    $scope.parameters = {};
+    $scope.close = function() {
+      return dialog.close();
+    };
+    return $scope.start = function(result) {
+      return $scope.model.$train($scope.parameters).then((function() {
+        return $scope.close();
+      }), (function() {
+        throw new Error("Unable to start model training");
+      }));
+    };
   }
 ]);
 var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
@@ -997,6 +917,8 @@ angular.module('app.models.model', ['app.config']).factory('Model', [
     Model = (function() {
 
       function Model(opts) {
+        this.$train = __bind(this.$train, this);
+
         this.$save = __bind(this.$save, this);
 
         this.prepareSaveJSON = __bind(this.prepareSaveJSON, this);
@@ -1012,6 +934,8 @@ angular.module('app.models.model', ['app.config']).factory('Model', [
       Model.prototype.id = null;
 
       Model.prototype.created_on = null;
+
+      Model.prototype.status = null;
 
       Model.prototype.name = null;
 
@@ -1030,6 +954,8 @@ angular.module('app.models.model', ['app.config']).factory('Model', [
       Model.prototype.latest_test = null;
 
       Model.prototype.importhandler = null;
+
+      Model.prototype.train_importhandler = null;
 
       Model.prototype.features = null;
 
@@ -1094,6 +1020,7 @@ angular.module('app.models.model', ['app.config']).factory('Model', [
         fd = new FormData();
         fd.append("trainer", this.trainer);
         fd.append("importhandler", this.importhandler);
+        fd.append("train_importhandler", this.train_importhandler);
         fd.append("features", this.features);
         return $http({
           method: this.isNew() ? "POST" : "PUT",
@@ -1139,6 +1066,31 @@ angular.module('app.models.model', ['app.config']).factory('Model', [
           return dfd.reject.apply(this, arguments);
         }));
         return dfd.promise;
+      };
+
+      Model.prototype.$train = function(opts) {
+        var fd, key, val,
+          _this = this;
+        if (opts == null) {
+          opts = {};
+        }
+        fd = new FormData();
+        for (key in opts) {
+          val = opts[key];
+          fd.append(key, val);
+        }
+        return $http({
+          method: "PUT",
+          headers: {
+            'Content-Type': void 0,
+            'X-Requested-With': null
+          },
+          url: "" + settings.apiUrl + "model/" + this.name + "/train",
+          data: fd,
+          transformRequest: angular.identity
+        }).then(function(resp) {
+          return _this.loadFromJSON(resp.data['model']);
+        });
       };
 
       return Model;

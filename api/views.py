@@ -21,6 +21,7 @@ page_parser.add_argument('page', type=int)
 
 model_parser = reqparse.RequestParser()
 model_parser.add_argument('importhandler', type=str)
+model_parser.add_argument('train_importhandler', type=str)
 model_parser.add_argument('features', type=str)
 model_parser.add_argument('trainer', type=FileStorage, location='files')
 
@@ -93,15 +94,16 @@ class Models(restful.Resource):
     @render(code=201)
     def _add(self, model, param):
         model = Model(model)
+        model.train_importhandler = param['train_importhandler']
         model.importhandler = param['importhandler']
         model.features = param['features']
+
         feature_model = FeatureModel(model.features, is_file=False)
         trainer = Trainer(feature_model)
-        plan = ExtractionPlan(model.importhandler, is_file=False)
-        #train_handler = ImportHandler(plan, param)
+        plan = ExtractionPlan(model.train_importhandler, is_file=False)
         model.import_params = plan.input_params
-        #trainer.train(train_handler)
         model.trainer = trainer
+
         db.session.add(model)
         db.session.commit()
         return {'model': model}
@@ -109,12 +111,13 @@ class Models(restful.Resource):
     @render(code=201)
     def _upload(self, model, param):
         """
-        Upload new Trained Model
+        Upload already trained Model
         """
         param = model_parser.parse_args()
         model = Model(model)
         trainer = load_trainer(param['trainer'])
         model.trainer = trainer
+        model.status = Model.STATUS_TRAINED
         model.set_weights(**trainer.get_weights())
         model.importhandler = param['importhandler']
         plan = ExtractionPlan(model.importhandler, is_file=False)
@@ -124,10 +127,33 @@ class Models(restful.Resource):
         return {'model': model}
 
     @render(code=200)
-    def put(self, model):
-        param = model_parser.parse_args()
+    def put(self, model, action=None):
         model = Model.query.filter(Model.name == model).one()
+        if action is None:
+            return self._edit(model)
+        elif action == 'train':
+            return self._train(model)
+
+    def _edit(self, model):
+        param = model_parser.parse_args()
         model.importhandler = param['importhandler']
+        db.session.commit()
+        return {'model': model}
+
+    def _train(self, model):
+        parser = reqparse.RequestParser()
+        parser.add_argument('start', type=str)
+        parser.add_argument('end', type=str)
+        param = parser.parse_args()
+
+        model.status = Model.STATUS_TRAINING
+        feature_model = FeatureModel(model.features, is_file=False)
+        trainer = Trainer(feature_model)
+        plan = ExtractionPlan(model.train_importhandler, is_file=False)
+        train_handler = ImportHandler(plan, param)
+        trainer.train(train_handler)
+        model.set_trainer(trainer)
+        model.status = Model.STATUS_TRAINED
         db.session.commit()
         return {'model': model}
 
@@ -141,6 +167,10 @@ class Train(restful.Resource):
 
     @render(code=201)
     def post(self, model):
+        #train_handler = ImportHandler(plan, param)
+        
+        #trainer.train(train_handler)
+        
         import_handler_local = request.files['import_handler_local']
         features = request.files['features']
         model = Model(model)

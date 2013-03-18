@@ -36,7 +36,6 @@ angular.module('app.controllers', ['app.config', ])
     $scope.pathElements = result
   )
 
-
   # getClass compares the current url with the id.
   # If the current url starts with the id it returns 'active'
   # otherwise it will return '' an empty string. E.g.

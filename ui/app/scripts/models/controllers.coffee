@@ -23,6 +23,14 @@ angular.module('app.models.controllers', ['app.config', ])
     )
     d.model = model
     d.open('partials/modal.html', 'TestDialogController')
+
+  $scope.train = (model) ->
+    d = $dialog.dialog(
+      modalFade: false
+    )
+    d.model = model
+    d.open('partials/model_train_popup.html', 'TrainModelCtrl')
+  
 ])
 
 .controller('AddModelCtl', [
@@ -72,6 +80,17 @@ angular.module('app.models.controllers', ['app.config', ])
           $scope.model.importhandler = str
         reader.readAsText($scope.import_handler)
 
+  $scope.setTrainImportHandlerFile = (element) ->
+      $scope.$apply ($scope) ->
+        $scope.msg = ""
+        $scope.error = ""
+        $scope.train_import_handler = element.files[0]
+        reader = new FileReader()
+        reader.onload = (e) ->
+          str = e.target.result
+          $scope.model.train_importhandler = str
+        reader.readAsText($scope.train_import_handler)
+
   $scope.setFeaturesFile = (element) ->
       $scope.$apply ($scope) ->
         $scope.msg = ""
@@ -84,6 +103,7 @@ angular.module('app.models.controllers', ['app.config', ])
         reader.readAsText($scope.features)
 ])
 
+# Upload trained model
 .controller('UploadModelCtl', [
   '$scope'
   '$http'
@@ -199,4 +219,27 @@ angular.module('app.models.controllers', ['app.config', ])
     )
     d.model = model
     d.open('partials/modal.html', 'TestDialogController')
+])
+
+.controller('TrainModelCtrl', [
+  '$scope'
+  '$http'
+  'dialog'
+  'settings'
+
+  ($scope, $http, dialog, settings) ->
+
+    $scope.model = dialog.model
+    $scope.params = $scope.model.import_params
+    $scope.parameters = {}
+
+    $scope.close = ->
+      dialog.close()
+
+    $scope.start = (result) ->
+      $scope.model.$train($scope.parameters).then (() ->
+        $scope.close()
+      ), (() ->
+        throw new Error "Unable to start model training"
+      )
 ])

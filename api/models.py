@@ -1,35 +1,53 @@
 from datetime import datetime
 
 from api import db
+from api.fields import ChoiceType
 from api.utils import JSONEncodedDict
 from api.serialization import Serializer
-from core.trainer.trainer import Trainer
 
 
 class Model(db.Model, Serializer):
     __public__ = ['id', 'name', 'created_on', 'import_params',
-                  'importhandler']
-    __all_public__ = ('id', 'name', 'created_on', 'import_params',
+                  'importhandler', 'status']
+    __all_public__ = ('id', 'name', 'created_on', 'status', 'import_params',
                       'positive_weights', 'negative_weights',
                       'positive_weights_tree', 'negative_weights_tree',
                       'importhandler', 'features', 'latest_test')
+    STATUS_NEW = 'New'
+    STATUS_TRAINING = 'Training'
+    STATUS_TRAINED = 'Trained'
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50))
-    features = db.Column(db.Text)
     created_on = db.Column(db.DateTime)
-    trainer = db.Column(db.PickleType)
+    status = db.Column(db.String(10), default=STATUS_NEW)
+
+    features = db.Column(db.Text)
+    # Import handler for tests
     importhandler = db.Column(db.Text)
-    import_params = db.Column(JSONEncodedDict)
-    tests = db.relationship('Test', backref='model',
-                            lazy='dynamic')
+    train_importhandler = db.Column(db.Text)
+    train_params = db.Column(JSONEncodedDict)
+
+    # Trainer specific fields
+    trainer = db.Column(db.PickleType)
+    # some denormalization:
     positive_weights = db.Column(JSONEncodedDict)
     negative_weights = db.Column(JSONEncodedDict)
     positive_weights_tree = db.Column(JSONEncodedDict)
     negative_weights_tree = db.Column(JSONEncodedDict)
 
+    # Running tests parameters
+    import_params = db.Column(JSONEncodedDict)
+    tests = db.relationship('Test', backref='model',
+                            lazy='dynamic')
+
     def __init__(self, name):
         self.name = name
         self.created_on = datetime.now()
+
+    def set_trainer(self, trainer):
+        self.trainer = trainer
+        self.set_weights(**trainer.get_weights())
 
     def set_weights(self, positive, negative):
         from helpers.weights import calc_weights_css, weights2tree

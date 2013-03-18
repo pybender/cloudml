@@ -20,6 +20,7 @@ angular.module('app.models.model', ['app.config'])
       id: null
       # Unix time of model creation
       created_on: null
+      status: null
       name: null
       trainer: null
       importParams: null
@@ -29,6 +30,7 @@ angular.module('app.models.model', ['app.config'])
       positive_weights_tree: null
       latest_test: null
       importhandler: null
+      train_importhandler: null
       features: null
 
       ### API methods ###
@@ -78,6 +80,7 @@ angular.module('app.models.model', ['app.config'])
         fd = new FormData()
         fd.append("trainer", @trainer)
         fd.append("importhandler", @importhandler)
+        fd.append("train_importhandler", @train_importhandler)
         fd.append("features", @features)
 
         # fields = opts.only || []
@@ -119,6 +122,21 @@ angular.module('app.models.model', ['app.config'])
         ), (-> dfd.reject.apply @, arguments)
 
         dfd.promise
+
+      $train: (opts={}) =>
+        fd = new FormData()
+        for key, val of opts
+          fd.append(key, val)
+        
+        $http(
+          method: "PUT"
+          #headers: settings.apiRequestDefaultHeaders
+          headers: {'Content-Type':undefined, 'X-Requested-With': null}
+          url: "#{settings.apiUrl}model/#{@name}/train"
+          data: fd
+          transformRequest: angular.identity
+        )
+        .then((resp) => @loadFromJSON(resp.data['model']))
 
     return Model
 ])

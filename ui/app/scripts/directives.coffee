@@ -293,7 +293,7 @@ updateGraphPrecisionRecallCurve = (metrics, oldVal, scope) ->
   if !metrics
     return
 
-  data = zip(metrics[0], metrics[1])
+  data = zip(metrics[1], metrics[0])
   chart = nv.models.lineChart()
 
   chart.xAxis

@@ -1,9 +1,9 @@
 <h2>
   {{ model.name|capfirst }} Details
   <a class="actions">
-    <span ng-click="test(model)" class="btn">
+    <span ng-show="model.status == 'Trained'" ng-click="test(model)" class="btn">
       <i title="Apply the classifier to the input provided by the data import handler"  class="status-icon icon-play"></i>
-      <small> TODO: run test</small>
+      <small>Run test</small>
     </span>
 </a>
 </h2>
@@ -74,6 +74,7 @@
     </div>
   </div>
   <div ng-show="action[0] == 'import_handler'" id="import_handler">
+    <h5>Here is import handler file for running tests:</h5>
     <span ng-click="saveImportHandlerChanges()"
         ng-show="importHandlerChanged"
         class="btn btn-primary">Save</span>
