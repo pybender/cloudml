@@ -47,11 +47,6 @@ angular.module('app.testresults.controllers', ['app.config', ])
   'TestResult'
 
 ($scope, $http, $routeParams, settings, Test) ->
-  $scope.path = [{label: 'Home', url: '#/'},
-                 {label: 'Models', url: '#/models'},
-                 {label: 'Model Details', url: ''},
-                 {label: 'Test Details', url: ''}]
-
   if not $scope.test
     if not $routeParams.name
       throw new Error "Can't initialize test detail controller

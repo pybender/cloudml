@@ -18,7 +18,7 @@ App.config([
     }).when('/models/:name/tests/:test_name/examples', {
       controller: 'TestExamplesCtrl',
       templateUrl: '/partials/test_examples.html'
-    }).when('/models/:name/tests/:test_name/example/:data_id', {
+    }).when('/models/:name/tests/:test_name/examples/:data_id', {
       controller: 'ExampleDetailsCtrl',
       templateUrl: '/partials/example_details.html'
     }).when('/upload_model', {
@@ -82,15 +82,29 @@ angular.module('app.config', []).config([
 /* Controllers
 */
 
-var API_URL;
-
-API_URL = 'http://127.0.0.1:5000/cloudml/b/v1/';
-
 angular.module('app.controllers', ['app.config']).controller('AppCtrl', [
   '$scope', '$location', '$resource', '$rootScope', 'settings', function($scope, $location, $resource, $rootScope, settings) {
     $scope.$location = $location;
+    $scope.pathElements = [];
     $scope.$watch('$location.path()', function(path) {
       return $scope.activeNavId = path || '/';
+    });
+    $scope.$on('$routeChangeSuccess', function(event, current) {
+      var key, path, pathElement, pathElements, pathParamsLookup, result;
+      pathElements = $location.path().split('/');
+      result = [];
+      path = '';
+      pathElements.shift();
+      pathParamsLookup = {};
+      for (key in pathElements) {
+        pathElement = pathElements[key];
+        path += '/' + pathElement;
+        result.push({
+          name: pathElement,
+          path: path
+        });
+      }
+      return $scope.pathElements = result;
     });
     return $scope.getClass = function(id) {
       if ($scope.activeNavId.substring(0, id.length) === id) {
@@ -150,24 +164,6 @@ angular.module('app.controllers', ['app.config']).controller('AppCtrl', [
 
 angular.module('app.datas.controllers', ['app.config']).controller('TestExamplesCtrl', [
   '$scope', '$http', '$routeParams', 'settings', 'Data', function($scope, $http, $routeParams, settings, Data) {
-    $scope.path = [
-      {
-        label: 'Home',
-        url: '#/'
-      }, {
-        label: 'Models',
-        url: '#/models'
-      }, {
-        label: 'Model Details',
-        url: "#/models/" + $routeParams.name
-      }, {
-        label: 'Test Details',
-        url: "#/models/" + $routeParams.name + "/tests/" + $routeParams.test_name
-      }, {
-        label: 'Test Examples',
-        url: ''
-      }
-    ];
     $scope.test_name = $routeParams.test_name;
     return $scope.loadDatas = function() {
       return function(pagination_opts) {
@@ -180,27 +176,6 @@ angular.module('app.datas.controllers', ['app.config']).controller('TestExamples
   }
 ]).controller('ExampleDetailsCtrl', [
   '$scope', '$http', '$routeParams', 'settings', 'Data', function($scope, $http, $routeParams, settings, Data) {
-    $scope.path = [
-      {
-        label: 'Home',
-        url: '#/'
-      }, {
-        label: 'Models',
-        url: '#/models'
-      }, {
-        label: 'Model Details',
-        url: ''
-      }, {
-        label: 'Test Details',
-        url: ''
-      }, {
-        label: 'Test Examples',
-        url: ''
-      }, {
-        label: 'Example Details',
-        url: ''
-      }
-    ];
     if (!$scope.data) {
       $scope.data = new Data({
         model_name: $routeParams.name,
@@ -346,17 +321,7 @@ angular.module('app.directives', ['app.services']).directive('appVersion', [
       return elm.text(version);
     };
   }
-]).directive('breadcrumb', function() {
-  return {
-    restrict: 'E',
-    template: "<div><ul class='breadcrumb'><li ng-repeat='node in path'><a ng-href='{{node.url}}'>{{node.label}}</a><span class='divider'>/</span></li></ul><div ng-transclude></div></div>",
-    replace: true,
-    transclude: true,
-    scope: {
-      path: '='
-    }
-  };
-}).directive('showtab', function() {
+]).directive('showtab', function() {
   return {
     link: function(scope, element, attrs) {
       return element.click(function(e) {
@@ -723,15 +688,6 @@ angular.module('app.local_config', []).constant('settings', LOCAL_SETTINGS);
 
 angular.module('app.models.controllers', ['app.config']).controller('ModelListCtrl', [
   '$scope', '$http', '$dialog', 'settings', 'Model', function($scope, $http, $dialog, settings, Model) {
-    $scope.path = [
-      {
-        label: 'Home',
-        url: '#/'
-      }, {
-        label: 'Models',
-        url: '#/models'
-      }
-    ];
     $scope.loadModels = function() {
       return function(pagination_opts) {
         return Model.$loadAll();
@@ -748,15 +704,6 @@ angular.module('app.models.controllers', ['app.config']).controller('ModelListCt
   }
 ]).controller('AddModelCtl', [
   '$scope', '$http', '$location', 'settings', 'Model', function($scope, $http, $location, settings, Model) {
-    $scope.path = [
-      {
-        label: 'Home',
-        url: '#/'
-      }, {
-        label: 'Add Model',
-        url: '#/add_model'
-      }
-    ];
     $scope.model = new Model();
     $scope["new"] = true;
     $scope.upload = function() {
@@ -811,15 +758,6 @@ angular.module('app.models.controllers', ['app.config']).controller('ModelListCt
   }
 ]).controller('UploadModelCtl', [
   '$scope', '$http', '$location', 'settings', 'Model', function($scope, $http, $location, settings, Model) {
-    $scope.path = [
-      {
-        label: 'Home',
-        url: '#/'
-      }, {
-        label: 'Upload Trained Model',
-        url: '#/upload_model'
-      }
-    ];
     $scope["new"] = true;
     $scope.model = new Model();
     $scope.upload = function() {
@@ -869,18 +807,6 @@ angular.module('app.models.controllers', ['app.config']).controller('ModelListCt
   '$scope', '$http', '$location', '$routeParams', '$dialog', 'settings', 'Model', 'TestResult', function($scope, $http, $location, $routeParams, $dialog, settings, Model, Test) {
     var DEFAULT_ACTION,
       _this = this;
-    $scope.path = [
-      {
-        label: 'Home',
-        url: '#/'
-      }, {
-        label: 'Models',
-        url: '#/models'
-      }, {
-        label: 'Model Details',
-        url: ''
-      }
-    ];
     if (!$scope.model) {
       if (!$routeParams.name) {
         throw new Error("Can't initialize model detail controller      without model name");
@@ -935,6 +861,125 @@ angular.module('app.models.controllers', ['app.config']).controller('ModelListCt
       d.model = model;
       return d.open('partials/modal.html', 'TestDialogController');
     };
+  }
+]);
+var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+
+angular.module('app.models.data', ['app.config']).factory('Data', [
+  '$http', '$q', 'settings', function($http, $q, settings) {
+    var Data;
+    Data = (function() {
+
+      function Data(opts) {
+        this.$load = __bind(this.$load, this);
+
+        this.loadFromJSON = __bind(this.loadFromJSON, this);
+
+        this.toJSON = __bind(this.toJSON, this);
+        this.loadFromJSON(opts);
+      }
+
+      Data.prototype.id = null;
+
+      Data.prototype.created_on = null;
+
+      Data.prototype.model_name = null;
+
+      Data.prototype.test_name = null;
+
+      Data.prototype.data_input = null;
+
+      Data.prototype.weighted_data_input = null;
+
+      /* API methods
+      */
+
+
+      Data.prototype.isNew = function() {
+        if (this.slug === null) {
+          return true;
+        } else {
+          return false;
+        }
+      };
+
+      Data.prototype.toJSON = function() {
+        return {
+          name: this.name
+        };
+      };
+
+      Data.prototype.loadFromJSON = function(origData) {
+        var data;
+        data = _.extend({}, origData);
+        return _.extend(this, data);
+      };
+
+      Data.prototype.$load = function() {
+        var _this = this;
+        if (this.name === null) {
+          throw new Error("Can't load model without name");
+        }
+        return $http({
+          method: 'GET',
+          url: settings.apiUrl + ("model/" + this.model_name + "/test/" + this.test_name + "/data/" + this.id),
+          headers: {
+            'X-Requested-With': null
+          }
+        }).then((function(resp) {
+          _this.loaded = true;
+          _this.loadFromJSON(resp.data['data']);
+          return resp;
+        }), (function(resp) {
+          return resp;
+        }));
+      };
+
+      Data.$loadAll = function(opts) {
+        var dfd, model_name, test_name,
+          _this = this;
+        dfd = $q.defer();
+        model_name = opts.model_name;
+        test_name = opts.test_name;
+        $http({
+          method: 'GET',
+          url: "" + settings.apiUrl + "model/" + model_name + "/test/" + test_name + "/data",
+          headers: settings.apiRequestDefaultHeaders,
+          params: opts
+        }).then((function(resp) {
+          var extra, obj;
+          extra = {
+            loaded: true,
+            model_name: model_name,
+            test_name: test_name
+          };
+          return dfd.resolve({
+            pages: resp.data['data'].pages,
+            page: resp.data['data'].page,
+            total: resp.data['data'].total,
+            per_page: resp.data['data'].per_page,
+            objects: (function() {
+              var _i, _len, _ref, _results;
+              _ref = resp.data['data'].items;
+              _results = [];
+              for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+                obj = _ref[_i];
+                _results.push(new this(_.extend(obj, extra)));
+              }
+              return _results;
+            }).call(_this),
+            _resp: resp
+          });
+        }), (function() {
+          return dfd.reject.apply(this, arguments);
+        }));
+        return dfd.promise;
+      };
+
+      return Data;
+
+    })();
+    return Data;
   }
 ]);
 var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
@@ -1150,21 +1195,6 @@ angular.module('app.testresults.controllers', ['app.config']).controller('TestDi
   }
 ]).controller('TestDetailsCtrl', [
   '$scope', '$http', '$routeParams', 'settings', 'TestResult', function($scope, $http, $routeParams, settings, Test) {
-    $scope.path = [
-      {
-        label: 'Home',
-        url: '#/'
-      }, {
-        label: 'Models',
-        url: '#/models'
-      }, {
-        label: 'Model Details',
-        url: ''
-      }, {
-        label: 'Test Details',
-        url: ''
-      }
-    ];
     if (!$scope.test) {
       if (!$routeParams.name) {
         throw new Error("Can't initialize test detail controller      without test name");

@@ -2,8 +2,6 @@
 
 ### Controllers ###
 
-API_URL = 'http://127.0.0.1:5000/cloudml/b/v1/'
-
 angular.module('app.controllers', ['app.config', ])
 
 .controller('AppCtrl', [
@@ -18,9 +16,26 @@ angular.module('app.controllers', ['app.config', ])
   # Uses the url to determine if the selected
   # menu item should have the class active.
   $scope.$location = $location
+  $scope.pathElements = []
   $scope.$watch('$location.path()', (path) ->
     $scope.activeNavId = path || '/'
   )
+
+  # Breadcrumbs
+  $scope.$on('$routeChangeSuccess', (event, current) ->
+    pathElements = $location.path().split('/')
+    result = []
+    path = ''
+    pathElements.shift()
+    pathParamsLookup = {}
+
+    for key, pathElement of pathElements
+      path += '/' + pathElement
+      result.push({name: pathElement, path: path})
+
+    $scope.pathElements = result
+  )
+
 
   # getClass compares the current url with the id.
   # If the current url starts with the id it returns 'active'

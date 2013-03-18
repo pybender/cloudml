@@ -8059,3 +8059,9 @@ bootstrap, so the may override it's behavior.
   padding: 5px;
   margin: 1em 0;
 }
+.breadcrumb {
+  margin: 0;
+}
+.wrapper > .container {
+  padding-top: 0px;
+}

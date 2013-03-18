@@ -17,19 +17,6 @@ angular.module('app.directives', [
     elm.text(version)
 ])
 
-.directive('breadcrumb', () ->
-  return {
-    restrict: 'E',
-    template: "<div><ul class='breadcrumb'><li ng-repeat='node in path'>
-<a ng-href='{{node.url}}'>{{node.label}}</a>
-<span class='divider'>/</span></li></ul>
-<div ng-transclude></div></div>",
-    replace: true,
-    transclude : true,
-    scope: { path: '=' }
-  }
-)
-
 .directive('showtab', () ->
   return {
     link: (scope, element, attrs) ->

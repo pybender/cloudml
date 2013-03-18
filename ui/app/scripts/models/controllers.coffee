@@ -12,7 +12,6 @@ angular.module('app.models.controllers', ['app.config', ])
   'Model'
 
 ($scope, $http, $dialog, settings, Model) ->
-  $scope.path = [{label: 'Home', url: '#/'}, {label: 'Models', url: '#/models'}]
   $scope.loadModels = () ->
     # Used for ObjectListCtrl initialization
     (pagination_opts) ->
@@ -34,9 +33,6 @@ angular.module('app.models.controllers', ['app.config', ])
   'Model'
 
 ($scope, $http, $location, settings, Model) ->
-  $scope.path = [{label: 'Home', url: '#/'},
-  {label: 'Add Model', url: '#/add_model'}]
-
   $scope.model = new Model()
   $scope.new = true
 
@@ -96,9 +92,6 @@ angular.module('app.models.controllers', ['app.config', ])
   'Model'
 
 ($scope, $http, $location, settings, Model) ->
-  $scope.path = [{label: 'Home', url: '#/'},
-  {label: 'Upload Trained Model', url: '#/upload_model'}]
- 
   $scope.new = true
   $scope.model = new Model()
 
@@ -156,10 +149,6 @@ angular.module('app.models.controllers', ['app.config', ])
   'TestResult'
 
 ($scope, $http, $location, $routeParams, $dialog, settings, Model, Test) ->
-  $scope.path = [{label: 'Home', url: '#/'},
-                 {label: 'Models', url: '#/models'},
-                 {label: 'Model Details', url: ''}]
-
   if not $scope.model
     if not $routeParams.name
       throw new Error "Can't initialize model detail controller

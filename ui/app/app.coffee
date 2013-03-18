@@ -43,7 +43,7 @@ App.config([
       controller: 'TestExamplesCtrl'
       templateUrl: '/partials/test_examples.html'
     })
-    .when('/models/:name/tests/:test_name/example/:data_id', {
+    .when('/models/:name/tests/:test_name/examples/:data_id', {
       controller: 'ExampleDetailsCtrl'
       templateUrl: '/partials/example_details.html'
     })

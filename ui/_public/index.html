@@ -31,6 +31,15 @@
           </div>
         </div>
       </div>
+      <ul class="breadcrumb">
+          <li ng-repeat="breadcrumb in pathElements" class="active">
+              <span class="divider">/</span>
+              <ng-switch on="$last">
+                  <span ng-switch-when="true">{{breadcrumb.name}}</span>
+                  <span ng-switch-default><a ng-href="#{{breadcrumb.path}}">{{breadcrumb.name}}</a></span>
+              </ng-switch>
+          </li>
+      </ul>
       <div class="container main-content">
         <div ng-view></div>
       </div>
