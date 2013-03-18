@@ -1,4 +1,4 @@
-angular.module('app.models.data', ['app.config'])
+angular.module('app.datas.model', ['app.config'])
 
 .factory('Data', [
   '$http'

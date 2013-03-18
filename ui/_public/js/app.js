@@ -2,12 +2,12 @@
 
 var App;
 
-App = angular.module('app', ['ui', 'ngCookies', 'ngResource', 'app.config', 'app.controllers', 'app.directives', 'app.filters', 'app.services', 'ui.bootstrap', 'app.models.model', 'app.models.testresults', 'app.models.data']);
+App = angular.module('app', ['ui', 'ngCookies', 'ngResource', 'app.config', 'app.controllers', 'app.directives', 'app.filters', 'app.services', 'ui.bootstrap', 'app.models.model', 'app.models.controllers', 'app.testresults.model', 'app.testresults.controllers', 'app.datas.model', 'app.datas.controllers']);
 
 App.config([
   '$routeProvider', '$locationProvider', function($routeProvider, $locationProvider, config) {
     $routeProvider.when('/models', {
-      controller: "Model_list",
+      controller: "ModelListCtrl",
       templateUrl: '/partials/model_list.html'
     }).when('/models/:name', {
       controller: 'ModelDetailsCtrl',
@@ -86,7 +86,21 @@ var API_URL;
 
 API_URL = 'http://127.0.0.1:5000/cloudml/b/v1/';
 
-angular.module('app.controllers', ['app.config']).controller('ObjectListCtrl', [
+angular.module('app.controllers', ['app.config']).controller('AppCtrl', [
+  '$scope', '$location', '$resource', '$rootScope', 'settings', function($scope, $location, $resource, $rootScope, settings) {
+    $scope.$location = $location;
+    $scope.$watch('$location.path()', function(path) {
+      return $scope.activeNavId = path || '/';
+    });
+    return $scope.getClass = function(id) {
+      if ($scope.activeNavId.substring(0, id.length) === id) {
+        return 'active';
+      } else {
+        return '';
+      }
+    };
+  }
+]).controller('ObjectListCtrl', [
   '$scope', function($scope) {
     var _this = this;
     $scope.pages = 0;
@@ -128,300 +142,13 @@ angular.module('app.controllers', ['app.config']).controller('ObjectListCtrl', [
       }));
     };
   }
-]).controller('AppCtrl', [
-  '$scope', '$location', '$resource', '$rootScope', 'settings', function($scope, $location, $resource, $rootScope, settings) {
-    $scope.$location = $location;
-    $scope.$watch('$location.path()', function(path) {
-      return $scope.activeNavId = path || '/';
-    });
-    return $scope.getClass = function(id) {
-      if ($scope.activeNavId.substring(0, id.length) === id) {
-        return 'active';
-      } else {
-        return '';
-      }
-    };
-  }
-]).controller('TestDialogController', [
-  '$scope', '$http', 'dialog', 'settings', function($scope, $http, dialog, settings) {
-    var model;
-    model = dialog.model;
-    $scope.params = model.import_params;
-    $scope.parameters = {};
-    $scope.close = function() {
-      return dialog.close();
-    };
-    return $scope.start = function(result) {
-      var form_data, key;
-      form_data = new FormData();
-      for (key in $scope.parameters) {
-        form_data.append(key, $scope.parameters[key]);
-      }
-      return $http({
-        method: "POST",
-        url: settings.apiUrl + ("model/" + model.name + "/test/test"),
-        data: form_data,
-        headers: {
-          'Content-Type': void 0,
-          'X-Requested-With': null
-        },
-        transformRequest: angular.identity
-      }).success(function(data, status, headers, config) {
-        $scope.success = true;
-        $scope.msg = {};
-        return dialog.close(result);
-      }).error(function(data, status, headers, config) {
-        return $scope.httpError = true;
-      });
-    };
-  }
-]).controller('Model_list', [
-  '$scope', '$http', '$dialog', 'settings', 'Model', function($scope, $http, $dialog, settings, Model) {
-    $scope.path = [
-      {
-        label: 'Home',
-        url: '#/'
-      }, {
-        label: 'Models',
-        url: '#/models'
-      }
-    ];
-    $scope.loadModels = function() {
-      return function(pagination_opts) {
-        return Model.$loadAll();
-      };
-    };
-    return $scope.test = function(model) {
-      var d;
-      d = $dialog.dialog({
-        modalFade: false
-      });
-      d.model = model;
-      return d.open('partials/modal.html', 'TestDialogController');
-    };
-  }
-]).controller('AddModelCtl', [
-  '$scope', '$http', '$location', 'settings', 'Model', function($scope, $http, $location, settings, Model) {
-    $scope.path = [
-      {
-        label: 'Home',
-        url: '#/'
-      }, {
-        label: 'Add Model',
-        url: '#/add_model'
-      }
-    ];
-    $scope.model = new Model();
-    $scope["new"] = true;
-    $scope.upload = function() {
-      $scope.saving = true;
-      $scope.savingProgress = '0%';
-      $scope.savingError = null;
-      _.defer(function() {
-        $scope.savingProgress = '50%';
-        return $scope.$apply();
-      });
-      return $scope.model.$save().then((function() {
-        $scope.savingProgress = '100%';
-        return _.delay((function() {
-          $location.path('/models');
-          return $scope.$apply();
-        }), 300);
-      }), (function(resp) {
-        $scope.saving = false;
-        return $scope.savingError = "Error while saving: server responded with " + ("" + resp.status + " (" + (resp.data.error || "no message") + "). ") + "Make sure you filled the form correctly. " + "Please contact support if the error will not go away.";
-      }));
-    };
-    $scope.setImportHandlerFile = function(element) {
-      return $scope.$apply(function($scope) {
-        var reader;
-        $scope.msg = "";
-        $scope.error = "";
-        $scope.import_handler = element.files[0];
-        reader = new FileReader();
-        reader.onload = function(e) {
-          var str;
-          str = e.target.result;
-          return $scope.model.importhandler = str;
-        };
-        return reader.readAsText($scope.import_handler);
-      });
-    };
-    return $scope.setFeaturesFile = function(element) {
-      return $scope.$apply(function($scope) {
-        var reader;
-        $scope.msg = "";
-        $scope.error = "";
-        $scope.features = element.files[0];
-        reader = new FileReader();
-        reader.onload = function(e) {
-          var str;
-          str = e.target.result;
-          return $scope.model.features = str;
-        };
-        return reader.readAsText($scope.features);
-      });
-    };
-  }
-]).controller('UploadModelCtl', [
-  '$scope', '$http', '$location', 'settings', 'Model', function($scope, $http, $location, settings, Model) {
-    $scope.path = [
-      {
-        label: 'Home',
-        url: '#/'
-      }, {
-        label: 'Upload Trained Model',
-        url: '#/upload_model'
-      }
-    ];
-    $scope["new"] = true;
-    $scope.model = new Model();
-    $scope.upload = function() {
-      $scope.saving = true;
-      $scope.savingProgress = '0%';
-      $scope.savingError = null;
-      _.defer(function() {
-        $scope.savingProgress = '50%';
-        return $scope.$apply();
-      });
-      return $scope.model.$save().then((function() {
-        $scope.savingProgress = '100%';
-        return _.delay((function() {
-          $location.path('/models');
-          return $scope.$apply();
-        }), 300);
-      }), (function(resp) {
-        $scope.saving = false;
-        return $scope.savingError = "Error while saving: server responded with " + ("" + resp.status + " (" + (resp.data.error || "no message") + "). ") + "Make sure you filled the form correctly. " + "Please contact support if the error will not go away.";
-      }));
-    };
-    $scope.setModelFile = function(element) {
-      return $scope.$apply(function($scope) {
-        $scope.msg = "";
-        $scope.error = "";
-        $scope.model_file = element.files[0];
-        return $scope.model.trainer = element.files[0];
-      });
-    };
-    return $scope.setImportHandlerFile = function(element) {
-      return $scope.$apply(function($scope) {
-        var reader;
-        $scope.msg = "";
-        $scope.error = "";
-        $scope.import_handler = element.files[0];
-        reader = new FileReader();
-        reader.onload = function(e) {
-          var str;
-          str = e.target.result;
-          return $scope.model.importhandler = str;
-        };
-        return reader.readAsText($scope.import_handler);
-      });
-    };
-  }
-]).controller('ModelDetailsCtrl', [
-  '$scope', '$http', '$location', '$routeParams', '$dialog', 'settings', 'Model', 'TestResult', function($scope, $http, $location, $routeParams, $dialog, settings, Model, Test) {
-    var DEFAULT_ACTION,
-      _this = this;
-    $scope.path = [
-      {
-        label: 'Home',
-        url: '#/'
-      }, {
-        label: 'Models',
-        url: '#/models'
-      }, {
-        label: 'Model Details',
-        url: ''
-      }
-    ];
-    if (!$scope.model) {
-      if (!$routeParams.name) {
-        throw new Error("Can't initialize model detail controller      without model name");
-      }
-      $scope.model = new Model({
-        name: $routeParams.name
-      });
-    }
-    $scope.model.$load().then((function() {
-      return $scope.latest_test = new Test($scope.model.latest_test);
-    }), (function() {
-      $scope.error = data;
-      return $scope.httpError = true;
-    }));
-    DEFAULT_ACTION = 'model:details';
-    $scope.action = ($routeParams.action || DEFAULT_ACTION).split(':');
-    $scope.$watch('action', function(action) {
-      var actionString;
-      actionString = action.join(':');
-      return $location.search(actionString === DEFAULT_ACTION ? "" : "action=" + actionString);
-    });
-    $scope.toggleAction = function(action) {
-      return $scope.action = action;
-    };
-    $scope.loadTests = function() {
-      return function(pagination_opts) {
-        return Test.$loadTests($scope.model.name);
-      };
-    };
-    $scope.saveImportHandlerChanges = function() {
-      if (!$scope.importHandlerChanged) {
-        return false;
-      }
-      return $scope.model.$save({
-        only: ['importhandler']
-      }).then((function() {
-        return $scope.importHandlerChanged = false;
-      }), (function() {
-        throw new Error("Unable to save import handler");
-      }));
-    };
-    $scope.$watch('model.importhandler', function(newVal, oldVal) {
-      if ((newVal != null) && (oldVal != null) && newVal !== "" && oldVal !== "") {
-        return $scope.importHandlerChanged = true;
-      }
-    });
-    return $scope.test = function(model) {
-      var d;
-      d = $dialog.dialog({
-        modalFade: false
-      });
-      d.model = model;
-      return d.open('partials/modal.html', 'TestDialogController');
-    };
-  }
-]).controller('TestDetailsCtrl', [
-  '$scope', '$http', '$routeParams', 'settings', 'TestResult', function($scope, $http, $routeParams, settings, Test) {
-    $scope.path = [
-      {
-        label: 'Home',
-        url: '#/'
-      }, {
-        label: 'Models',
-        url: '#/models'
-      }, {
-        label: 'Model Details',
-        url: ''
-      }, {
-        label: 'Test Details',
-        url: ''
-      }
-    ];
-    if (!$scope.test) {
-      if (!$routeParams.name) {
-        throw new Error("Can't initialize test detail controller      without test name");
-      }
-      $scope.test = new Test({
-        model_name: $routeParams.name,
-        name: $routeParams.test_name
-      });
-    }
-    return $scope.test.$load().then((function() {}), (function() {
-      $scope.error = data;
-      return $scope.httpError = true;
-    }));
-  }
-]).controller('TestExamplesCtrl', [
+]);
+'use strict';
+
+/* Tests examples specific Controllers
+*/
+
+angular.module('app.datas.controllers', ['app.config']).controller('TestExamplesCtrl', [
   '$scope', '$http', '$routeParams', 'settings', 'Data', function($scope, $http, $routeParams, settings, Data) {
     $scope.path = [
       {
@@ -485,6 +212,125 @@ angular.module('app.controllers', ['app.config']).controller('ObjectListCtrl', [
       $scope.error = data;
       return $scope.httpError = true;
     }));
+  }
+]);
+var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+
+angular.module('app.datas.model', ['app.config']).factory('Data', [
+  '$http', '$q', 'settings', function($http, $q, settings) {
+    var Data;
+    Data = (function() {
+
+      function Data(opts) {
+        this.$load = __bind(this.$load, this);
+
+        this.loadFromJSON = __bind(this.loadFromJSON, this);
+
+        this.toJSON = __bind(this.toJSON, this);
+        this.loadFromJSON(opts);
+      }
+
+      Data.prototype.id = null;
+
+      Data.prototype.created_on = null;
+
+      Data.prototype.model_name = null;
+
+      Data.prototype.test_name = null;
+
+      Data.prototype.data_input = null;
+
+      Data.prototype.weighted_data_input = null;
+
+      /* API methods
+      */
+
+
+      Data.prototype.isNew = function() {
+        if (this.slug === null) {
+          return true;
+        } else {
+          return false;
+        }
+      };
+
+      Data.prototype.toJSON = function() {
+        return {
+          name: this.name
+        };
+      };
+
+      Data.prototype.loadFromJSON = function(origData) {
+        var data;
+        data = _.extend({}, origData);
+        return _.extend(this, data);
+      };
+
+      Data.prototype.$load = function() {
+        var _this = this;
+        if (this.name === null) {
+          throw new Error("Can't load model without name");
+        }
+        return $http({
+          method: 'GET',
+          url: settings.apiUrl + ("model/" + this.model_name + "/test/" + this.test_name + "/data/" + this.id),
+          headers: {
+            'X-Requested-With': null
+          }
+        }).then((function(resp) {
+          _this.loaded = true;
+          _this.loadFromJSON(resp.data['data']);
+          return resp;
+        }), (function(resp) {
+          return resp;
+        }));
+      };
+
+      Data.$loadAll = function(opts) {
+        var dfd, model_name, test_name,
+          _this = this;
+        dfd = $q.defer();
+        model_name = opts.model_name;
+        test_name = opts.test_name;
+        $http({
+          method: 'GET',
+          url: "" + settings.apiUrl + "model/" + model_name + "/test/" + test_name + "/data",
+          headers: settings.apiRequestDefaultHeaders,
+          params: opts
+        }).then((function(resp) {
+          var extra, obj;
+          extra = {
+            loaded: true,
+            model_name: model_name,
+            test_name: test_name
+          };
+          return dfd.resolve({
+            pages: resp.data['data'].pages,
+            page: resp.data['data'].page,
+            total: resp.data['data'].total,
+            per_page: resp.data['data'].per_page,
+            objects: (function() {
+              var _i, _len, _ref, _results;
+              _ref = resp.data['data'].items;
+              _results = [];
+              for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+                obj = _ref[_i];
+                _results.push(new this(_.extend(obj, extra)));
+              }
+              return _results;
+            }).call(_this),
+            _resp: resp
+          });
+        }), (function() {
+          return dfd.reject.apply(this, arguments);
+        }));
+        return dfd.promise;
+      };
+
+      return Data;
+
+    })();
+    return Data;
   }
 ]);
 'use strict';
@@ -870,123 +716,225 @@ LOCAL_SETTINGS = {
 };
 
 angular.module('app.local_config', []).constant('settings', LOCAL_SETTINGS);
-var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+'use strict';
 
-angular.module('app.models.data', ['app.config']).factory('Data', [
-  '$http', '$q', 'settings', function($http, $q, settings) {
-    var Data;
-    Data = (function() {
+/* Trained Model specific Controllers
+*/
 
-      function Data(opts) {
-        this.$load = __bind(this.$load, this);
-
-        this.loadFromJSON = __bind(this.loadFromJSON, this);
-
-        this.toJSON = __bind(this.toJSON, this);
-        this.loadFromJSON(opts);
+angular.module('app.models.controllers', ['app.config']).controller('ModelListCtrl', [
+  '$scope', '$http', '$dialog', 'settings', 'Model', function($scope, $http, $dialog, settings, Model) {
+    $scope.path = [
+      {
+        label: 'Home',
+        url: '#/'
+      }, {
+        label: 'Models',
+        url: '#/models'
       }
-
-      Data.prototype.id = null;
-
-      Data.prototype.created_on = null;
-
-      Data.prototype.model_name = null;
-
-      Data.prototype.test_name = null;
-
-      Data.prototype.data_input = null;
-
-      Data.prototype.weighted_data_input = null;
-
-      /* API methods
-      */
-
-
-      Data.prototype.isNew = function() {
-        if (this.slug === null) {
-          return true;
-        } else {
-          return false;
-        }
+    ];
+    $scope.loadModels = function() {
+      return function(pagination_opts) {
+        return Model.$loadAll();
       };
-
-      Data.prototype.toJSON = function() {
-        return {
-          name: this.name
+    };
+    return $scope.test = function(model) {
+      var d;
+      d = $dialog.dialog({
+        modalFade: false
+      });
+      d.model = model;
+      return d.open('partials/modal.html', 'TestDialogController');
+    };
+  }
+]).controller('AddModelCtl', [
+  '$scope', '$http', '$location', 'settings', 'Model', function($scope, $http, $location, settings, Model) {
+    $scope.path = [
+      {
+        label: 'Home',
+        url: '#/'
+      }, {
+        label: 'Add Model',
+        url: '#/add_model'
+      }
+    ];
+    $scope.model = new Model();
+    $scope["new"] = true;
+    $scope.upload = function() {
+      $scope.saving = true;
+      $scope.savingProgress = '0%';
+      $scope.savingError = null;
+      _.defer(function() {
+        $scope.savingProgress = '50%';
+        return $scope.$apply();
+      });
+      return $scope.model.$save().then((function() {
+        $scope.savingProgress = '100%';
+        return _.delay((function() {
+          $location.path('/models');
+          return $scope.$apply();
+        }), 300);
+      }), (function(resp) {
+        $scope.saving = false;
+        return $scope.savingError = "Error while saving: server responded with " + ("" + resp.status + " (" + (resp.data.error || "no message") + "). ") + "Make sure you filled the form correctly. " + "Please contact support if the error will not go away.";
+      }));
+    };
+    $scope.setImportHandlerFile = function(element) {
+      return $scope.$apply(function($scope) {
+        var reader;
+        $scope.msg = "";
+        $scope.error = "";
+        $scope.import_handler = element.files[0];
+        reader = new FileReader();
+        reader.onload = function(e) {
+          var str;
+          str = e.target.result;
+          return $scope.model.importhandler = str;
         };
+        return reader.readAsText($scope.import_handler);
+      });
+    };
+    return $scope.setFeaturesFile = function(element) {
+      return $scope.$apply(function($scope) {
+        var reader;
+        $scope.msg = "";
+        $scope.error = "";
+        $scope.features = element.files[0];
+        reader = new FileReader();
+        reader.onload = function(e) {
+          var str;
+          str = e.target.result;
+          return $scope.model.features = str;
+        };
+        return reader.readAsText($scope.features);
+      });
+    };
+  }
+]).controller('UploadModelCtl', [
+  '$scope', '$http', '$location', 'settings', 'Model', function($scope, $http, $location, settings, Model) {
+    $scope.path = [
+      {
+        label: 'Home',
+        url: '#/'
+      }, {
+        label: 'Upload Trained Model',
+        url: '#/upload_model'
+      }
+    ];
+    $scope["new"] = true;
+    $scope.model = new Model();
+    $scope.upload = function() {
+      $scope.saving = true;
+      $scope.savingProgress = '0%';
+      $scope.savingError = null;
+      _.defer(function() {
+        $scope.savingProgress = '50%';
+        return $scope.$apply();
+      });
+      return $scope.model.$save().then((function() {
+        $scope.savingProgress = '100%';
+        return _.delay((function() {
+          $location.path('/models');
+          return $scope.$apply();
+        }), 300);
+      }), (function(resp) {
+        $scope.saving = false;
+        return $scope.savingError = "Error while saving: server responded with " + ("" + resp.status + " (" + (resp.data.error || "no message") + "). ") + "Make sure you filled the form correctly. " + "Please contact support if the error will not go away.";
+      }));
+    };
+    $scope.setModelFile = function(element) {
+      return $scope.$apply(function($scope) {
+        $scope.msg = "";
+        $scope.error = "";
+        $scope.model_file = element.files[0];
+        return $scope.model.trainer = element.files[0];
+      });
+    };
+    return $scope.setImportHandlerFile = function(element) {
+      return $scope.$apply(function($scope) {
+        var reader;
+        $scope.msg = "";
+        $scope.error = "";
+        $scope.import_handler = element.files[0];
+        reader = new FileReader();
+        reader.onload = function(e) {
+          var str;
+          str = e.target.result;
+          return $scope.model.importhandler = str;
+        };
+        return reader.readAsText($scope.import_handler);
+      });
+    };
+  }
+]).controller('ModelDetailsCtrl', [
+  '$scope', '$http', '$location', '$routeParams', '$dialog', 'settings', 'Model', 'TestResult', function($scope, $http, $location, $routeParams, $dialog, settings, Model, Test) {
+    var DEFAULT_ACTION,
+      _this = this;
+    $scope.path = [
+      {
+        label: 'Home',
+        url: '#/'
+      }, {
+        label: 'Models',
+        url: '#/models'
+      }, {
+        label: 'Model Details',
+        url: ''
+      }
+    ];
+    if (!$scope.model) {
+      if (!$routeParams.name) {
+        throw new Error("Can't initialize model detail controller      without model name");
+      }
+      $scope.model = new Model({
+        name: $routeParams.name
+      });
+    }
+    $scope.model.$load().then((function() {
+      return $scope.latest_test = new Test($scope.model.latest_test);
+    }), (function() {
+      $scope.error = data;
+      return $scope.httpError = true;
+    }));
+    DEFAULT_ACTION = 'model:details';
+    $scope.action = ($routeParams.action || DEFAULT_ACTION).split(':');
+    $scope.$watch('action', function(action) {
+      var actionString;
+      actionString = action.join(':');
+      return $location.search(actionString === DEFAULT_ACTION ? "" : "action=" + actionString);
+    });
+    $scope.toggleAction = function(action) {
+      return $scope.action = action;
+    };
+    $scope.loadTests = function() {
+      return function(pagination_opts) {
+        return Test.$loadTests($scope.model.name);
       };
-
-      Data.prototype.loadFromJSON = function(origData) {
-        var data;
-        data = _.extend({}, origData);
-        return _.extend(this, data);
-      };
-
-      Data.prototype.$load = function() {
-        var _this = this;
-        if (this.name === null) {
-          throw new Error("Can't load model without name");
-        }
-        return $http({
-          method: 'GET',
-          url: settings.apiUrl + ("model/" + this.model_name + "/test/" + this.test_name + "/data/" + this.id),
-          headers: {
-            'X-Requested-With': null
-          }
-        }).then((function(resp) {
-          _this.loaded = true;
-          _this.loadFromJSON(resp.data['data']);
-          return resp;
-        }), (function(resp) {
-          return resp;
-        }));
-      };
-
-      Data.$loadAll = function(opts) {
-        var dfd, model_name, test_name,
-          _this = this;
-        dfd = $q.defer();
-        model_name = opts.model_name;
-        test_name = opts.test_name;
-        $http({
-          method: 'GET',
-          url: "" + settings.apiUrl + "model/" + model_name + "/test/" + test_name + "/data",
-          headers: settings.apiRequestDefaultHeaders,
-          params: opts
-        }).then((function(resp) {
-          var extra, obj;
-          extra = {
-            loaded: true,
-            model_name: model_name,
-            test_name: test_name
-          };
-          return dfd.resolve({
-            pages: resp.data['data'].pages,
-            page: resp.data['data'].page,
-            total: resp.data['data'].total,
-            per_page: resp.data['data'].per_page,
-            objects: (function() {
-              var _i, _len, _ref, _results;
-              _ref = resp.data['data'].items;
-              _results = [];
-              for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-                obj = _ref[_i];
-                _results.push(new this(_.extend(obj, extra)));
-              }
-              return _results;
-            }).call(_this),
-            _resp: resp
-          });
-        }), (function() {
-          return dfd.reject.apply(this, arguments);
-        }));
-        return dfd.promise;
-      };
-
-      return Data;
-
-    })();
-    return Data;
+    };
+    $scope.saveImportHandlerChanges = function() {
+      if (!$scope.importHandlerChanged) {
+        return false;
+      }
+      return $scope.model.$save({
+        only: ['importhandler']
+      }).then((function() {
+        return $scope.importHandlerChanged = false;
+      }), (function() {
+        throw new Error("Unable to save import handler");
+      }));
+    };
+    $scope.$watch('model.importhandler', function(newVal, oldVal) {
+      if ((newVal != null) && (oldVal != null) && newVal !== "" && oldVal !== "") {
+        return $scope.importHandlerChanged = true;
+      }
+    });
+    return $scope.test = function(model) {
+      var d;
+      d = $dialog.dialog({
+        modalFade: false
+      });
+      d.model = model;
+      return d.open('partials/modal.html', 'TestDialogController');
+    };
   }
 ]);
 var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
@@ -1154,10 +1102,88 @@ angular.module('app.models.model', ['app.config']).factory('Model', [
     return Model;
   }
 ]);
+'use strict';
+
+/* Sevices
+*/
+
+angular.module('app.services', []).factory('version', function() {
+  return "0.1";
+});
+'use strict';
+
+/* Tests specific Controllers
+*/
+
+angular.module('app.testresults.controllers', ['app.config']).controller('TestDialogController', [
+  '$scope', '$http', 'dialog', 'settings', function($scope, $http, dialog, settings) {
+    var model;
+    model = dialog.model;
+    $scope.params = model.import_params;
+    $scope.parameters = {};
+    $scope.close = function() {
+      return dialog.close();
+    };
+    return $scope.start = function(result) {
+      var form_data, key;
+      form_data = new FormData();
+      for (key in $scope.parameters) {
+        form_data.append(key, $scope.parameters[key]);
+      }
+      return $http({
+        method: "POST",
+        url: settings.apiUrl + ("model/" + model.name + "/test/test"),
+        data: form_data,
+        headers: {
+          'Content-Type': void 0,
+          'X-Requested-With': null
+        },
+        transformRequest: angular.identity
+      }).success(function(data, status, headers, config) {
+        $scope.success = true;
+        $scope.msg = {};
+        return dialog.close(result);
+      }).error(function(data, status, headers, config) {
+        return $scope.httpError = true;
+      });
+    };
+  }
+]).controller('TestDetailsCtrl', [
+  '$scope', '$http', '$routeParams', 'settings', 'TestResult', function($scope, $http, $routeParams, settings, Test) {
+    $scope.path = [
+      {
+        label: 'Home',
+        url: '#/'
+      }, {
+        label: 'Models',
+        url: '#/models'
+      }, {
+        label: 'Model Details',
+        url: ''
+      }, {
+        label: 'Test Details',
+        url: ''
+      }
+    ];
+    if (!$scope.test) {
+      if (!$routeParams.name) {
+        throw new Error("Can't initialize test detail controller      without test name");
+      }
+      $scope.test = new Test({
+        model_name: $routeParams.name,
+        name: $routeParams.test_name
+      });
+    }
+    return $scope.test.$load().then((function() {}), (function() {
+      $scope.error = data;
+      return $scope.httpError = true;
+    }));
+  }
+]);
 var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-angular.module('app.models.testresults', ['app.config']).factory('TestResult', [
+angular.module('app.testresults.model', ['app.config']).factory('TestResult', [
   '$http', '$q', 'settings', 'Model', function($http, $q, settings, Model) {
     var TestResult, trimTrailingWhitespace;
     trimTrailingWhitespace = function(val) {
@@ -1312,11 +1338,3 @@ angular.module('app.models.testresults', ['app.config']).factory('TestResult', [
     return TestResult;
   }
 ]);
-'use strict';
-
-/* Sevices
-*/
-
-angular.module('app.services', []).factory('version', function() {
-  return "0.1";
-});

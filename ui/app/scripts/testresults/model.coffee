@@ -1,4 +1,4 @@
-angular.module('app.models.testresults', ['app.config'])
+angular.module('app.testresults.model', ['app.config'])
 
 .factory('TestResult', [
   '$http'
