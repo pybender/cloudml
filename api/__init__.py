@@ -10,7 +10,6 @@ db = SQLAlchemy(app)
 
 api = restful.Api(app)
 
-
 class RegExConverter(BaseConverter):
     """
     Converter that allows routing to specific functions according to given

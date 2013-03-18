@@ -5,6 +5,13 @@
       <a ng-href="#" href="#">(Cancel)</a>
   </small>
 </h2>
+
+<loadindicator
+  title="Saving changes..."
+  ng-show="saving"
+  progress="savingProgress">
+</loadindicator>
+
 <form name="UploadModelForm" class="form-horizontal">
   <p class="lead">
     Please upload pickled trained model and define import handler.
@@ -12,39 +19,31 @@
   <div class="control-group" ng-class="{error: UploadModelForm.name.$invalid}">
     <label class="control-label">Name</label>
     <div class="controls">
-      <input type="text" name="name" ng-model="name" required>
+      <input type="text" name="name" ng-model="model.name" required>
       <span ng-show="UploadModelForm.name.$error.required" class="help-inline">
         Required</span>
     </div>
   </div>
-  <div class="control-group" ng-class="{error: !file}">
+  <div class="control-group" ng-class="{error: !model_file}">
     <label class="control-label">Model file name</label>
     <div class="controls">
-      <input type="file" name="file" ng-model="model.file" onchange="angular.element(this).scope().setFile(this)">
-      <span ng-show="!file" class="help-inline">
+      <input type="file" name="model_file" ng-model="model.model_file" onchange="angular.element(this).scope().setModelFile(this)">
+      <span ng-show="!model_file" class="help-inline">
           Required</span>
     </div>
   </div>
-  <div class="control-group" ng-class="{error: !import_handler_local}">
+  <div class="control-group" ng-class="{error: !import_handler}">
     <label title="local file or s3 or http address" class="control-label">Import Handler</label>
     <div class="controls">
-      <input type="file" name="import_handler_local" ng-model="model.import_handler_local" onchange="angular.element(this).scope().setImportHandlerLocalFile(this)">
-      <span ng-show="!import_handler_local" class="help-inline">
-          Required</span>
-    </div>
-  </div>
-  <div class="control-group" ng-class="{error: !features}">
-    <label class="control-label">Features</label>
-    <div class="controls">
-      <input type="file" name="features" ng-model="model.features" onchange="angular.element(this).scope().setFeaturesFile(this)">
-      <span ng-show="!features" class="help-inline">
+      <input type="file" name="import_handler" ng-model="model.import_handler" onchange="angular.element(this).scope().setImportHandlerFile(this)">
+      <span ng-show="!import_handler" class="help-inline">
           Required</span>
     </div>
   </div>
 
   <br />
   <a href="#/models" class="btn">Cancel</a>
-  <button ng-click="upload()" ng-disabled="UploadModelForm.$invalid || !file || !import_handler_local"
+  <button ng-click="upload()" ng-disabled="UploadModelForm.$invalid || !model_file || !import_handler"
           class="btn btn-primary">Upload</button>
 </form>
 

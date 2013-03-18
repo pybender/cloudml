@@ -1,23 +1,35 @@
 <breadcrumb path="path"></breadcrumb>
-<h2>{{ test.name|capfirst }} Examples List</h2>
-<pagination boundary-links="true" num-pages="data.pages" current-page="currentPage"></pagination>
-<p>Total items : {{ data.total }}</p>
-<table class="table table-striped">
-    <thead>
-      <tr>
-        <th>Id</th>
-        <th>Created</th>
-        <th>Params</th>
-        <th>Hire outcome</th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr ng-repeat="data in data.items | filter:search | orderBy:'name'" ng-class="{success : data.data_input['hire_outcome']=='1', error : !(data.data_input['hire_outcome']=='1')}">
-        <td><a href="#/models/{{ model.name }}/tests/{{ test.name }}/example/{{ data.id }}">{{ data.id }}</a></td>
-        <td>{{ data.created_on|format_date }}</td>
-        <td><a href="#/models/{{ model.name }}/tests/{{ test.name }}/example/{{ data.id }}">{{ data.data_input['contractor.dev_profile_title'] }}</a></td>
-        <td><span >{{ data.data_input['hire_outcome'] }} </span></td>
-      </tr>
-    </tbody>
-</table>
-<pagination boundary-links="true" num-pages="data.pages" current-page="currentPage"></pagination>
+<div ng-app="ng-app" ng-controller="ObjectListCtrl">
+  <div ng-init="init({objectLoader: loadDatas()})">
+    <h2>{{ test_name|capfirst }} Examples List</h2>
+
+    <pagination boundary-links="true" num-pages="pages" current-page="page"></pagination>
+{{ objects.length }}
+    <div ng-show="total == 0">
+          <p>No examples to display.</p>
+    </div>
+    <div ng-show="total">
+          <p>Total examples : {{ total }}</p>
+    </div>
+
+    <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Id</th>
+            <th>Created</th>
+            <th>Params</th>
+            <th>Hire outcome</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr ng-repeat="data in objects | filter:search | orderBy:'id'" ng-class="{success : data.data_input['hire_outcome']=='1', error : !(data.data_input['hire_outcome']=='1')}">
+            <td><a href="#/models/{{ data.model_name }}/tests/{{ data.test_name }}/example/{{ data.id }}">{{ data.id }}</a></td>
+            <td>{{ data.created_on|format_date }}</td>
+            <td><a href="#/models/{{ data.model_name }}/tests/{{ data.test_name }}/example/{{ data.id }}">{{ data.data_input['contractor.dev_profile_title'] }}</a></td>
+            <td><span >{{ data.data_input['hire_outcome'] }} </span></td>
+          </tr>
+        </tbody>
+    </table>
+    <pagination boundary-links="true" num-pages="pages" current-page="page"></pagination>
+  </div>
+</div>

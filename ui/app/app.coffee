@@ -13,6 +13,7 @@ App = angular.module('app', [
   'ui.bootstrap'
   'app.models.model'
   'app.models.testresults'
+  'app.models.data'
 ])
 App.config([
   '$routeProvider'

@@ -21,21 +21,26 @@ angular.module('app.models.model', ['app.config'])
       # Unix time of model creation
       created_on: null
       name: null
-      import_params: null
+      trainer: null
+      importParams: null
       negative_weights: null
       negative_weights_tree: null
       positive_weights: null
       positive_weights_tree: null
       latest_test: null
+      importhandler: null
+      features: null
 
       ### API methods ###
 
-      isNew: -> if @slug == null then true else false
+      isNew: -> if @id == null then true else false
 
       # Returns an object of job properties, for use in e.g. API requests
       # and templates
       toJSON: =>
-        name: @name
+        importhandler: @importhandler
+        trainer: @trainer
+        features: @features
 
       # Sets attributes from object received e.g. from API response
       loadFromJSON: (origData) =>
@@ -49,7 +54,8 @@ angular.module('app.models.model', ['app.config'])
         $http(
           method: 'GET'
           url: settings.apiUrl + "model/#{@name}"
-          headers: {'X-Requested-With': null}
+          headers:
+            'X-Requested-With': null
         ).then ((resp) =>
           @loaded = true
           @loadFromJSON(resp.data['model'])
@@ -59,28 +65,37 @@ angular.module('app.models.model', ['app.config'])
           return resp
         )
 
+
+      prepareSaveJSON: (json) =>
+        reqData = json or @toJSON()
+        return reqData
+
       # Makes PUT or POST request to save the object. Options:
       # ``only``: may contain a list of fields that will be sent to the server
       # (only when PUTting to existing objects, API allows partial update)
       $save: (opts={}) =>
-        saveData = @toJSON()
+        #saveData = @toJSON()
+        fd = new FormData()
+        fd.append("trainer", @trainer)
+        fd.append("importhandler", @importhandler)
+        fd.append("features", @features)
 
-        fields = opts.only || []
-        if fields.length > 0
-          for key in _.keys(saveData)
-            if key not in fields
-              delete saveData[key]
+        # fields = opts.only || []
+        # if fields.length > 0
+        #   for key in _.keys(saveData)
+        #     if key not in fields
+        #       delete saveData[key]
 
-        saveData = @prepareSaveJSON(saveData)
-
+        #saveData = @prepareSaveJSON(saveData)
         $http(
-          method: if @isNew() then 'POST' else 'PUT'
-          headers: settings.apiRequestDefaultHeaders
-          url: "#{settings.apiUrl}/jobs/#{@id or ""}"
-          params: {access_token: user.access_token}
-          data: $.param saveData
+          method: if @isNew() then "POST" else "PUT"
+          #headers: settings.apiRequestDefaultHeaders
+          headers: {'Content-Type':undefined, 'X-Requested-With': null}
+          url: "#{settings.apiUrl}model/#{@name or ""}"
+          data: fd
+          transformRequest: angular.identity
         )
-        .then((resp) => @loadFromJSON(resp.data))
+        .then((resp) => @loadFromJSON(resp.data['model']))
 
       # Requests all available jobs from API and return a list of
       # Job instances
@@ -89,7 +104,7 @@ angular.module('app.models.model', ['app.config'])
 
         $http(
           method: 'GET'
-          url: "#{settings.apiUrl}model"
+          url: "#{settings.apiUrl}model/"
           headers: settings.apiRequestDefaultHeaders
         )
         .then ((resp) =>

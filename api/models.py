@@ -8,17 +8,17 @@ from core.trainer.trainer import Trainer
 
 class Model(db.Model, Serializer):
     __public__ = ['id', 'name', 'created_on', 'import_params',
-                  'import_handler']
+                  'importhandler']
     __all_public__ = ('id', 'name', 'created_on', 'import_params',
                       'positive_weights', 'negative_weights',
                       'positive_weights_tree', 'negative_weights_tree',
-                      'import_handler', 'features', 'latest_test')
+                      'importhandler', 'features', 'latest_test')
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50))
     features = db.Column(db.Text)
     created_on = db.Column(db.DateTime)
     trainer = db.Column(db.PickleType)
-    import_handler = db.Column(db.Text)
+    importhandler = db.Column(db.Text)
     import_params = db.Column(JSONEncodedDict)
     tests = db.relationship('Test', backref='model',
                             lazy='dynamic')
@@ -42,7 +42,8 @@ class Model(db.Model, Serializer):
     @property
     def latest_test(self):
         test = self.tests.order_by('-id').first()
-        return test.to_brief_dict()
+        if test:
+            return test.to_brief_dict()
 
     def __repr__(self):
         return '<Model %r>' % self.name

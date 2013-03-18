@@ -34,9 +34,12 @@ class FeatureModel(object):
     Reads training data configuration from a file containing a JSON object.
 
     """
-    def __init__(self, config_file):
-        with open(config_file, 'r') as fp:
-            data = json.load(fp)
+    def __init__(self, config, is_file=True):
+        if is_file:
+            with open(config, 'r') as fp:
+                data = json.load(fp)
+        else:
+            data = json.loads(config)
 
         self.schema_name = data['schema-name']
         self.classifier = {}

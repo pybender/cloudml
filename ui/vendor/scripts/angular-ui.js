@@ -140,7 +140,7 @@ angular.module('ui.directives').directive('uiCodemirror', ['ui.config', '$timeou
                     var newValue = instance.getValue();
                     if (newValue !== ngModel.$viewValue) {
                         ngModel.$setViewValue(newValue);
-                        scope.$apply();
+
                     }
                     if (typeof aEvent === "function")
                         aEvent(instance, changeObj);

@@ -44,7 +44,6 @@ angular.module('app.models.testresults', ['app.config'])
       $load: =>
         if @name == null
           throw new Error "Can't load model without name"
-
         $http(
           method: 'GET'
           url: settings.apiUrl + "model/#{@model_name}/test/#{@name}"

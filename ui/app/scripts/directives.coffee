@@ -111,6 +111,114 @@ angular.module('app.directives', [
   }
 ])
 
+
+.directive('loadindicator',
+
+  () ->
+
+    ###
+    Usage::
+
+      <loadindicator title="Loading jobs..." ng-show="!jobs" progress="'90%'">
+      </loadindicator>
+
+    Specify `progress` attribute if you want a progress bar. Value could be
+    a string (enclosed in single quotes) or a function reference.
+    It will be used as watch expression to dynamically update progress.
+
+    If there's no `progress` attribute, then indicator will be simple ajaxy
+    spinner.
+    ###
+
+    return {
+      restrict: 'E'
+      replace: true
+      transclude: 'element'
+      scope: true
+      template: '''
+        <div class="loading-indicator">
+        </div>
+        '''
+
+      link: (scope, el, attrs) ->
+
+        # Show progress bar if progress attribute is specified
+        if attrs.progress
+          tmpl = '''
+            <div class="progress progress-striped active">
+              <div class="bar" style="width: 100%;"></div>
+            </div>
+            '''
+          el.addClass('loading-indicator-progress').append $(tmpl)
+
+          el.find('.bar').css width: '0%'
+          # Progress attribute value is expected to be a valid watchExpression
+          # because it is going to be watched for changes
+          scope.$watch attrs.progress, (newVal, oldVal, scope) ->
+            el.find('.bar').css width: newVal
+
+        # Spinner otherwise
+        else
+          tmpl = '''
+            <img src="/img/ajax-loader.gif">
+            '''
+          el.addClass 'loading-indicator-spin'
+          el.append $(tmpl)
+    }
+)
+
+
+.directive('alert',
+
+  () ->
+    ###
+    Use like this::
+
+      <alert ng-show="savingError"
+             alert-class="alert-error"
+             msg="savingError" unsafe></alert>
+
+    ``msg`` is an expression, and ``alert-class`` a string.
+
+    ``unsafe`` is boolean, if present then contents retrieved from ``msg``
+    are used to set the HTML content of the alert with all the markup.
+
+    Important: NEVER pass user-generated content to ``msg`` with ``unsafe`` on.
+    ###
+    return {
+      restrict: 'E'
+      replace: true
+      scope: true
+
+      template: '''
+        <div class="alert alert-block">
+          <button type="button"
+            class="close" data-dismiss="alert">&times;</button>
+          <div class="message"></div>
+        </div>
+        '''
+
+      link: (scope, el, attrs) ->
+
+        unsafe = attrs.unsafe
+        _meth = if unsafe is undefined then 'text' else 'html'
+
+        el.find('.message')[_meth] ''
+        attrs.$observe 'msg', (newVal, oldVal, scope) ->
+          if newVal
+            el.find('.message')[_meth] newVal
+
+        attrs.$observe 'htmlclass', (newVal, oldVal, scope) ->
+          alert = el
+
+          if oldVal
+            alert.removeClass oldVal
+
+          if newVal
+            alert.addClass newVal
+    }
+)
+
 .directive('scRocCurve', [ ->
   return {
     restrict: 'E',

@@ -3,3 +3,4 @@ SQLALCHEMY_DATABASE_URI = 'sqlite:///cloudml.db'
 STATIC_ROOT = None
 UPLOAD_FOLDER = 'models'
 MAX_CONTENT_LENGTH = 128 * 1024 * 1024
+DEBUG = True

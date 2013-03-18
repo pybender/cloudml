@@ -2,7 +2,7 @@
 <h2>
     {{ test.name|capfirst }} Details
     <div class="actions">
-        <a class="btn" href="#/models/{{ model.name }}/tests/{{ test.name }}/examples">
+        <a class="btn" href="#/models/{{ test.model_name }}/tests/{{ test.name }}/examples">
             <i class="status-icon icon-search"></i><small> Browse examples</small>
           </a>
     </div>
@@ -22,7 +22,7 @@
             <div class="span12">
                 <div>
                     Trained Model:
-                    <a class="value" href="#/models/{{ model.name }}">{{ model.name }}</a>
+                    <a class="value" href="#/models/{{ test.model_name }}">{{ test.model_name }}</a>
                 </div>
                 <div>
                     Import parameters:

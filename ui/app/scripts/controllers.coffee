@@ -11,47 +11,44 @@ angular.module('app.controllers', ['app.config', ])
   '$scope'
 
   ($scope) ->
-    $scope.objNumTotal = 0
-    $scope.objNumDisplayed = 0
+    $scope.pages = 0
+    $scope.page = 1
+    $scope.total = 0
+    $scope.per_page = 20
+
     $scope.objects = []
-    $scope.objPerLoad = 10
-    $scope.haveMoreToLoad = true
-    $scope.loadingMore = false
+    $scope.loading = false
 
     $scope.init = (opts={}) =>
       if not _.isFunction(opts.objectLoader)
         throw new Error "Invalid object loader supplied to ObjectListCtrl"
 
       $scope.objectLoader = opts.objectLoader
-      $scope.loadMore()
+      $scope.load()
 
-    $scope.loadMore = =>
-      if $scope.loadingMore
+      $scope.$watch('page', (page, oldVal, scope) ->
+        $scope.load()
+      , true)
+
+    $scope.load = =>
+      if $scope.loading
         return false
-
-      $scope.loadingMore = true
-
+      $scope.loading = true
       $scope.objectLoader(
-        count: $scope.objPerLoad
-        offset: $scope.objNumDisplayed
+        page: $scope.page
       ).then ((opts) ->
-        $scope.loadingMore = false
-
-        $scope.objNumTotal = opts.total
-        $scope.objects.push.apply $scope.objects, opts.objects
-
-        objNumDisplayedBeforeUpdate = $scope.objNumDisplayed
-        $scope.objNumDisplayed = $scope.objects.length
-        if $scope.objNumDisplayed == objNumDisplayedBeforeUpdate
-          $scope.haveMoreToLoad = false
+        $scope.loading = false
+        $scope.total = opts.total
+        $scope.page = opts.page
+        $scope.pages = opts.pages
+        $scope.per_page = opts.per_page
+        $scope.objects = opts.objects
 
         # Notify interested parties by emitting and broadcasting an event
         # Event contains
         $scope.$broadcast 'ObjectListCtrl:load:success', $scope.objects
-
       ), ((opts) ->
         $scope.$broadcast 'ObjectListCtrl:load:error', opts
-
       )
 ])
 
@@ -148,35 +145,61 @@ angular.module('app.controllers', ['app.config', ])
   '$http'
   '$location'
   'settings'
+  'Model'
 
-($scope, $http, $location, settings) ->
+($scope, $http, $location, settings, Model) ->
   $scope.path = [{label: 'Home', url: '#/'},
-  {label: 'Train Model', url: '#/add_model'}]
+  {label: 'Add Model', url: '#/add_model'}]
+
+  $scope.model = new Model()
+  $scope.new = true
+
   $scope.upload = ->
-    fd = new FormData()
-    fd.append("import_handler_local", $scope.import_handler_local)
-    fd.append("features", $scope.features)
-    $http(
-      method: "POST"
-      url: settings.apiUrl + "model/train/#{$scope.name}"
-      data: fd
-      headers: {'Content-Type':undefined, 'X-Requested-With': null}
-      transformRequest: angular.identity
-    ).success((data, status, headers, config) ->
-      $scope.msg = data.name
-      $location.path '/models'
+    $scope.saving = true
+    $scope.savingProgress = '0%'
+    $scope.savingError = null
+
+    _.defer ->
+      $scope.savingProgress = '50%'
+      $scope.$apply()
+
+    $scope.model.$save().then (->
+      $scope.savingProgress = '100%'
+
+      _.delay (->
+        $location.path '/models'
+        $scope.$apply()
+      ), 300
+
+    ), ((resp) ->
+      $scope.saving = false
+      $scope.savingError = "Error while saving: server responded with " +
+        "#{resp.status} (#{resp.data.error or "no message"}). " +
+        "Make sure you filled the form correctly. " +
+        "Please contact support if the error will not go away."
     )
-  $scope.setImportHandlerLocalFile = (element) ->
+
+  $scope.setImportHandlerFile = (element) ->
       $scope.$apply ($scope) ->
         $scope.msg = ""
         $scope.error = ""
-        $scope.import_handler_local = element.files[0]
+        $scope.import_handler = element.files[0]
+        reader = new FileReader()
+        reader.onload = (e) ->
+          str = e.target.result
+          $scope.model.importhandler = str
+        reader.readAsText($scope.import_handler)
 
   $scope.setFeaturesFile = (element) ->
       $scope.$apply ($scope) ->
         $scope.msg = ""
         $scope.error = ""
         $scope.features = element.files[0]
+        reader = new FileReader()
+        reader.onload = (e) ->
+          str = e.target.result
+          $scope.model.features = str
+        reader.readAsText($scope.features)
 ])
 
 .controller('UploadModelCtl', [
@@ -184,42 +207,56 @@ angular.module('app.controllers', ['app.config', ])
   '$http'
   '$location'
   'settings'
+  'Model'
 
-($scope, $http, $location, settings) ->
+($scope, $http, $location, settings, Model) ->
   $scope.path = [{label: 'Home', url: '#/'},
   {label: 'Upload Trained Model', url: '#/upload_model'}]
+ 
+  $scope.new = true
+  $scope.model = new Model()
+
   $scope.upload = ->
-    fd = new FormData()
-    fd.append("file", $scope.file)
-    fd.append("import_handler_local", $scope.import_handler_local)
-    fd.append("features", $scope.features)
-    $http(
-      method: "POST"
-      url: settings.apiUrl + "model/#{$scope.name}"
-      data: fd
-      headers: {'Content-Type':undefined, 'X-Requested-With': null}
-      transformRequest: angular.identity
-    ).success((data, status, headers, config) ->
-      $scope.msg = data.name
-      $location.path '/models'
+    
+    $scope.saving = true
+    $scope.savingProgress = '0%'
+    $scope.savingError = null
+    _.defer ->
+      $scope.savingProgress = '50%'
+      $scope.$apply()
+    $scope.model.$save().then (->
+      $scope.savingProgress = '100%'
+
+      _.delay (->
+        $location.path '/models'
+        $scope.$apply()
+      ), 300
+
+    ), ((resp) ->
+      $scope.saving = false
+      $scope.savingError = "Error while saving: server responded with " +
+        "#{resp.status} (#{resp.data.error or "no message"}). " +
+        "Make sure you filled the form correctly. " +
+        "Please contact support if the error will not go away."
     )
-  $scope.setFile = (element) ->
-      $scope.$apply ($scope) ->
-        $scope.msg = ""
-        $scope.error = ""
-        $scope.file = element.files[0]
 
-  $scope.setImportHandlerLocalFile = (element) ->
+  $scope.setModelFile = (element) ->
       $scope.$apply ($scope) ->
         $scope.msg = ""
         $scope.error = ""
-        $scope.import_handler_local = element.files[0]
+        $scope.model_file = element.files[0]
+        $scope.model.trainer = element.files[0]
 
-  $scope.setFeaturesFile = (element) ->
+  $scope.setImportHandlerFile = (element) ->
       $scope.$apply ($scope) ->
         $scope.msg = ""
         $scope.error = ""
-        $scope.features = element.files[0]
+        $scope.import_handler = element.files[0]
+        reader = new FileReader()
+        reader.onload = (e) ->
+          str = e.target.result
+          $scope.model.importhandler = str
+        reader.readAsText($scope.import_handler)
 ])
 
 .controller('ModelDetailsCtrl', [
@@ -247,7 +284,7 @@ angular.module('app.controllers', ['app.config', ])
   $scope.model.$load().then (->
     $scope.latest_test = new Test($scope.model.latest_test)
     ), (->
-      console.error "Couldn't get model"
+      #console.error "Couldn't get model"
       $scope.error = data
       $scope.httpError = true
     )
@@ -271,13 +308,13 @@ angular.module('app.controllers', ['app.config', ])
     if not $scope.importHandlerChanged
       return false
 
-    $scope.model.$save(only: ['import_handler']).then (() ->
+    $scope.model.$save(only: ['importhandler']).then (() ->
       $scope.importHandlerChanged = false
     ), (() ->
       throw new Error "Unable to save import handler"
     )
 
-  $scope.$watch 'model.import_handler', (newVal, oldVal) ->
+  $scope.$watch 'model.importhandler', (newVal, oldVal) ->
     if newVal? and oldVal? and  newVal != "" and oldVal != ""
       $scope.importHandlerChanged = true
 
@@ -312,7 +349,7 @@ angular.module('app.controllers', ['app.config', ])
 
   $scope.test.$load().then (->
     ), (->
-      console.error "Couldn't get test"
+      #console.error "Couldn't get test"
       $scope.error = data
       $scope.httpError = true
     )
@@ -324,32 +361,21 @@ angular.module('app.controllers', ['app.config', ])
   '$http'
   '$routeParams'
   'settings'
+  'Data'
 
-($scope, $http, $routeParams, settings) ->
+($scope, $http, $routeParams, settings, Data) ->
   $scope.path = [{label: 'Home', url: '#/'},
                  {label: 'Models', url: '#/models'},
                  {label: 'Model Details', url: "#/models/#{$routeParams.name}"},
                  {label: 'Test Details', url: "#/models/#{$routeParams.name}/\
 tests/#{$routeParams.test_name}"},
                  {label: 'Test Examples', url: ''}]
-  $scope.currentPage = 1
-  $scope.$watch('currentPage',
-    (currentPage, oldVal, scope) ->
-      $http(
-        method: 'GET'
-        url: settings.apiUrl +
-          "model/#{$routeParams.name}/test/#{$routeParams.test_name}\
-/data?page=#{currentPage}"
-        headers: {'X-Requested-With': null}
-      ).success((data, status, headers, config) ->
-          $scope.data = data.data
-          $scope.test = data.test
-          $scope.model = data.model
-      ).error((data, status, headers, config) ->
-          $scope.error = data
-      )
-    , true)
-
+  $scope.test_name = $routeParams.test_name
+  $scope.loadDatas = () ->
+    # Used for ObjectListCtrl initialization
+    (pagination_opts) ->
+      Data.$loadAll(_.extend({model_name: $routeParams.name,
+      test_name: $routeParams.test_name}, pagination_opts))
 ])
 
 .controller('ExampleDetailsCtrl', [
@@ -357,27 +383,23 @@ tests/#{$routeParams.test_name}"},
   '$http'
   '$routeParams'
   'settings'
+  'Data'
 
-($scope, $http, $routeParams, settings) ->
+($scope, $http, $routeParams, settings, Data) ->
   $scope.path = [{label: 'Home', url: '#/'},
                  {label: 'Models', url: '#/models'},
                  {label: 'Model Details', url: ''},
                  {label: 'Test Details', url: ''},
                  {label: 'Test Examples', url: ''},
                  {label: 'Example Details', url: ''}]
-  $http(
-    method: 'GET'
-    url: settings.apiUrl +
-      "model/#{$routeParams.name}/test/#{$routeParams.test_name}/" +
-      "data/#{$routeParams.data_id}"
-    headers: {'X-Requested-With': null}
-  ).success((data, status, headers, config) ->
-      $scope.data = data.data
-      $scope.test = data.test
-      $scope.model = data.model
+  if not $scope.data
+    $scope.data = new Data({model_name: $routeParams.name,
+    test_name: $routeParams.test_name,
+    id: $routeParams.data_id})
 
-  ).error((data, status, headers, config) ->
+  $scope.data.$load().then (->
+    ), (->
       $scope.error = data
-  )
-
+      $scope.httpError = true
+    )
 ])
