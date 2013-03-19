@@ -7,11 +7,12 @@ from api.serialization import Serializer
 
 class Model(db.Model, Serializer):
     __public__ = ['id', 'name', 'created_on', 'import_params',
-                  'importhandler', 'status']
+                  'importhandler', 'status', 'train_importhandler']
     __all_public__ = ('id', 'name', 'created_on', 'status', 'import_params',
                       'positive_weights', 'negative_weights',
                       'positive_weights_tree', 'negative_weights_tree',
-                      'importhandler', 'features', 'latest_test')
+                      'importhandler', 'features', 'latest_test',
+                      'train_importhandler')
     STATUS_NEW = 'New'
     STATUS_QUEUED = 'Queued'
     STATUS_TRAINING = 'Training'

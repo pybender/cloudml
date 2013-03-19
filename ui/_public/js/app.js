@@ -814,6 +814,7 @@ angular.module('app.models.controllers', ['app.config']).controller('ModelListCt
   '$scope', '$http', '$location', '$routeParams', '$dialog', 'settings', 'Model', 'TestResult', function($scope, $http, $location, $routeParams, $dialog, settings, Model, Test) {
     var DEFAULT_ACTION,
       _this = this;
+    $scope.msg = '';
     if (!$scope.model) {
       if (!$routeParams.name) {
         throw new Error("Can't initialize model detail controller      without model name");
@@ -825,7 +826,7 @@ angular.module('app.models.controllers', ['app.config']).controller('ModelListCt
     $scope.model.$load().then((function() {
       return $scope.latest_test = new Test($scope.model.latest_test);
     }), (function() {
-      $scope.error = data;
+      $scope.err = data;
       return $scope.httpError = true;
     }));
     DEFAULT_ACTION = 'model:details';
@@ -843,23 +844,24 @@ angular.module('app.models.controllers', ['app.config']).controller('ModelListCt
         return Test.$loadTests($scope.model.name);
       };
     };
-    $scope.saveImportHandlerChanges = function() {
-      if (!$scope.importHandlerChanged) {
-        return false;
-      }
+    $scope.saveTrainHandler = function() {
       return $scope.model.$save({
-        only: ['importhandler']
+        only: ['train_importhandler']
       }).then((function() {
-        return $scope.importHandlerChanged = false;
+        return $scope.msg = 'Import Handler for training model saved';
       }), (function() {
         throw new Error("Unable to save import handler");
       }));
     };
-    return $scope.$watch('model.importhandler', function(newVal, oldVal) {
-      if ((newVal != null) && (oldVal != null) && newVal !== "" && oldVal !== "") {
-        return $scope.importHandlerChanged = true;
-      }
-    });
+    return $scope.saveTestHandler = function() {
+      return $scope.model.$save({
+        only: ['importhandler']
+      }).then((function() {
+        return $scope.msg = 'Import Handler for tests saved';
+      }), (function() {
+        throw new Error("Unable to save import handler");
+      }));
+    };
   }
 ]).controller('TrainModelCtrl', [
   '$scope', '$http', 'dialog', 'settings', function($scope, $http, dialog, settings) {

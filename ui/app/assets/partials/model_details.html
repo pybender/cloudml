@@ -29,12 +29,18 @@
 <alert-message ng-show="model.status == 'Trained' && model.latest_test == null" class="alert-success" msg='Model is successfully trained. You could start running tests now.' unsafe>
 </alert-message>
 
+<alert-message ng-show="msg" class="alert-info" msg='{{ msg }}' unsafe>
+</alert-message>
+
+<alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe>
+</alert-message>
+
 <ul class="nav nav-tabs" id="tabs">
   <li  ng-class="{active: action[0] == 'model'}"><a ng-click="action = ['model', 'details']">Details</a></li>
   <li ng-class="{active: action[0] == 'weights'}"><a  ng-click="action = ['weights', 'file']">Parameters Weights</a></li>
   <li ng-class="{active: action[0] == 'test'}"><a  ng-click="action = ['test', 'list']">Tests</a></li>
   <li ng-class="{active: action[0] == 'features'}"><a ng-click="action = ['features', 'file']">Features</a></li>
-  <li ng-class="{active: action[0] == 'import_handler'}"><a  ng-click="action = ['import_handler', 'file']">Import Handler</a></li>
+  <li ng-class="{active: action[0] == 'import_handlers'}"><a ng-click="action = ['import_handlers', 'train']">Import Handlers</a></li>
 </ul>
  
 <div class="tab-content">
@@ -94,12 +100,21 @@
         </div>
     </div>
   </div>
-  <div ng-show="action[0] == 'import_handler'" id="import_handler">
-    <h5>Here is import handler file for running tests:</h5>
-    <span ng-click="saveImportHandlerChanges()"
-        ng-show="importHandlerChanged"
-        class="btn btn-primary">Save</span>
-    <textarea ui-codemirror="{ mode: {name: 'javascript', json: true} }" ng-model="model.importhandler"> </textarea>
+  <div ng-show="action[0] == 'import_handlers'">
+    <div class="switcher">
+      <a ng-click="action = ['import_handlers', 'train']" ng-class="{active: action[1] == 'train'}">for training</a> |
+      <a ng-click="action = ['import_handlers', 'test']" ng-class="{active: action[1] == 'test'}">for testing</a>
+    </div>
+    <div ng-show="action[1] == 'train'">
+      <h5>Here is import handler file for running tests:</h5>
+      <span ng-click="saveTrainHandler()" class="btn btn-primary">Save</span>
+      <textarea name="train_import_handler" ui-codemirror="{ mode: {name: 'javascript', json: true} }" ng-model="model.train_importhandler"> </textarea>
+    </div>
+    <div ng-show="action[1] == 'test'">
+      <h5>Here is import handler file for running tests:</h5>
+      <span ng-click="saveTestHandler()" class="btn btn-primary">Save</span>
+      <textarea name="test_import_handler" ui-codemirror="{ mode: {name: 'javascript', json: true} }" ng-model="model.importhandler"> </textarea>
+    </div>
   </div>
   <div ng-show="action[0] == 'features'"  id="features">
     <textarea ui-codemirror="{ mode: {name: 'javascript', json: true} }" ng-model="model.features"> </textarea>

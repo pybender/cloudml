@@ -154,6 +154,8 @@ angular.module('app.models.controllers', ['app.config', ])
   'TestResult'
 
 ($scope, $http, $location, $routeParams, $dialog, settings, Model, Test) ->
+  $scope.msg = ''
+
   if not $scope.model
     if not $routeParams.name
       throw new Error "Can't initialize model detail controller
@@ -165,7 +167,7 @@ angular.module('app.models.controllers', ['app.config', ])
     $scope.latest_test = new Test($scope.model.latest_test)
     ), (->
       #console.error "Couldn't get model"
-      $scope.error = data
+      $scope.err = data
       $scope.httpError = true
     )
 
@@ -184,19 +186,19 @@ angular.module('app.models.controllers', ['app.config', ])
     (pagination_opts) ->
       Test.$loadTests($scope.model.name)
 
-  $scope.saveImportHandlerChanges = =>
-    if not $scope.importHandlerChanged
-      return false
-
-    $scope.model.$save(only: ['importhandler']).then (() ->
-      $scope.importHandlerChanged = false
+  $scope.saveTrainHandler = =>
+    $scope.model.$save(only: ['train_importhandler']).then (() ->
+      $scope.msg = 'Import Handler for training model saved'
     ), (() ->
       throw new Error "Unable to save import handler"
     )
 
-  $scope.$watch 'model.importhandler', (newVal, oldVal) ->
-    if newVal? and oldVal? and  newVal != "" and oldVal != ""
-      $scope.importHandlerChanged = true
+  $scope.saveTestHandler = =>
+    $scope.model.$save(only: ['importhandler']).then (() ->
+      $scope.msg = 'Import Handler for tests saved'
+    ), (() ->
+      throw new Error "Unable to save import handler"
+    )
 ])
 
 .controller('TrainModelCtrl', [
