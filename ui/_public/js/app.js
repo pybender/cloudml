@@ -677,7 +677,7 @@ add_zero = function(val) {
 var LOCAL_SETTINGS;
 
 LOCAL_SETTINGS = {
-  apiUrl: 'http://127.0.0.1:5000/cloudml/b/v1/'
+  apiUrl: 'http://172.27.67.106:5000/api/cloudml/b/v1/'
 };
 
 angular.module('app.local_config', []).constant('settings', LOCAL_SETTINGS);

@@ -47,7 +47,7 @@ def install():
 
 @task
 def setup():
-    fabd.mkdirs.run()
+#    fabd.mkdirs.run()
 #
 #    with settings(warn_only=True):
 #        postgres.create_user.run()
@@ -59,14 +59,14 @@ def setup():
     #     rabbitmq.add_vhost.run()
     # rabbitmq.set_permissions.run()
 
-    apache.wsgi_push.run()
-    apache.push_config.run()
-    apache.graceful.run()
+    # apache.wsgi_push.run()
+    # apache.push_config.run()
+    # apache.graceful.run()
 
    # pip.push_config.run()
 
-    #supervisor.push_configs.run()
-    #supervisor.d.run()
+    supervisor.push_configs.run()
+    supervisor.d.run()
 
 @task
 def qdeploy():
@@ -83,7 +83,7 @@ def deploy():
 
 
     
-    #supervisor.push_configs.run()
+    supervisor.push_configs.run()
     apache.wsgi_push.run()
     push_flask_config.run()
 
@@ -101,11 +101,11 @@ def deploy():
 
     version.activate.run()
 
-    #supervisor.update.run()
-    # supervisor.restart_program.run(program='celeryd')
+    supervisor.update.run()
+    supervisor.restart_program.run(program='celeryd')
     # supervisor.restart_program.run(program='celerycam')
     # supervisor.restart_program.run(program='celerybeat')
-    # supervisor.reload.run()
+    supervisor.reload.run()
 
     apache.wsgi_touch.run()
 
