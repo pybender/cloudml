@@ -20,6 +20,7 @@ def train_model(model, parameters):
             raise InvalidOperationError("Model already trained")
 
         model.status = Model.STATUS_TRAINING
+        model.error = ""
         db.session.commit()
 
         feature_model = FeatureModel(model.features, is_file=False)
@@ -30,8 +31,9 @@ def train_model(model, parameters):
         model.set_trainer(trainer)
         model.status = Model.STATUS_TRAINED
         db.session.commit()
-    except Exception:
+    except Exception, exc:
         model.status = Model.STATUS_ERROR
+        model.error = str(exc)
         db.session.merge(model)
         db.session.commit()
         return 'Failed'
@@ -48,7 +50,8 @@ def run_test(test, model):
         if model.status != Model.STATUS_TRAINED:
             raise InvalidOperationError("Train model before")
 
-        test.status = Model.STATUS_IN_PROGRESS
+        test.status = Test.STATUS_IN_PROGRESS
+        test.error = ""
         db.session.commit()
 
         metrics, raw_data = model.run_test(test.parameters)
@@ -72,8 +75,9 @@ def run_test(test, model):
         db.session.commit()
         # store test data in db
         Data.loads_from_raw_data(model, test, raw_data)
-    except Exception:
+    except Exception, exc:
         test.status = Test.STATUS_ERROR
+        test.error = str(exc)
         db.session.merge(test)
         db.session.commit()
         return 'Failed'

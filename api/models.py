@@ -7,12 +7,12 @@ from api.serialization import Serializer
 
 class Model(db.Model, Serializer):
     __public__ = ['id', 'name', 'created_on', 'import_params',
-                  'importhandler', 'status', 'train_importhandler']
+                  'importhandler', 'status', 'train_importhandler', 'error']
     __all_public__ = ('id', 'name', 'created_on', 'status', 'import_params',
                       'positive_weights', 'negative_weights',
                       'positive_weights_tree', 'negative_weights_tree',
                       'importhandler', 'features', 'latest_test',
-                      'train_importhandler')
+                      'train_importhandler', 'error')
     STATUS_NEW = 'New'
     STATUS_QUEUED = 'Queued'
     STATUS_TRAINING = 'Training'
@@ -23,6 +23,7 @@ class Model(db.Model, Serializer):
     name = db.Column(db.String(50), unique=True)
     created_on = db.Column(db.DateTime)
     status = db.Column(db.String(10), default=STATUS_NEW)
+    error = db.Column(db.Text)
 
     features = db.Column(db.Text)
     import_params = db.Column(JSONEncodedDict)
@@ -85,7 +86,7 @@ class Test(db.Model, Serializer):
                   'parameters', 'data_count', 'status')
     __all_public__ = ('id', 'name', 'created_on', 'accuracy', 'parameters',
                       'classes_set', 'metrics', 'data_count',
-                      'status')
+                      'status', 'error')
     STATUS_QUEUED = 'Queued'
     STATUS_IN_PROGRESS = 'In Progress'
     STATUS_COMPLETED = 'Completed'
@@ -94,6 +95,7 @@ class Test(db.Model, Serializer):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50))
     status = db.Column(db.String(10), default=STATUS_IN_PROGRESS)
+    error = db.Column(db.Text)
     created_on = db.Column(db.DateTime)
     model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
 

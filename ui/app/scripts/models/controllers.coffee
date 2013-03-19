@@ -48,8 +48,9 @@ angular.module('app.models.controllers', ['app.config', ])
 
     ), ((resp) ->
       $scope.saving = false
-      $scope.savingError = "Error while saving: server responded with " +
-        "#{resp.status} (#{resp.data.error or "no message"}). " +
+      $scope.err = "Error while saving: server responded with " +
+        "#{resp.status} " +
+        "(#{resp.data.response.error.message or "no message"}). " +
         "Make sure you filled the form correctly. " +
         "Please contact support if the error will not go away."
     )
@@ -112,14 +113,15 @@ angular.module('app.models.controllers', ['app.config', ])
       $scope.savingProgress = '100%'
 
       _.delay (->
-        $location.path '/models'
+        $location.path $scope.model.objectUrl()
         $scope.$apply()
       ), 300
 
     ), ((resp) ->
       $scope.saving = false
-      $scope.savingError = "Error while saving: server responded with " +
-        "#{resp.status} (#{resp.data.error or "no message"}). " +
+      $scope.err = "Error while saving: server responded with " +
+        "#{resp.status} " +
+        "(#{resp.data.response.error.message or "no message"}). " +
         "Make sure you filled the form correctly. " +
         "Please contact support if the error will not go away."
     )

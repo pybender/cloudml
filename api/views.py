@@ -8,6 +8,7 @@ from api.decorators import render
 from api import db, api
 from api.utils import crossdomain, ERR_NO_SUCH_MODEL, odesk_error_response
 from api.models import Model, Test, Data
+from api.exceptions import MethodException
 from api.tasks import train_model, run_test
 
 from core.trainer.store import load_trainer
@@ -82,17 +83,20 @@ class Models(restful.Resource):
         model.delete()
         return '', 204
 
+    @render(code=201)
     def post(self, model):
         """
         Adds new Trained Model
         """
         param = model_parser.parse_args()
-        if not param['features']:
-            return self._upload(model, param)
-        else:
-            return self._add(model, param)
+        try:
+            if not param['features']:
+                return self._upload(model, param)
+            else:
+                return self._add(model, param)
+        except Exception, exc:
+            raise MethodException(exc.message)
 
-    @render(code=201)
     def _add(self, model, param):
         model = Model(model)
         model.train_importhandler = param['train_importhandler']
@@ -109,7 +113,6 @@ class Models(restful.Resource):
         db.session.commit()
         return {'model': model}
 
-    @render(code=201)
     def _upload(self, model, param):
         """
         Upload already trained Model

@@ -4,6 +4,9 @@
       <a ng-href="#" href="#">(Cancel)</a>
   </small>
 </h2>
+
+<alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+
 <form name="UploadModelForm" class="form-horizontal">
   <p class="lead">
     Please upload features and define import handler.

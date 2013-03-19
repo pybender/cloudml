@@ -11,6 +11,8 @@
   progress="savingProgress">
 </loadindicator>
 
+<alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+
 <form name="UploadModelForm" class="form-horizontal">
   <p class="lead">
     Please upload pickled trained model and define import handler.
@@ -21,7 +23,7 @@
       <input type="text" name="name" ng-model="model.name" required>
       <span ng-show="UploadModelForm.name.$error.required" class="help-inline">
         Required</span>
-        <span class="help-block">json file with features</span>
+        <span class="help-block">name without spaces</span>
     </div>
   </div>
   <div class="control-group" ng-class="{error: !model_file}">

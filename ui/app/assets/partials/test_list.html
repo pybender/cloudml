@@ -11,9 +11,9 @@
       </tr>
   </thead>
   <tbody>
-    <tr ng-repeat="test in objects | filter:search | orderBy:'-id'" ng-class="{warning : test.status=='In Progress', success : test.status =='Completed'}">
+    <tr ng-repeat="test in objects | filter:search | orderBy:'-id'" ng-class="{error : test.status=='Error', warning : test.status=='In Progress', success : test.status =='Completed'}">
       <td><a href="#/models/{{ model.name }}/tests/{{ test.name }}">{{ test.name }}</a></td>
-      <td>{{ test.status }}</td>
+      <td title="{{ test.error }}">{{ test.status }}</td>
       <td>{{ test.created_on|format_date }}</td>
       <td><span class="value" ng-repeat="(key, val) in test.parameters">{{ key }}={{ val }}</span></td>
       <td>{{ test.accuracy.toFixed(4) }}</td>

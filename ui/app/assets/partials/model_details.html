@@ -6,7 +6,7 @@
         <i title="Apply the classifier to the input provided by the data import handler" class="status-icon icon-play"></i>
         Run test
       </button>
-      <button ng-show="model.status == 'New'" ng-click="train_model(model)" class="btn btn-info">
+      <button ng-show="model.status == 'New' || model.status == 'Error'" ng-click="train_model(model)" class="btn btn-info">
         <i title="Train your model" class="icon-tasks"></i>
         Start training
       </button>
@@ -25,6 +25,8 @@
 
 <alert-message ng-show="model.status == 'Error'" class="alert-error" msg='Error occures while model training. Look at celery tasks for details' unsafe>
 </alert-message>
+
+<alert-message ng-show="model.error" class="alert-error" msg="{{ model.error }}" unsafe></alert-message>
 
 <alert-message ng-show="model.status == 'Trained' && model.latest_test == null" class="alert-success" msg='Model is successfully trained. You could start running tests now.' unsafe>
 </alert-message>
@@ -51,6 +53,12 @@
                 Created at:
                 <span class="value">
                     {{ model.created_on|format_date }}
+                </span>
+            </div>
+            <div>
+                Status:
+                <span class="value">
+                    {{ model.status }}
                 </span>
             </div>
             <div class="block" ng-show="latest_test">
