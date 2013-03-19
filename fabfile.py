@@ -45,6 +45,10 @@ def install():
         pip.install.run(app=app)
 
 @task
+def push_key():
+    ssh.push_key.run(pub_key_file='~/.ssh/id_rsa.pub')
+
+@task
 def setup():
     # fabd.mkdirs.run()
 
