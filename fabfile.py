@@ -101,7 +101,7 @@ def deploy():
     supervisor.restart_program.run(program='celeryd')
     # supervisor.restart_program.run(program='celerycam')
     # supervisor.restart_program.run(program='celerybeat')
-    supervisor.reload.run()
+    #supervisor.reload.run()
 
     apache.wsgi_touch.run()
 
