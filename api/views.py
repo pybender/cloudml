@@ -145,7 +145,7 @@ class Models(restful.Resource):
         parser = populate_parser(model)
         parameters = parser.parse_args()
 
-        model.status = Model.STATUS_TRAINING
+        model.status = Model.STATUS_QUEUED
         db.session.commit()
 
         train_model.delay(model, parameters)
@@ -184,6 +184,7 @@ class Tests(restful.Resource):
         parameters = parser.parse_args()
 
         test = Test(model)
+        test.status = Test.STATUS_QUEUED
         test.parameters = parameters
         db.session.add(test)
         db.session.commit()

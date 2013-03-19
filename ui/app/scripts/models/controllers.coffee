@@ -16,21 +16,6 @@ angular.module('app.models.controllers', ['app.config', ])
     # Used for ObjectListCtrl initialization
     (pagination_opts) ->
       Model.$loadAll()
-
-  $scope.test = (model)->
-    d = $dialog.dialog(
-      modalFade: false
-    )
-    d.model = model
-    d.open('partials/modal.html', 'TestDialogController')
-
-  $scope.train = (model) ->
-    d = $dialog.dialog(
-      modalFade: false
-    )
-    d.model = model
-    d.open('partials/model_train_popup.html', 'TrainModelCtrl')
-  
 ])
 
 .controller('AddModelCtl', [
@@ -57,7 +42,7 @@ angular.module('app.models.controllers', ['app.config', ])
       $scope.savingProgress = '100%'
 
       _.delay (->
-        $location.path '/models'
+        $location.path $scope.model.objectUrl()
         $scope.$apply()
       ), 300
 
@@ -212,13 +197,6 @@ angular.module('app.models.controllers', ['app.config', ])
   $scope.$watch 'model.importhandler', (newVal, oldVal) ->
     if newVal? and oldVal? and  newVal != "" and oldVal != ""
       $scope.importHandlerChanged = true
-
-  $scope.test = (model)->
-    d = $dialog.dialog(
-      modalFade: false
-    )
-    d.model = model
-    d.open('partials/modal.html', 'TestDialogController')
 ])
 
 .controller('TrainModelCtrl', [
@@ -242,4 +220,31 @@ angular.module('app.models.controllers', ['app.config', ])
       ), (() ->
         throw new Error "Unable to start model training"
       )
+])
+
+.controller('ModelActionsCtrl', [
+  '$scope'
+  '$dialog'
+
+  ($scope, $dialog) ->
+    $scope.init = (opts={}) =>
+      if not opts.model
+        throw new Error "Please specify model"
+
+      $scope.model = opts.model
+
+    $scope.test_model = (model)->
+      d = $dialog.dialog(
+        modalFade: false
+      )
+      d.model = model
+      d.open('partials/modal.html', 'TestDialogController')
+
+    $scope.train_model = (model)->
+      d = $dialog.dialog(
+        modalFade: false
+      )
+      d.model = model
+      d.open('partials/model_train_popup.html', 'TrainModelCtrl')
+  
 ])

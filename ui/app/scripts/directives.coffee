@@ -155,7 +155,7 @@ angular.module('app.directives', [
 )
 
 
-.directive('alert',
+.directive('alertMessage',
 
   () ->
     ###

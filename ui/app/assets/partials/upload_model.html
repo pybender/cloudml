@@ -21,6 +21,7 @@
       <input type="text" name="name" ng-model="model.name" required>
       <span ng-show="UploadModelForm.name.$error.required" class="help-inline">
         Required</span>
+        <span class="help-block">json file with features</span>
     </div>
   </div>
   <div class="control-group" ng-class="{error: !model_file}">
@@ -29,6 +30,7 @@
       <input type="file" name="model_file" ng-model="model.model_file" onchange="angular.element(this).scope().setModelFile(this)">
       <span ng-show="!model_file" class="help-inline">
           Required</span>
+      <span class="help-block">pickled trained model file</span>
     </div>
   </div>
   <div class="control-group" ng-class="{error: !import_handler}">
@@ -37,6 +39,7 @@
       <input type="file" name="import_handler" ng-model="model.import_handler" onchange="angular.element(this).scope().setImportHandlerFile(this)">
       <span ng-show="!import_handler" class="help-inline">
           Required</span>
+      <span class="help-block">json file with import data details that would be used to test model</span>
     </div>
   </div>
 

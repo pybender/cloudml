@@ -13,8 +13,10 @@ class Model(db.Model, Serializer):
                       'positive_weights_tree', 'negative_weights_tree',
                       'importhandler', 'features', 'latest_test')
     STATUS_NEW = 'New'
+    STATUS_QUEUED = 'Queued'
     STATUS_TRAINING = 'Training'
     STATUS_TRAINED = 'Trained'
+    STATUS_ERROR = 'Error'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), unique=True)
@@ -83,8 +85,10 @@ class Test(db.Model, Serializer):
     __all_public__ = ('id', 'name', 'created_on', 'accuracy', 'parameters',
                       'classes_set', 'metrics', 'data_count',
                       'status')
+    STATUS_QUEUED = 'Queued'
     STATUS_IN_PROGRESS = 'In Progress'
     STATUS_COMPLETED = 'Completed'
+    STATUS_ERROR = 'Error'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50))

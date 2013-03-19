@@ -1,5 +1,5 @@
 <h2>
-  Train new Model
+  Add New Model
   <small>
       <a ng-href="#" href="#">(Cancel)</a>
   </small>
@@ -14,6 +14,7 @@
       <input type="text" name="name" ng-model="model.name" required>
       <span ng-show="UploadModelForm.name.$error.required" class="help-inline">
         Required</span>
+      <span class="help-block">name should be without spaces</span>
     </div>
   </div>
   <div class="control-group" ng-class="{error: !features}">
@@ -22,6 +23,7 @@
       <input type="file" name="features" ng-model="model.features" onchange="angular.element(this).scope().setFeaturesFile(this)">
       <span ng-show="!features" class="help-inline">
           Required</span>
+      <span class="help-block">json file with features</span>
     </div>
   </div>
   <div class="control-group" ng-class="{error: !import_handler}">
@@ -30,6 +32,7 @@
       <input type="file" name="train_importhandler" ng-model="model.train_importhandler" onchange="angular.element(this).scope().setTrainImportHandlerFile(this)">
       <span ng-show="!import_handler" class="help-inline">
           Required</span>
+      <span class="help-block">json file with import data details that would be used to train model</span>
     </div>
   </div>
   <div class="control-group" ng-class="{error: !import_handler}">
@@ -38,6 +41,7 @@
       <input type="file" name="importhandler" ng-model="model.importhandler" onchange="angular.element(this).scope().setImportHandlerFile(this)">
       <span ng-show="!import_handler" class="help-inline">
           Required</span>
+      <span class="help-block">json file with import data details that would be used to test model</span>
     </div>
   </div>
   <br />

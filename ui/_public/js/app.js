@@ -432,7 +432,7 @@ angular.module('app.directives', ['app.services']).directive('appVersion', [
       }
     }
   };
-}).directive('alert', function() {
+}).directive('alertMessage', function() {
   /*
       Use like this::
   
@@ -677,7 +677,7 @@ add_zero = function(val) {
 var LOCAL_SETTINGS;
 
 LOCAL_SETTINGS = {
-  apiUrl: 'http://172.27.77.242/api/cloudml/b/v1/'
+  apiUrl: 'http://127.0.0.1:5000/cloudml/b/v1/'
 };
 
 angular.module('app.local_config', []).constant('settings', LOCAL_SETTINGS);
@@ -688,26 +688,10 @@ angular.module('app.local_config', []).constant('settings', LOCAL_SETTINGS);
 
 angular.module('app.models.controllers', ['app.config']).controller('ModelListCtrl', [
   '$scope', '$http', '$dialog', 'settings', 'Model', function($scope, $http, $dialog, settings, Model) {
-    $scope.loadModels = function() {
+    return $scope.loadModels = function() {
       return function(pagination_opts) {
         return Model.$loadAll();
       };
-    };
-    $scope.test = function(model) {
-      var d;
-      d = $dialog.dialog({
-        modalFade: false
-      });
-      d.model = model;
-      return d.open('partials/modal.html', 'TestDialogController');
-    };
-    return $scope.train = function(model) {
-      var d;
-      d = $dialog.dialog({
-        modalFade: false
-      });
-      d.model = model;
-      return d.open('partials/model_train_popup.html', 'TrainModelCtrl');
     };
   }
 ]).controller('AddModelCtl', [
@@ -725,7 +709,7 @@ angular.module('app.models.controllers', ['app.config']).controller('ModelListCt
       return $scope.model.$save().then((function() {
         $scope.savingProgress = '100%';
         return _.delay((function() {
-          $location.path('/models');
+          $location.path($scope.model.objectUrl());
           return $scope.$apply();
         }), 300);
       }), (function(resp) {
@@ -871,19 +855,11 @@ angular.module('app.models.controllers', ['app.config']).controller('ModelListCt
         throw new Error("Unable to save import handler");
       }));
     };
-    $scope.$watch('model.importhandler', function(newVal, oldVal) {
+    return $scope.$watch('model.importhandler', function(newVal, oldVal) {
       if ((newVal != null) && (oldVal != null) && newVal !== "" && oldVal !== "") {
         return $scope.importHandlerChanged = true;
       }
     });
-    return $scope.test = function(model) {
-      var d;
-      d = $dialog.dialog({
-        modalFade: false
-      });
-      d.model = model;
-      return d.open('partials/modal.html', 'TestDialogController');
-    };
   }
 ]).controller('TrainModelCtrl', [
   '$scope', '$http', 'dialog', 'settings', function($scope, $http, dialog, settings) {
@@ -899,6 +875,35 @@ angular.module('app.models.controllers', ['app.config']).controller('ModelListCt
       }), (function() {
         throw new Error("Unable to start model training");
       }));
+    };
+  }
+]).controller('ModelActionsCtrl', [
+  '$scope', '$dialog', function($scope, $dialog) {
+    var _this = this;
+    $scope.init = function(opts) {
+      if (opts == null) {
+        opts = {};
+      }
+      if (!opts.model) {
+        throw new Error("Please specify model");
+      }
+      return $scope.model = opts.model;
+    };
+    $scope.test_model = function(model) {
+      var d;
+      d = $dialog.dialog({
+        modalFade: false
+      });
+      d.model = model;
+      return d.open('partials/modal.html', 'TestDialogController');
+    };
+    return $scope.train_model = function(model) {
+      var d;
+      d = $dialog.dialog({
+        modalFade: false
+      });
+      d.model = model;
+      return d.open('partials/model_train_popup.html', 'TrainModelCtrl');
     };
   }
 ]);
@@ -928,6 +933,8 @@ angular.module('app.models.model', ['app.config']).factory('Model', [
         this.loadFromJSON = __bind(this.loadFromJSON, this);
 
         this.toJSON = __bind(this.toJSON, this);
+
+        this.objectUrl = __bind(this.objectUrl, this);
         this.loadFromJSON(opts);
       }
 
@@ -962,6 +969,10 @@ angular.module('app.models.model', ['app.config']).factory('Model', [
       /* API methods
       */
 
+
+      Model.prototype.objectUrl = function() {
+        return '/models/' + this.name;
+      };
 
       Model.prototype.isNew = function() {
         if (this.id === null) {

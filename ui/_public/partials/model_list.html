@@ -26,15 +26,21 @@
       </tr>
     </thead>
     <tbody>
-      <tr ng-repeat="model in objects" ng-class="{success : model.status=='Trained', error : model.status =='New', warning : model.status =='Training'}">
+      <tr ng-repeat="model in objects" ng-class="{success : model.status=='Trained', warning : model.status =='New', info : model.status =='Training', error : model.status =='Error'}">
         <td><a href="#/models/{{ model.name }}">{{ model.name }}</a></td>
         <td>{{ model.status }}</td>
         <td>{{ model.created_on|format_date }}</td>
         <td><span ng-repeat="param in model.import_params">{{ param|capfirst }} </span></td>
-        <td>
-          <i ng-show="model.status == 'New'" class="icon-large icon-tasks pointer" title="Train your model" ng-click="train(model)"></i>
+        <td ng-controller="ModelActionsCtrl">
+          <div ng-init="init({model: model})">
+            <button ng-show="model.status == 'Trained'" ng-click="test_model(model)" class="btn btn-success">
+              <i title="Apply the classifier to the input provided by the data import handler" class="status-icon icon-play"></i>
+            </button>
+            <button ng-show="model.status == 'New'" ng-click="train_model(model)" class="btn btn-info">
+              <i title="Train your model" class="icon-tasks"></i>
+            </button>
+          </div>
           <i ng-show="model.status == 'Training'" class="icon-large icon-refresh" title="Training model is in progress"></i>
-          <i ng-show="model.status == 'Trained'" title="Apply the classifier to the input provided by the data import handler" class="icon-play  pointer icon-large" ng-click="test(model)"></i>
         </td>
       </tr>
     </tbody>

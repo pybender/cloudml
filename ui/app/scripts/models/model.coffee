@@ -35,6 +35,9 @@ angular.module('app.models.model', ['app.config'])
 
       ### API methods ###
 
+      objectUrl: =>
+        return '/models/' + @name
+
       isNew: -> if @id == null then true else false
 
       # Returns an object of job properties, for use in e.g. API requests
