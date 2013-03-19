@@ -34,11 +34,10 @@ def install():
 
     fabd.mkdirs.run()
 
-    # system.setup_backports.run()
+    #system.setup_backports.run()
     #system.install_common_software.run()
 
     #rabbitmq.install()
-    #nginx.install.run()
     apache.install.run()
     #postgres.install.run()
 
@@ -47,26 +46,25 @@ def install():
 
 @task
 def setup():
-#    fabd.mkdirs.run()
-#
-#    with settings(warn_only=True):
-#        postgres.create_user.run()
-#        postgres.create_db.run()
-#        postgres.grant.run()
-#
+    # fabd.mkdirs.run()
+
+    # apache.wsgi_push.run()
+    # apache.push_config.run()
+    # apache.graceful.run()  
+
+    supervisor.push_configs.run()
+    supervisor.d.run()
+
+    # pip.push_config.run()
+    # with settings(warn_only=True):
+    #     postgres.create_user.run()
+    #     postgres.create_db.run()
+    #     postgres.grant.run()
+    #
     # with settings(warn_only=True):
     #     rabbitmq.add_user.run()
     #     rabbitmq.add_vhost.run()
     # rabbitmq.set_permissions.run()
-
-    # apache.wsgi_push.run()
-    # apache.push_config.run()
-    # apache.graceful.run()
-
-   # pip.push_config.run()
-
-    supervisor.push_configs.run()
-    supervisor.d.run()
 
 @task
 def qdeploy():
@@ -81,8 +79,6 @@ def deploy():
     git.init.run()
     git.push.run()
 
-
-    
     supervisor.push_configs.run()
     apache.wsgi_push.run()
     push_flask_config.run()
@@ -96,8 +92,8 @@ def deploy():
 
     
     #run('cd %(project_path)s/ui; ./scripts/production.sh')
-    #run('%(env_path)s/bin/python %(project_path)s/manage.py '
-    #     'createdb;' % env.conf)
+    run('%(env_path)s/bin/python %(project_path)s/manage.py '
+         'createdb;' % env.conf)
 
     version.activate.run()
 
