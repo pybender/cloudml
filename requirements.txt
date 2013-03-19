@@ -14,3 +14,4 @@ psycopg2
 jsonpath
 fabric==1.4
 celery==3.0
+supervisor
