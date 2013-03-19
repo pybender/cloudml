@@ -25,7 +25,7 @@
     </div>
   </div>
   <div class="control-group" ng-class="{error: !import_handler}">
-    <label title="local file or s3 or http address" class="control-label">Import Handler</label>
+    <label title="local file or s3 or http address" class="control-label">Import Handler For Train</label>
     <div class="controls">
       <input type="file" name="train_importhandler" ng-model="model.train_importhandler" onchange="angular.element(this).scope().setTrainImportHandlerFile(this)">
       <span ng-show="!import_handler" class="help-inline">

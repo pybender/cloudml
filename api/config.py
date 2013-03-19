@@ -9,5 +9,5 @@ DEBUG = True
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_ENABLE_UTC = True
-BROKER_URL = 'sqla+sqlite:///celerydb.sqlite'
+BROKER_URL = 'sqla+sqlite:///cloudml-celery.db'
 CELERY_RESULT_BACKEND = ''
