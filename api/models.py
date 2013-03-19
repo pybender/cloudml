@@ -83,7 +83,7 @@ class Model(db.Model, Serializer):
 
 class Test(db.Model, Serializer):
     __public__ = ('id', 'name', 'created_on', 'accuracy',
-                  'parameters', 'data_count', 'status')
+                  'parameters', 'data_count', 'status', 'error')
     __all_public__ = ('id', 'name', 'created_on', 'accuracy', 'parameters',
                       'classes_set', 'metrics', 'data_count',
                       'status', 'error')
