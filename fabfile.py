@@ -55,7 +55,7 @@ def setup():
     # apache.wsgi_push.run()
     # apache.push_config.run()
     # apache.graceful.run()  
-    supervisor.push_init_config.run()
+    #supervisor.push_init_config.run()
     #supervisor.push_configs.run()
     #supervisor.d.run()
 
@@ -64,11 +64,10 @@ def setup():
     #     postgres.create_user.run()
     #     postgres.create_db.run()
     #     postgres.grant.run()
-    #
-    # with settings(warn_only=True):
-    #     rabbitmq.add_user.run()
-    #     rabbitmq.add_vhost.run()
-    # rabbitmq.set_permissions.run()
+    with settings(warn_only=True):
+        rabbitmq.add_user.run()
+        rabbitmq.add_vhost.run()
+    rabbitmq.set_permissions.run()
 
 @task
 def qdeploy():

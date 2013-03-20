@@ -10,11 +10,17 @@ DIRNAME = os.path.dirname(__file__)
 class HereConf(DefaultConf):
     """Local development settings. Change these for your machine."""
 
-    address = 'atmel@localhost'
+    address = 'atmel@home'
     sudo_user = 'atmel'
     src_path = os.path.dirname(DIRNAME)
     env_path = os.path.join(DIRNAME, 've')
-    django_dir = 'sna-client/sna_client'
+    django_dir = 'api'
+
+    rabbitmq_host = 'localhost'
+    rabbitmq_port = 5672
+    rabbitmq_user = 'cloudml'
+    rabbitmq_password = 'cloudml'
+    rabbitmq_vhost =  'cloudml'
 
 
 class BaseConf(DefaultConf):
@@ -64,7 +70,7 @@ class StagingConf(BaseConf):
     home_path = '/webapps/cloudml'
 
     # Code from this branch will be deployed.
-    branch = 'master'
+    branch = 'staging'
 
     server_name = 'cloudml.staging.match.odesk.com'
     # For Apache ServerAdmin directive
