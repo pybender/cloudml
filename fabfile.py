@@ -55,9 +55,9 @@ def setup():
     # apache.wsgi_push.run()
     # apache.push_config.run()
     # apache.graceful.run()  
-
-    supervisor.push_configs.run()
-    supervisor.d.run()
+    supervisor.push_init_config.run()
+    #supervisor.push_configs.run()
+    #supervisor.d.run()
 
     # pip.push_config.run()
     # with settings(warn_only=True):
