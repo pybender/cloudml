@@ -13,7 +13,7 @@
   "queries":[
     {
       "name":"retrieve",
-      "sql": "SELECT t.employer_info as employer_info, t.contractor_info as contractor_info, case when offermc_comp_reply = 'accept' then 'hire' else 'nothire' end as hire_outcome from (match.ja_quick_info qi join agg.b_opening o on qi.opening=o.opening) t join agg.b_job_application ja on t.application=ja.application where t.file_provenance_date >= '%(start)s' AND t.file_provenance_date < '%(end)s' AND  t.include_in_stats;",
+      "sql": "select * from match.bestmatch_dataset where file_provenance_date >= '%(start)s' AND t.file_provenance_date < '%(end)s'",
       "items": [
         {
           "source": "hire_outcome",

@@ -17,7 +17,7 @@
     }
   ],
   "features":[
-    {"name":"hire_outcome", "type": "map", "params": {"mappings": {"hire": 1, "nothire": 0}}, "is-target-variable":true},
+    {"name": "made_offer", "type": "boolean", "is-target-variable":true},
 
     {"name": "employer.op_timezone", "type": "str_to_timezone"},
     {"name": "employer.op_country_tz", "type": "str_to_timezone"},
@@ -63,23 +63,32 @@
     {"name": "contractor.dev_portfolio_items_count", "type": "int"},
     {"name": "contractor.dev_eng_skill", "type": "int"},
     {"name": "contractor.dev_timezone","type": "str_to_timezone"},
-    
-    {"name": "ja.is_ac", "type": "boolean"},
-    {"name": "ja.bid_amount", "type": "float"},
-    {"name": "ja.bid_rate", "type": "float"},
 
-    {"name": "country_pair", "transformer": {"type": "Count", "token_pattern": "[^,]+,[\\w\\s]+"}},
-    {"name": "job_in_contactor_categories" "type": "boolean"}, 
-    {"name": "matched_category" "transformer": {"type: "Count", "token_pattern": "[^,]+"}},
-    {"name": "matched_skills", "transformer": {"type: "Count", "token_pattern": "[^\\s,]+"}},
+    {"name": "opening.title", "transformer": {"type": "Tfidf", "min_df": 3}},
+    {"name": "opening.skills", "transformer": {"type": "Count", "token_pattern": "[^\\s,]+"}},
+    {"name": "opening.type", "transformer": {"type: "Count", "token_pattern": ".+"}},
+    {"name": "opening.category", "transformer": {"type: "Count", "token_pattern": ".+"}},
+    {"name": "opening.segment", "transformer": {"type: "Count", "token_pattern": ".+"}},
+    {"name": "opening.budget", "type": "float", "is-required": false},
+    {"name": "opening.is_fjp", "type": "boolean"},
+  
+    {"name": "ja.is_ic", "type": "boolean"},
+    {"name": "ja.bid_amount", "type": "float", "is-required": false},
+    {"name": "ja.bid_rate", "type": "float", "is-required": false},
 
     {"name": "matches_pref_english", "type": "boolean"},
     {"name": "matches_pref_feedback", "type": "boolean"},
     {"name": "matches_pref_portfolio", "type": "boolean"},
     {"name": "matches_pref_rate", "type": "boolean"},
-    {"name": "matches_pref_location", "type": "boolean"},
-    {"name": "matches_pref_test","type": "boolean"},
+    {"name": "matches_pref_region", "type": "boolean"},
+    {"name": "matches_pref_test", "type": "boolean"},
     {"name": "matches_pref_odesk_hours": "boolean"},
-    {"name": "matches_pref_ic_ac": "boolean"}
+    {"name": "matches_pref_ic_ac": "boolean"},
+
+    {"name": "employer_contactor_countries", "transformer": {"type": "Count", "token_pattern": "[^,]+,.+"}},
+    {"name": "job_in_contactor_categories" "type": "boolean"}, 
+    {"name": "matched_category" "transformer": {"type: "Count", "token_pattern": "[^,]+"}},
+    {"name": "matched_skills", "transformer": {"type: "Count", "token_pattern": "[^\\s,]+"}},
+    {"name": "matched_skills_ratio", "type": "float"}
   ]
 }
