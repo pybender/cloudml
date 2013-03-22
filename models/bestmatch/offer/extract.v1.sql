@@ -33,9 +33,7 @@ as $$
     input_json = json.loads(contractor_info)
   except Exception as e:
     input_json = dict() 
-
   def false_to_array(m): return [] if not m else m
-  
   contractor = dict()
   contractor['dev_eng_skill'] = input_json.get('dev_eng_skill', 0)
   contractor['dev_adj_score'] = input_json.get('dev_adj_score', 0)
@@ -63,9 +61,10 @@ $function$;
 create table match.bestmatch_dataset as
 select
   case when ja.offermc_comp_reply = 'accept' then 1 else 0 end as made_offer,
-  qi.employer_info, 
-  qi.contractor_info, 
-  qi.agency_info,
+  qi.application,
+--  qi.employer_info, 
+--  qi.contractor_info, 
+--  qi.agency_info,
 
   oo."Opening Title" as opening_title,
   oo."Job Description" as opening_description,
@@ -107,7 +106,7 @@ select
   (con).dev_total_hours >= oo."PrefoDeskHours" as matches_pref_odesk_hours,
   so.candidate_type_pref = 'all' or ja.is_ic and so.candidate_type_pref = 'individuals' or not ja.is_ic and so.candidate_type_pref = 'agencies' as matches_pref_ic_ac,
 
-  json_get(employer_info, '$.op_country') || E'\t' || (con).dev_country as employer_contractor_countries,
+  json_get(employer_info, '$.op_country') || ',' || (con).dev_country as employer_contractor_countries,
   array_to_string(my_array_intersect((con).skills, string_to_array(oo."Required Skills", ',')), ',') as matched_skills,
   coalesce(array_upper(my_array_intersect((con).skills, string_to_array(oo."Required Skills", ',')), 1), 0)::float / array_upper(string_to_array(oo."Required Skills", ','), 1) as matched_skills_ratio,
   qi.file_provenance_date
@@ -118,7 +117,7 @@ from
     from 
       match.ja_quick_info qi
     where 
-      qi.file_provenance_date between '2012-10-01' and < '2012-11-01'
+      qi.file_provenance_date between '2012-10-01' and '2012-11-01'
   ) qi join
   agg.b_opening o on qi.opening = o.opening join 
   "oDesk DB"."Openings" oo on oo."Record ID#" = o.opening join
@@ -128,4 +127,5 @@ from
   "oDesk DB"."Regions" r on r."Record ID#" = oo."PrefLocationRegion"
 where 
   o.include_in_stats
+distributed randomly
 ;

@@ -13,7 +13,7 @@
   "queries":[
     {
       "name":"retrieve",
-      "sql": "select * from match.bestmatch_dataset where file_provenance_date >= '%(start)s' AND t.file_provenance_date < '%(end)s'",
+      "sql": "select qi.application, qi.contractor_info, qi.employer_info, qi.agency_info, bd.* from match.ja_quick_info qi join match.bestmatch_dataset bd on qi.application = bd.application where file_provenance_date >= '%(start)s' AND t.file_provenance_date < '%(end)s'",
       "items": [
         {
           "source": "hire_outcome",
