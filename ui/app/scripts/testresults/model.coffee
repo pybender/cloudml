@@ -26,10 +26,20 @@ angular.module('app.testresults.model', ['app.config'])
       parameters: null
       model: null
       model_name: null
+      loaded: false
 
       ### API methods ###
 
       isNew: -> if @slug == null then true else false
+
+      objectUrl: =>
+        if @model?
+          return '/models/' + @model.name + "/tests/" + @name
+
+      fullName: =>
+        if @model?
+          return @model.name + " / " + @name
+        return @name
 
       # Returns an object of job properties, for use in e.g. API requests
       # and templates
@@ -40,6 +50,9 @@ angular.module('app.testresults.model', ['app.config'])
       loadFromJSON: (origData) =>
         data = _.extend {}, origData
         _.extend @, data
+        if 'model' in origData
+          @model = new Model(origData['model'])
+          @model_name = origData['model']['name']
 
       $load: =>
         if @name == null
@@ -81,7 +94,6 @@ angular.module('app.testresults.model', ['app.config'])
         )
         .then((resp) => @loadFromJSON(resp.data))
 
-      
       @$loadTests: (modelName, opts) ->
         dfd = $q.defer()
 
@@ -96,14 +108,13 @@ angular.module('app.testresults.model', ['app.config'])
         )
         .then ((resp) =>
           dfd.resolve {
-            total: resp.data.found
-            objects: (new @(obj) for obj in resp.data.tests)
+            #total: resp.data.found
+            objects: (new TestResult(obj) for obj in resp.data.tests)
             _resp: resp
           }
 
         ), (-> dfd.reject.apply @, arguments)
 
         dfd.promise
-         
     return TestResult
 ])

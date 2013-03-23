@@ -3,6 +3,7 @@ from flask.ext.restful import reqparse
 from flask import request
 from werkzeug.datastructures import FileStorage
 from sqlalchemy import and_
+from sqlalchemy.sql.expression import asc, desc
 
 from api.decorators import render
 from api import db, api
@@ -120,9 +121,8 @@ class Models(restful.Resource):
         param = model_parser.parse_args()
         model = Model(model)
         trainer = load_trainer(param['trainer'])
-        model.trainer = trainer
         model.status = Model.STATUS_TRAINED
-        model.set_weights(**trainer.get_weights())
+        model.set_trainer(trainer)
         model.importhandler = param['importhandler']
         plan = ExtractionPlan(model.importhandler, is_file=False)
         model.import_params = plan.input_params
@@ -234,6 +234,35 @@ class DataList(restful.Resource):
 api.add_resource(DataList, '/cloudml/b/v1/model/<regex("[\w\.]+"):model>/test/<regex("[\w\.\-]+"):test_name>/data')
 api.add_resource(Datas,
                  '/cloudml/b/v1/model/<regex("[\w\.]+"):model>/test/<regex("[\w\.\-]+"):test_name>/data/<regex("[\w\.\-]+"):data_id>')
+
+
+class CompareReport(restful.Resource):
+    decorators = [crossdomain(origin='*')]
+
+    @render(brief=False)
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('test1', type=str)
+        parser.add_argument('test2', type=str)
+        parser.add_argument('model1', type=str)
+        parser.add_argument('model2', type=str)
+        parameters = parser.parse_args()
+        test1 = db.session.query(Test).join(Model)\
+            .filter(Model.name == parameters['model1'],
+                    Test.name == parameters['test1']).one()
+        test2 = db.session.query(Test).join(Model)\
+            .filter(Model.name == parameters['model2'],
+                    Test.name == parameters['test2']).one()
+        examples1 = db.session.query(Data).join(Test)\
+            .filter(Data.test == test1)\
+            .order_by(desc(Data.pred_label))[:10]
+        examples2 = db.session.query(Data).join(Test)\
+            .filter(Data.test == test2)\
+            .order_by(desc(Data.pred_label))[:10]
+        return {'test1': test1, 'test2': test2,
+                'examples1': examples1, 'examples2': examples2}
+
+api.add_resource(CompareReport, '/cloudml/b/v1/reports/compare')
 
 
 def populate_parser(model):

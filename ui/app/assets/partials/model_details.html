@@ -61,6 +61,13 @@
                     {{ model.status }}
                 </span>
             </div>
+            <div>
+                Target variable:
+                <span class="value">
+                    {{ model.target_variable }}
+                </span>
+            </div>
+            
             <div class="block" ng-show="latest_test">
                 <b>
                   Latest Test: <a class="value" href="#/models/{{ model.name }}/tests/{{ latest_test.name }}">{{ latest_test.name }}</a>

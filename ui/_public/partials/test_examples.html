@@ -17,7 +17,8 @@
             <th>Id</th>
             <th>Created</th>
             <th>Params</th>
-            <th>Hire outcome</th>
+            <th>Original</th>
+            <th>Predict</th>
           </tr>
           </thead>
           <tbody>
@@ -25,7 +26,8 @@
             <td><a href="#/models/{{ data.model_name }}/tests/{{ data.test_name }}/examples/{{ data.id }}">{{ data.id }}</a></td>
             <td>{{ data.created_on|format_date }}</td>
             <td><a href="#/models/{{ data.model_name }}/tests/{{ data.test_name }}/examples/{{ data.id }}">{{ data.data_input['contractor.dev_profile_title'] }}</a></td>
-            <td><span >{{ data.data_input['hire_outcome'] }} </span></td>
+            <td><span>{{ data.label }}</span></td>
+            <td><span>{{ data.pred_label }}</span></td>
           </tr>
         </tbody>
     </table>

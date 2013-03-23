@@ -2,7 +2,7 @@
 
 var App;
 
-App = angular.module('app', ['ui', 'ngCookies', 'ngResource', 'app.config', 'app.controllers', 'app.directives', 'app.filters', 'app.services', 'ui.bootstrap', 'app.models.model', 'app.models.controllers', 'app.testresults.model', 'app.testresults.controllers', 'app.datas.model', 'app.datas.controllers']);
+App = angular.module('app', ['ui', 'ngCookies', 'ngResource', 'app.config', 'app.controllers', 'app.directives', 'app.filters', 'app.services', 'ui.bootstrap', 'app.models.model', 'app.models.controllers', 'app.testresults.model', 'app.testresults.controllers', 'app.datas.model', 'app.datas.controllers', 'app.reports.model', 'app.reports.controllers']);
 
 App.config([
   '$routeProvider', '$locationProvider', function($routeProvider, $locationProvider, config) {
@@ -27,6 +27,9 @@ App.config([
     }).when('/add_model', {
       templateUrl: '/partials/add_model.html',
       controller: 'AddModelCtl'
+    }).when('/compare_models', {
+      templateUrl: '/partials/compare_models_form.html',
+      controller: 'CompareModelsFormCtl'
     }).otherwise({
       redirectTo: '/models'
     });
@@ -356,6 +359,41 @@ angular.module('app.directives', ['app.services']).directive('appVersion', [
       weights: '='
     }
   };
+}).directive('weightedDataParameters', function() {
+  return {
+    restrict: 'E',
+    template: "<span>\n<span ng-show=\"!val.weights\" title=\"weight={{ val.weight }}\"\nclass=\"badge {{ val.css_class }}\">{{ val.value }}</span>\n\n<div ng-show=\"val.weights\">\n  <span  ng-show=\"val.type == 'List'\"\n  ng-init=\"lword=word.toLowerCase()\"\n  ng-repeat=\"word in val.value|words\">\n    <span ng-show=\"val.weights[lword].weight\"\n    title=\"weight={{ val.weights[lword].weight }}\"\n    class=\"badge {{ val.weights[lword].css_class }}\">{{ word }}</span>\n    <span ng-show=\"!val.weights[lword].weight\">{{ word }}</span></span>\n\n  <span ng-show=\"val.type == 'Dictionary'\"\n  ng-repeat=\"(key, dval) in val.weights\">\n    <span title=\"weight={{ dval.weight }}\"\n    class=\"badge {{ dval.css_class }}\">\n      {{ key }}={{ dval.value }}</span></span>\n</div>\n</span>",
+    replace: true,
+    transclude: true,
+    scope: {
+      val: '='
+    }
+  };
+}).directive('confusionMatrix', function() {
+  return {
+    restrict: 'E',
+    template: '<table class="table">\
+<thead>\
+<tr>\
+    <th></th>\
+    <th ng-repeat="row in matrix">\
+      {{ row.0 }}\
+    </th>\
+</tr>\
+</thead>\
+<tbody>\
+    <tr ng-repeat="row in matrix">\
+        <th>{{ row.0 }}</th>\
+        <td ng-repeat="cell in row.1">{{ cell }}</td>\
+    </tr>\
+</tbody>\
+</table>',
+    scope: {
+      matrix: '='
+    },
+    replace: true,
+    transclude: true
+  };
 }).directive("recursive", [
   '$compile', function($compile) {
     return {
@@ -646,6 +684,17 @@ angular.module('app.filters', []).filter('interpolate', [
       var t;
       t = String(text);
       return t.split(/\W+/);
+    };
+  }
+]).filter('range', [
+  function() {
+    return function(input, total) {
+      var num, _i, _ref;
+      total = parseInt(total);
+      for (num = _i = 0, _ref = total - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; num = 0 <= _ref ? ++_i : --_i) {
+        input.push(num);
+      }
+      return input;
     };
   }
 ]).filter('format_date', [
@@ -1106,10 +1155,275 @@ angular.module('app.models.model', ['app.config']).factory('Model', [
         });
       };
 
+      Model.$getModelsToCompare = function() {
+        var dfd;
+        dfd = $q.defer();
+        $http({
+          method: 'GET',
+          url: "" + settings.apiUrl + "model/",
+          headers: settings.apiRequestDefaultHeaders
+        }).then((function(resp) {
+          var obj;
+          return dfd.resolve({
+            total: resp.data.found,
+            objects: (function() {
+              var _i, _len, _ref, _results;
+              _ref = resp.data.models;
+              _results = [];
+              for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+                obj = _ref[_i];
+                _results.push(new this(_.extend(obj, {
+                  loaded: true
+                })));
+              }
+              return _results;
+            }).call(Model),
+            _resp: resp
+          });
+        }), (function() {
+          return dfd.reject.apply(this, arguments);
+        }));
+        return dfd.promise;
+      };
+
       return Model;
 
-    })();
+    }).call(this);
     return Model;
+  }
+]);
+'use strict';
+
+/* Trained Model specific Controllers
+*/
+
+angular.module('app.reports.controllers', ['app.config']).controller('CompareModelsFormCtl', [
+  '$scope', '$http', '$location', '$routeParams', 'settings', 'Model', 'TestResult', 'Data', 'CompareReport', function($scope, $http, $location, $routeParams, settings, Model, Test, Data, CompareReport) {
+    var FORM_ACTION, model_watcher,
+      _this = this;
+    FORM_ACTION = 'form:';
+    $scope.section = 'metrics';
+    $scope.action = ($routeParams.action || FORM_ACTION).split(':');
+    $scope.$watch('action', function(action) {
+      var actionString, get_params, i, kwargs, num, param, _i, _ref;
+      get_params = action[1].split(',');
+      if (!($scope.report != null) && get_params.length !== 0) {
+        kwargs = {};
+        for (i = _i = 0, _ref = get_params.length; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
+          param = get_params[i];
+          num = Math.floor(i / 2 + 1);
+          if (i % 2 === 1) {
+            kwargs['test_name' + num] = param;
+          } else {
+            kwargs['model_name' + num] = param;
+          }
+        }
+        $scope.report = new CompareReport(kwargs);
+      }
+      if (action[0] === 'report') {
+        if (!$scope.report.generated) {
+          $scope.generate();
+        }
+      } else {
+        if (action[0] === 'form') {
+          $scope.initForm();
+        }
+      }
+      actionString = action.join(':');
+      return $location.search(actionString === FORM_ACTION ? "" : "action=" + actionString);
+    });
+    model_watcher = function(model, oldVal, scope) {
+      if (model != null) {
+        return $scope.loadTestsList(model);
+      }
+    };
+    $scope.$watch('model1', model_watcher, true);
+    $scope.$watch('model2', model_watcher, true);
+    $scope.init = function(opts) {
+      if (opts == null) {
+        opts = {};
+      }
+      $scope.modelsLoader = Model.$getModelsToCompare;
+      return $scope.testsLoader = Test.$loadTests;
+    };
+    $scope.is_form = function() {
+      return $scope.action[0] === 'form';
+    };
+    $scope.loadModelsList = function() {
+      return $scope.modelsLoader().then((function(opts) {
+        var m, _i, _len, _ref, _results;
+        $scope.models = opts.objects;
+        if ($scope.is_form()) {
+          _ref = $scope.models;
+          _results = [];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            m = _ref[_i];
+            if (m.name === $scope.report.model_name1) {
+              $scope.model1 = m;
+            }
+            if (m.name === $scope.report.model_name2) {
+              _results.push($scope.model2 = m);
+            } else {
+              _results.push(void 0);
+            }
+          }
+          return _results;
+        }
+      }), (function(opts) {
+        var err;
+        return err = opts.$error;
+      }));
+    };
+    $scope.loadTestsList = function(model) {
+      return $scope.testsLoader(model.name).then((function(opts) {
+        var t, _i, _len, _ref, _results;
+        model.tests = opts.objects;
+        if ($scope.is_form()) {
+          _ref = model.tests;
+          _results = [];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            t = _ref[_i];
+            if ((t.name === $scope.report.test_name1) && (model.name === $scope.report.model_name1)) {
+              $scope.test1 = t;
+            }
+            if ((t.name === $scope.report.test_name2) && (model.name === $scope.report.model_name2)) {
+              _results.push($scope.test2 = t);
+            } else {
+              _results.push(void 0);
+            }
+          }
+          return _results;
+        }
+      }), (function(opts) {
+        var err;
+        return err = opts.$error;
+      }));
+    };
+    $scope.backToForm = function() {
+      return $scope.toogleAction("form");
+    };
+    $scope.generateReport = function() {
+      var kwargs;
+      kwargs = {
+        test_name1: $scope.test1.name,
+        model_name1: $scope.model1.name,
+        test_name2: $scope.test2.name,
+        model_name2: $scope.model2.name
+      };
+      $scope.report = new CompareReport(kwargs);
+      return $scope.toogleAction("report", "metrics");
+    };
+    $scope.toogleAction = function(action_name) {
+      var report;
+      report = $scope.report;
+      return $scope.action = [action_name, ("" + report.model_name1 + "," + report.test_name1 + ",") + ("" + report.model_name2 + "," + report.test_name2)];
+    };
+    $scope.toogleReportSection = function(section) {
+      return $scope.section = section;
+    };
+    $scope.initForm = function() {
+      return $scope.loadModelsList();
+    };
+    return $scope.generate = function() {
+      $scope.generating = true;
+      $scope.generatingProgress = '0%';
+      $scope.generatingError = null;
+      _.defer(function() {
+        $scope.generatingProgress = '70%';
+        return $scope.$apply();
+      });
+      return $scope.report.$getReportData().then((function() {
+        $scope.generatingProgress = '100%';
+        $scope.generating = false;
+        return $scope.generated = true;
+      }), (function(resp) {
+        $scope.generating = false;
+        return $scope.err = "Error while generating compare report:" + ("server responded with " + resp.status + " ") + ("(" + (resp.data.response.error.message || "no message") + "). ") + "Make sure you filled the form correctly. " + "Please contact support if the error will not go away.";
+      }));
+    };
+  }
+]);
+var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+
+angular.module('app.reports.model', ['app.config']).factory('CompareReport', [
+  '$http', '$q', 'settings', 'Model', 'TestResult', 'Data', function($http, $q, settings, Model, Test, Data) {
+    var CompareReport;
+    CompareReport = (function() {
+
+      function CompareReport(opts) {
+        this.$getReportData = __bind(this.$getReportData, this);
+
+        this.loadFromJSON = __bind(this.loadFromJSON, this);
+
+        this.objectUrl = __bind(this.objectUrl, this);
+        this.loadFromJSON(opts);
+      }
+
+      CompareReport.prototype.generated = false;
+
+      /* API methods
+      */
+
+
+      CompareReport.prototype.objectUrl = function() {
+        if (this.model != null) {
+          return '/models/' + this.model.name + "/tests/" + this.name;
+        }
+      };
+
+      CompareReport.prototype.loadFromJSON = function(origData) {
+        var data;
+        data = _.extend({}, origData);
+        return _.extend(this, data);
+      };
+
+      CompareReport.prototype.$getReportData = function() {
+        var params,
+          _this = this;
+        params = {
+          'test1': this.test_name1,
+          'test2': this.test_name2,
+          'model1': this.model_name1,
+          'model2': this.model_name2
+        };
+        return $http({
+          method: 'GET',
+          url: settings.apiUrl + "reports/compare",
+          headers: {
+            'X-Requested-With': null
+          },
+          params: params
+        }).then((function(resp) {
+          var example, examples, examples_data, key, num, test, value, _i, _len, _ref;
+          _this.generated = true;
+          _ref = resp.data;
+          for (key in _ref) {
+            value = _ref[key];
+            if (key.indexOf('test') === 0) {
+              test = new Test(resp.data[key]);
+              eval("_this." + key + "=test");
+            }
+            if (key.indexOf('examples') === 0) {
+              num = key.replace('examples', '');
+              examples = [];
+              examples_data = resp.data[key];
+              for (_i = 0, _len = examples_data.length; _i < _len; _i++) {
+                example = examples_data[_i];
+                examples.push(new Data(example));
+              }
+              eval("_this.test" + num + ".examples=examples");
+            }
+          }
+          return resp;
+        }), (function(resp) {
+          return resp;
+        }));
+      };
+
+      return CompareReport;
+
+    })();
+    return CompareReport;
   }
 ]);
 'use strict';
@@ -1198,6 +1512,10 @@ angular.module('app.testresults.model', ['app.config']).factory('TestResult', [
         this.loadFromJSON = __bind(this.loadFromJSON, this);
 
         this.toJSON = __bind(this.toJSON, this);
+
+        this.fullName = __bind(this.fullName, this);
+
+        this.objectUrl = __bind(this.objectUrl, this);
         this.loadFromJSON(opts);
       }
 
@@ -1217,6 +1535,8 @@ angular.module('app.testresults.model', ['app.config']).factory('TestResult', [
 
       TestResult.prototype.model_name = null;
 
+      TestResult.prototype.loaded = false;
+
       /* API methods
       */
 
@@ -1229,6 +1549,19 @@ angular.module('app.testresults.model', ['app.config']).factory('TestResult', [
         }
       };
 
+      TestResult.prototype.objectUrl = function() {
+        if (this.model != null) {
+          return '/models/' + this.model.name + "/tests/" + this.name;
+        }
+      };
+
+      TestResult.prototype.fullName = function() {
+        if (this.model != null) {
+          return this.model.name + " / " + this.name;
+        }
+        return this.name;
+      };
+
       TestResult.prototype.toJSON = function() {
         return {
           name: this.name
@@ -1238,7 +1571,11 @@ angular.module('app.testresults.model', ['app.config']).factory('TestResult', [
       TestResult.prototype.loadFromJSON = function(origData) {
         var data;
         data = _.extend({}, origData);
-        return _.extend(this, data);
+        _.extend(this, data);
+        if (__indexOf.call(origData, 'model') >= 0) {
+          this.model = new Model(origData['model']);
+          return this.model_name = origData['model']['name'];
+        }
       };
 
       TestResult.prototype.$load = function() {
@@ -1308,17 +1645,16 @@ angular.module('app.testresults.model', ['app.config']).factory('TestResult', [
         }).then((function(resp) {
           var obj;
           return dfd.resolve({
-            total: resp.data.found,
             objects: (function() {
               var _i, _len, _ref, _results;
               _ref = resp.data.tests;
               _results = [];
               for (_i = 0, _len = _ref.length; _i < _len; _i++) {
                 obj = _ref[_i];
-                _results.push(new this(obj));
+                _results.push(new TestResult(obj));
               }
               return _results;
-            }).call(_this),
+            })(),
             _resp: resp
           });
         }), (function() {
