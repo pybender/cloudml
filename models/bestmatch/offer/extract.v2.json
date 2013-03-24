@@ -103,7 +103,7 @@
         {"process-as": "composite", "target-features": [{"name": "matches_pref_region", "expression": {"type": "python", "value": "%(pref_region_id)s == 0 or '%(pref_region)s' == '%(contractor.dev_region)s'"}}]},
         {"process-as": "composite", "target-features": [{"name": "matches_pref_test", "expression": {"type": "python", "value": "%(pref_test)s == 0 or %(pref_test)s in '%(contractor.tsexam_ids)s'.split(',')"}}]},
         {"process-as": "composite", "target-features": [{"name": "matches_pref_odesk_hours", "expression": {"type": "python", "value": "%(contractor.dev_total_hours_rounded)s >= %(pref_odesk_hours)s"}}]},
-        {"process-as": "composite", "target-features": [{"name": "matches_pref_ic_ac", "expression": {"type": "python", "value": "'%(pref_candidate_type)s' == 'all' or %(pref_candidate_type)s is None or %(ja.is_ic)s and '%(pref_candidate_type)s' == 'individuals' or not %(ja.is_ic)s and '%(pref_candidate_type)s' == 'agencies'"}}]},
+        {"process-as": "composite", "target-features": [{"name": "matches_pref_ic_ac", "expression": {"type": "python", "value": "'%(pref_candidate_type)s' == 'all' or '%(pref_candidate_type)s' == 'None' or %(ja.is_ic)s and '%(pref_candidate_type)s' == 'individuals' or not %(ja.is_ic)s and '%(pref_candidate_type)s' == 'agencies'"}}]},
         
         {"process-as": "composite", "target-features": [{"name": "employer_contractor_countries", "expression": {"type": "string", "value": "%(employer.country)s,%(contractor.dev_country)s"}}]},
         {"process-as": "composite", "target-features": [{"name": "job_in_contractor_categories", "expression": {"type": "python", "value": "'%(opening.category)s' in '%(contractor.job_categories)s'.split(',')"}}]},
