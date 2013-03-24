@@ -92,8 +92,8 @@ def process_composite(value, query_item, row_data):
                 elif expression_type == 'python':
                     result[feature['name']] = eval(expression_value % row_data)
             except NameError as e:
-                raise ProcessException('%s (expression: %s, row: %s)' %
-                                       (e, expression_value, row_data))
+                raise ProcessException('%s (expression: %s)' %
+                                       (e, expression_value % row_data))
 
     return result
 
