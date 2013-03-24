@@ -80,8 +80,7 @@ def process_composite(value, query_item, row_data):
         expression_value = feature['expression']['value']
 
         required_params = extract_parameters(expression_value)
-        missing_params = [param for param in required_params 
-                          if param not in row_data]
+        missing_params = filter(lambda x: x not in row_data, required_params)
         if len(missing_params) > 0:
             logging.debug('Missing values %s for target feature %s'
                           % (', '.join(missing_params), feature['name']))
