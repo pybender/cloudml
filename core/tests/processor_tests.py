@@ -4,7 +4,7 @@ import unittest
 import os
 
 from importhandler.processors import extract_parameters, \
-    process_string, ProcessException, process_expression, process_json
+    process_string, ProcessException, process_composite, process_json
 
 BASEDIR = 'testdata'
 
@@ -102,7 +102,7 @@ class ProcessorCase(unittest.TestCase):
                 }
             ]
         }
-        result = process_expression('should ignore', item, row_data)
+        result = process_composite('should ignore', item, row_data)
         self.assertDictEqual(result, {'test.feature1': '42,value',
                                       'test.feature2': 'test 42'})
 
@@ -123,7 +123,7 @@ class ProcessorCase(unittest.TestCase):
                 }
             ]
         }
-        result = process_expression('should ignore', item, row_data)
+        result = process_composite('should ignore', item, row_data)
         self.assertDictEqual(result, {'test.feature1': '42,value',
                                       'test.feature2': None})
 
@@ -138,7 +138,7 @@ class ProcessorCase(unittest.TestCase):
             ]
         }
         try:
-            process_expression('should ignore', item, row_data)
+            process_composite('should ignore', item, row_data)
             self.fail('Should not be able to process expression when '
                       'expression is missing')
         except ProcessException:

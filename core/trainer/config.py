@@ -35,11 +35,14 @@ class FeatureModel(object):
 
     """
     def __init__(self, config, is_file=True):
-        if is_file:
-            with open(config, 'r') as fp:
-                data = json.load(fp)
-        else:
-            data = json.loads(config)
+        try:
+            if is_file:
+                with open(config, 'r') as fp:
+                    data = json.load(fp)
+            else:
+                data = json.loads(config)
+        except ValueError as e:
+            raise SchemaException(message='%s %s ' % (config, e))
 
         self.schema_name = data['schema-name']
         self.classifier = {}

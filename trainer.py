@@ -120,7 +120,7 @@ def main(argv=None):
                and args.test_params is None:
                 test_handler = ImportHandler(plan, train_context)
                 logging.info('Starting testing with params:')
-                for key, value in test_context.iteritems():
+                for key, value in train_context.iteritems():
                     logging.info('%s --> %s' % (key, value))
 
                 trainer.test(test_handler, test_percent)

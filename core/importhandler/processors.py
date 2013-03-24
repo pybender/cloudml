@@ -27,30 +27,32 @@ class ProcessException(Exception):
 ###############################################################################
 
 
-def process_string(value, query_item, row_data):
-    """
-    Function to invoke when processing a feature that simply returns the
-    value of a column.
+def process_primitive(constructor):
+    def process(value, query_item, row_data):
+        """
+        Function to invoke when processing a feature that simply returns the
+        value of a column.
 
-    Keyword arguments:
-    value -- the value to process for the given feature
-    query_item -- the query item currently processing. Must contain a
-                  'target-features' list, with one item. This item must be a
-                  dictionary with the property 'name' set.
-    row_data -- a map containing the values of the current row processed so
-                far.
+        Keyword arguments:
+        value -- the value to process for the given feature
+        query_item -- the query item currently processing. Must contain a
+                      'target-features' list, with one item. This item must 
+                      be a dictionary with the property 'name' set.
+        row_data -- a map containing the values of the current row processed 
+                    so far.
 
-    """
-    target_features = query_item.get('target-features', [])
+        """
+        target_features = query_item.get('target-features', [])
 
-    result = None
-    if value is not None:
-        result = str(value)
+        result = None
+        if value is not None:
+            result = constructor(value)
 
-    return {target_features[0]['name']: result}
+        return {target_features[0]['name']: result}
+    
+    return process
 
-
-def process_expression(value, query_item, row_data):
+def process_composite(value, query_item, row_data):
     """
     Function to invoke when processing a feature value that is created from
     other features.
@@ -68,19 +70,31 @@ def process_expression(value, query_item, row_data):
     target_features = query_item.get('target-features', [])
 
     for feature in target_features:
-        if 'expression' not in feature:
-            raise ProcessException('Must define an expression for  '
-                                   'target feature %s' % (feature['name']))
+        if 'expression' not in feature or \
+                'type' not in feature['expression'] or \
+                'value' not in feature ['expression']:
+            raise ProcessException(
+                    'Must define an expression with "type" and "value" for '
+                    'target feature %s' % (feature['name']))
+        expression_type = feature['expression']['type']
+        expression_value = feature['expression']['value']
 
-        required_params = set(extract_parameters(feature['expression']))
-        current_params = [k for k, v in row_data.items() if v is not None]
-        missing = required_params.difference(set(current_params))
-        if len(missing) > 0:
+        required_params = extract_parameters(expression_value)
+        missing_params = [param for param in required_params 
+                          if param not in row_data]
+        if len(missing_params) > 0:
             logging.debug('Missing values %s for target feature %s'
-                          % (', '.join(missing), feature['name']))
+                          % (', '.join(missing_params), feature['name']))
             result[feature['name']] = None
         else:
-            result[feature['name']] = feature['expression'] % row_data
+            try:
+                if expression_type == 'string':
+                    result[feature['name']] = expression_value % row_data
+                elif expression_type == 'python':
+                    result[feature['name']] = eval(expression_value % row_data)
+            except NameError as e:
+                raise ProcessException('%s (expression: %s, row: %s)' %
+                                       (e, expression_value, row_data))
 
     return result
 
@@ -148,7 +162,11 @@ def extract_parameters(expression):
 
 
 PROCESS_STRATEGIES = {
-    'string': process_string,
+    'identity': process_primitive(lambda x: x),
+    'string': process_primitive(str),
+    'float': process_primitive(float),
+    'boolean': process_primitive(bool),
+    'integer': process_primitive(int),
     'json': process_json,
-    'expression': process_expression
+    'composite': process_composite
 }
