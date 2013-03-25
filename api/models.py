@@ -155,9 +155,10 @@ class Data(db.Model, Serializer):
             for key, val in row.iteritems():
                 try:
                     if isinstance(val, basestring):
-                        row[key] = val.encode('utf-8')
+                        row[key] = val.encode('ascii', 'ignore')
                 except UnicodeDecodeError, exc:
                     logging.error('Error while decoding %s: %s', val, exc)
+                    row[key] = ""
             return row
 
         from helpers.weights import get_weighted_data
