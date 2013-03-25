@@ -54,13 +54,15 @@ angular.module('app.testresults.model', ['app.config'])
           @model = new Model(origData['model'])
           @model_name = origData['model']['name']
 
-      $load: =>
+      $load: (opts) ->
         if @name == null
           throw new Error "Can't load model without name"
         $http(
           method: 'GET'
           url: settings.apiUrl + "model/#{@model_name}/test/#{@name}"
           headers: {'X-Requested-With': null}
+          params: _.extend {
+          }, opts
         ).then ((resp) =>
           @loaded = true
           @loadFromJSON(resp.data['test'])

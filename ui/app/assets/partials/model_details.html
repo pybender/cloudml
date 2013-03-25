@@ -1,3 +1,4 @@
+{{ detailsLoaded}}
 <h2>
   {{ model.name|capfirst }} Details
   <div class="actions" ng-controller="ModelActionsCtrl">
@@ -70,7 +71,7 @@
             
             <div class="block" ng-show="latest_test">
                 <b>
-                  Latest Test: <a class="value" href="#/models/{{ model.name }}/tests/{{ latest_test.name }}">{{ latest_test.name }}</a>
+                  Latest Test: <a class="value" href="#/models/{{ model.name }}/tests/{{ latest_test.name }}">{{ model.latest_test.name }}</a>
                 </b>
                 <div>
                   <a class="label">
@@ -93,7 +94,9 @@
 
   <div ng-show="action[0] == 'test'" id="tests" ng-controller="ObjectListCtrl">
     <h3>Tests</h3>
-    <ng-include src="'/partials/test_list.html'"></ng-include>
+    <div ng-init="init({objectLoader: loadTests()})">
+      <ng-include src="'/partials/test_list.html'"></ng-include>
+    </div>  
   </div>
   <div  ng-show="action[0] == 'weights'" id="weights">
     <div class="row">

@@ -134,7 +134,6 @@ angular.module('app.controllers', ['app.config']).controller('AppCtrl', [
         throw new Error("Invalid object loader supplied to ObjectListCtrl");
       }
       $scope.objectLoader = opts.objectLoader;
-      $scope.load();
       return $scope.$watch('page', function(page, oldVal, scope) {
         return $scope.load();
       }, true);
@@ -149,7 +148,7 @@ angular.module('app.controllers', ['app.config']).controller('AppCtrl', [
       }).then((function(opts) {
         $scope.loading = false;
         $scope.total = opts.total;
-        $scope.page = opts.page;
+        $scope.page = opts.page || 1;
         $scope.pages = opts.pages;
         $scope.per_page = opts.per_page;
         $scope.objects = opts.objects;
@@ -849,36 +848,69 @@ angular.module('app.models.controllers', ['app.config']).controller('ModelListCt
   }
 ]).controller('ModelDetailsCtrl', [
   '$scope', '$http', '$location', '$routeParams', '$dialog', 'settings', 'Model', 'TestResult', function($scope, $http, $location, $routeParams, $dialog, settings, Model, Test) {
-    var DEFAULT_ACTION,
+    var DEFAULT_ACTION, err,
       _this = this;
-    $scope.msg = '';
-    if (!$scope.model) {
-      if (!$routeParams.name) {
-        throw new Error("Can't initialize model detail controller      without model name");
-      }
-      $scope.model = new Model({
-        name: $routeParams.name
-      });
-    }
-    $scope.model.$load().then((function() {
-      return $scope.latest_test = new Test($scope.model.latest_test);
-    }), (function() {
-      $scope.err = data;
-      return $scope.httpError = true;
-    }));
     DEFAULT_ACTION = 'model:details';
     $scope.action = ($routeParams.action || DEFAULT_ACTION).split(':');
     $scope.$watch('action', function(action) {
       var actionString;
       actionString = action.join(':');
-      return $location.search(actionString === DEFAULT_ACTION ? "" : "action=" + actionString);
+      $location.search(actionString === DEFAULT_ACTION ? "" : "action=" + actionString);
+      switch (action[0]) {
+        case "features":
+          return $scope.go('features');
+        case "weights":
+          return $scope.go('positive_weights,negative_weights');
+        case "test":
+          break;
+        case "import_handlers":
+          if (action[1] === 'train') {
+            return $scope.go('train_importhandler');
+          } else {
+            return $scope.go('importhandler');
+          }
+          break;
+        default:
+          return $scope.goDetails();
+      }
     });
+    if (!$scope.model) {
+      if (!$routeParams.name) {
+        err = "Can't initialize without model name";
+      }
+      $scope.model = new Model({
+        name: $routeParams.name
+      });
+    }
     $scope.toggleAction = function(action) {
       return $scope.action = action;
     };
+    $scope.goDetails = function() {
+      var callback;
+      callback = function() {
+        return $scope.latest_test = new Test($scope.model.latest_test);
+      };
+      return $scope.go('status,created_on,target_variable,latest_test.name,\
+  latest_test.accuracy,latest_test.parameters', callback);
+    };
+    $scope.go = function(fields, callback) {
+      return $scope.model.$load({
+        show: fields
+      }).then((function() {
+        var loaded_var;
+        loaded_var = true;
+        if (callback != null) {
+          return callback();
+        }
+      }), (function() {
+        return $scope.err = data;
+      }));
+    };
     $scope.loadTests = function() {
       return function(pagination_opts) {
-        return Test.$loadTests($scope.model.name);
+        return Test.$loadTests($scope.model.name, {
+          show: 'name,created_on,status,parameters,accuracy,data_count'
+        });
       };
     };
     $scope.saveTrainHandler = function() {
@@ -946,7 +978,8 @@ angular.module('app.models.controllers', ['app.config']).controller('ModelListCt
     };
   }
 ]);
-var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
+  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 angular.module('app.models.model', ['app.config']).factory('Model', [
   '$http', '$q', 'settings', function($http, $q, settings) {
@@ -966,8 +999,6 @@ angular.module('app.models.model', ['app.config']).factory('Model', [
         this.$save = __bind(this.$save, this);
 
         this.prepareSaveJSON = __bind(this.prepareSaveJSON, this);
-
-        this.$load = __bind(this.$load, this);
 
         this.loadFromJSON = __bind(this.loadFromJSON, this);
 
@@ -1032,10 +1063,13 @@ angular.module('app.models.model', ['app.config']).factory('Model', [
       Model.prototype.loadFromJSON = function(origData) {
         var data;
         data = _.extend({}, origData);
-        return _.extend(this, data);
+        _.extend(this, data);
+        if (__indexOf.call(origData, 'latest_test') >= 0) {
+          return this.latest_test = new Test(origData['latest_test']);
+        }
       };
 
-      Model.prototype.$load = function() {
+      Model.prototype.$load = function(opts) {
         var _this = this;
         if (this.name === null) {
           throw new Error("Can't load model without name");
@@ -1045,7 +1079,8 @@ angular.module('app.models.model', ['app.config']).factory('Model', [
           url: settings.apiUrl + ("model/" + this.name),
           headers: {
             'X-Requested-With': null
-          }
+          },
+          params: _.extend({}, opts)
         }).then((function(resp) {
           _this.loaded = true;
           _this.loadFromJSON(resp.data['model']);
@@ -1460,8 +1495,6 @@ angular.module('app.testresults.model', ['app.config']).factory('TestResult', [
       function TestResult(opts) {
         this.$save = __bind(this.$save, this);
 
-        this.$load = __bind(this.$load, this);
-
         this.loadFromJSON = __bind(this.loadFromJSON, this);
 
         this.toJSON = __bind(this.toJSON, this);
@@ -1531,7 +1564,7 @@ angular.module('app.testresults.model', ['app.config']).factory('TestResult', [
         }
       };
 
-      TestResult.prototype.$load = function() {
+      TestResult.prototype.$load = function(opts) {
         var _this = this;
         if (this.name === null) {
           throw new Error("Can't load model without name");
@@ -1541,7 +1574,8 @@ angular.module('app.testresults.model', ['app.config']).factory('TestResult', [
           url: settings.apiUrl + ("model/" + this.model_name + "/test/" + this.name),
           headers: {
             'X-Requested-With': null
-          }
+          },
+          params: _.extend({}, opts)
         }).then((function(resp) {
           _this.loaded = true;
           _this.loadFromJSON(resp.data['test']);

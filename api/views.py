@@ -74,29 +74,28 @@ class Models(restful.Resource):
             models = Model.query.all()
         else:
             models = Model.query.all()
-        model_list = []
-        for model in models:
-            data = {}
-            for field in fields:
-                if hasattr(model, field):
-                    data[field] = getattr(model, field)
-            model_list.append(data)
-        return {'models': model_list}
+        return {'models': qs2list(models, fields)}
 
     @render(brief=False)
     def _details(self, model):
         """
         Gets Trained Model details
         """
-        return {'model': model}
+        param = get_parser.parse_args()
+        fields = param.get('show', None)
+        fields = fields.split(',') if fields else Model.__public__
+        return {'model': qs2list(model, fields)}
 
     @render()
     def _load_tests(self, model):
         """
         Gets list of Trained Model's tests
         """
+        param = get_parser.parse_args()
+        fields = param.get('show', None)
+        fields = fields.split(',') if fields else Test.__public__
         tests = model.tests.all()
-        return {'model': model, 'tests': tests}
+        return {'tests': qs2list(tests, fields)}
 
     def delete(self, model):
         """
@@ -188,12 +187,15 @@ api.add_resource(Models, '/cloudml/b/v1/model/<regex("[\w\.]*"):model>',
 class Tests(restful.Resource):
     decorators = [crossdomain(origin='*')]
 
-    @render(brief=False)
+    @render()
     def get(self, model, test_name):
         test = db.session.query(Test).join(Model)\
             .filter(Model.name == model,
                     Test.name == test_name).one()
-        return {'test': test, 'model': test.model}
+        param = get_parser.parse_args()
+        fields = param.get('show', None)
+        fields = fields.split(',') if fields else Test.__public__
+        return {'test': qs2list(test, fields)}
 
     @render(code=204)
     def delete(self, model, test_name):
@@ -295,3 +297,35 @@ def populate_parser(model):
     for param in model.import_params:
         parser.add_argument(param, type=str)
     return parser
+
+
+def qs2list(obj, fields):
+    from collections import Iterable
+
+    def model2dict(model):
+        data = {}
+        for field in fields:
+            if hasattr(model, field):
+                data[field] = getattr(model, field)
+            else:
+                subfields = field.split('.')
+                count = len(subfields)
+                val = model
+                el = data
+                for i, subfield in enumerate(subfields):
+                    if not subfield in el:
+                        el[subfield] = {}
+                    if hasattr(val, subfield):
+                        val = getattr(val, subfield)
+                        if i == count - 1:
+                            el[subfield] = val
+                    el = el[subfield]
+        return data
+
+    if isinstance(obj, Iterable):
+        model_list = []
+        for model in obj:
+            model_list.append(model2dict(model))
+        return model_list
+    else:
+        return model2dict(obj)

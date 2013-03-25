@@ -76,9 +76,7 @@ class Model(db.Model, Serializer):
 
     @property
     def latest_test(self):
-        test = self.tests.order_by('-id').first()
-        if test:
-            return test.to_brief_dict()
+        return self.tests.order_by('-id').first()
 
     def __repr__(self):
         return '<Model %r>' % self.name

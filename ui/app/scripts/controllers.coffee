@@ -69,8 +69,6 @@ angular.module('app.controllers', ['app.config', ])
         throw new Error "Invalid object loader supplied to ObjectListCtrl"
 
       $scope.objectLoader = opts.objectLoader
-      $scope.load()
-
       $scope.$watch('page', (page, oldVal, scope) ->
         $scope.load()
       , true)
@@ -84,7 +82,7 @@ angular.module('app.controllers', ['app.config', ])
       ).then ((opts) ->
         $scope.loading = false
         $scope.total = opts.total
-        $scope.page = opts.page
+        $scope.page = opts.page || 1
         $scope.pages = opts.pages
         $scope.per_page = opts.per_page
         $scope.objects = opts.objects
