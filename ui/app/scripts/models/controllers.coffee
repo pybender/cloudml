@@ -34,6 +34,7 @@ angular.module('app.models.controllers', ['app.config', ])
 
 ($scope, $http, $location, settings, Model) ->
   $scope.model = new Model()
+  $scope.err = ''
   $scope.new = true
 
   $scope.upload = ->
@@ -162,14 +163,14 @@ angular.module('app.models.controllers', ['app.config', ])
       else "action=#{actionString}")
 
     switch action[0]
-      when "features" then $scope.go 'features'
-      when "weights" then  $scope.go 'positive_weights,negative_weights'
+      when "features" then $scope.go 'features,status'
+      when "weights" then  $scope.go 'positive_weights,negative_weights,status'
       when "test" then
-      when "import_handlers"
+      when "import_handlers,status"
         if action[1] == 'train'
-          $scope.go 'train_importhandler'
+          $scope.go 'train_importhandler,status'
         else
-          $scope.go 'importhandler'
+          $scope.go 'importhandler,status'
       else $scope.goDetails()
 
   if not $scope.model
@@ -228,7 +229,14 @@ angular.module('app.models.controllers', ['app.config', ])
   ($scope, $http, dialog, settings) ->
 
     $scope.model = dialog.model
-    $scope.params = $scope.model.import_params
+    $scope.model.$load(
+      show: fields
+      ).then (->
+        $scope.params = $scope.model.import_params
+      ), (->
+        $scope.err = data
+      )
+
     $scope.parameters = {}
 
     $scope.close = ->

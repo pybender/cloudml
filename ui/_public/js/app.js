@@ -749,6 +749,7 @@ angular.module('app.models.controllers', ['app.config']).controller('ModelListCt
 ]).controller('AddModelCtl', [
   '$scope', '$http', '$location', 'settings', 'Model', function($scope, $http, $location, settings, Model) {
     $scope.model = new Model();
+    $scope.err = '';
     $scope["new"] = true;
     $scope.upload = function() {
       $scope.saving = true;
@@ -860,16 +861,16 @@ angular.module('app.models.controllers', ['app.config']).controller('ModelListCt
       $location.search(actionString === DEFAULT_ACTION ? "" : "action=" + actionString);
       switch (action[0]) {
         case "features":
-          return $scope.go('features');
+          return $scope.go('features,status');
         case "weights":
-          return $scope.go('positive_weights,negative_weights');
+          return $scope.go('positive_weights,negative_weights,status');
         case "test":
           break;
-        case "import_handlers":
+        case "import_handlers,status":
           if (action[1] === 'train') {
-            return $scope.go('train_importhandler');
+            return $scope.go('train_importhandler,status');
           } else {
-            return $scope.go('importhandler');
+            return $scope.go('importhandler,status');
           }
           break;
         default:
@@ -937,7 +938,13 @@ angular.module('app.models.controllers', ['app.config']).controller('ModelListCt
 ]).controller('TrainModelCtrl', [
   '$scope', '$http', 'dialog', 'settings', function($scope, $http, dialog, settings) {
     $scope.model = dialog.model;
-    $scope.params = $scope.model.import_params;
+    $scope.model.$load({
+      show: fields
+    }).then((function() {
+      return $scope.params = $scope.model.import_params;
+    }), (function() {
+      return $scope.err = data;
+    }));
     $scope.parameters = {};
     $scope.close = function() {
       return dialog.close();
@@ -1430,17 +1437,23 @@ angular.module('app.services', []).factory('version', function() {
 */
 
 angular.module('app.testresults.controllers', ['app.config']).controller('TestDialogController', [
-  '$scope', '$http', 'dialog', 'settings', function($scope, $http, dialog, settings) {
-    var model;
-    model = dialog.model;
-    $scope.params = model.import_params;
+  '$scope', '$http', 'dialog', 'settings', '$location', 'TestResult', function($scope, $http, dialog, settings, $location, Test) {
+    $scope.model = dialog.model;
+    $scope.model.$load({
+      show: 'import_params'
+    }).then((function() {
+      return $scope.params = $scope.model.import_params;
+    }), (function() {
+      return $scope.err = data;
+    }));
     $scope.parameters = {};
     $scope.close = function() {
       return dialog.close();
     };
     return $scope.start = function(result) {
-      var form_data, key;
+      var form_data, key, model;
       form_data = new FormData();
+      model = $scope.model;
       for (key in $scope.parameters) {
         form_data.append(key, $scope.parameters[key]);
       }
@@ -1454,8 +1467,11 @@ angular.module('app.testresults.controllers', ['app.config']).controller('TestDi
         },
         transformRequest: angular.identity
       }).success(function(data, status, headers, config) {
+        var test;
         $scope.success = true;
-        $scope.msg = {};
+        data['test']['model_name'] = model.name;
+        test = new Test(data['test']);
+        $location.path(test.objectUrl());
         return dialog.close(result);
       }).error(function(data, status, headers, config) {
         return $scope.httpError = true;
@@ -1562,9 +1578,7 @@ angular.module('app.testresults.model', ['app.config']).factory('TestResult', [
       };
 
       TestResult.prototype.objectUrl = function() {
-        if (this.model != null) {
-          return '/models/' + this.model.name + "/tests/" + this.name;
-        }
+        debugger;        return '/models/' + (this.model_name || this.model.name) + "/tests/" + this.name;
       };
 
       TestResult.prototype.fullName = function() {

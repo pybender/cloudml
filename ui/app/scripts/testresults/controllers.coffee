@@ -9,11 +9,19 @@ angular.module('app.testresults.controllers', ['app.config', ])
   '$http'
   'dialog'
   'settings'
+  '$location'
+  'TestResult'
 
-($scope, $http, dialog, settings) ->
+($scope, $http, dialog, settings, $location, Test) ->
 
-  model = dialog.model
-  $scope.params = model.import_params # list of parameters names
+  $scope.model = dialog.model
+  $scope.model.$load(
+    show: 'import_params'
+    ).then (->
+      $scope.params = $scope.model.import_params
+    ), (->
+      $scope.err = data
+    )
   $scope.parameters = {} # parameters to send via API
 
   $scope.close = ->
@@ -21,6 +29,7 @@ angular.module('app.testresults.controllers', ['app.config', ])
 
   $scope.start = (result) ->
     form_data = new FormData()
+    model = $scope.model
     for key of $scope.parameters
       form_data.append(key, $scope.parameters[key])
 
@@ -32,7 +41,9 @@ angular.module('app.testresults.controllers', ['app.config', ])
       transformRequest: angular.identity
     ).success((data, status, headers, config) ->
       $scope.success = true
-      $scope.msg = {}
+      data['test']['model_name'] = model.name
+      test = new Test(data['test'])
+      $location.path test.objectUrl()
       dialog.close(result)
     ).error((data, status, headers, config) ->
       $scope.httpError = true

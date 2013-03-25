@@ -30,8 +30,8 @@ angular.module('app.testresults.model', ['app.config'])
       isNew: -> if @slug == null then true else false
 
       objectUrl: =>
-        if @model?
-          return '/models/' + @model.name + "/tests/" + @name
+        debugger
+        return '/models/' + (@model_name || @model.name) + "/tests/" + @name
 
       fullName: =>
         if @model?

@@ -52,6 +52,7 @@ def run_test(test, model):
 
         test.status = Test.STATUS_IN_PROGRESS
         test.error = ""
+        db.session.merge(test)
         db.session.commit()
 
         metrics, raw_data = model.run_test(test.parameters)
