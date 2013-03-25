@@ -5,7 +5,7 @@ importhandler-- extract values from DB according to extraction plan.
 
 It defines classes ImportHandlerException, ExtractionPlan and ImportHandler
 
-@author:     ifoukarakis
+@author:     ifoukarakis, papadimitriou
 
 @copyright: 2013 oDesk. All rights reserved.
 
@@ -38,12 +38,15 @@ class ExtractionPlan(object):
 
     """
     def __init__(self, config, is_file=True):
-        if is_file:
-            with open(config, 'r') as fp:
-                data = json.load(fp)
-        else:
-            data = json.loads(config)
-
+        try:
+            if is_file:
+                with open(config, 'r') as fp:
+                    data = json.load(fp)
+            else:
+                data = json.loads(config)
+        except ValueError as e:
+            raise ImportHandlerException(message='%s %s ' % (config, e))
+        
         if 'target-schema' not in data:
             raise ImportHandlerException('No target schema defined in config')
         self.schema_name = data['target-schema']
@@ -82,9 +85,6 @@ class ExtractionPlan(object):
 
         """
         for item in query.get('items'):
-            if 'process-as' not in item:
-                raise ImportHandlerException('Query item must define '
-                                             'process-as field')
             target_features = item.get('target-features', [])
             if len(target_features) == 0:
                 raise ImportHandlerException('Query item must define at least '
@@ -159,11 +159,11 @@ class ImportHandler(object):
         # Hold data of current row processed so far
         row_data = {}
         for item in query['items']:
-            strategy = PROCESS_STRATEGIES.get(item['process-as'])
+            strategy = PROCESS_STRATEGIES.get(item.get('process-as', 'identity'))
             if strategy is None:
                 raise ImportHandlerException('Unknown strategy %s'
                                              % item['process-as'])
-            # Get value from query for this dtata
+            # Get value from query for this item
             source = item.get('source', None)
             item_value = row.get(source, None)
             result = strategy(item_value, item, row_data)
