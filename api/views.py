@@ -160,7 +160,7 @@ class Models(restful.Resource):
         model.status = Model.STATUS_QUEUED
         db.session.commit()
 
-        train_model.run(model, parameters)
+        train_model.delay(model, parameters)
         return {'model': model}
 
 
