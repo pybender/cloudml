@@ -155,7 +155,7 @@ class Data(db.Model, Serializer):
             for key, val in row.iteritems():
                 try:
                     if isinstance(val, basestring):
-                        row[key] = val.encode('ascii', 'ignore')
+                        row[key] = val.encode('utf-8')
                 except UnicodeDecodeError, exc:
                     logging.error('Error while decoding %s: %s', val, exc)
             return row
