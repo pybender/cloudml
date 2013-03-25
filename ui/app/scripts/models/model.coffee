@@ -51,7 +51,7 @@ angular.module('app.models.model', ['app.config'])
       loadFromJSON: (origData) =>
         data = _.extend {}, origData
         _.extend @, data
-        if 'latest_test' in origData
+        if origData? and 'latest_test' in origData
           @latest_test = new Test(origData['latest_test'])
 
       $load: (opts) ->

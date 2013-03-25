@@ -230,7 +230,7 @@ angular.module('app.models.controllers', ['app.config', ])
 
     $scope.model = dialog.model
     $scope.model.$load(
-      show: fields
+      show: 'import_params'
       ).then (->
         $scope.params = $scope.model.import_params
       ), (->

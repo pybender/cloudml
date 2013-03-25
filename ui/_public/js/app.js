@@ -939,7 +939,7 @@ angular.module('app.models.controllers', ['app.config']).controller('ModelListCt
   '$scope', '$http', 'dialog', 'settings', function($scope, $http, dialog, settings) {
     $scope.model = dialog.model;
     $scope.model.$load({
-      show: fields
+      show: 'import_params'
     }).then((function() {
       return $scope.params = $scope.model.import_params;
     }), (function() {
@@ -1073,7 +1073,7 @@ angular.module('app.models.model', ['app.config']).factory('Model', [
         var data;
         data = _.extend({}, origData);
         _.extend(this, data);
-        if (__indexOf.call(origData, 'latest_test') >= 0) {
+        if ((origData != null) && __indexOf.call(origData, 'latest_test') >= 0) {
           return this.latest_test = new Test(origData['latest_test']);
         }
       };
