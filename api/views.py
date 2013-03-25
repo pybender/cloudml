@@ -319,6 +319,10 @@ def qs2list(obj, fields):
                         val = getattr(val, subfield)
                         if i == count - 1:
                             el[subfield] = val
+                    if subfield in val:
+                        val = val[subfield]
+                        if i == count - 1:
+                            el[subfield] = val
                     el = el[subfield]
         return data
 

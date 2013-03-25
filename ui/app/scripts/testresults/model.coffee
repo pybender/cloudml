@@ -7,11 +7,8 @@ angular.module('app.testresults.model', ['app.config'])
   'Model'
   
   ($http, $q, settings, Model) ->
-
-    trimTrailingWhitespace = (val) -> val.replace /^\s+|\s+$/g, ''
-
     ###
-    Trained Model
+    Trained Model Test
     ###
     class TestResult
 
@@ -66,7 +63,7 @@ angular.module('app.testresults.model', ['app.config'])
         ).then ((resp) =>
           @loaded = true
           @loadFromJSON(resp.data['test'])
-          @model = new Model(resp.data['model'])
+          #@model = new Model(resp.data['model'])
           return resp
 
         ), ((resp) =>

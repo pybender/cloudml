@@ -1461,7 +1461,8 @@ angular.module('app.testresults.controllers', ['app.config']).controller('TestDi
     };
   }
 ]).controller('TestDetailsCtrl', [
-  '$scope', '$http', '$routeParams', 'settings', 'TestResult', function($scope, $http, $routeParams, settings, Test) {
+  '$scope', '$http', '$routeParams', 'settings', 'TestResult', '$location', function($scope, $http, $routeParams, settings, Test, $location) {
+    var DEFAULT_ACTION;
     if (!$scope.test) {
       if (!$routeParams.name) {
         throw new Error("Can't initialize test detail controller      without test name");
@@ -1471,10 +1472,36 @@ angular.module('app.testresults.controllers', ['app.config']).controller('TestDi
         name: $routeParams.test_name
       });
     }
-    return $scope.test.$load().then((function() {}), (function() {
-      $scope.error = data;
-      return $scope.httpError = true;
-    }));
+    DEFAULT_ACTION = 'test:details';
+    $scope.action = ($routeParams.action || DEFAULT_ACTION).split(':');
+    $scope.$watch('action', function(action) {
+      var actionString;
+      actionString = action.join(':');
+      $location.search(actionString === DEFAULT_ACTION ? "" : "action=" + actionString);
+      switch (action[0]) {
+        case "curves":
+          return $scope.go('status,metrics.roc_curve,\
+metrics.precision_recall_curve,metrics.roc_auc');
+        case "matrix":
+          return $scope.go('status,metrics.confusion_matrix');
+        default:
+          return $scope.go('name,status,classes_set,created_on,accuracy,data_count,\
+parameters');
+      }
+    });
+    return $scope.go = function(fields, callback) {
+      return $scope.test.$load({
+        show: fields
+      }).then((function() {
+        var loaded_var;
+        loaded_var = true;
+        if (callback != null) {
+          return callback();
+        }
+      }), (function() {
+        return $scope.err = 'Error';
+      }));
+    };
   }
 ]);
 var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
@@ -1482,14 +1509,11 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
 
 angular.module('app.testresults.model', ['app.config']).factory('TestResult', [
   '$http', '$q', 'settings', 'Model', function($http, $q, settings, Model) {
-    var TestResult, trimTrailingWhitespace;
-    trimTrailingWhitespace = function(val) {
-      return val.replace(/^\s+|\s+$/g, '');
-    };
     /*
-        Trained Model
+        Trained Model Test
     */
 
+    var TestResult;
     TestResult = (function() {
 
       function TestResult(opts) {
@@ -1579,7 +1603,6 @@ angular.module('app.testresults.model', ['app.config']).factory('TestResult', [
         }).then((function(resp) {
           _this.loaded = true;
           _this.loadFromJSON(resp.data['test']);
-          _this.model = new Model(resp.data['model']);
           return resp;
         }), (function(resp) {
           return resp;
