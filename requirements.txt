@@ -7,7 +7,7 @@ SQLAlchemy==0.8.0b2
 Werkzeug==0.8.3
 numpy
 scipy
-scikit-learn==0.13
+scikit-learn
 -e git+https://github.com/tobiasandtobias/flask-alembic.git#egg=flask-alembic
 django-fabdeploy-plus==0.3.6
 psycopg2==2.4.6
