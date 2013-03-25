@@ -30,21 +30,12 @@
     </div>
   </div>
   <div class="control-group" ng-class="{error: !import_handler}">
-    <label title="local file or s3 or http address" class="control-label">Import Handler For Train</label>
-    <div class="controls">
-      <input type="file" name="train_importhandler" ng-model="model.train_importhandler" onchange="angular.element(this).scope().setTrainImportHandlerFile(this)">
-      <span ng-show="!import_handler" class="help-inline">
-          Required</span>
-      <span class="help-block">json file with import data details that would be used to train model</span>
-    </div>
-  </div>
-  <div class="control-group" ng-class="{error: !import_handler}">
     <label title="local file or s3 or http address" class="control-label">Import Handler For Tests</label>
     <div class="controls">
       <input type="file" name="importhandler" ng-model="model.importhandler" onchange="angular.element(this).scope().setImportHandlerFile(this)">
       <span ng-show="!import_handler" class="help-inline">
           Required</span>
-      <span class="help-block">json file with import data details that would be used to test model</span>
+      <span class="help-block">json file with import data details</span>
     </div>
   </div>
   <br />

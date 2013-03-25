@@ -17,6 +17,8 @@ from core.trainer.trainer import Trainer
 from core.trainer.config import FeatureModel
 from core.importhandler.importhandler import ExtractionPlan, ImportHandler
 
+get_parser = reqparse.RequestParser()
+get_parser.add_argument('show', type=str)
 
 page_parser = reqparse.RequestParser()
 page_parser.add_argument('page', type=int)
@@ -53,18 +55,33 @@ class Models(restful.Resource):
     def _list(self):
         """
         Gets list of Trained Models
+
+        GET parameters:
+            * comparable - returns list of models that could be compared
+            to each other. (They should be Trained and has successfull
+            completed Test)
+            * show - list of fields to return
         """
-        parser = reqparse.RequestParser()
+        parser = get_parser
         parser.add_argument('comparable', type=bool)
+
         param = parser.parse_args()
         comparable = param.get('comparable', False)
+        fields = param.get('show', None)
+        fields = fields.split(',') if fields else Model.__public__
         if comparable:
-            # Look for models with completed tests
+            # TODO: Look for models with completed tests
             models = Model.query.all()
         else:
             models = Model.query.all()
-        found = models.count(Model.id)
-        return {'models': models, 'found': found}
+        model_list = []
+        for model in models:
+            data = {}
+            for field in fields:
+                if hasattr(model, field):
+                    data[field] = getattr(model, field)
+            model_list.append(data)
+        return {'models': model_list}
 
     @render(brief=False)
     def _details(self, model):

@@ -12,10 +12,17 @@ angular.module('app.models.controllers', ['app.config', ])
   'Model'
 
 ($scope, $http, $dialog, settings, Model) ->
-  $scope.loadModels = () ->
-    # Used for ObjectListCtrl initialization
-    (pagination_opts) ->
-      Model.$loadAll()
+  Model.$loadAll(
+    show: 'name,status,created_on,import_params'
+  ).then ((opts) ->
+    $scope.objects = opts.objects
+  ), ((opts) ->
+    $scope.err = "Error while saving: server responded with " +
+        "#{resp.status} " +
+        "(#{resp.data.response.error.message or "no message"}). " +
+        "Make sure you filled the form correctly. " +
+        "Please contact support if the error will not go away."
+  )
 ])
 
 .controller('AddModelCtl', [
@@ -64,18 +71,8 @@ angular.module('app.models.controllers', ['app.config', ])
         reader.onload = (e) ->
           str = e.target.result
           $scope.model.importhandler = str
-        reader.readAsText($scope.import_handler)
-
-  $scope.setTrainImportHandlerFile = (element) ->
-      $scope.$apply ($scope) ->
-        $scope.msg = ""
-        $scope.error = ""
-        $scope.train_import_handler = element.files[0]
-        reader = new FileReader()
-        reader.onload = (e) ->
-          str = e.target.result
           $scope.model.train_importhandler = str
-        reader.readAsText($scope.train_import_handler)
+        reader.readAsText($scope.import_handler)
 
   $scope.setFeaturesFile = (element) ->
       $scope.$apply ($scope) ->
