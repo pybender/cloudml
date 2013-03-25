@@ -54,15 +54,11 @@ angular.module('app.reports.controllers', ['app.config', ])
     $scope.$watch('model1', model_watcher, true)
     $scope.$watch('model2', model_watcher, true)
 
-    $scope.init = (opts={}) =>
-      $scope.modelsLoader = Model.$getModelsToCompare
-      $scope.testsLoader = Test.$loadTests
-
     $scope.is_form = ->
       $scope.action[0] == 'form'
 
     $scope.loadModelsList = =>
-      $scope.modelsLoader(
+      Model.$loadAll({comparable: true}
       ).then ((opts) ->
         $scope.models = opts.objects
         # TODO: Fix this
@@ -77,7 +73,7 @@ angular.module('app.reports.controllers', ['app.config', ])
       )
 
     $scope.loadTestsList = (model) =>
-      $scope.testsLoader(
+      Test.$loadTests(
         model.name
       ).then ((opts) ->
         model.tests = opts.objects

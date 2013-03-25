@@ -1105,7 +1105,8 @@ angular.module('app.models.model', ['app.config']).factory('Model', [
         $http({
           method: 'GET',
           url: "" + settings.apiUrl + "model/",
-          headers: settings.apiRequestDefaultHeaders
+          headers: settings.apiRequestDefaultHeaders,
+          params: _.extend({}, opts)
         }).then((function(resp) {
           var obj;
           return dfd.resolve({
@@ -1155,40 +1156,9 @@ angular.module('app.models.model', ['app.config']).factory('Model', [
         });
       };
 
-      Model.$getModelsToCompare = function() {
-        var dfd;
-        dfd = $q.defer();
-        $http({
-          method: 'GET',
-          url: "" + settings.apiUrl + "model/",
-          headers: settings.apiRequestDefaultHeaders
-        }).then((function(resp) {
-          var obj;
-          return dfd.resolve({
-            total: resp.data.found,
-            objects: (function() {
-              var _i, _len, _ref, _results;
-              _ref = resp.data.models;
-              _results = [];
-              for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-                obj = _ref[_i];
-                _results.push(new this(_.extend(obj, {
-                  loaded: true
-                })));
-              }
-              return _results;
-            }).call(Model),
-            _resp: resp
-          });
-        }), (function() {
-          return dfd.reject.apply(this, arguments);
-        }));
-        return dfd.promise;
-      };
-
       return Model;
 
-    }).call(this);
+    })();
     return Model;
   }
 ]);
@@ -1239,18 +1209,13 @@ angular.module('app.reports.controllers', ['app.config']).controller('CompareMod
     };
     $scope.$watch('model1', model_watcher, true);
     $scope.$watch('model2', model_watcher, true);
-    $scope.init = function(opts) {
-      if (opts == null) {
-        opts = {};
-      }
-      $scope.modelsLoader = Model.$getModelsToCompare;
-      return $scope.testsLoader = Test.$loadTests;
-    };
     $scope.is_form = function() {
       return $scope.action[0] === 'form';
     };
     $scope.loadModelsList = function() {
-      return $scope.modelsLoader().then((function(opts) {
+      return Model.$loadAll({
+        comparable: true
+      }).then((function(opts) {
         var m, _i, _len, _ref, _results;
         $scope.models = opts.objects;
         if ($scope.is_form()) {
@@ -1275,7 +1240,7 @@ angular.module('app.reports.controllers', ['app.config']).controller('CompareMod
       }));
     };
     $scope.loadTestsList = function(model) {
-      return $scope.testsLoader(model.name).then((function(opts) {
+      return Test.$loadTests(model.name).then((function(opts) {
         var t, _i, _len, _ref, _results;
         model.tests = opts.objects;
         if ($scope.is_form()) {

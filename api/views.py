@@ -54,7 +54,15 @@ class Models(restful.Resource):
         """
         Gets list of Trained Models
         """
-        models = Model.query.all()
+        parser = reqparse.RequestParser()
+        parser.add_argument('comparable', type=bool)
+        param = parser.parse_args()
+        comparable = param.get('comparable', False)
+        if comparable:
+            # Look for models with completed tests
+            models = Model.query.all()
+        else:
+            models = Model.query.all()
         found = models.count(Model.id)
         return {'models': models, 'found': found}
 

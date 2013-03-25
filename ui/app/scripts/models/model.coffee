@@ -112,6 +112,8 @@ angular.module('app.models.model', ['app.config'])
           method: 'GET'
           url: "#{settings.apiUrl}model/"
           headers: settings.apiRequestDefaultHeaders
+          params: _.extend {
+          }, opts
         )
         .then ((resp) =>
           dfd.resolve {
@@ -140,27 +142,6 @@ angular.module('app.models.model', ['app.config'])
           transformRequest: angular.identity
         )
         .then((resp) => @loadFromJSON(resp.data['model']))
-
-      @$getModelsToCompare: =>
-        dfd = $q.defer()
-
-        $http(
-          method: 'GET'
-          url: "#{settings.apiUrl}model/"
-          headers: settings.apiRequestDefaultHeaders
-        )
-        .then ((resp) =>
-          dfd.resolve {
-            total: resp.data.found
-            objects: (
-              new @(_.extend(obj, {loaded: true})) \
-              for obj in resp.data.models)
-            _resp: resp
-          }
-
-        ), (-> dfd.reject.apply @, arguments)
-
-        dfd.promise
 
     return Model
 ])

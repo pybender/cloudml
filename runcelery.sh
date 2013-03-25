@@ -1,1 +1,0 @@
-celery -A api.tasks worker --loglevel=info
