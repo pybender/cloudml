@@ -33,7 +33,7 @@ angular.module('app.datas.model', ['app.config'])
         data = _.extend {}, origData
         _.extend @, data
 
-      $load: =>
+      $load: (opts) ->
         if @name == null
           throw new Error "Can't load model without name"
         
@@ -42,6 +42,8 @@ angular.module('app.datas.model', ['app.config'])
           url: settings.apiUrl + "model/#{@model_name}/test/
 #{@test_name}/data/#{@id}"
           headers: {'X-Requested-With': null}
+          params: _.extend {
+          }, opts
         ).then ((resp) =>
           @loaded = true
           @loadFromJSON(resp.data['data'])

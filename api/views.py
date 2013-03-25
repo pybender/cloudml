@@ -232,10 +232,13 @@ class Datas(restful.Resource):
 
     @render(brief=False)
     def get(self, model, test_name, data_id):
+        param = get_parser.parse_args()
+        fields = param.get('show', None)
+        fields = fields.split(',') if fields else Data.__public__
         data = db.session.query(Data).join(Test).join(Model).\
             filter(and_(Model.name == model, Test.name == test_name,
                         Data.id == data_id)).one()
-        return {'data': data}
+        return {'data': qs2list(data, fields)}
 
 
 class DataList(restful.Resource):
@@ -248,15 +251,16 @@ class DataList(restful.Resource):
             .filter(Model.name == model,
                     Test.name == test_name).one()
         data_paginated = test.data.paginate(param['page'] or 1, 20, False)
-        return {'model': test.model,
-                'data': {'items': data_paginated.items,
+        param = get_parser.parse_args()
+        fields = param.get('show', None)
+        fields = fields.split(',') if fields else Data.__public__
+        return {'data': {'items': qs2list(data_paginated.items, fields),
                          'pages': data_paginated.pages,
                          'total': data_paginated.total,
                          'page': data_paginated.page,
                          'has_next': data_paginated.has_next,
                          'has_prev': data_paginated.has_prev,
-                         'per_page': data_paginated.per_page},
-                'test': test}
+                         'per_page': data_paginated.per_page}}
 
 api.add_resource(DataList, '/cloudml/b/v1/model/<regex("[\w\.]+"):model>/test/<regex("[\w\.\-]+"):test_name>/data')
 api.add_resource(Datas,
@@ -319,7 +323,7 @@ def qs2list(obj, fields):
                         val = getattr(val, subfield)
                         if i == count - 1:
                             el[subfield] = val
-                    if subfield in val:
+                    if isinstance(val, Iterable) and subfield in val:
                         val = val[subfield]
                         if i == count - 1:
                             el[subfield] = val

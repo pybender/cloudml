@@ -15,7 +15,6 @@
         <thead>
           <tr>
             <th>Id</th>
-            <th>Created</th>
             <th>Params</th>
             <th>Original</th>
             <th>Predict</th>
@@ -24,8 +23,7 @@
           <tbody>
           <tr ng-repeat="data in objects | filter:search | orderBy:'id'" ng-class="{success : data.data_input['hire_outcome']=='1', error : !(data.data_input['hire_outcome']=='1')}">
             <td><a href="#/models/{{ data.model_name }}/tests/{{ data.test_name }}/examples/{{ data.id }}">{{ data.id }}</a></td>
-            <td>{{ data.created_on|format_date }}</td>
-            <td><a href="#/models/{{ data.model_name }}/tests/{{ data.test_name }}/examples/{{ data.id }}">{{ data.data_input['contractor.dev_profile_title'] }}</a></td>
+            <td><a href="#/models/{{ data.model_name }}/tests/{{ data.test_name }}/examples/{{ data.id }}">{{ data.title }}</a></td>
             <td><span>{{ data.label }}</span></td>
             <td><span>{{ data.pred_label }}</span></td>
           </tr>

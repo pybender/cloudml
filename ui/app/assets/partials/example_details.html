@@ -1,4 +1,16 @@
 <h2>{{ data.test_name|capfirst }}:{{ data.id }} Example</h2>
+<div class="well">
+<div>
+  Target Variable: <span class="value">{{ data.target_variable }}</span>
+</div>
+<div>
+  Label: <span class="value">{{ data.label }}</span>
+</div>
+<div>
+  Predicted Label: <span class="value">{{ data.pred_label }}</span>
+</div>
+</div>
+<h4>Parameters with Weights</h4>
 <table class="table">
     <thead>
         <tr>

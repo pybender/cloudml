@@ -158,3 +158,15 @@ class Data(db.Model, Serializer):
                        str(label), str(pred))
             db.session.add(data)
         db.session.commit()
+
+    @property
+    def target_variable(self):
+        return self.test.model.target_variable
+
+    @property
+    def title(self):
+        # TODO: hack
+        try:
+            return self.data_input['contractor.dev_profile_title']
+        except:
+            return 'No Title'

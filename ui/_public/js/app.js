@@ -171,7 +171,8 @@ angular.module('app.datas.controllers', ['app.config']).controller('TestExamples
       return function(pagination_opts) {
         return Data.$loadAll(_.extend({
           model_name: $routeParams.name,
-          test_name: $routeParams.test_name
+          test_name: $routeParams.test_name,
+          show: 'id,label,pred_label,title'
         }, pagination_opts));
       };
     };
@@ -185,7 +186,9 @@ angular.module('app.datas.controllers', ['app.config']).controller('TestExamples
         id: $routeParams.data_id
       });
     }
-    return $scope.data.$load().then((function() {}), (function() {
+    return $scope.data.$load({
+      show: "id,weighted_data_input,target_variable,pred_label,label"
+    }).then((function() {}), (function() {
       $scope.error = data;
       return $scope.httpError = true;
     }));
@@ -199,8 +202,6 @@ angular.module('app.datas.model', ['app.config']).factory('Data', [
     Data = (function() {
 
       function Data(opts) {
-        this.$load = __bind(this.$load, this);
-
         this.loadFromJSON = __bind(this.loadFromJSON, this);
 
         this.toJSON = __bind(this.toJSON, this);
@@ -243,7 +244,7 @@ angular.module('app.datas.model', ['app.config']).factory('Data', [
         return _.extend(this, data);
       };
 
-      Data.prototype.$load = function() {
+      Data.prototype.$load = function(opts) {
         var _this = this;
         if (this.name === null) {
           throw new Error("Can't load model without name");
@@ -253,7 +254,8 @@ angular.module('app.datas.model', ['app.config']).factory('Data', [
           url: settings.apiUrl + ("model/" + this.model_name + "/test/" + this.test_name + "/data/" + this.id),
           headers: {
             'X-Requested-With': null
-          }
+          },
+          params: _.extend({}, opts)
         }).then((function(resp) {
           _this.loaded = true;
           _this.loadFromJSON(resp.data['data']);
