@@ -69,7 +69,7 @@
            {"name": "contractor.dev_region", "jsonpath": "$.dev_region"}
         ]},
 
-        {"source": "opening_tile", "is-required": true, "target-features": [{"name": "opening.title"}]},
+        {"source": "opening_title", "is-required": true, "target-features": [{"name": "opening.title"}]},
         {"source": "opening_description", "is-required": true, "target-features": [{"name": "opening.description"}]},
         {"source": "opening_skills", "is-required": true, "target-features": [{"name": "opening.skills"}]},
         {"source": "opening_type", "is-required": true, "target-features": [{"name": "opening.type"}]},

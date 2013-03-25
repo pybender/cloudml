@@ -7,11 +7,8 @@ angular.module('app.testresults.model', ['app.config'])
   'Model'
   
   ($http, $q, settings, Model) ->
-
-    trimTrailingWhitespace = (val) -> val.replace /^\s+|\s+$/g, ''
-
     ###
-    Trained Model
+    Trained Model Test
     ###
     class TestResult
 
@@ -26,10 +23,19 @@ angular.module('app.testresults.model', ['app.config'])
       parameters: null
       model: null
       model_name: null
+      loaded: false
 
       ### API methods ###
 
       isNew: -> if @slug == null then true else false
+
+      objectUrl: =>
+        return '/models/' + (@model_name || @model.name) + "/tests/" + @name
+
+      fullName: =>
+        if @model?
+          return @model.name + " / " + @name
+        return @name
 
       # Returns an object of job properties, for use in e.g. API requests
       # and templates
@@ -40,18 +46,23 @@ angular.module('app.testresults.model', ['app.config'])
       loadFromJSON: (origData) =>
         data = _.extend {}, origData
         _.extend @, data
+        if 'model' in origData
+          @model = new Model(origData['model'])
+          @model_name = origData['model']['name']
 
-      $load: =>
+      $load: (opts) ->
         if @name == null
           throw new Error "Can't load model without name"
         $http(
           method: 'GET'
           url: settings.apiUrl + "model/#{@model_name}/test/#{@name}"
           headers: {'X-Requested-With': null}
+          params: _.extend {
+          }, opts
         ).then ((resp) =>
           @loaded = true
           @loadFromJSON(resp.data['test'])
-          @model = new Model(resp.data['model'])
+          #@model = new Model(resp.data['model'])
           return resp
 
         ), ((resp) =>
@@ -81,7 +92,6 @@ angular.module('app.testresults.model', ['app.config'])
         )
         .then((resp) => @loadFromJSON(resp.data))
 
-      
       @$loadTests: (modelName, opts) ->
         dfd = $q.defer()
 
@@ -96,14 +106,13 @@ angular.module('app.testresults.model', ['app.config'])
         )
         .then ((resp) =>
           dfd.resolve {
-            total: resp.data.found
-            objects: (new @(obj) for obj in resp.data.tests)
+            #total: resp.data.found
+            objects: (new TestResult(obj) for obj in resp.data.tests)
             _resp: resp
           }
 
         ), (-> dfd.reject.apply @, arguments)
 
         dfd.promise
-         
     return TestResult
 ])

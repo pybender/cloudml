@@ -9,17 +9,17 @@
 
 <alert-message ng-show="test.error" class="alert-error" msg="{{ test.error }}" unsafe></alert-message>
 
-<alert-message ng-show="test.status != 'Completed'" class="alert-warning" msg="Test was not calculated yet." unsafe></alert-message>
+<alert-message ng-show="test.status != 'Completed'" class="alert-warning" msg="Test was not calculated yet. Status: {{ test.status }}" unsafe></alert-message>
 
 <div ng-show="test.status == 'Completed'">
     <ul class="nav nav-tabs" id="tabs">
-      <li><a showtab="" href="#details">Details</a></li>
-      <li class="active"><a showtab="" href="#metrics">ROC and Precision-Recall</a></li>
-      <li><a showtab="" href="#confusion">Confusion Matrix</a></li>
+      <li ng-class="{active: action[0] == 'test'}"><a ng-click="action = ['test', 'details']">Details</a></li>
+      <li ng-class="{active: action[0] == 'curves'}"><a ng-click="action = ['curves', 'show']">ROC and Precision-Recall</a></li>
+      <li ng-class="{active: action[0] == 'matrix'}"><a ng-click="action = ['matrix', 'confusion']">Confusion Matrix</a></li>
     </ul>
-     
+
     <div class="tab-content">
-      <div class="tab-pane" id="details">
+      <div  ng-show="action[0] == 'test'" id="details">
         <div class="row">
             <div class="span12">
                 <div>
@@ -44,7 +44,7 @@
                     </span>
                 </div>
                 <div>
-                    Classification Accuracy: <span class="value">{{ test.metrics.accuracy.toFixed(4) }}</span>
+                    Classification Accuracy: <span class="value">{{ test.accuracy.toFixed(4) }}</span>
                 </div>
                 <div>
                     Examples count: <span class="value">{{ test.data_count }}</span>
@@ -52,7 +52,7 @@
             </div>
         </div>
       </div>
-      <div class="tab-pane active" id="metrics">
+      <div ng-show="action[0] == 'curves'">
         <div class="row">
           <div class="span6">
             <h4>Receiver operating characteristic</h4>
@@ -69,26 +69,11 @@
 
       </div>
 
-    <div class="tab-pane" id="confusion">
+    <div  ng-show="action[0] == 'matrix'">
         <div class="row">
             <div class="span6">
                 <h4>Confusion Matrix</h4>
-                <table class="table">
-                <thead>
-                <tr>
-                    <th></th>
-                    <th ng-repeat="row in test.metrics.confusion_matrix">
-                      {{ row.0 }}
-                    </th>
-                </tr>
-                </thead>
-                <tbody>
-                    <tr ng-repeat="row in test.metrics.confusion_matrix">
-                        <th>{{ row.0 }}</th>
-                        <td ng-repeat="cell in row.1">{{ cell }}</td>
-                    </tr>
-                </tbody>
-                </table>
+                <confusion-matrix matrix=test.metrics.confusion_matrix ></confusion-matrix>
             </div>
         </div>
       </div>

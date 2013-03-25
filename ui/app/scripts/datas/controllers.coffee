@@ -17,7 +17,8 @@ angular.module('app.datas.controllers', ['app.config', ])
     # Used for ObjectListCtrl initialization
     (pagination_opts) ->
       Data.$loadAll(_.extend({model_name: $routeParams.name,
-      test_name: $routeParams.test_name}, pagination_opts))
+      test_name: $routeParams.test_name,
+      show:'id,label,pred_label,title'}, pagination_opts))
 ])
 
 .controller('ExampleDetailsCtrl', [
@@ -33,7 +34,9 @@ angular.module('app.datas.controllers', ['app.config', ])
     test_name: $routeParams.test_name,
     id: $routeParams.data_id})
 
-  $scope.data.$load().then (->
+  $scope.data.$load(
+    show: "id,weighted_data_input,target_variable,pred_label,label"
+  ).then (->
     ), (->
       $scope.error = data
       $scope.httpError = true

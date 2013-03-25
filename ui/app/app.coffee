@@ -18,6 +18,8 @@ App = angular.module('app', [
   'app.testresults.controllers'
   'app.datas.model'
   'app.datas.controllers'
+  'app.reports.model'
+  'app.reports.controllers'
 ])
 App.config([
   '$routeProvider'
@@ -55,7 +57,10 @@ App.config([
       templateUrl: '/partials/add_model.html'
       controller: 'AddModelCtl'
     })
-
+    .when('/compare_models', {
+      templateUrl: '/partials/compare_models_form.html'
+      controller: 'CompareModelsFormCtl'
+    })
     # Catch all
     .otherwise({redirectTo: '/models'})
 

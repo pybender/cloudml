@@ -10,13 +10,21 @@ Create virtual env and install requirements::
     $ . ve/bin/activate
     $ pip install -r requirements.txt
 
-Run api dev server::
+Run dev server::
 
-    $ python runserver.py
+    $ python manage.py runserver
 
 Run celery:
 
-    $ ./runcelery.sh
+    $ python manage.py celeryd
+
+Run flower (celery monitor):
+
+    $ python manage.py flower
+
+Run shell:
+
+    $ python manage.py shell
 
 
 Frontend

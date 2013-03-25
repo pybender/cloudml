@@ -5,9 +5,9 @@ Flask-Script==0.5.3
 Jinja2==2.6
 SQLAlchemy==0.8.0b2
 Werkzeug==0.8.3
-numpy==1.6.2
-scipy==0.11.0
-scikit-learn==0.13
+numpy
+scipy
+scikit-learn
 -e git+https://github.com/tobiasandtobias/flask-alembic.git#egg=flask-alembic
 django-fabdeploy-plus==0.3.6
 psycopg2==2.4.6

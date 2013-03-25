@@ -12,10 +12,17 @@ angular.module('app.models.controllers', ['app.config', ])
   'Model'
 
 ($scope, $http, $dialog, settings, Model) ->
-  $scope.loadModels = () ->
-    # Used for ObjectListCtrl initialization
-    (pagination_opts) ->
-      Model.$loadAll()
+  Model.$loadAll(
+    show: 'name,status,created_on,import_params,error'
+  ).then ((opts) ->
+    $scope.objects = opts.objects
+  ), ((opts) ->
+    $scope.err = "Error while saving: server responded with " +
+        "#{resp.status} " +
+        "(#{resp.data.response.error.message or "no message"}). " +
+        "Make sure you filled the form correctly. " +
+        "Please contact support if the error will not go away."
+  )
 ])
 
 .controller('AddModelCtl', [
@@ -27,6 +34,7 @@ angular.module('app.models.controllers', ['app.config', ])
 
 ($scope, $http, $location, settings, Model) ->
   $scope.model = new Model()
+  $scope.err = ''
   $scope.new = true
 
   $scope.upload = ->
@@ -64,18 +72,8 @@ angular.module('app.models.controllers', ['app.config', ])
         reader.onload = (e) ->
           str = e.target.result
           $scope.model.importhandler = str
-        reader.readAsText($scope.import_handler)
-
-  $scope.setTrainImportHandlerFile = (element) ->
-      $scope.$apply ($scope) ->
-        $scope.msg = ""
-        $scope.error = ""
-        $scope.train_import_handler = element.files[0]
-        reader = new FileReader()
-        reader.onload = (e) ->
-          str = e.target.result
           $scope.model.train_importhandler = str
-        reader.readAsText($scope.train_import_handler)
+        reader.readAsText($scope.import_handler)
 
   $scope.setFeaturesFile = (element) ->
       $scope.$apply ($scope) ->
@@ -156,23 +154,6 @@ angular.module('app.models.controllers', ['app.config', ])
   'TestResult'
 
 ($scope, $http, $location, $routeParams, $dialog, settings, Model, Test) ->
-  $scope.msg = ''
-
-  if not $scope.model
-    if not $routeParams.name
-      throw new Error "Can't initialize model detail controller
-      without model name"
-
-    $scope.model = new Model({name: $routeParams.name})
-
-  $scope.model.$load().then (->
-    $scope.latest_test = new Test($scope.model.latest_test)
-    ), (->
-      #console.error "Couldn't get model"
-      $scope.err = data
-      $scope.httpError = true
-    )
-
   DEFAULT_ACTION = 'model:details'
   $scope.action = ($routeParams.action or DEFAULT_ACTION).split ':'
   $scope.$watch 'action', (action) ->
@@ -181,12 +162,48 @@ angular.module('app.models.controllers', ['app.config', ])
       if actionString == DEFAULT_ACTION then ""
       else "action=#{actionString}")
 
+    switch action[0]
+      when "features" then $scope.go 'features,status'
+      when "weights" then  $scope.go 'positive_weights,negative_weights,status'
+      when "test" then
+      when "import_handlers"
+        if action[1] == 'train'
+          $scope.go 'train_importhandler,status,id'
+        else
+          $scope.go 'importhandler,status,id'
+      else $scope.goDetails()
+
+  if not $scope.model
+    if not $routeParams.name
+      err = "Can't initialize without model name"
+    $scope.model = new Model({name: $routeParams.name})
+
   $scope.toggleAction = (action) =>
     $scope.action = action
 
+  $scope.goDetails = =>
+    callback = () ->
+      $scope.latest_test = new Test($scope.model.latest_test)
+    $scope.go 'status,created_on,target_variable,latest_test.name,
+  latest_test.accuracy,latest_test.parameters,error', callback
+
+  $scope.go = (fields, callback) ->
+    $scope.model.$load(
+      show: fields
+      ).then (->
+        loaded_var = true
+        if callback?
+          callback()
+      ), (->
+        $scope.err = data
+      )
+
   $scope.loadTests = () ->
     (pagination_opts) ->
-      Test.$loadTests($scope.model.name)
+      Test.$loadTests(
+        $scope.model.name,
+        show: 'name,created_on,status,parameters,accuracy,data_count'
+      )
 
   $scope.saveTrainHandler = =>
     $scope.model.$save(only: ['train_importhandler']).then (() ->
@@ -212,7 +229,14 @@ angular.module('app.models.controllers', ['app.config', ])
   ($scope, $http, dialog, settings) ->
 
     $scope.model = dialog.model
-    $scope.params = $scope.model.import_params
+    $scope.model.$load(
+      show: 'import_params'
+      ).then (->
+        $scope.params = $scope.model.import_params
+      ), (->
+        $scope.err = data
+      )
+
     $scope.parameters = {}
 
     $scope.close = ->

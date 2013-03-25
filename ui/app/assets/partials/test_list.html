@@ -1,4 +1,3 @@
-<div ng-init="init({objectLoader: loadTests()})">
 <table class="table table-striped">
   <thead>
       <tr>
@@ -17,8 +16,7 @@
       <td>{{ test.created_on|format_date }}</td>
       <td><span class="value" ng-repeat="(key, val) in test.parameters">{{ key }}={{ val }}</span></td>
       <td>{{ test.accuracy.toFixed(4) }}</td>
-      <td>{{ test.data_count }}</td>
+      <td><a href="#/models/{{ model.name }}/tests/{{ test.name }}/examples">{{ test.data_count }}</a></td>
     </tr>
   </tbody>
 </table>
-</div>

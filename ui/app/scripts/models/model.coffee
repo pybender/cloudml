@@ -51,8 +51,10 @@ angular.module('app.models.model', ['app.config'])
       loadFromJSON: (origData) =>
         data = _.extend {}, origData
         _.extend @, data
+        if origData? and 'latest_test' in origData
+          @latest_test = new Test(origData['latest_test'])
 
-      $load: =>
+      $load: (opts) ->
         if @name == null
           throw new Error "Can't load model without name"
 
@@ -61,6 +63,8 @@ angular.module('app.models.model', ['app.config'])
           url: settings.apiUrl + "model/#{@name}"
           headers:
             'X-Requested-With': null
+          params: _.extend {
+          }, opts
         ).then ((resp) =>
           @loaded = true
           @loadFromJSON(resp.data['model'])
@@ -112,6 +116,8 @@ angular.module('app.models.model', ['app.config'])
           method: 'GET'
           url: "#{settings.apiUrl}model/"
           headers: settings.apiRequestDefaultHeaders
+          params: _.extend {
+          }, opts
         )
         .then ((resp) =>
           dfd.resolve {

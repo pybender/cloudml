@@ -52,9 +52,11 @@ def run_test(test, model):
 
         test.status = Test.STATUS_IN_PROGRESS
         test.error = ""
+        db.session.merge(test)
         db.session.commit()
 
         metrics, raw_data = model.run_test(test.parameters)
+
         test.accuracy = metrics.accuracy
 
         metrics_dict = metrics.get_metrics_dict()
@@ -74,7 +76,8 @@ def run_test(test, model):
         db.session.merge(test)
         db.session.commit()
         # store test data in db
-        Data.loads_from_raw_data(model, test, raw_data)
+        Data.loads_from_raw_data(model, test, raw_data,
+                                 metrics._labels, metrics._preds)
     except Exception, exc:
         test.status = Test.STATUS_ERROR
         test.error = str(exc)

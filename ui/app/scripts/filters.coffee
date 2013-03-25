@@ -24,6 +24,14 @@ angular.module('app.filters', [])
     return t.split(/\W+/)
 ])
 
+.filter('range', [() ->
+  (input, total) ->
+    total = parseInt(total)
+    for num in [0..total - 1]
+      input.push(num)
+    return input
+])
+
 
 .filter('format_date', [() ->
   (text) ->

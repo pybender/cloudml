@@ -54,6 +54,62 @@ angular.module('app.directives', [
   }
 )
 
+
+.directive('weightedDataParameters', () ->
+  return {
+    restrict: 'E',
+    template: """<span>
+<span ng-show="!val.weights" title="weight={{ val.weight }}"
+class="badge {{ val.css_class }}">{{ val.value }}</span>
+
+<div ng-show="val.weights">
+  <span  ng-show="val.type == 'List'"
+  ng-init="lword=word.toLowerCase()"
+  ng-repeat="word in val.value|words">
+    <span ng-show="val.weights[lword].weight"
+    title="weight={{ val.weights[lword].weight }}"
+    class="badge {{ val.weights[lword].css_class }}">{{ word }}</span>
+    <span ng-show="!val.weights[lword].weight">{{ word }}</span></span>
+
+  <span ng-show="val.type == 'Dictionary'"
+  ng-repeat="(key, dval) in val.weights">
+    <span title="weight={{ dval.weight }}"
+    class="badge {{ dval.css_class }}">
+      {{ key }}={{ dval.value }}</span></span>
+</div>
+</span>""",
+    replace: true,
+    transclude : true,
+    scope: { val: '=' }
+  }
+)
+
+
+.directive('confusionMatrix', () ->
+  return {
+    restrict: 'E',
+    template: '<table class="table">
+<thead>
+<tr>
+    <th></th>
+    <th ng-repeat="row in matrix">
+      {{ row.0 }}
+    </th>
+</tr>
+</thead>
+<tbody>
+    <tr ng-repeat="row in matrix">
+        <th>{{ row.0 }}</th>
+        <td ng-repeat="cell in row.1">{{ cell }}</td>
+    </tr>
+</tbody>
+</table>',
+    scope: { matrix: '=' },
+    replace: true,
+    transclude : true,
+  }
+)
+
 .directive("recursive", [
   '$compile'
 

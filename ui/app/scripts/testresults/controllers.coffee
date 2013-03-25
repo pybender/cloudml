@@ -9,11 +9,19 @@ angular.module('app.testresults.controllers', ['app.config', ])
   '$http'
   'dialog'
   'settings'
+  '$location'
+  'TestResult'
 
-($scope, $http, dialog, settings) ->
+($scope, $http, dialog, settings, $location, Test) ->
 
-  model = dialog.model
-  $scope.params = model.import_params # list of parameters names
+  $scope.model = dialog.model
+  $scope.model.$load(
+    show: 'import_params'
+    ).then (->
+      $scope.params = $scope.model.import_params
+    ), (->
+      $scope.err = data
+    )
   $scope.parameters = {} # parameters to send via API
 
   $scope.close = ->
@@ -21,6 +29,7 @@ angular.module('app.testresults.controllers', ['app.config', ])
 
   $scope.start = (result) ->
     form_data = new FormData()
+    model = $scope.model
     for key of $scope.parameters
       form_data.append(key, $scope.parameters[key])
 
@@ -32,7 +41,9 @@ angular.module('app.testresults.controllers', ['app.config', ])
       transformRequest: angular.identity
     ).success((data, status, headers, config) ->
       $scope.success = true
-      $scope.msg = {}
+      data['test']['model_name'] = model.name
+      test = new Test(data['test'])
+      $location.path test.objectUrl()
       dialog.close(result)
     ).error((data, status, headers, config) ->
       $scope.httpError = true
@@ -45,8 +56,9 @@ angular.module('app.testresults.controllers', ['app.config', ])
   '$routeParams'
   'settings'
   'TestResult'
+  '$location'
 
-($scope, $http, $routeParams, settings, Test) ->
+($scope, $http, $routeParams, settings, Test, $location) ->
   if not $scope.test
     if not $routeParams.name
       throw new Error "Can't initialize test detail controller
@@ -55,10 +67,29 @@ angular.module('app.testresults.controllers', ['app.config', ])
     $scope.test = new Test({model_name: $routeParams.name,
     name: $routeParams.test_name})
 
-  $scope.test.$load().then (->
-    ), (->
-      #console.error "Couldn't get test"
-      $scope.error = data
-      $scope.httpError = true
-    )
+  DEFAULT_ACTION = 'test:details'
+  $scope.action = ($routeParams.action or DEFAULT_ACTION).split ':'
+  $scope.$watch 'action', (action) ->
+    actionString = action.join(':')
+    $location.search(
+      if actionString == DEFAULT_ACTION then ""
+      else "action=#{actionString}")
+
+    switch action[0]
+      when "curves" then $scope.go 'status,metrics.roc_curve,
+metrics.precision_recall_curve,metrics.roc_auc'
+      when "matrix" then $scope.go 'status,metrics.confusion_matrix'
+      else $scope.go 'name,status,classes_set,created_on,accuracy,data_count,
+parameters,error'
+
+  $scope.go = (fields, callback) ->
+    $scope.test.$load(
+      show: fields
+      ).then (->
+        loaded_var = true
+        if callback?
+          callback()
+      ), (->
+        $scope.err = 'Error'
+      )
 ])
