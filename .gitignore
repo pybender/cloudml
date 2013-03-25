@@ -24,6 +24,7 @@ build.xml
 build
 node_modules/*
 npm-debug.log
+local.json
 
 *.sublime-project
 *.sublime-workspace

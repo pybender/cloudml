@@ -197,5 +197,13 @@ class ImportHandler(object):
         """
         with open(output, 'w') as fp:
             for row_data in self:
-                fp.write('%s\n' % (json.dumps(row_data), ))
+                fp.write('%s\n' % json.dumps(row_data, cls=DecimalEncoder))
 
+from  decimal import Decimal
+
+
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return "%.2f" % obj
+        return json.JSONEncoder.default(self, obj)

@@ -3,6 +3,12 @@
 Changelog
 =========
 
+Release 2013-03-25
+------------------
+* Feature - Add compare models
+* Support - Update docs
+* Feature - Move all management commands to manage.py
+
 Release 2013-03-20
 ------------------
 
