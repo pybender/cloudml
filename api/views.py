@@ -124,7 +124,7 @@ class Models(restful.Resource):
 
     def _add(self, model, param):
         model = Model(model)
-        model.train_importhandler = param['train_importhandler']
+        model.train_importhandler = param['importhandler']
         model.importhandler = param['importhandler']
         model.features = param['features']
 

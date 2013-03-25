@@ -13,7 +13,7 @@ angular.module('app.models.controllers', ['app.config', ])
 
 ($scope, $http, $dialog, settings, Model) ->
   Model.$loadAll(
-    show: 'name,status,created_on,import_params'
+    show: 'name,status,created_on,import_params,error'
   ).then ((opts) ->
     $scope.objects = opts.objects
   ), ((opts) ->
@@ -166,11 +166,11 @@ angular.module('app.models.controllers', ['app.config', ])
       when "features" then $scope.go 'features,status'
       when "weights" then  $scope.go 'positive_weights,negative_weights,status'
       when "test" then
-      when "import_handlers,status"
+      when "import_handlers"
         if action[1] == 'train'
-          $scope.go 'train_importhandler,status'
+          $scope.go 'train_importhandler,status,id'
         else
-          $scope.go 'importhandler,status'
+          $scope.go 'importhandler,status,id'
       else $scope.goDetails()
 
   if not $scope.model
@@ -185,7 +185,7 @@ angular.module('app.models.controllers', ['app.config', ])
     callback = () ->
       $scope.latest_test = new Test($scope.model.latest_test)
     $scope.go 'status,created_on,target_variable,latest_test.name,
-  latest_test.accuracy,latest_test.parameters', callback
+  latest_test.accuracy,latest_test.parameters,error', callback
 
   $scope.go = (fields, callback) ->
     $scope.model.$load(

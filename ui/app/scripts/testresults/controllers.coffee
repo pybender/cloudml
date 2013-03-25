@@ -80,7 +80,7 @@ angular.module('app.testresults.controllers', ['app.config', ])
 metrics.precision_recall_curve,metrics.roc_auc'
       when "matrix" then $scope.go 'status,metrics.confusion_matrix'
       else $scope.go 'name,status,classes_set,created_on,accuracy,data_count,
-parameters'
+parameters,error'
 
   $scope.go = (fields, callback) ->
     $scope.test.$load(

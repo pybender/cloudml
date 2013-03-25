@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 
 from api import db
@@ -150,9 +151,18 @@ class Data(db.Model, Serializer):
 
     @classmethod
     def loads_from_raw_data(cls, model, test, raw_data, labels, pred):
+        def decode(row):
+            for key, val in row.iteritems():
+                try:
+                    row[key] = val.encode('ascii', 'ignore')
+                except UnicodeDecodeError, exc:
+                    logging.error('Error while decoding %s: %s', val, exc)
+            return row
+
         from helpers.weights import get_weighted_data
         from itertools import izip
         for row, label, pred in izip(raw_data, labels, pred):
+            row = decode(row)
             weighted_data_input = get_weighted_data(model, row)
             data = cls(row, test.id, weighted_data_input,
                        str(label), str(pred))
