@@ -81,8 +81,8 @@
     {"name": "matches_pref_odesk_hours", "type": "boolean"},
     {"name": "matches_pref_ic_ac", "type": "boolean"},
 
-    {"name": "employer_contactor_countries", "transformer": {"type": "Count", "token_pattern": "[^,]+,.+"}},
-    {"name": "job_in_contactor_categories", "type": "boolean"}, 
+    {"name": "employer_contractor_countries", "transformer": {"type": "Count", "token_pattern": "[^,]+,.+"}},
+    {"name": "job_in_contractor_categories", "type": "boolean"}, 
     {"name": "matched_category", "transformer": {"type": "Count", "token_pattern": "[^,]+"}},
     {"name": "matched_skills", "transformer": {"type": "Count", "token_pattern": "[^\\s,]+"}},
     {"name": "matched_skills_ratio", "type": "float"}

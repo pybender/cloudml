@@ -17,8 +17,8 @@ create type contractor as (
   dev_eng_skill float,
   dev_adj_score float,
   dev_portfolio_items_count integer,
-  tsexams numeric[],
-  skills text[],
+  tsexams text,
+  skills text,
   dev_country text,
   dev_region text,
   dev_total_hours float
@@ -33,7 +33,7 @@ as $$
     input_json = json.loads(contractor_info)
   except Exception as e:
     input_json = dict() 
-  def false_to_array(m): return [] if not m else m
+  def false_to_array(m): return None if not m else map(str, m)
   contractor = dict()
   contractor['dev_eng_skill'] = input_json.get('dev_eng_skill', 0)
   contractor['dev_adj_score'] = input_json.get('dev_adj_score', 0)
@@ -102,13 +102,13 @@ select
     oo."PrefHourlyRateMin" = 0 and oo."PrefHourlyRateMax" = 0 or  
     ja.hr_charge_rate >= oo."PrefHourlyRateMin" and ja.hr_charge_rate <= oo."PrefHourlyRateMax" as matches_pref_rate,
   oo."PrefLocationRegion" = 0 or r."Region" = (con).dev_region  as matches_pref_region,
-  oo."PrefTest" = 0 or my_array_intersect((con).tsexams, array[oo."PrefTest"]) is not null as matches_pref_test,
+  oo."PrefTest" = 0 or my_array_intersect(string_to_array((con).tsexams, ','), array[oo."PrefTest"::text]) is not null as matches_pref_test,
   (con).dev_total_hours >= oo."PrefoDeskHours" as matches_pref_odesk_hours,
   so.candidate_type_pref = 'all' or ja.is_ic and so.candidate_type_pref = 'individuals' or not ja.is_ic and so.candidate_type_pref = 'agencies' as matches_pref_ic_ac,
 
   json_get(employer_info, '$.op_country') || ',' || (con).dev_country as employer_contractor_countries,
-  array_to_string(my_array_intersect((con).skills, string_to_array(oo."Required Skills", ',')), ',') as matched_skills,
-  coalesce(array_upper(my_array_intersect((con).skills, string_to_array(oo."Required Skills", ',')), 1), 0)::float / array_upper(string_to_array(oo."Required Skills", ','), 1) as matched_skills_ratio,
+  array_to_string(my_array_intersect(string_to_array((con).skills, ','), string_to_array(oo."Required Skills", ',')), ',') as matched_skills,
+  coalesce(array_upper(my_array_intersect(string_to_array((con).skills, ','), string_to_array(oo."Required Skills", ',')), 1), 0)::float / array_upper(string_to_array(oo."Required Skills", ','), 1) as matched_skills_ratio,
   qi.file_provenance_date
 from 
   (
@@ -117,7 +117,7 @@ from
     from 
       match.ja_quick_info qi
     where 
-      qi.file_provenance_date between '2012-10-01' and '2012-11-01'
+      qi.file_provenance_date between '2012-10-01' and '2012-10-02'
   ) qi join
   agg.b_opening o on qi.opening = o.opening join 
   "oDesk DB"."Openings" oo on oo."Record ID#" = o.opening join
