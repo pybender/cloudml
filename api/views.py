@@ -164,8 +164,9 @@ class Models(restful.Resource):
 
     def _edit(self, model):
         param = model_parser.parse_args()
-        model.importhandler = param['importhandler']
-        model.train_importhandler = param['train_importhandler']
+        model.importhandler = param['importhandler'] or model.importhandler
+        model.train_importhandler = param['train_importhandler'] \
+            or model.train_importhandler
         db.session.commit()
         return {'model': model}
 
