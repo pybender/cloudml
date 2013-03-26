@@ -10,7 +10,7 @@ scipy
 scikit-learn
 -e git+https://github.com/tobiasandtobias/flask-alembic.git#egg=flask-alembic
 django-fabdeploy-plus==0.3.6
-psycopg2==2.4.6
+psycopg2==2.4.6 # sudo apt-get install libpq-dev python-dev
 jsonpath==0.54
 fabric==1.4
 celery==3.0.16
