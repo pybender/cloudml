@@ -47,8 +47,8 @@
     {"name": "contractor.dev_test_passed_count", "type": "int"},
     {"name": "contractor.dev_skill_test_passed_count", "type": "int"},
 
-    {"name": "contractor.dev_profile_title", "transformer": {"type": "Tfidf", "min_df": 3}},
-    {"name": "contractor.dev_blurb", "transformer": {"type": "Tfidf", "ngram_range_min": 1, "ngram_range_max": 1,"min_df": 10}},
+    {"name": "contractor.dev_profile_title", "transformer": {"type": "Tfidf", "min_df": 100}},
+    {"name": "contractor.dev_blurb", "transformer": {"type": "Tfidf", "ngram_range_min": 1, "ngram_range_max": 1,"min_df": 1000, "stop_words": "english"}},
     {"name": "contractor.skills", "transformer": {"type": "Count", "token_pattern": "[^\\s,]+"}},
     {"name": "contractor.job_categories", "transformer": {"type": "Count", "token_pattern": "[^,]+"}},
 
@@ -60,7 +60,8 @@
     {"name": "contractor.dev_timezone", "type": "str_to_timezone"},
     {"name": "contractor.dev_country", "transformer": {"type": "Count", "token_pattern": ".+"}},
 
-    {"name": "opening.title", "transformer": {"type": "Tfidf", "min_df": 3}},
+    {"name": "opening.title", "transformer": {"type": "Tfidf", "min_df": 100}},
+    {"name": "opening.description", "transformer": {"type": "Tfidf", "min_df": 1000, "stop_words": "english"}},
     {"name": "opening.skills", "transformer": {"type": "Count", "token_pattern": "[^\\s,]+"}},
     {"name": "opening.type", "transformer": {"type": "Count", "token_pattern": ".+"}},
     {"name": "opening.category", "transformer": {"type": "Count", "token_pattern": ".+"}},
