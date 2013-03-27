@@ -67,13 +67,13 @@ angular.module('app.datas.model', ['app.config'])
         .then ((resp) =>
           extra = {loaded: true, model_name: model_name, test_name: test_name}
           dfd.resolve {
-            pages: resp.data['data'].pages
-            page: resp.data['data'].page
-            total: resp.data['data'].total
-            per_page: resp.data['data'].per_page
+            pages: resp.data['datas'].pages
+            page: resp.data['datas'].page
+            total: resp.data['datas'].total
+            per_page: resp.data['datas'].per_page
             objects: (
               new @(_.extend(obj, extra)) \
-              for obj in resp.data['data'].items)
+              for obj in resp.data['datas'].items)
             _resp: resp
           }
 

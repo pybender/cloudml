@@ -284,13 +284,13 @@ angular.module('app.datas.model', ['app.config']).factory('Data', [
             test_name: test_name
           };
           return dfd.resolve({
-            pages: resp.data['data'].pages,
-            page: resp.data['data'].page,
-            total: resp.data['data'].total,
-            per_page: resp.data['data'].per_page,
+            pages: resp.data['datas'].pages,
+            page: resp.data['datas'].page,
+            total: resp.data['datas'].total,
+            per_page: resp.data['datas'].per_page,
             objects: (function() {
               var _i, _len, _ref, _results;
-              _ref = resp.data['data'].items;
+              _ref = resp.data['datas'].items;
               _results = [];
               for (_i = 0, _len = _ref.length; _i < _len; _i++) {
                 obj = _ref[_i];

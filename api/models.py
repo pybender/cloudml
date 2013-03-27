@@ -109,7 +109,7 @@ class Test(db.Model, Serializer):
     classes_set = db.Column(JSONEncodedDict)
 
     accuracy = db.Column(db.Float)
-    metrics = db.Column(JSONEncodedDict)
+    metrics = deferred(db.Column(JSONEncodedDict))
 
     def __init__(self, model):
         self.model_id = model.id
@@ -140,8 +140,8 @@ class Data(db.Model, Serializer):
 
     id = db.Column(db.Integer, primary_key=True)
     created_on = db.Column(db.DateTime)
-    data_input = db.Column(JSONEncodedDict)
-    weighted_data_input = db.Column(JSONEncodedDict)
+    data_input = deferred(db.Column(JSONEncodedDict))
+    weighted_data_input = deferred(db.Column(JSONEncodedDict))
     label = db.Column(db.String(50))
     pred_label = db.Column(db.String(50))
     test_id = db.Column(db.Integer, db.ForeignKey('test.id'))

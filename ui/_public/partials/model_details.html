@@ -29,7 +29,7 @@
 
 <alert-message ng-show="model.error" class="alert-error" msg="{{ model.error }}" unsafe></alert-message>
 
-<alert-message ng-show="model.status == 'Trained' && model.latest_test == null" class="alert-success" msg='Model is successfully trained. You could start running tests now.' unsafe>
+<alert-message ng-show="model.status == 'Trained'" class="alert-success" msg='Model is trained. You could start running tests now.' unsafe>
 </alert-message>
 
 <alert-message ng-show="msg" class="alert-info" msg='{{ msg }}' unsafe>
