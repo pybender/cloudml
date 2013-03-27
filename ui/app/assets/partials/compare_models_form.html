@@ -47,7 +47,7 @@
       </select>
       <span ng-show="CompareModelsForm.model1.$error.required || CompareModelsForm.test1.$error.required" class="help-inline">Required</span>
 
-      <span class="help-block">you could choose only trained model with successfull completed tests</span>
+      <span class="help-block">TODO: you could choose only trained model with successfull completed tests</span>
     </div>
   </div>
 
@@ -62,7 +62,7 @@
       </select>
       <span ng-show="CompareModelsForm.model2.$error.required || CompareModelsForm.test2.$error.required" class="help-inline">Required</span>
 
-      <span class="help-block">you could choose only trained model with successfull completed tests</span>
+      <span class="help-block">TODO: you could choose only trained model with successfull completed tests</span>
     </div>
   </div>
 
@@ -74,21 +74,23 @@
 
 <div ng-show="action[0]=='report' && section=='examples'">
     <h4>Examples comparation</h4>
-    <table class="table table-bordered">
+    <alert-message ng-show="!report.test1.examples.length" class="alert-warning" msg="{{ report.test1.fullName() }} has not any examples" unsafe></alert-message>
+    <alert-message ng-show="!report.test2.examples.length" class="alert-warning" msg="{{ report.test2.fullName() }} has not any examples" unsafe></alert-message>
+    <table ng-show="report.test1.examples.length || report.test2.examples.length" class="table table-bordered">
         <col style="width: 2%;" />
         <col style="width: 49%;" />
         <col style="width: 49%;" />
         <thead>
             <tr>
                 <th></th>
-                <th> <a target="_blank" href="#{{ report.test1.objectUrl() }}">{{ report.test1.fullName() }}</a></th>
-                <th> <a target="_blank" href="#{{ report.test2.objectUrl() }}">{{ report.test2.fullName() }}</a></th>
+                <th ng-show="report.test1.examples.length"><a target="_blank" href="#{{ report.test1.objectUrl() }}">{{ report.test1.fullName() }}</a></th>
+                <th ng-show="report.test2.examples.length"><a target="_blank" href="#{{ report.test2.objectUrl() }}">{{ report.test2.fullName() }}</a></th>
             </tr>
         </thead>
         <tbody ng-init="states={}">
             <tr ng-repeat="i in [] | range:10">
                 <td>{{ i + 1 }}</td>
-                <td>
+                <td ng-show="report.test1.examples.length">
                   <div>
                     Label<span class="value">{{ report.test1.examples[i].label }}</span>
                   </div>
@@ -103,7 +105,7 @@
                   </small>
                 </div>
                 </td>
-                <td>
+                <td ng-show="report.test2.examples.length">
                   <div>
                     Label<span class="value">{{ report.test2.examples[i].label }}</span>
                   </div>
@@ -120,7 +122,6 @@
             </tr>
         </tbody>
     </table>
-    {{  report.test1.examples }}
 </div>
 
 <div ng-show="action[0]=='report' && section=='metrics'  && !generating">
@@ -132,8 +133,8 @@
         <thead>
             <tr>
                 <th></th>
-                <th>{{ report.test1.fullName() }}</th>
-                <th>{{ report.test2.fullName() }}</th>
+                <th><a target="_blank" href="#{{ report.test1.objectUrl() }}">{{ report.test1.fullName() }}</a></th>
+                <th><a target="_blank" href="#{{ report.test2.objectUrl() }}">{{ report.test2.fullName() }}</a></th>
             </tr>
         </thead>
         <tbody>

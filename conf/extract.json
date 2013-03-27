@@ -87,9 +87,9 @@
           ]
         },
         {
-          "process-as": "expression",
+          "process-as": "composite",
           "target-features": [
-            { "name": "country_pair", "expression": "%(employer.country)s,%(contractor.dev_country)s"}
+            { "name": "country_pair", "expression": {"type": "string", "value": "%(employer.country)s,%(contractor.dev_country)s"}}
           ]
         }
       ]

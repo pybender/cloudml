@@ -1,6 +1,8 @@
 import logging
 from datetime import datetime
 
+from sqlalchemy.orm import deferred
+
 from api import db
 from api.utils import JSONEncodedDict
 from api.serialization import Serializer
@@ -25,22 +27,22 @@ class Model(db.Model, Serializer):
     name = db.Column(db.String(50), unique=True)
     created_on = db.Column(db.DateTime)
     status = db.Column(db.String(10), default=STATUS_NEW)
-    error = db.Column(db.Text)
+    error = deferred(db.Column(db.Text))
 
-    features = db.Column(db.Text)
+    features = deferred(db.Column(db.Text))
     target_variable = db.Column(db.String(100))
     import_params = db.Column(JSONEncodedDict)
     # Import handler for tests
-    importhandler = db.Column(db.Text)
-    train_importhandler = db.Column(db.Text)
+    importhandler = deferred(db.Column(db.Text))
+    train_importhandler = deferred(db.Column(db.Text))
 
     # Trainer specific fields
-    trainer = db.Column(db.PickleType)
+    trainer = deferred(db.Column(db.PickleType))
     # some denormalization:
-    positive_weights = db.Column(JSONEncodedDict)
-    negative_weights = db.Column(JSONEncodedDict)
-    positive_weights_tree = db.Column(JSONEncodedDict)
-    negative_weights_tree = db.Column(JSONEncodedDict)
+    positive_weights = deferred(db.Column(JSONEncodedDict))
+    negative_weights = deferred(db.Column(JSONEncodedDict))
+    positive_weights_tree = deferred(db.Column(JSONEncodedDict))
+    negative_weights_tree = deferred(db.Column(JSONEncodedDict))
 
     tests = db.relationship('Test', backref='model',
                             lazy='dynamic')
@@ -88,7 +90,7 @@ class Test(db.Model, Serializer):
                   'parameters', 'data_count', 'status', 'error')
     __all_public__ = ('id', 'name', 'created_on', 'accuracy', 'parameters',
                       'classes_set', 'metrics', 'data_count',
-                      'status', 'error', 'model')
+                      'status', 'error', 'model_name')
     STATUS_QUEUED = 'Queued'
     STATUS_IN_PROGRESS = 'In Progress'
     STATUS_COMPLETED = 'Completed'
@@ -125,6 +127,10 @@ class Test(db.Model, Serializer):
     @property
     def data_count(self):
         return self.data.count()
+
+    @property
+    def model_name(self):
+        return self.model.name
 
 
 class Data(db.Model, Serializer):

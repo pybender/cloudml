@@ -1,9 +1,10 @@
 from flask.ext import restful
 from flask.ext.restful import reqparse
-from flask import request
 from werkzeug.datastructures import FileStorage
 from sqlalchemy import and_
 from sqlalchemy.sql.expression import asc, desc
+from sqlalchemy.orm import undefer
+from sqlalchemy import orm
 
 from api.decorators import render
 from api import db, api
@@ -15,7 +16,7 @@ from api.tasks import train_model, run_test
 from core.trainer.store import load_trainer
 from core.trainer.trainer import Trainer
 from core.trainer.config import FeatureModel
-from core.importhandler.importhandler import ExtractionPlan, ImportHandler
+from core.importhandler.importhandler import ExtractionPlan
 
 get_parser = reqparse.RequestParser()
 get_parser.add_argument('show', type=str)
@@ -31,82 +32,109 @@ model_parser.add_argument('features', type=str)
 model_parser.add_argument('trainer', type=FileStorage, location='files')
 
 
-class Models(restful.Resource):
+class BaseResource(restful.Resource):
+    MODEL = None
+    GET_ACTIONS = ()
+    GET_PARAMS = (('show', str), )
+
+    def get(self, model=None, action=None):
+        if action:
+            if action in self.GET_ACTIONS:
+                return getattr(self, "_get_%s_action" % action)(model)
+            else:
+                return odesk_error_response(404, ERR_NO_SUCH_MODEL,
+                                            "Invalid action: %s" % action)
+        if model:
+            return self._details(model)
+        else:
+            return self._list()
+
+    def delete(self, model):
+        """
+        Deletes unused model
+        """
+        model = self.MODEL.query.filter(self.MODEL.name == model).first()
+        if model is None:
+            return odesk_error_response(404, ERR_NO_SUCH_MODEL,
+                                        "Model %s doesn't exist" % model)
+        model.delete()
+        return '', 204
+
+    @render()
+    def _list(self, extra_params=()):
+        """
+        Gets list of models
+
+        GET parameters:
+            * show - list of fields to return
+        """
+        params = self._parse_parameters(extra_params + self.GET_PARAMS)
+        fields = self._get_fields_to_show(params)
+        opts = self._get_undefer_options(fields)
+        models = self._get_list_query(params, opts)
+        return {'models': qs2list(models, fields)}
+
+    def _get_list_query(self, params, opts):
+        return db.session.query(self.MODEL).options(*opts).all()
+
+    @render()
+    def _details(self, model, extra_params=()):
+        """
+        GET model by name
+        """
+        params = self._parse_parameters(extra_params + self.GET_PARAMS)
+        fields = self._get_fields_to_show(params)
+        opts = self._get_undefer_options(fields)
+        model = db.session.query(self.MODEL).options(*opts)\
+            .filter(self.MODEL.name == model)
+        return {'model': qs2list(model.one(), fields)}
+
+    def _get_fields_to_show(self, params):
+        fields = params.get('show', None)
+        return fields.split(',') if fields else Model.__public__
+
+    def _parse_parameters(self, extra_params=()):
+        parser = reqparse.RequestParser()
+        for name, param_type in extra_params:
+            parser.add_argument(name, type=param_type)
+        return parser.parse_args()
+
+    def _get_undefer_options(self, fields):
+        def is_model_field(prop):
+            return hasattr(self.MODEL, prop) and \
+                type(getattr(self.MODEL, prop)) == \
+                orm.attributes.InstrumentedAttribute
+        opts = []
+        for field in fields:
+            if is_model_field(field):
+                opts.append(undefer(field))
+        return opts
+
+
+class Models(BaseResource):
     """
     Models API methods
     """
+    MODEL = Model
+    GET_ACTIONS = ('tests', )
     decorators = [crossdomain(origin='*')]
     methods = ['GET', 'OPTIONS', 'PUT', 'POST']
 
-    def get(self, model=None, action=None):
-        if model == "":
-            return self._list()
-        else:
-            model = Model.query.filter(Model.name == model).first()
-            if model is None:
-                return odesk_error_response(404, ERR_NO_SUCH_MODEL,
-                                            "Model %s doesn't exist" % model)
-            if action == 'tests':
-                return self._load_tests(model)
-            else:
-                return self._details(model)
+    def _get_list_query(self, params, opts):
+        comparable = params.get('comparable', False)
+        # TODO: Look for models with completed tests if comparable
+        return super(Models, self)._get_list_query(params, opts)
 
     @render()
-    def _list(self):
-        """
-        Gets list of Trained Models
-
-        GET parameters:
-            * comparable - returns list of models that could be compared
-            to each other. (They should be Trained and has successfull
-            completed Test)
-            * show - list of fields to return
-        """
-        parser = get_parser
-        parser.add_argument('comparable', type=bool)
-
-        param = parser.parse_args()
-        comparable = param.get('comparable', False)
-        fields = param.get('show', None)
-        fields = fields.split(',') if fields else Model.__public__
-        if comparable:
-            # TODO: Look for models with completed tests
-            models = Model.query.all()
-        else:
-            models = Model.query.all()
-        return {'models': qs2list(models, fields)}
-
-    @render(brief=False)
-    def _details(self, model):
-        """
-        Gets Trained Model details
-        """
-        param = get_parser.parse_args()
-        fields = param.get('show', None)
-        fields = fields.split(',') if fields else Model.__public__
-        return {'model': qs2list(model, fields)}
-
-    @render()
-    def _load_tests(self, model):
+    def _get_tests_action(self, model):
         """
         Gets list of Trained Model's tests
         """
         param = get_parser.parse_args()
         fields = param.get('show', None)
         fields = fields.split(',') if fields else Test.__public__
-        tests = model.tests.all()
+        tests = db.session.query(Test).join(Model).filter(Model.name == model).all()
         return {'tests': qs2list(tests, fields)}
-
-    def delete(self, model):
-        """
-        Deletes unused Trained Model
-        """
-        model = Model.query.filter(Model.name == model).first()
-        if model is None:
-            return odesk_error_response(404, ERR_NO_SUCH_MODEL,
-                                        "Model %s doesn't exist" % model)
-        model.delete()
-        return '', 204
 
     @render(code=201)
     def post(self, model):
