@@ -68,26 +68,6 @@
                     {{ model.target_variable }}
                 </span>
             </div>
-            
-            <div class="block" ng-show="latest_test">
-                <b>
-                  Latest Test: <a class="value" href="#/models/{{ model.name }}/tests/{{ latest_test.name }}">{{ model.latest_test.name }}</a>
-                </b>
-                <div>
-                  <a class="label">
-                    <i class="icon-tag icon-white"></i>
-                    <span class="accuracy ng-binding">{{ latest_test.accuracy }}
-                    </span>
-                  </a>
-                  <span ng-repeat="(key, val) in latest_test.parameters">
-                  <a class="label">
-                    <i class="icon-tag icon-white"></i>
-                    <span class="accuracy ng-binding">{{ key }} = {{ val }}
-                    </span>
-                  </a>
-                  <span>
-                </div>
-            </div>
         </div>
     </div>
   </div>

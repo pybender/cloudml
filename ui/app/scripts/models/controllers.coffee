@@ -184,8 +184,7 @@ angular.module('app.models.controllers', ['app.config', ])
   $scope.goDetails = =>
     callback = () ->
       $scope.latest_test = new Test($scope.model.latest_test)
-    $scope.go 'status,created_on,target_variable,latest_test.name,
-  latest_test.accuracy,latest_test.parameters,error', callback
+    $scope.go 'status,created_on,target_variable', callback
 
   $scope.go = (fields, callback) ->
     $scope.model.$load(
