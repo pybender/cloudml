@@ -145,6 +145,7 @@ class Data(db.Model, Serializer):
     label = db.Column(db.String(50))
     pred_label = db.Column(db.String(50))
     test_id = db.Column(db.Integer, db.ForeignKey('test.id'))
+    #group_by_field = db.Column(db.String(250))
 
     def __init__(self, data_input, test_id, weighted_data_input,
                  label, pred_label):
@@ -174,6 +175,7 @@ class Data(db.Model, Serializer):
             weighted_data_input = get_weighted_data(model, row)
             data = cls(row, test.id, weighted_data_input,
                        str(label), str(pred))
+            #data.group_by_field = row['opening_id']
             db.session.add(data)
         db.session.commit()
 

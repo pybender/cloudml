@@ -269,9 +269,12 @@ class Tests(BaseResource):
 
     @render(code=201)
     def post(self, model, test_name):
-        model = Model.query.filter(Model.name == model,
-                                   Model.status == Model.STATUS_TRAINED)\
-            .first()
+        opts = [undefer(field) for field in ('importhandler', 'trainer',
+            'positive_weights', 'negative_weights',
+            'positive_weights_tree', 'negative_weights_tree')]
+        model = Model.query.options(*opts).filter(
+            Model.name == model,
+            Model.status == Model.STATUS_TRAINED).first()
 
         parser = populate_parser(model)
         parameters = parser.parse_args()
@@ -303,7 +306,7 @@ class Datas(BaseResource):
         model = kwargs.get('model')
         test_name = kwargs.get('test_name')
         return Data.query.options(*opts).join(Test).join(Model)\
-            .filter(and_(Model.name == model, Test.name == test_name))
+            .filter(and_(Model.name == model, Test.name == test_name)).group_by(Data.group_by_field)
 
     def _get_details_query(self, params, opts, **kwargs):
         model = kwargs.get('model')

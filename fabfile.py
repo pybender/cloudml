@@ -29,20 +29,17 @@ def prod(**kwargs):
 
 @task
 def install():
-    #users.create.run()
-    #ssh.push_key.run(pub_key_file='~/.ssh/id_rsa.pub')
+    users.create.run()
+    ssh.push_key.run(pub_key_file='~/.ssh/id_rsa.pub')
 
-    #fabd.mkdirs.run()
+    fabd.mkdirs.run()
 
-    #system.setup_backports.run()
-    #system.install_common_software.run()
-
-    #rabbitmq.install()
-    #apache.install.run()
+    rabbitmq.install()
+    apache.install.run()
     #postgres.install.run()
 
-    #for app in ['supervisor']:
-    #    pip.install.run(app=app)
+    for app in ['supervisor']:
+        pip.install.run(app=app)
 
     pip.install.run(app='virtualenv', upgrade=True)
 

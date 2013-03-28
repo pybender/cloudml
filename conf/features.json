@@ -183,6 +183,10 @@
       "default": 0.0
     },
     {
+      "name":"opening_id",
+      "type":"int"
+    },
+    {
       "name":"contractor.dev_last_worked",
       "type": "string-to-date",
       "params": {
