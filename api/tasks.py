@@ -68,7 +68,13 @@ def run_test(test, model):
         for i, val in enumerate(metrics.classes_set):
             confusion_matrix_ex.append((val, confusion_matrix[i]))
         metrics_dict['confusion_matrix'] = confusion_matrix_ex
-
+        n = len(raw_data) / 100
+        metrics_dict['roc_curve'][1] = metrics_dict['roc_curve'][1][0::n]
+        metrics_dict['roc_curve'][0] = metrics_dict['roc_curve'][0][0::n]
+        metrics_dict['precision_recall_curve'][1] = \
+            metrics_dict['precision_recall_curve'][1][0::n]
+        metrics_dict['precision_recall_curve'][0] = \
+            metrics_dict['precision_recall_curve'][0][0::n]
         test.metrics = metrics_dict
         test.classes_set = list(metrics.classes_set)
         test.status = Test.STATUS_COMPLETED

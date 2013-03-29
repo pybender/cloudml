@@ -33,8 +33,8 @@ angular.module('app.testresults.model', ['app.config'])
         return '/models/' + (@model_name || @model.name) + "/tests/" + @name
 
       fullName: =>
-        if @model?
-          return @model.name + " / " + @name
+        if @model? || @model_name
+          return (@model_name || @model.name) + " / " + @name
         return @name
 
       # Returns an object of job properties, for use in e.g. API requests

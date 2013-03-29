@@ -34,15 +34,14 @@ def install():
 
     fabd.mkdirs.run()
 
-    #system.setup_backports.run()
-    #system.install_common_software.run()
-
-    #rabbitmq.install()
+    rabbitmq.install()
     apache.install.run()
     #postgres.install.run()
 
     for app in ['supervisor']:
         pip.install.run(app=app)
+
+    pip.install.run(app='virtualenv', upgrade=True)
 
 @task
 def push_key():
@@ -50,14 +49,14 @@ def push_key():
 
 @task
 def setup():
-    # fabd.mkdirs.run()
+    fabd.mkdirs.run()
 
-    # apache.wsgi_push.run()
-    # apache.push_config.run()
-    # apache.graceful.run()  
-    #supervisor.push_init_config.run()
-    #supervisor.push_configs.run()
-    #supervisor.d.run()
+    apache.wsgi_push.run()
+    apache.push_config.run()
+    apache.graceful.run()  
+    supervisor.push_init_config.run()
+    supervisor.push_configs.run()
+    supervisor.d.run()
 
     # pip.push_config.run()
     # with settings(warn_only=True):
@@ -102,7 +101,7 @@ def deploy():
 
     supervisor.update.run()
     supervisor.restart_program.run(program='celeryd')
-    # supervisor.restart_program.run(program='celerycam')
+    supervisor.restart_program.run(program='celerycam')
     # supervisor.restart_program.run(program='celerybeat')
     #supervisor.reload.run()
 

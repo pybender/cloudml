@@ -77,6 +77,7 @@ class ClassificationModelMetrics(Metrics):
                       'roc_auc': 'Area under ROC curve',
                       'confusion_matrix': 'Confusion Matrix',
                       'accuracy': 'Accuracy',
+                      'avarage_precision': 'Avarage Precision',
                       'precision_recall_curve': 'Precision-recall curve'}
     MORE_DIMENSIONAL_METRICS = {'confusion_matrix': 'Confusion Matrix',
                                 'accuracy': 'Accuracy'}
@@ -89,6 +90,13 @@ class ClassificationModelMetrics(Metrics):
             self._fpr, self._tpr, thresholds = \
                 sk_metrics.roc_curve(self._labels, self._probs[:, 1])
         return self._fpr, self._tpr
+
+    @property
+    def avarage_precision(self):
+        from ml_metrics import apk #, mapk
+        if not hasattr(self, '_apk'):
+            self._apk = apk(self._labels, self._preds)
+        return self._apk
 
     @property
     def roc_auc(self):

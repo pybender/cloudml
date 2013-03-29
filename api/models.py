@@ -1,6 +1,8 @@
 import logging
 from datetime import datetime
 
+from sqlalchemy.orm import deferred
+
 from api import db
 from api.utils import JSONEncodedDict
 from api.serialization import Serializer
@@ -25,22 +27,22 @@ class Model(db.Model, Serializer):
     name = db.Column(db.String(50), unique=True)
     created_on = db.Column(db.DateTime)
     status = db.Column(db.String(10), default=STATUS_NEW)
-    error = db.Column(db.Text)
+    error = deferred(db.Column(db.Text))
 
-    features = db.Column(db.Text)
+    features = deferred(db.Column(db.Text))
     target_variable = db.Column(db.String(100))
     import_params = db.Column(JSONEncodedDict)
     # Import handler for tests
-    importhandler = db.Column(db.Text)
-    train_importhandler = db.Column(db.Text)
+    importhandler = deferred(db.Column(db.Text))
+    train_importhandler = deferred(db.Column(db.Text))
 
     # Trainer specific fields
-    trainer = db.Column(db.PickleType)
+    trainer = deferred(db.Column(db.PickleType))
     # some denormalization:
-    positive_weights = db.Column(JSONEncodedDict)
-    negative_weights = db.Column(JSONEncodedDict)
-    positive_weights_tree = db.Column(JSONEncodedDict)
-    negative_weights_tree = db.Column(JSONEncodedDict)
+    positive_weights = deferred(db.Column(JSONEncodedDict))
+    negative_weights = deferred(db.Column(JSONEncodedDict))
+    positive_weights_tree = deferred(db.Column(JSONEncodedDict))
+    negative_weights_tree = deferred(db.Column(JSONEncodedDict))
 
     tests = db.relationship('Test', backref='model',
                             lazy='dynamic')
@@ -88,7 +90,7 @@ class Test(db.Model, Serializer):
                   'parameters', 'data_count', 'status', 'error')
     __all_public__ = ('id', 'name', 'created_on', 'accuracy', 'parameters',
                       'classes_set', 'metrics', 'data_count',
-                      'status', 'error', 'model')
+                      'status', 'error', 'model_name')
     STATUS_QUEUED = 'Queued'
     STATUS_IN_PROGRESS = 'In Progress'
     STATUS_COMPLETED = 'Completed'
@@ -107,7 +109,7 @@ class Test(db.Model, Serializer):
     classes_set = db.Column(JSONEncodedDict)
 
     accuracy = db.Column(db.Float)
-    metrics = db.Column(JSONEncodedDict)
+    metrics = deferred(db.Column(JSONEncodedDict))
 
     def __init__(self, model):
         self.model_id = model.id
@@ -126,6 +128,10 @@ class Test(db.Model, Serializer):
     def data_count(self):
         return self.data.count()
 
+    @property
+    def model_name(self):
+        return self.model.name
+
 
 class Data(db.Model, Serializer):
     __public__ = ('id', 'created_on', 'data_input', 'label', 'pred_label')
@@ -134,11 +140,12 @@ class Data(db.Model, Serializer):
 
     id = db.Column(db.Integer, primary_key=True)
     created_on = db.Column(db.DateTime)
-    data_input = db.Column(JSONEncodedDict)
-    weighted_data_input = db.Column(JSONEncodedDict)
+    data_input = deferred(db.Column(JSONEncodedDict))
+    weighted_data_input = deferred(db.Column(JSONEncodedDict))
     label = db.Column(db.String(50))
     pred_label = db.Column(db.String(50))
     test_id = db.Column(db.Integer, db.ForeignKey('test.id'))
+    #group_by_field = db.Column(db.String(250))
 
     def __init__(self, data_input, test_id, weighted_data_input,
                  label, pred_label):
@@ -168,6 +175,7 @@ class Data(db.Model, Serializer):
             weighted_data_input = get_weighted_data(model, row)
             data = cls(row, test.id, weighted_data_input,
                        str(label), str(pred))
+            #data.group_by_field = row['opening_id']
             db.session.add(data)
         db.session.commit()
 
