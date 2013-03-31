@@ -158,7 +158,7 @@ class Trainer():
         metr.log_metrics()
         return metr
 
-    def predict(self, iterator, callback=None):
+    def predict(self, iterator, callback=None, ignore_error=True):
         """
         Attempts to predict the class of each of the data in the given
         iterator. Returns the predicted values, the target feature value (if
@@ -174,11 +174,14 @@ class Trainer():
 
         vectorized_data = []
         labels = None
+        probs = None
 
-        self._prepare_data(iterator, callback)
+        self._prepare_data(iterator, callback, ignore_error)
         logging.info('Processed %d lines, ignored %s lines'
                      % (self._count, self._ignored))
-
+        if self._ignored == self._count:
+            logging.info("Don't have valid records")
+            return {'probs': probs, 'labels': labels}
         # Get X and y
         logging.info('Extracting features...')
         for feature_name, feature in self._feature_model.features.iteritems():
@@ -233,7 +236,7 @@ class Trainer():
         return numpy.transpose(
             csc_matrix([0.0 if item is None else float(item) for item in x]))
 
-    def _prepare_data(self, iterator, callback=None):
+    def _prepare_data(self, iterator, callback=None, ignore_error=True):
         """
         Iterates over input data and stores them by column, ignoring lines
         with required properties missing.
@@ -260,7 +263,10 @@ class Trainer():
             except ItemParseException, e:
                 logging.debug('Ignoring item #%d: %s'
                               % (self._count, e.message))
-                self._ignored += 1
+                if ignore_error:
+                    self._ignored += 1
+                else:
+                    raise e
 
     def _apply_feature_types(self, row_data):
         """

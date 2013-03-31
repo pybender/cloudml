@@ -94,30 +94,54 @@ class ExtractionPlan(object):
                     raise ImportHandlerException('Target features must have '
                                                  'a name')
 
+class BaseImportHandler(object):
 
-class ImportHandler(object):
+    def __init__(self, plan):
+        self._plan = plan
+
+        # Currently we support a single query. This might change in the future.
+        self._query = self._plan.queries[0]
+        self.count = 0
+        self.ignored = 0
+
+    def __iter__(self):
+        return self
+
+    def _process_row(self, row, query):
+        """
+        Processes a single row from DB.
+        """
+        # Hold data of current row processed so far
+        row_data = {}
+        for item in query['items']:
+            strategy = PROCESS_STRATEGIES.get(item.get('process-as', 'identity'))
+            if strategy is None:
+                raise ImportHandlerException('Unknown strategy %s'
+                                             % item['process-as'])
+            # Get value from query for this item
+            source = item.get('source', None)
+            item_value = row.get(source, None)
+            result = strategy(item_value, item, row_data)
+            row_data.update(result)
+        return row_data
+
+class ImportHandler(BaseImportHandler):
     DB_ITERS = {
         'postgres': postgres_iter
     }
 
     def __init__(self, plan, params=None):
-        self._plan = plan
+        super(ImportHandler, self).__init__(plan)
         if params is None:
             params = {}
-        # Currently we support a single query. This might change in the future.
-        self._query = self._plan.queries[0]
 
         logging.info('Running query %s' % self._query['name'])
         datasource = self._plan.datasource[0]
-        self.count = 0
-        self.ignored = 0
+
         self._validate_input_params(params)
         sql = self._query['sql'] % params
         iter_func = self._get_db_iter(datasource)
         self._iterator = iter_func(sql, datasource['db']['conn'])
-
-    def __iter__(self):
-        return self
 
     def next(self):
         if self.count % 1000 == 0:
@@ -151,25 +175,6 @@ class ImportHandler(object):
             raise ImportHandlerException('Missing input parameters: %s'
                                          % ', '.join(missing))
 
-    def _process_row(self, row, query):
-        """
-        Processes a single row from DB.
-
-        """
-        # Hold data of current row processed so far
-        row_data = {}
-        for item in query['items']:
-            strategy = PROCESS_STRATEGIES.get(item.get('process-as', 'identity'))
-            if strategy is None:
-                raise ImportHandlerException('Unknown strategy %s'
-                                             % item['process-as'])
-            # Get value from query for this item
-            source = item.get('source', None)
-            item_value = row.get(source, None)
-            result = strategy(item_value, item, row_data)
-            row_data.update(result)
-
-        return row_data
 
     def _get_db_iter(self, datasource):
 
@@ -198,6 +203,30 @@ class ImportHandler(object):
         with open(output, 'w') as fp:
             for row_data in self:
                 fp.write('%s\n' % json.dumps(row_data, cls=DecimalEncoder))
+
+
+class RequestImportHandler(BaseImportHandler):
+
+    def __init__(self, plan, request):
+        super(RequestImportHandler, self).__init__(plan)
+        self._request = request
+        self._iterator = self._request.__iter__()
+
+    def next(self):
+        if self.count % 1000 == 0:
+            logging.info('Processed %s rows so far' % (self.count, ))
+        result = None
+        while result is None:
+            try:
+                row = self._process_row(self._iterator.next(), self._query)
+                self.count += 1
+                return row
+            except ProcessException, e:
+                logging.debug('Ignored line #%d: %s' % (self.count, str(e)))
+                self.ignored += 1
+                raise e
+
+
 
 from  decimal import Decimal
 
