@@ -134,7 +134,7 @@ def process_json(value, query_item, row_data):
             if 'key-path' in feature and 'value-path' in feature:
                 # Treat as a dictionary
                 keys = jsonpath(path_result[0], feature['key-path'])
-                values = jsonpath(path_result[0], feature['value-path'])
+                values = map(float, jsonpath(path_result[0], feature['value-path']))
                 if keys is not False and values is not False:
                     result[feature['name']] = dict(zip(keys, values))
                 else:

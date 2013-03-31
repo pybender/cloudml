@@ -41,9 +41,9 @@
     {"name": "contractor.dev_adj_score_recent", "type": "float"},
     {"name": "contractor.dev_rank_percentile", "type": "float"},
     {"name": "contractor.dev_recent_rank_percentile", "type": "float"},
-    {"name": "contractor.dev_scores", "transformer": {"type": "Dictionary", "cast-value-as": "float"}},
+    {"name": "contractor.dev_scores", "transformer": {"type": "Dictionary"}},
  
-    {"name": "contractor.tsexams", "transformer": {"type": "Dictionary", "cast-value-as": "float"}},
+    {"name": "contractor.tsexams", "transformer": {"type": "Dictionary"}},
     {"name": "contractor.dev_test_passed_count", "type": "int"},
     {"name": "contractor.dev_skill_test_passed_count", "type": "int"},
 
