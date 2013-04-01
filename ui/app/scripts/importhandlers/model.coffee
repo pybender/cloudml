@@ -56,7 +56,7 @@ angular.module('app.importhandlers.model', ['app.config'])
       $save: (opts={}) =>
         fd = new FormData()
         fd.append("name", @name)
-        fd.append("type", @type)
+        fd.append("type", @type['name'])
         fd.append("data", @data)
         $http(
           method: if @isNew() then "POST" else "PUT"

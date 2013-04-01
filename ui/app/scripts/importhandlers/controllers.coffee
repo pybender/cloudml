@@ -60,6 +60,7 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 
 ($scope, $http, $location, settings, ImportHandler) ->
   $scope.handler = new ImportHandler()
+  $scope.types = [{name: 'Db'}, {name: 'Request'}]
   $scope.err = ''
   $scope.new = true
 

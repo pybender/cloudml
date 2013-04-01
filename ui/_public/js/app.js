@@ -769,6 +769,13 @@ angular.module('app.importhandlers.controllers', ['app.config']).controller('Imp
 ]).controller('AddImportHandlerCtl', [
   '$scope', '$http', '$location', 'settings', 'ImportHandler', function($scope, $http, $location, settings, ImportHandler) {
     $scope.handler = new ImportHandler();
+    $scope.types = [
+      {
+        name: 'Db'
+      }, {
+        name: 'Request'
+      }
+    ];
     $scope.err = '';
     $scope["new"] = true;
     $scope.add = function() {
@@ -890,7 +897,7 @@ angular.module('app.importhandlers.model', ['app.config']).factory('ImportHandle
         }
         fd = new FormData();
         fd.append("name", this.name);
-        fd.append("type", this.type);
+        fd.append("type", this.type['name']);
         fd.append("data", this.data);
         return $http({
           method: this.isNew() ? "POST" : "PUT",

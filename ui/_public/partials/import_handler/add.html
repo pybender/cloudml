@@ -23,7 +23,8 @@
  <div class="control-group" ng-class="{error: UploadImportHandlerForm.type.$invalid}">
     <label class="control-label">Type</label>
     <div class="controls">
-      <input type="text" name="type" ng-model="handler.type" required>
+      <select ng-model="handler.type" required ng-options="value.name for value in types" ng-selected='types[0]'>
+      </select>
       <span ng-show="UploadImportHandlerForm.type.$error.required" class="help-inline">Required</span>
     </div>
   </div>

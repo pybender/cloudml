@@ -52,7 +52,8 @@ class Model(db.Model, Serializer):
         self.created_on = datetime.now()
 
     def get_import_handler(self, parameters=None, is_test=False):
-        from core.importhandler.importhandler import ExtractionPlan, ImportHandler
+        from core.importhandler.importhandler import ExtractionPlan, \
+            ImportHandler
         plan = ExtractionPlan(self.importhandler if is_test
                               else self.train_importhandler, is_file=False)
         handler = ImportHandler(plan, parameters)
@@ -97,9 +98,8 @@ class ImportHandler(db.Model, Serializer):
     created_on = db.Column(db.DateTime, default=db.func.now())
     updated_on = db.Column(db.DateTime, default=db.func.now(),
                            onupdate=db.func.now())
-    type = db.Column(db.String(15))
-    data = db.Column(db.Text)
-
+    type = db.Column(db.String(15), default=TYPE_DB)
+    data = deferred(db.Column(db.Text))
 
 
 class Test(db.Model, Serializer):
