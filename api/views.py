@@ -53,6 +53,22 @@ class BaseResource(restful.Resource):
         else:
             return self._details(**kwargs)
 
+    @render(code=201)
+    def post(self, name):
+        """
+        Adds new model
+        """
+        parser = self.get_model_parser()
+        params = parser.parse_args()
+
+        obj = self.MODEL()
+        obj.name = name
+        self._fill_post_data(obj, params)
+
+        db.session.add(obj)
+        db.session.commit()
+        return {self.OBJECT_NAME: obj}
+
     def delete(self, model):
         """
         Deletes unused model
@@ -98,14 +114,19 @@ class BaseResource(restful.Resource):
         return '%ss' % self.OBJECT_NAME
 
     def _is_list_method(self, **kwargs):
-        model = kwargs.get('model')
-        return not model
+        name = kwargs.get('name')
+        return not name
 
     def _get_list_query(self, params, opts, **kwargs):
         return self.MODEL.query.options(*opts)
 
     def _get_details_query(self, params, opts, **kwargs):
-        raise NotImplemented('Should be implemented in the parent class')
+        name = kwargs.get('name')
+        return db.session.query(self.MODEL).options(*opts)\
+            .filter(self.MODEL.name == name)
+
+    def _fill_post_data(self, obj, params):
+        raise NotImplemented('Should be implemented in the child class')
 
     @render()
     def _details(self, extra_params=(), **kwargs):
@@ -274,32 +295,9 @@ class ImportHandlerResource(BaseResource):
             cls._model_parser = parser
         return cls._model_parser
 
-    def _is_list_method(self, **kwargs):
-        name = kwargs.get('name')
-        return not name
-
-    def _get_details_query(self, params, opts, **kwargs):
-        name = kwargs.get('name')
-        return db.session.query(self.MODEL).options(*opts)\
-            .filter(self.MODEL.name == name)
-
-    @render(code=201)
-    def post(self, name):
-        """
-        Adds new Import Handler
-        """
-        parser = self.get_model_parser()
-        params = parser.parse_args()
-
-        obj = self.MODEL()
-        obj.name = name
-        #import pdb; pdb.set_trace()
+    def _fill_post_data(self, obj, params):
         obj.type = params.get('type')
         obj.data = params.get('data')
-
-        db.session.add(obj)
-        db.session.commit()
-        return {self.OBJECT_NAME: obj}
 
 api.add_resource(ImportHandlerResource,
                  '/cloudml/import/handler/<regex("[\w\.]*"):name>')
