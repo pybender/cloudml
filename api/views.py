@@ -10,7 +10,7 @@ from sqlalchemy import orm
 from api.decorators import render
 from api import db, api
 from api.utils import crossdomain, ERR_NO_SUCH_MODEL, odesk_error_response
-from api.models import Model, Test, Data
+from api.models import Model, Test, Data, ImportHandler
 from api.exceptions import MethodException
 from api.tasks import train_model, run_test
 
@@ -252,8 +252,57 @@ class Models(BaseResource):
         return {'model': model}
 
 
-api.add_resource(Models, '/cloudml/b/v1/model/<regex("[\w\.]*"):model>',
-                 '/cloudml/b/v1/model/<regex("[\w\.]+"):model>/<regex("[\w\.]+"):action>')
+api.add_resource(Models, '/cloudml/model/<regex("[\w\.]*"):model>',
+                 '/cloudml/model/<regex("[\w\.]+"):model>/<regex("[\w\.]+"):action>')
+
+
+class ImportHandlerResource(BaseResource):
+    """
+    Import handler API methods
+    """
+    MODEL = ImportHandler
+    OBJECT_NAME = 'import_handler'
+    decorators = [crossdomain(origin='*')]
+    methods = ['GET', 'OPTIONS', 'PUT', 'POST']
+
+    @classmethod
+    def get_model_parser(cls):
+        if not hasattr(cls, "_model_parser"):
+            parser = reqparse.RequestParser()
+            parser.add_argument('data', type=str)
+            parser.add_argument('type', type=str)
+            cls._model_parser = parser
+        return cls._model_parser
+
+    def _is_list_method(self, **kwargs):
+        name = kwargs.get('name')
+        return not name
+
+    def _get_details_query(self, params, opts, **kwargs):
+        name = kwargs.get('name')
+        return db.session.query(self.MODEL).options(*opts)\
+            .filter(self.MODEL.name == name)
+
+    @render(code=201)
+    def post(self, name):
+        """
+        Adds new Import Handler
+        """
+        parser = self.get_model_parser()
+        params = parser.parse_args()
+
+        obj = self.MODEL()
+        obj.name = name
+        #import pdb; pdb.set_trace()
+        obj.type = params.get('type')
+        obj.data = params.get('data')
+
+        db.session.add(obj)
+        db.session.commit()
+        return {self.OBJECT_NAME: obj}
+
+api.add_resource(ImportHandlerResource,
+                 '/cloudml/import/handler/<regex("[\w\.]*"):name>')
 
 
 class Tests(BaseResource):
@@ -290,7 +339,7 @@ class Tests(BaseResource):
 
         return {'test': test}
 
-api.add_resource(Tests, '/cloudml/b/v1/model/<regex("[\w\.]+"):model>/test/<regex("[\w\.\-]+"):test_name>')
+api.add_resource(Tests, '/cloudml/model/<regex("[\w\.]+"):model>/test/<regex("[\w\.\-]+"):test_name>')
 
 
 class Datas(BaseResource):
@@ -318,9 +367,9 @@ class Datas(BaseResource):
             .filter(and_(Model.name == model, Test.name == test_name,
                          Data.id == data_id))
 
-api.add_resource(Datas, '/cloudml/b/v1/model/<regex("[\w\.]+"):model>/test/<regex("[\w\.\-]+"):test_name>/data')
+api.add_resource(Datas, '/cloudml/model/<regex("[\w\.]+"):model>/test/<regex("[\w\.\-]+"):test_name>/data')
 api.add_resource(Datas,
-                 '/cloudml/b/v1/model/<regex("[\w\.]+"):model>/test/<regex("[\w\.\-]+"):test_name>/data/<regex("[\w\.\-]+"):data_id>')
+                 '/cloudml/model/<regex("[\w\.]+"):model>/test/<regex("[\w\.\-]+"):test_name>/data/<regex("[\w\.\-]+"):data_id>')
 
 
 class CompareReport(restful.Resource):
@@ -349,7 +398,7 @@ class CompareReport(restful.Resource):
         return {'test1': test1, 'test2': test2,
                 'examples1': examples1, 'examples2': examples2}
 
-api.add_resource(CompareReport, '/cloudml/b/v1/reports/compare')
+api.add_resource(CompareReport, '/cloudml/reports/compare')
 
 
 class Predict(restful.Resource):
@@ -375,7 +424,7 @@ class Predict(restful.Resource):
             count += 1
         return result
 
-api.add_resource(Predict, '/cloudml/b/v1/model/<regex("[\w\.]*"):model>/predict')
+api.add_resource(Predict, '/cloudml/model/<regex("[\w\.]*"):model>/predict')
 
 def populate_parser(model):
     parser = reqparse.RequestParser()

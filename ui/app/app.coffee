@@ -20,6 +20,8 @@ App = angular.module('app', [
   'app.datas.controllers'
   'app.reports.model'
   'app.reports.controllers'
+  'app.importhandlers.model'
+  'app.importhandlers.controllers'
 ])
 App.config([
   '$routeProvider'
@@ -61,6 +63,20 @@ App.config([
       templateUrl: '/partials/compare_models_form.html'
       controller: 'CompareModelsFormCtl'
     })
+
+    .when('/import_handlers', {
+      controller: "ImportHandlerListCtrl"
+      templateUrl: '/partials/import_handler/list.html'
+    })
+    .when('/import_handlers/add', {
+      controller: "AddImportHandlerCtl"
+      templateUrl: '/partials/import_handler/add.html'
+    })
+    .when('/import_handlers/:name', {
+      controller: 'ImportHandlerDetailsCtrl'
+      templateUrl: '/partials/import_handler/details.html'
+    })
+
     # Catch all
     .otherwise({redirectTo: '/models'})
 

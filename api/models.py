@@ -85,6 +85,23 @@ class Model(db.Model, Serializer):
         return '<Model %r>' % self.name
 
 
+class ImportHandler(db.Model, Serializer):
+    __public__ = ('id', 'name', 'created_on', 'type')
+    __all_public__ = ('id', 'name', 'created_on', 'type')
+
+    TYPE_DB = 'Db'
+    TYPE_REQUEST = 'Request'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50))
+    created_on = db.Column(db.DateTime, default=db.func.now())
+    updated_on = db.Column(db.DateTime, default=db.func.now(),
+                           onupdate=db.func.now())
+    type = db.Column(db.String(15))
+    data = db.Column(db.Text)
+
+
+
 class Test(db.Model, Serializer):
     __public__ = ('id', 'name', 'created_on', 'accuracy',
                   'parameters', 'data_count', 'status', 'error')

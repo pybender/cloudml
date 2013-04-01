@@ -9,11 +9,11 @@ Models
 +--------+-------------------------------------------------------+--------------------+
 | Method | Resource                                              | Description        |
 +========+=======================================================+====================+
-| GET    | :ref:`/cloudml/b/v1/model/<list_models>`              | Get list of models |
+| GET    | :ref:`/cloudml/model/<list_models>`              | Get list of models |
 +--------+-------------------------------------------------------+--------------------+
-| GET    | :ref:`/cloudml/b/v1/model/:ModelName<get_model>`      | Get model by name  |
+| GET    | :ref:`/cloudml/model/:ModelName<get_model>`      | Get model by name  |
 +--------+-------------------------------------------------------+--------------------+
-| POST   | :ref:`/cloudml/b/v1/model/:ModelName/predict<predict>`| Predict            |
+| POST   | :ref:`/cloudml/model/:ModelName/predict<predict>`| Predict            |
 +--------+-------------------------------------------------------+--------------------+
 
 .. _list_models:
@@ -22,7 +22,7 @@ List of Models
 --------------
 
 * Method: GET
-* URL: /cloudml/b/v1/model/
+* URL: /cloudml/model/
 
 Response Parameters
 ^^^^^^^^^^^^^^^^^^^
@@ -52,7 +52,7 @@ Example
 
 cURL::
 
-    curl http://127.0.0.1:5000/cloudml/b/v1/model/
+    curl http://127.0.0.1:5000/cloudml/model/
 
 Response body::
     
@@ -75,7 +75,7 @@ Get Model
 ---------
 
 * Method: GET
-* URL: /cloudml/b/v1/model/:ModelName
+* URL: /cloudml/model/:ModelName
 
 Request paraneters
 ^^^^^^^^^^^^^^^^^^
@@ -115,7 +115,7 @@ Example
 
 cURL::
 
-    curl http://127.0.0.1:5000/cloudml/b/v1/model/test
+    curl http://127.0.0.1:5000/cloudml/model/test
 
 Response body::
     
@@ -135,7 +135,7 @@ Predict
 -------
 
 * Method: POST
-* URL: /cloudml/b/v1/model/:ModelName/predict
+* URL: /cloudml/model/:ModelName/predict
 
 Request paraneters
 ^^^^^^^^^^^^^^^^^^
@@ -180,7 +180,7 @@ Example
 
 cURL::
 
-    curl -XPOST http://127.0.0.1:5000/cloudml/b/v1/model/test/predict H "Accept: application/json" -H "Content-type: application/json" -d @request.json
+    curl -XPOST http://127.0.0.1:5000/cloudml/model/test/predict H "Accept: application/json" -H "Content-type: application/json" -d @request.json
 
 Request body::
 
