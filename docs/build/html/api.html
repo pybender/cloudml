@@ -52,6 +52,45 @@
             
   <div class="section" id="api">
 <h1>Api<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="import-handlers">
+<h2>Import Handlers<a class="headerlink" href="#import-handlers" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="9%" />
+<col width="68%" />
+<col width="23%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Method</th>
+<th class="head">Resource</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>GET</td>
+<td><a class="reference internal" href="#list-handlers"><em>/cloudml/import/handler/</em></a></td>
+<td>Get list</td>
+</tr>
+<tr class="row-odd"><td>GET</td>
+<td><a class="reference internal" href="#get-handlers"><em>/cloudml/import/handler/:HandlerName</em></a></td>
+<td>Get by name</td>
+</tr>
+<tr class="row-even"><td>POST</td>
+<td><a class="reference internal" href="#post-handlers"><em>/cloudml/import/handler/:HandlerName</em></a></td>
+<td>Create</td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="get-list-of-import-handlers">
+<span id="list-handlers"></span><h3>Get list of import handlers<a class="headerlink" href="#get-list-of-import-handlers" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="get-import-handler-by-name">
+<span id="get-handlers"></span><h3>Get import handler by name<a class="headerlink" href="#get-import-handler-by-name" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="create-import-handler">
+<span id="post-handlers"></span><h3>Create import handler<a class="headerlink" href="#create-import-handler" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
 <div class="section" id="models">
 <h2>Models<a class="headerlink" href="#models" title="Permalink to this headline">¶</a></h2>
 <table border="1" class="docutils">
@@ -68,15 +107,15 @@
 </thead>
 <tbody valign="top">
 <tr class="row-even"><td>GET</td>
-<td><a class="reference internal" href="#list-models"><em>/cloudml/b/v1/model/</em></a></td>
+<td><a class="reference internal" href="#list-models"><em>/cloudml/model/</em></a></td>
 <td>Get list of models</td>
 </tr>
 <tr class="row-odd"><td>GET</td>
-<td><a class="reference internal" href="#get-model"><em>/cloudml/b/v1/model/:ModelName</em></a></td>
+<td><a class="reference internal" href="#get-model"><em>/cloudml/model/:ModelName</em></a></td>
 <td>Get model by name</td>
 </tr>
 <tr class="row-even"><td>POST</td>
-<td><a class="reference internal" href="#predict"><em>/cloudml/b/v1/model/:ModelName/predict</em></a></td>
+<td><a class="reference internal" href="#predict"><em>/cloudml/model/:ModelName/predict</em></a></td>
 <td>Predict</td>
 </tr>
 </tbody>
@@ -85,7 +124,7 @@
 <span id="list-models"></span><h3>List of Models<a class="headerlink" href="#list-of-models" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li>Method: GET</li>
-<li>URL: /cloudml/b/v1/model/</li>
+<li>URL: /cloudml/model/</li>
 </ul>
 <div class="section" id="response-parameters">
 <h4>Response Parameters<a class="headerlink" href="#response-parameters" title="Permalink to this headline">¶</a></h4>
@@ -113,7 +152,7 @@
 <div class="section" id="example">
 <h4>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h4>
 <p>cURL:</p>
-<div class="highlight-python"><pre>curl http://127.0.0.1:5000/cloudml/b/v1/model/</pre>
+<div class="highlight-python"><pre>curl http://127.0.0.1:5000/cloudml/model/</pre>
 </div>
 <p>Response body:</p>
 <div class="highlight-python"><pre>{
@@ -133,7 +172,7 @@
 <span id="id1"></span><h3>Get Model<a class="headerlink" href="#get-model" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li>Method: GET</li>
-<li>URL: /cloudml/b/v1/model/:ModelName</li>
+<li>URL: /cloudml/model/:ModelName</li>
 </ul>
 <div class="section" id="request-paraneters">
 <h4>Request paraneters<a class="headerlink" href="#request-paraneters" title="Permalink to this headline">¶</a></h4>
@@ -172,7 +211,7 @@
 <div class="section" id="id4">
 <h4>Example<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h4>
 <p>cURL:</p>
-<div class="highlight-python"><pre>curl http://127.0.0.1:5000/cloudml/b/v1/model/test</pre>
+<div class="highlight-python"><pre>curl http://127.0.0.1:5000/cloudml/model/test</pre>
 </div>
 <p>Response body:</p>
 <div class="highlight-python"><pre>{
@@ -190,7 +229,7 @@
 <span id="id5"></span><h3>Predict<a class="headerlink" href="#predict" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li>Method: POST</li>
-<li>URL: /cloudml/b/v1/model/:ModelName/predict</li>
+<li>URL: /cloudml/model/:ModelName/predict</li>
 </ul>
 <div class="section" id="id6">
 <h4>Request paraneters<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h4>
@@ -235,7 +274,7 @@
 <div class="section" id="id9">
 <h4>Example<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h4>
 <p>cURL:</p>
-<div class="highlight-python"><pre>curl -XPOST http://127.0.0.1:5000/cloudml/b/v1/model/test/predict H "Accept: application/json" -H "Content-type: application/json" -d @request.json</pre>
+<div class="highlight-python"><pre>curl -XPOST http://127.0.0.1:5000/cloudml/model/test/predict H "Accept: application/json" -H "Content-type: application/json" -d @request.json</pre>
 </div>
 <p>Request body:</p>
 <div class="highlight-python"><pre>[
@@ -290,6 +329,12 @@
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Api</a><ul>
+<li><a class="reference internal" href="#import-handlers">Import Handlers</a><ul>
+<li><a class="reference internal" href="#get-list-of-import-handlers">Get list of import handlers</a></li>
+<li><a class="reference internal" href="#get-import-handler-by-name">Get import handler by name</a></li>
+<li><a class="reference internal" href="#create-import-handler">Create import handler</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#models">Models</a><ul>
 <li><a class="reference internal" href="#list-of-models">List of Models</a><ul>
 <li><a class="reference internal" href="#response-parameters">Response Parameters</a></li>

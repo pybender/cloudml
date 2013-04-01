@@ -21,9 +21,9 @@ def render(brief=True, code=200):
                                   indent=None if request.is_xhr else 2)
                 return app.response_class(resp,
                                           mimetype='application/json'), code
-            except NoResultFound:
+            except NoResultFound, exc:
                 return odesk_error_response(404, ERR_NO_SUCH_MODEL,
-                                            'Model doesn\'t exist')
+                                            exc.message or 'Object doesn\'t exist')
             except ItemParseException, exc:
                 return odesk_error_response(400, ERR_INVALID_DATA,
                                             exc.message)

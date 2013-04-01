@@ -2,6 +2,35 @@
 Api
 ===
 
+Import Handlers
+===============
+
++--------+-----------------------------------------------------------+--------------------+
+| Method | Resource                                                  | Description        |
++========+===========================================================+====================+
+| GET    | :ref:`/cloudml/import/handler/<list_handlers>`            | Get list           |
++--------+-----------------------------------------------------------+--------------------+
+| GET    | :ref:`/cloudml/import/handler/:HandlerName<get_handlers>` | Get by name        |
++--------+-----------------------------------------------------------+--------------------+
+| POST   | :ref:`/cloudml/import/handler/:HandlerName<post_handlers>`| Create             | 
++--------+-----------------------------------------------------------+--------------------+
+
+.. _list_handlers:
+
+Get list of import handlers
+---------------------------
+
+.. _get_handlers:
+
+Get import handler by name
+--------------------------
+
+.. _post_handlers:
+
+Create import handler
+---------------------
+
+
 
 Models
 ======
@@ -9,11 +38,11 @@ Models
 +--------+-------------------------------------------------------+--------------------+
 | Method | Resource                                              | Description        |
 +========+=======================================================+====================+
-| GET    | :ref:`/cloudml/model/<list_models>`              | Get list of models |
+| GET    | :ref:`/cloudml/model/<list_models>`                   | Get list of models |
 +--------+-------------------------------------------------------+--------------------+
-| GET    | :ref:`/cloudml/model/:ModelName<get_model>`      | Get model by name  |
+| GET    | :ref:`/cloudml/model/:ModelName<get_model>`           | Get model by name  |
 +--------+-------------------------------------------------------+--------------------+
-| POST   | :ref:`/cloudml/model/:ModelName/predict<predict>`| Predict            |
+| POST   | :ref:`/cloudml/model/:ModelName/predict<predict>`     | Predict            |
 +--------+-------------------------------------------------------+--------------------+
 
 .. _list_models:

@@ -6,6 +6,7 @@ from sqlalchemy import and_
 from sqlalchemy.sql.expression import asc, desc
 from sqlalchemy.orm import undefer
 from sqlalchemy import orm
+from sqlalchemy.orm.exc import NoResultFound
 
 from api.decorators import render
 from api import db, api
@@ -141,7 +142,7 @@ class BaseResource(restful.Resource):
 
     def _get_fields_to_show(self, params):
         fields = params.get('show', None)
-        return fields.split(',') if fields else Model.__public__
+        return fields.split(',') if fields else self.MODEL.__public__
 
     def _parse_parameters(self, extra_params=()):
         parser = reqparse.RequestParser()
@@ -403,16 +404,27 @@ class Predict(restful.Resource):
     decorators = [crossdomain(origin='*')]
 
     @render(code=201)
-    def post(self, model):
-        from core.importhandler.importhandler import ExtractionPlan, RequestImportHandler
+    def post(self, model, import_handler):
+        from core.importhandler.importhandler import ExtractionPlan,\
+             RequestImportHandler
         from itertools import izip
-        model = Model.query.filter(Model.name == model).one()
+        try:
+            importhandler = ImportHandler.query.filter(
+                ImportHandler.name == import_handler).one()
+        except NoResultFound, exc:
+            exc.message = "Import handler %s doesn\'t exist" % import_handler
+            raise exc
+        try:
+            model = Model.query.filter(Model.name == model).one()
+        except Exception, exc:
+            exc.message = "Model %s doesn\'t exist" % model
+            raise exc
         data = request.json
-        plan = ExtractionPlan(model.importhandler, is_file=False)
-        import_handler = RequestImportHandler(plan, data)
+        plan = ExtractionPlan(importhandler, is_file=False)
+        request_import_handler = RequestImportHandler(plan, data)
         result = []
         count = 0
-        probabilities = model.trainer.predict(import_handler, ignore_error=False)
+        probabilities = model.trainer.predict(request_import_handler, ignore_error=False)
         for prob, label in izip(probabilities['probs'], probabilities['labels']):
             prob = prob.tolist() if not (prob is None) else []
             label = label.tolist() if not (label is None)  else []
@@ -422,7 +434,8 @@ class Predict(restful.Resource):
             count += 1
         return result
 
-api.add_resource(Predict, '/cloudml/model/<regex("[\w\.]*"):model>/predict')
+api.add_resource(Predict, '/cloudml/model/<regex("[\w\.]*"):model>/\
+<regex("[\w\.]*"):import_handler>/predict')
 
 def populate_parser(model):
     parser = reqparse.RequestParser()

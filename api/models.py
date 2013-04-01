@@ -88,7 +88,6 @@ class Model(db.Model, Serializer):
 
 class ImportHandler(db.Model, Serializer):
     __public__ = ('id', 'name', 'created_on', 'type')
-    __all_public__ = ('id', 'name', 'created_on', 'type')
 
     TYPE_DB = 'Db'
     TYPE_REQUEST = 'Request'
@@ -100,6 +99,9 @@ class ImportHandler(db.Model, Serializer):
                            onupdate=db.func.now())
     type = db.Column(db.String(15), default=TYPE_DB)
     data = deferred(db.Column(db.Text))
+
+    def __repr__(self):
+        return '<Import Handler %r>' % self.name
 
 
 class Test(db.Model, Serializer):
