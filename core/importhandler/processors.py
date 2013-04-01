@@ -113,7 +113,10 @@ def process_json(value, query_item, row_data):
     """
     # Parse JSON string
     try:
-        data = json.loads(value)
+        if isinstance(value, basestring):
+            data = json.loads(value)
+        else:
+            data = value
     except:
         raise ProcessException('Couldn\'t parse JSON message')
 

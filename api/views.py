@@ -1,4 +1,5 @@
 from flask.ext import restful
+from flask import request
 from flask.ext.restful import reqparse
 from werkzeug.datastructures import FileStorage
 from sqlalchemy import and_
@@ -350,6 +351,31 @@ class CompareReport(restful.Resource):
 
 api.add_resource(CompareReport, '/cloudml/b/v1/reports/compare')
 
+
+class Predict(restful.Resource):
+    decorators = [crossdomain(origin='*')]
+
+    @render(code=201)
+    def post(self, model):
+        from core.importhandler.importhandler import ExtractionPlan, RequestImportHandler
+        from itertools import izip
+        model = Model.query.filter(Model.name == model).one()
+        data = request.json
+        plan = ExtractionPlan(model.importhandler, is_file=False)
+        import_handler = RequestImportHandler(plan, data)
+        result = []
+        count = 0
+        probabilities = model.trainer.predict(import_handler, ignore_error=False)
+        for prob, label in izip(probabilities['probs'], probabilities['labels']):
+            prob = prob.tolist() if not (prob is None) else []
+            label = label.tolist() if not (label is None)  else []
+            result.append({'item': count,
+                           'label': label,
+                           'probs': prob})
+            count += 1
+        return result
+
+api.add_resource(Predict, '/cloudml/b/v1/model/<regex("[\w\.]*"):model>/predict')
 
 def populate_parser(model):
     parser = reqparse.RequestParser()

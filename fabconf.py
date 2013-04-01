@@ -30,6 +30,7 @@ class BaseConf(DefaultConf):
 
     ui_scripts_dir = ['home_path', 'ui', 'app', 'scripts']
     active_public_link = ['%(active_src_link)s', 'ui', '_public']
+    active_docs_link = ['%(active_src_link)s', 'docs', 'build', 'html']
 
     pip_req_path = ''
     pip_req_name = 'requirements.txt'
@@ -92,7 +93,8 @@ class StagingConf(BaseConf):
 class Production1Conf(BaseConf):
     """Settings specific to production environment."""
 
-    address = 'cloudml@172.27.77.242'
+    #address = 'cloudml@172.27.77.242'
+    address = 'cloudml@172.27.77.141'
 
     sudo_user = 'nmelnik'
 
