@@ -4,12 +4,10 @@ _author__ = 'ifoukarakis'
 import json
 import logging
 import numpy
-import sklearn.metrics as metrics
 
 from collections import defaultdict
 from time import gmtime, strftime
 from operator import itemgetter
-from sklearn.linear_model import LogisticRegression
 from scipy.sparse import hstack, csc_matrix
 from featuretype import FEATURE_TYPE_DEFAULTS
 from transformers import TRANSFORMER_DEFAULTS
