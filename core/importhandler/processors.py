@@ -138,6 +138,8 @@ def process_json(value, query_item, row_data):
                     values = map(float, jsonpath(path_result[0], feature['value-path']))
                 except ValueError as e:
                     raise ProcessException(e)
+                except TypeError as e:
+                    raise ProcessException(e)
                 if keys is not False and values is not False:
                     result[feature['name']] = dict(zip(keys, values))
                 else:
