@@ -171,7 +171,7 @@ angular.module('app.models.controllers', ['app.config', ])
           $scope.go 'train_importhandler,status,id'
         else
           $scope.go 'importhandler,status,id'
-      else $scope.goDetails()
+      else $scope.go 'status,created_on,target_variable'
 
   if not $scope.model
     if not $routeParams.name
@@ -180,11 +180,6 @@ angular.module('app.models.controllers', ['app.config', ])
 
   $scope.toggleAction = (action) =>
     $scope.action = action
-
-  $scope.goDetails = =>
-    callback = () ->
-      $scope.latest_test = new Test($scope.model.latest_test)
-    $scope.go 'status,created_on,target_variable', callback
 
   $scope.go = (fields, callback) ->
     $scope.model.$load(
