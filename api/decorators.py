@@ -31,8 +31,8 @@ def render(brief=True, code=200):
                 return odesk_error_response(400, ERR_INVALID_DATA,
                                             exc.message)
             except Exception, exc:
-                print type(exc)
-                raise exc
+                # print type(exc)
+                # raise exc
                 return odesk_error_response(500, ERR_INVALID_DATA,
                                             exc.message)
         return wrapper

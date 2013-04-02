@@ -419,19 +419,16 @@ class Predict(restful.Resource):
         except Exception, exc:
             exc.message = "Model %s doesn\'t exist" % model
             raise exc
-        data = request.json
-        plan = ExtractionPlan(importhandler, is_file=False)
+        data = [request.form, ]
+        plan = ExtractionPlan(importhandler.data, is_file=False)
         request_import_handler = RequestImportHandler(plan, data)
-        result = []
-        count = 0
         probabilities = model.trainer.predict(request_import_handler, ignore_error=False)
-        for prob, label in izip(probabilities['probs'], probabilities['labels']):
-            prob = prob.tolist() if not (prob is None) else []
-            label = label.tolist() if not (label is None)  else []
-            result.append({'item': count,
-                           'label': label,
-                           'probs': prob})
-            count += 1
+        prob =  probabilities['probs'][0]
+        label = probabilities['labels'][0]
+        prob = prob.tolist() if not (prob is None) else []
+        label = label.tolist() if not (label is None)  else []
+        result = {'label': label,
+                  'probs': prob}
         return result
 
 api.add_resource(Predict, '/cloudml/model/<regex("[\w\.]*"):model>/\
