@@ -120,7 +120,8 @@ class Production1Conf(BaseConf):
 class ProductionConf(BaseConf):
     """Settings specific to production environment."""
 
-    address = 'cloudml@172.27.77.205'
+    #address = 'cloudml@172.27.77.205'
+    address = 'cloudml@172.27.77.141'
 
     sudo_user = 'nmelnik'
 
