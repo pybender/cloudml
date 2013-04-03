@@ -169,7 +169,7 @@ angular.module('app.models.controllers', ['app.config', ])
     switch action[0]
       when "features" then $scope.go 'features,status'
       when "weights" then  $scope.goWeights(true, true)
-      when "test" then
+      when "test" then $scope.goTests()
       when "import_handlers"
         if action[1] == 'train'
           $scope.go 'train_importhandler,status,id'
@@ -214,17 +214,21 @@ angular.module('app.models.controllers', ['app.config', ])
     $scope.ppage += 1
     $scope.goWeights(true, false)
 
-
   $scope.moreNegativeWeights  = =>
     $scope.npage += 1
     $scope.goWeights(false, true)
 
-  $scope.loadTests = () ->
-    (pagination_opts) ->
-      Test.$loadTests(
-        $scope.model.name,
-        show: 'name,created_on,status,parameters,accuracy,data_count'
-      )
+  $scope.goTests = () ->
+    Test.$loadTests(
+      $scope.model.name,
+      show: 'name,created_on,status,parameters,accuracy,data_count'
+    ).then ((opts) ->
+      $scope.tests = opts.objects
+    ), ((opts) ->
+      $scope.err = "Error while loading tests: server responded with " +
+        "#{opts.status} " +
+        "(#{opts.data.response.error.message or "no message"}). "
+    )
 
   $scope.saveTrainHandler = =>
     $scope.model.$save(only: ['train_importhandler']).then (() ->

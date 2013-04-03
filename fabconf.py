@@ -147,7 +147,7 @@ class ProductionConf(BaseConf):
     address = 'cloudml@172.27.77.141'
 
     sudo_user = 'nmelnik'
-    django_dir = ''
+    #django_dir = ''
 
     # Code from this branch will be deployed.
     branch = 'master'
