@@ -90,6 +90,7 @@ def run_test(test, model):
     except Exception, exc:
         test.status = Test.STATUS_ERROR
         test.error = str(exc)
+        db.session.rollback()
         db.session.merge(test)
         db.session.commit()
         return 'Failed'
