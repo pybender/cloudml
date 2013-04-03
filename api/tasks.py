@@ -27,7 +27,7 @@ def train_model(model, parameters):
         trainer = Trainer(feature_model)
         train_handler = model.get_import_handler(parameters)
         trainer.train(train_handler)
-
+        trainer.clear_temp_data()
         model.set_trainer(trainer)
         model.status = Model.STATUS_TRAINED
         db.session.commit()

@@ -66,6 +66,7 @@ class Model(db.Model, Serializer):
         test_handler = self.get_import_handler(parameters, is_test=True)
         metrics = self.trainer.test(test_handler)
         raw_data = self.trainer._raw_data
+        self.trainer.clear_temp_data()
         return metrics, raw_data
 
     def set_trainer(self, trainer):

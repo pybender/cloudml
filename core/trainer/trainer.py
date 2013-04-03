@@ -57,6 +57,14 @@ class Trainer():
         self._ignored = 0
         self.train_time = None
 
+    def clear_temp_data(self):
+        if hasattr(self, '_raw_data'):
+            raw_data = self._raw_data
+            self._raw_data = None
+        if hasattr(self, '_vect_data'):
+            vect_data = self._vect_data
+            self._vect_data = None
+
     # TODO: Did you mean this?
     @property
     def model_type(self):
