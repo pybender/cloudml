@@ -132,6 +132,26 @@ angular.module('app.models.model', ['app.config'])
 
         dfd.promise
 
+      $loadWeights: (opts) ->
+        if @name == null
+          throw new Error "Can't load model without name"
+
+        $http(
+          method: 'GET'
+          url: settings.apiUrl + "model/#{@name}/weights"
+          headers:
+            'X-Requested-With': null
+          params: _.extend {
+          }, opts
+        ).then ((resp) =>
+          @loaded = true
+          @loadFromJSON(resp.data['model'])
+          return resp
+
+        ), ((resp) =>
+          return resp
+        )
+
       $train: (opts={}) =>
         fd = new FormData()
         for key, val of opts
