@@ -7,30 +7,36 @@ def calc_weights_css(weights, css_cls):
     Determines tones of color dependly of weight value.
     """
     cmp_func = lambda a: abs(a['weight'])
-    no_zero_weights = [w for w in weights if w['weight'] != 0]
-    min_weight = min(no_zero_weights, key=cmp_func)['weight']
-    weights = [{'name': item['name'],
-                'weight': item['weight'],
-                'transforment_weight': math.log(
-                abs(item['weight'] / min_weight))
-                if item['weight'] != 0 else 0}
-               for item in weights]
-    weights.sort(key=cmp_func)
 
+    def get_min_no_zero(weights):
+        no_zero_weights = [w for w in weights if w['weight'] != 0]
+        return min(no_zero_weights, key=cmp_func)['weight']
+
+    def normalize_weights(weights, min_weight):
+        weights = [{'name': item['name'],
+                    'weight': item['weight'],
+                    'transformed_weight': math.log(
+                        abs(item['weight'] / min_weight))
+                    if item['weight'] != 0 else 0}
+                   for item in weights]
+        weights.sort(key=cmp_func)
+        if min_weight > 0:
+            weights.reverse()
+        return weights
+
+    min_weight = get_min_no_zero(weights)
+    weights = normalize_weights(weights, min_weight)
     tones = ['lightest', 'lighter', 'light', 'dark', 'darker', 'darkest']
-    if min_weight > 0:
-        tones.reverse()
-
     tones_count = len(tones)
-    cmp_func = lambda a: abs(a['transforment_weight'])
-    wmax = abs(max(weights, key=cmp_func)['transforment_weight'])
+    cmp_func = lambda a: abs(a['transformed_weight'])
+    wmax = max(weights, key=cmp_func)['transformed_weight']
     delta = round(wmax / tones_count)
     for i in xrange(tones_count):
         tone = tones[i]
         css_class = "%s %s" % (css_cls, tone)
         limit = i * delta
         for item in weights:
-            if abs(item['transforment_weight']) >= limit:
+            if abs(item['transformed_weight']) >= limit:
                 item['css_class'] = css_class
     return weights
 
