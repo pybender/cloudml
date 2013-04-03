@@ -258,6 +258,7 @@ angular.module('app.models.controllers', ['app.config', ])
       show: 'import_params'
       ).then (->
         $scope.params = $scope.model.import_params
+        $scope.params.pop('group_by')
       ), (->
         $scope.err = data
       )

@@ -3,6 +3,7 @@ from flask import request
 from flask.ext.restful import reqparse
 from werkzeug.datastructures import FileStorage
 from sqlalchemy import and_
+from sqlalchemy import func
 from sqlalchemy.sql.expression import asc, desc
 from sqlalchemy.orm import undefer
 from sqlalchemy.orm.exc import NoResultFound
@@ -66,7 +67,8 @@ class Models(BaseResource):
         param = get_parser.parse_args()
         fields = param.get('show', None)
         fields = fields.split(',') if fields else Test.__public__
-        tests = db.session.query(Test).join(Model).filter(Model.name == model).all()
+        tests = db.session.query(Test).join(Model)\
+            .filter(Model.name == model).all()
         return {'tests': qs2list(tests, fields)}
 
     @render()
@@ -83,8 +85,10 @@ class Models(BaseResource):
         ppage = params.get('ppage') or 1
         npage = params.get('npage') or 1
         return {self.OBJECT_NAME: qs2list(model, fields),
-                'positive': model.positive_weights[(ppage - 1) * per_page:ppage * per_page],
-                'negative': model.negative_weights[(npage - 1) * per_page:npage * per_page]}
+                'positive': model.positive_weights
+                [(ppage - 1) * per_page:ppage * per_page],
+                'negative': model.negative_weights
+                [(npage - 1) * per_page:npage * per_page]}
 
     @render(code=201)
     def post(self, model):
@@ -107,6 +111,7 @@ class Models(BaseResource):
         trainer = Trainer(feature_model)
         plan = ExtractionPlan(model.train_importhandler, is_file=False)
         model.import_params = plan.input_params
+        model.import_params.append('group_by')
         model.trainer = trainer
 
         db.session.add(model)
@@ -224,13 +229,15 @@ class Tests(BaseResource):
 
         return {'test': test}
 
-api.add_resource(Tests, '/cloudml/model/<regex("[\w\.]+"):model>/test/<regex("[\w\.\-]+"):test_name>')
+api.add_resource(Tests, '/cloudml/model/<regex("[\w\.]+"):model>/test/\
+<regex("[\w\.\-]+"):test_name>')
 
 
 class Datas(BaseResource):
     MODEL = Data
     OBJECT_NAME = 'data'
     NEED_PAGING = True
+    GET_ACTIONS = ('groupped', )
     decorators = [crossdomain(origin='*')]
 
     def _is_list_method(self, **kwargs):
@@ -242,7 +249,6 @@ class Datas(BaseResource):
         test_name = kwargs.get('test_name')
         return Data.query.options(*opts).join(Test).join(Model)\
             .filter(and_(Model.name == model, Test.name == test_name))
-            #.group_by(Data.group_by_field)
 
     def _get_details_query(self, params, opts, **kwargs):
         model = kwargs.get('model')
@@ -253,9 +259,32 @@ class Datas(BaseResource):
             .filter(and_(Model.name == model, Test.name == test_name,
                          Data.id == data_id))
 
-api.add_resource(Datas, '/cloudml/model/<regex("[\w\.]+"):model>/test/<regex("[\w\.\-]+"):test_name>/data')
-api.add_resource(Datas,
-                 '/cloudml/model/<regex("[\w\.]+"):model>/test/<regex("[\w\.\-]+"):test_name>/data/<regex("[\w\.\-]+"):data_id>')
+    @render()
+    def _get_groupped_action(self, model, test_name, **kwargs):
+        """
+        Groups data by `group_by_field` field.
+        """
+        test = Test.query.join(Model)\
+            .filter(Model.name == model,
+                    Test.name == test_name).one()
+        datas = db.session.query(Data.group_by_field,
+                                 func.count(Data.group_by_field))\
+            .join(Test).join(Model)\
+            .filter(and_(Model.name == model, Test.name == test_name))\
+            .group_by(Data.group_by_field).all()
+        res = [{'group_by_field': d[0], 'count': d[1]} for d in datas]
+        field_name = test.parameters.get('group_by')
+        print test.parameters
+        return {self.list_key: {'items': res}, 'field_name': field_name}
+
+
+api.add_resource(Datas, '/cloudml/model/<regex("[\w\.]+"):model>/test/\
+<regex("[\w\.\-]+"):test_name>/data',
+                 '/cloudml/model/<regex("[\w\.]+")\
+:model>/test/<regex("[\w\.\-]+"):test_name>/data/<regex("[\w\.\-]+"):data_id>',
+                 '/cloudml/model/<regex("[\w\.]+"):model>/test/\
+<regex("[\w\.\-]+"):test_name>/action/<regex("[\w\.]+"):action>/data'
+)
 
 
 class CompareReport(restful.Resource):
@@ -307,17 +336,19 @@ class Predict(restful.Resource):
         data = [request.form, ]
         plan = ExtractionPlan(importhandler.data, is_file=False)
         request_import_handler = RequestImportHandler(plan, data)
-        probabilities = model.trainer.predict(request_import_handler, ignore_error=False)
-        prob =  probabilities['probs'][0]
+        probabilities = model.trainer.predict(request_import_handler,
+                                              ignore_error=False)
+        prob = probabilities['probs'][0]
         label = probabilities['labels'][0]
         prob = prob.tolist() if not (prob is None) else []
-        label = label.tolist() if not (label is None)  else []
+        label = label.tolist() if not (label is None) else []
         result = {'label': label,
                   'probs': prob}
         return result
 
 api.add_resource(Predict, '/cloudml/model/<regex("[\w\.]*"):model>/\
 <regex("[\w\.]*"):import_handler>/predict')
+
 
 def populate_parser(model):
     parser = reqparse.RequestParser()

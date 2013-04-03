@@ -1,3 +1,4 @@
+from copy import copy
 from api import celery, db
 
 from api.models import Model, Data, Test
@@ -54,8 +55,9 @@ def run_test(test, model):
         test.error = ""
         db.session.merge(test)
         db.session.commit()
-
-        metrics, raw_data = model.run_test(test.parameters)
+        parameters = copy(test.parameters)
+        group_by = parameters.pop('group_by')
+        metrics, raw_data = model.run_test(parameters)
         test.accuracy = metrics.accuracy
 
         metrics_dict = metrics.get_metrics_dict()
@@ -86,7 +88,8 @@ def run_test(test, model):
         db.session.commit()
         # store test data in db
         Data.loads_from_raw_data(model, test, raw_data,
-                                 metrics._labels, metrics._preds)
+                                 metrics._labels, metrics._preds,
+                                 group_by)
     except Exception, exc:
         test.status = Test.STATUS_ERROR
         test.error = str(exc)
