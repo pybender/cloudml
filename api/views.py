@@ -5,14 +5,12 @@ from werkzeug.datastructures import FileStorage
 from sqlalchemy import and_
 from sqlalchemy.sql.expression import asc, desc
 from sqlalchemy.orm import undefer
-from sqlalchemy import orm
 from sqlalchemy.orm.exc import NoResultFound
 
 from api.decorators import render
 from api import db, api
 from api.utils import crossdomain, ERR_NO_SUCH_MODEL, odesk_error_response
 from api.models import Model, Test, Data, ImportHandler
-from api.exceptions import MethodException
 from api.tasks import train_model, run_test
 from api.resources import BaseResource, qs2list
 
@@ -41,8 +39,8 @@ class Models(BaseResource):
     Models API methods
     """
     MODEL = Model
-    GET_ACTIONS = ('tests', )
-    methods = ['GET', 'OPTIONS', 'PUT', 'POST']
+    GET_ACTIONS = ('tests', 'weights')
+    methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
 
     def _get_list_query(self, params, opts, **kwargs):
         comparable = params.get('comparable', False)
@@ -70,6 +68,23 @@ class Models(BaseResource):
         fields = fields.split(',') if fields else Test.__public__
         tests = db.session.query(Test).join(Model).filter(Model.name == model).all()
         return {'tests': qs2list(tests, fields)}
+
+    @render()
+    def _get_weights_action(self, per_page=50, **kwargs):
+        """
+        Gets list with Model's weighted parameters with pagination.
+        """
+        paging_params = (('ppage', int), ('npage', int),)
+        params = self._parse_parameters(self.GET_PARAMS + paging_params)
+        fields = self._get_fields_to_show(params)
+        wfields = ['positive_weights', 'negative_weights']
+        opts = self._get_undefer_options(fields + wfields)
+        model = self._get_details_query(params, opts, **kwargs).one()
+        ppage = params.get('ppage') or 1
+        npage = params.get('npage') or 1
+        return {self.OBJECT_NAME: qs2list(model, fields),
+                'positive': model.positive_weights[(ppage - 1) * per_page:ppage * per_page],
+                'negative': model.negative_weights[(npage - 1) * per_page:npage * per_page]}
 
     @render(code=201)
     def post(self, model):

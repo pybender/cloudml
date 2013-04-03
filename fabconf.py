@@ -64,7 +64,7 @@ class BaseConf(DefaultConf):
 class DevConf(BaseConf):
     """Settings specific to dev environment."""
 
-    address = 'cloudml@172.27.68.180'
+    address = 'cloudml@172.27.68.147'
 
     sudo_user = 'nmelnik'
     home_path = '/webapps/cloudml'
@@ -72,7 +72,7 @@ class DevConf(BaseConf):
     # Code from this branch will be deployed.
     branch = 'master'
 
-    server_name = '172.27.68.180'
+    server_name = '172.27.68.147'
     # For Apache ServerAdmin directive
     server_admin = 'ifoukarakis@odesk.com'
     # Apache will serve WSGI on this port. (Nginx is front-end.)
@@ -147,6 +147,7 @@ class ProductionConf(BaseConf):
     address = 'cloudml@172.27.77.141'
 
     sudo_user = 'nmelnik'
+    #django_dir = ''
 
     # Code from this branch will be deployed.
     branch = 'master'

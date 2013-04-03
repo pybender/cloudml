@@ -27,6 +27,12 @@ def staging(**kwargs):
 def prod(**kwargs):
     fabd.conf.run('production')
 
+
+@task
+def dev(**kwargs):
+    fabd.conf.run('dev')
+
+
 @task
 def install():
     users.create.run()
@@ -42,6 +48,8 @@ def install():
         pip.install.run(app=app)
 
     pip.install.run(app='virtualenv', upgrade=True)
+    system.aptitude_install.run(packages='liblapack-dev gfortran libpq-dev')
+
 
 @task
 def push_key():
@@ -52,7 +60,7 @@ def setup():
     fabd.mkdirs.run()
 
     apache.wsgi_push.run()
-    apache.push_config.run()
+    apache.push_config.run(update_ports=False)
     apache.graceful.run()  
     supervisor.push_init_config.run()
     supervisor.push_configs.run()
@@ -86,6 +94,8 @@ def deploy():
     push_flask_config.run()
 
     virtualenv.create.run()
+    # with shell_env(LAPACK='/usr/lib/liblapack.so',
+    #      ATLAS='/usr/lib/libatlas.so', BLAS='/usr/lib/libblas.so'):
     virtualenv.pip_install_req.run()
     virtualenv.make_relocatable.run()
 

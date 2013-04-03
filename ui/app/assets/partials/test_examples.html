@@ -2,7 +2,7 @@
   <div ng-init="init({objectLoader: loadDatas()})">
     <h2>{{ test_name|capfirst }} Examples List</h2>
 
-    <pagination boundary-links="true" num-pages="pages" current-page="page"></pagination>
+    <pagination boundary-links="true" max-size="8" num-pages="pages" current-page="page"></pagination>
 
     <div ng-show="total == 0">
           <p>No examples to display.</p>
@@ -29,6 +29,6 @@
           </tr>
         </tbody>
     </table>
-    <pagination boundary-links="true" num-pages="pages" current-page="page"></pagination>
+    <pagination boundary-links="true" num-pages="pages" max-size="8" current-page="page"></pagination>
   </div>
 </div>
