@@ -93,6 +93,7 @@ angular.module('app.datas.model', ['app.config'])
         .then ((resp) =>
           dfd.resolve {
             field_name: resp.data['field_name']
+            mavp: resp.data['mavp']
             objects: resp.data['datas'].items
           }
         ), (-> dfd.reject.apply @, arguments)

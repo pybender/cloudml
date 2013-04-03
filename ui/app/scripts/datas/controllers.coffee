@@ -36,6 +36,7 @@ angular.module('app.datas.controllers', ['app.config', ])
     test_name: $routeParams.test_name
   ).then ((opts) ->
     $scope.field_name = opts.field_name
+    $scope.mavp = opts.mavp
     $scope.objects = opts.objects
   ), ((opts) ->
     $scope.err = "Error while loading: server responded with " +

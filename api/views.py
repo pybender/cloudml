@@ -264,6 +264,8 @@ class Datas(BaseResource):
         """
         Groups data by `group_by_field` field.
         """
+        from ml_metrics import apk
+        import numpy as np
         test = Test.query.join(Model)\
             .filter(Model.name == model,
                     Test.name == test_name).one()
@@ -272,9 +274,19 @@ class Datas(BaseResource):
             .join(Test).join(Model)\
             .filter(and_(Model.name == model, Test.name == test_name))\
             .group_by(Data.group_by_field).order_by('total DESC').all()[:100]
-        res = [{'group_by_field': d[0], 'count': d[1]} for d in datas]
+
+        res = []
+        avps = []
+        for d in datas:
+            data_set = Data.query.filter(Data.group_by_field == d[0]).all()
+            labels = [i.label for i in data_set]
+            pred_labels = [i.pred_label for i in data_set]
+            avp = apk(labels, pred_labels)
+            avps.append(avp)
+            res.append({'group_by_field': d[0], 'count': d[1], 'avp': avp} )
+        mavp =np.mean(avps)
         field_name = test.parameters.get('group_by')
-        return {self.list_key: {'items': res}, 'field_name': field_name}
+        return {self.list_key: {'items': res}, 'field_name': field_name, 'mavp': mavp}
 
 
 api.add_resource(Datas, '/cloudml/model/<regex("[\w\.]+"):model>/test/\

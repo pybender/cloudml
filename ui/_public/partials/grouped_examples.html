@@ -1,17 +1,20 @@
 <div>
   <div>
     <h2>{{ test_name|capfirst }} Examples List</h2>
+    Mean avarage precision: {{ mavp.toFixed(4) }}
     <table class="table table-striped">
         <thead>
           <tr>
             <th>Group By Field: {{ field_name }}</th>
             <th>Count of examples</th>
+            <th>Average precision</th>
           </tr>
           </thead>
           <tbody>
           <tr ng-repeat="data in objects">
             <td><a href="#/models/{{ model_name }}/tests/{{ test_name }}/examples/?group_by_field={{ data.group_by_field }}">{{ data.group_by_field }}</a></td>
-            <td><span>{{ data.count }}</span></td>
+            <td><span>{{ data.count }} </span></td>
+            <td><span>{{ data.avp.toFixed(4) }} </span></td>
           </tr>
         </tbody>
     </table>
