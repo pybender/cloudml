@@ -18,8 +18,8 @@ angular.module('app.models.controllers', ['app.config', ])
     $scope.objects = opts.objects
   ), ((opts) ->
     $scope.err = "Error while saving: server responded with " +
-        "#{resp.status} " +
-        "(#{resp.data.response.error.message or "no message"}). " +
+        "#{opts.status} " +
+        "(#{opts.data.response.error.message or "no message"}). " +
         "Make sure you filled the form correctly. " +
         "Please contact support if the error will not go away."
   )

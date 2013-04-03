@@ -40,7 +40,7 @@ class BaseConf(DefaultConf):
     supervisord_config_file = ['%(supervisor_config_path)s', 'supervisord.conf']
 
     supervisor__log_path = ['%(var_path)s', 'log', 'supervisor']
-    supervisor_programs = ['celeryd', ]
+    supervisor_programs = ['celeryd', 'celerycam']
     
     rabbitmq_host = 'localhost'
     rabbitmq_port = 5672

@@ -44,6 +44,9 @@ class Model(db.Model, Serializer):
     positive_weights_tree = deferred(db.Column(JSONEncodedDict))
     negative_weights_tree = deferred(db.Column(JSONEncodedDict))
 
+    # True for models with completed tests
+    comparable = db.Column(db.Boolean, nullable=False, default=False)
+
     tests = db.relationship('Test', backref='model',
                             lazy='dynamic')
 

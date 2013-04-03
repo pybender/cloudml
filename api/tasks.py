@@ -78,6 +78,10 @@ def run_test(test, model):
         test.classes_set = list(metrics.classes_set)
         test.status = Test.STATUS_COMPLETED
 
+        if not model.comparable:
+            model.comparable = True
+            db.session.merge(model)
+
         db.session.merge(test)
         db.session.commit()
         # store test data in db

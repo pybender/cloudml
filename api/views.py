@@ -45,14 +45,11 @@ class Models(BaseResource):
     methods = ['GET', 'OPTIONS', 'PUT', 'POST']
 
     def _get_list_query(self, params, opts, **kwargs):
-        # comparable = params.get('comparable', False)
-        # if comparable:
-        #     # Looking for models with completed tests if comparable
-        #     return Model.options(*opts)\
-        #         .filter(Model.status == Model.STATUS_TRAINED,
-        #                 Model.tests)
-        # else:
-        return super(Models, self)._get_list_query(params, opts)
+        comparable = params.get('comparable', False)
+        if comparable:
+            return Model.options(*opts).filter(Model.comparable)
+        else:
+            return super(Models, self)._get_list_query(params, opts)
 
     def _is_list_method(self, **kwargs):
         model = kwargs.get('model')
@@ -80,13 +77,10 @@ class Models(BaseResource):
         Adds new Trained Model
         """
         param = model_parser.parse_args()
-        try:
-            if not param['features']:
-                return self._upload(model, param)
-            else:
-                return self._add(model, param)
-        except Exception, exc:
-            raise MethodException(exc.message)
+        if not param['features']:
+            return self._upload(model, param)
+        else:
+            return self._add(model, param)
 
     def _add(self, model, param):
         model = Model(model)
