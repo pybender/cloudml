@@ -7,25 +7,12 @@ from fabdeploy import monkey
 monkey.patch_all()
 import os
 import posixpath
-from fabric.api import task, env, settings, local, run, sudo, prefix
+from fabric.api import task, env, settings, local, run, sudo
 from fabric.contrib import files
 from fabdeploy.api import *
 
 
 setup_fabdeploy()
-
-
-from contextlib import contextmanager
-
-@contextmanager
-def shell_env(**env_vars):
-    orig_shell = env['shell']
-    env_vars_str = ' '.join('{0}={1}'.format(key, value)
-                           for key, value in env_vars.items())
-    env['shell']='{0} {1}'.format(env_vars_str, orig_shell)
-    yield
-    env['shell']= orig_shell
-
 
 
 @task
@@ -61,7 +48,7 @@ def install():
         pip.install.run(app=app)
 
     pip.install.run(app='virtualenv', upgrade=True)
-    aptitude_install.run(packages='liblapack-dev gfortran')
+    system.aptitude_install.run(packages='liblapack-dev gfortran libpq-dev')
 
 
 @task
@@ -107,9 +94,9 @@ def deploy():
     push_flask_config.run()
 
     virtualenv.create.run()
-    with shell_env(LAPACK='/usr/lib/liblapack.so',
-         ATLAS='/usr/lib/libatlas.so', BLAS='/usr/lib/libblas.so'):
-        virtualenv.pip_install_req.run()
+    # with shell_env(LAPACK='/usr/lib/liblapack.so',
+    #      ATLAS='/usr/lib/libatlas.so', BLAS='/usr/lib/libblas.so'):
+    virtualenv.pip_install_req.run()
     virtualenv.make_relocatable.run()
 
     # django.syncdb.run()
