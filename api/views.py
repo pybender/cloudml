@@ -268,13 +268,12 @@ class Datas(BaseResource):
             .filter(Model.name == model,
                     Test.name == test_name).one()
         datas = db.session.query(Data.group_by_field,
-                                 func.count(Data.group_by_field))\
+                                 func.count(Data.group_by_field).label('total'))\
             .join(Test).join(Model)\
             .filter(and_(Model.name == model, Test.name == test_name))\
-            .group_by(Data.group_by_field).all()
+            .group_by(Data.group_by_field).order_by('total DESC').all()[:100]
         res = [{'group_by_field': d[0], 'count': d[1]} for d in datas]
         field_name = test.parameters.get('group_by')
-        print test.parameters
         return {self.list_key: {'items': res}, 'field_name': field_name}
 
 

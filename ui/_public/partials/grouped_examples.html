@@ -9,7 +9,7 @@
           </tr>
           </thead>
           <tbody>
-          <tr ng-repeat="data in objects | filter:search | orderBy:'id'" ng-class="{success : data.data_input['hire_outcome']=='1', error : !(data.data_input['hire_outcome']=='1')}">
+          <tr ng-repeat="data in objects">
             <td><a href="#/models/{{ model_name }}/tests/{{ test_name }}/examples/?group_by_field={{ data.group_by_field }}">{{ data.group_by_field }}</a></td>
             <td><span>{{ data.count }}</span></td>
           </tr>
