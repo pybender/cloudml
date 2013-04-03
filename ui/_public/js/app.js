@@ -1212,6 +1212,25 @@ angular.module('app.models.controllers', ['app.config']).controller('ModelListCt
       }));
     };
   }
+]).controller('DeleteModelCtrl', [
+  '$scope', '$http', 'dialog', 'settings', '$location', function($scope, $http, dialog, settings, location) {
+    $scope.model = dialog.model;
+    $scope.close = function() {
+      return dialog.close();
+    };
+    return $scope["delete"] = function(result) {
+      return $scope.model.$delete().then((function() {
+        $scope.close();
+        return location.path("#/models");
+      }), (function(opts) {
+        if (opts.data) {
+          return $scope.err = "Error while deleting model:" + "server responded with " + ("" + opts.status + " ") + ("(" + (opts.data.response.error.message || "no message") + "). ");
+        } else {
+          return $scope.err = "Error while deleting model";
+        }
+      }));
+    };
+  }
 ]).controller('ModelActionsCtrl', [
   '$scope', '$dialog', function($scope, $dialog) {
     var _this = this;
@@ -1232,13 +1251,21 @@ angular.module('app.models.controllers', ['app.config']).controller('ModelListCt
       d.model = model;
       return d.open('partials/modal.html', 'TestDialogController');
     };
-    return $scope.train_model = function(model) {
+    $scope.train_model = function(model) {
       var d;
       d = $dialog.dialog({
         modalFade: false
       });
       d.model = model;
       return d.open('partials/model_train_popup.html', 'TrainModelCtrl');
+    };
+    return $scope.delete_model = function(model) {
+      var d;
+      d = $dialog.dialog({
+        modalFade: false
+      });
+      d.model = model;
+      return d.open('partials/models/delete_model_popup.html', 'DeleteModelCtrl');
     };
   }
 ]);
@@ -1259,6 +1286,8 @@ angular.module('app.models.model', ['app.config']).factory('Model', [
 
       function Model(opts) {
         this.$train = __bind(this.$train, this);
+
+        this.$delete = __bind(this.$delete, this);
 
         this.$save = __bind(this.$save, this);
 
@@ -1382,6 +1411,21 @@ angular.module('app.models.model', ['app.config']).factory('Model', [
           transformRequest: angular.identity
         }).then(function(resp) {
           return _this.loadFromJSON(resp.data['model']);
+        });
+      };
+
+      Model.prototype.$delete = function(opts) {
+        if (opts == null) {
+          opts = {};
+        }
+        return $http({
+          method: "DELETE",
+          headers: {
+            'Content-Type': void 0,
+            'X-Requested-With': null
+          },
+          url: "" + settings.apiUrl + "model/" + this.name,
+          transformRequest: angular.identity
         });
       };
 

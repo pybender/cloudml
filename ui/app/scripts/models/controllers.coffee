@@ -275,6 +275,33 @@ angular.module('app.models.controllers', ['app.config', ])
       )
 ])
 
+.controller('DeleteModelCtrl', [
+  '$scope'
+  '$http'
+  'dialog'
+  'settings'
+  '$location'
+
+  ($scope, $http, dialog, settings, location) ->
+    $scope.model = dialog.model
+
+    $scope.close = ->
+      dialog.close()
+
+    $scope.delete = (result) ->
+      $scope.model.$delete().then (() ->
+        $scope.close()
+        location.path "#/models"
+      ), ((opts) ->
+        if opts.data
+          $scope.err = "Error while deleting model:" +
+            "server responded with " + "#{opts.status} " +
+            "(#{opts.data.response.error.message or "no message"}). "
+        else
+          $scope.err = "Error while deleting model"
+      )
+])
+
 .controller('ModelActionsCtrl', [
   '$scope'
   '$dialog'
@@ -299,5 +326,12 @@ angular.module('app.models.controllers', ['app.config', ])
       )
       d.model = model
       d.open('partials/model_train_popup.html', 'TrainModelCtrl')
+
+    $scope.delete_model = (model)->
+      d = $dialog.dialog(
+        modalFade: false
+      )
+      d.model = model
+      d.open('partials/models/delete_model_popup.html', 'DeleteModelCtrl')
   
 ])

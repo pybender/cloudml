@@ -40,7 +40,7 @@ class Models(BaseResource):
     """
     MODEL = Model
     GET_ACTIONS = ('tests', 'weights')
-    methods = ['GET', 'OPTIONS', 'PUT', 'POST']
+    methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
 
     def _get_list_query(self, params, opts, **kwargs):
         comparable = params.get('comparable', False)

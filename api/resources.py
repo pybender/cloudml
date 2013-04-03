@@ -14,7 +14,7 @@ class BaseResource(restful.Resource):
     NEED_PAGING = False
     GET_PARAMS = (('show', str), )
     PAGING_PARAMS = (('page', int), )
-    decorators = [crossdomain(origin='*')]
+    decorators = [crossdomain(origin='*', headers="accept, origin, content-type")]
 
     def get(self, action=None, **kwargs):
         if action:
@@ -52,7 +52,8 @@ class BaseResource(restful.Resource):
         if model is None:
             return odesk_error_response(404, ERR_NO_SUCH_MODEL,
                                         "Model %s doesn't exist" % model)
-        model.delete()
+        db.session.delete(model)
+        db.session.commit()
         return '', 204
 
     @render()
