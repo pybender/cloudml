@@ -79,7 +79,7 @@ angular.module('app.testresults.controllers', ['app.config', ])
       when "curves" then $scope.go 'status,metrics.roc_curve,
 metrics.precision_recall_curve,metrics.roc_auc'
       when "matrix" then $scope.go 'status,metrics.confusion_matrix'
-      else $scope.go 'name,status,classes_set,created_on,accuracy,data_count,
+      else $scope.go 'name,status,classes_set,created_on,accuracy,
 parameters,error'
 
   $scope.go = (fields, callback) ->

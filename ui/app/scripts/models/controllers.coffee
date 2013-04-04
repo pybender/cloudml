@@ -221,7 +221,7 @@ angular.module('app.models.controllers', ['app.config', ])
   $scope.goTests = () ->
     Test.$loadTests(
       $scope.model.name,
-      show: 'name,created_on,status,parameters,accuracy,data_count'
+      show: 'name,created_on,status,parameters,accuracy'
     ).then ((opts) ->
       $scope.tests = opts.objects
     ), ((opts) ->

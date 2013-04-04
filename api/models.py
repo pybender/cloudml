@@ -110,9 +110,9 @@ class ImportHandler(db.Model, Serializer):
 
 class Test(db.Model, Serializer):
     __public__ = ('id', 'name', 'created_on', 'accuracy',
-                  'parameters', 'data_count', 'status', 'error')
+                  'parameters', 'status', 'error')
     __all_public__ = ('id', 'name', 'created_on', 'accuracy', 'parameters',
-                      'classes_set', 'metrics', 'data_count',
+                      'classes_set', 'metrics',
                       'status', 'error', 'model_name')
     STATUS_QUEUED = 'Queued'
     STATUS_IN_PROGRESS = 'In Progress'
