@@ -130,6 +130,7 @@ class Models(BaseResource):
         model.importhandler = param['importhandler']
         plan = ExtractionPlan(model.importhandler, is_file=False)
         model.import_params = plan.input_params
+        model.import_params.append('group_by')
         db.session.add(model)
         db.session.commit()
         return {'model': model}
@@ -283,8 +284,9 @@ class Datas(BaseResource):
             pred_labels = [i.pred_label for i in data_set]
             avp = apk(labels, pred_labels)
             avps.append(avp)
-            res.append({'group_by_field': d[0], 'count': d[1], 'avp': avp} )
-        mavp =np.mean(avps)
+            res.append({'group_by_field': d[0],
+                        'count': d[1], 'avp': avp})
+        mavp = np.mean(avps)
         field_name = test.parameters.get('group_by')
         return {self.list_key: {'items': res}, 'field_name': field_name, 'mavp': mavp}
 
@@ -294,8 +296,7 @@ api.add_resource(Datas, '/cloudml/model/<regex("[\w\.]+"):model>/test/\
                  '/cloudml/model/<regex("[\w\.]+")\
 :model>/test/<regex("[\w\.\-]+"):test_name>/data/<regex("[\w\.\-]+"):data_id>',
                  '/cloudml/model/<regex("[\w\.]+"):model>/test/\
-<regex("[\w\.\-]+"):test_name>/action/<regex("[\w\.]+"):action>/data'
-)
+<regex("[\w\.\-]+"):test_name>/action/<regex("[\w\.]+"):action>/data')
 
 
 class CompareReport(restful.Resource):
