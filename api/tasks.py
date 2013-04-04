@@ -1,3 +1,4 @@
+from copy import copy
 from api import celery, db
 
 from api.models import Model, Data, Test
@@ -27,7 +28,7 @@ def train_model(model, parameters):
         trainer = Trainer(feature_model)
         train_handler = model.get_import_handler(parameters)
         trainer.train(train_handler)
-
+        trainer.clear_temp_data()
         model.set_trainer(trainer)
         model.status = Model.STATUS_TRAINED
         db.session.commit()
@@ -54,9 +55,9 @@ def run_test(test, model):
         test.error = ""
         db.session.merge(test)
         db.session.commit()
-
-        metrics, raw_data = model.run_test(test.parameters)
-
+        parameters = copy(test.parameters)
+        group_by = parameters.pop('group_by')
+        metrics, raw_data = model.run_test(parameters)
         test.accuracy = metrics.accuracy
 
         metrics_dict = metrics.get_metrics_dict()
@@ -68,7 +69,7 @@ def run_test(test, model):
         for i, val in enumerate(metrics.classes_set):
             confusion_matrix_ex.append((val, confusion_matrix[i]))
         metrics_dict['confusion_matrix'] = confusion_matrix_ex
-        n = len(raw_data) / 100
+        n = len(raw_data) / 100 or 1
         metrics_dict['roc_curve'][1] = metrics_dict['roc_curve'][1][0::n]
         metrics_dict['roc_curve'][0] = metrics_dict['roc_curve'][0][0::n]
         metrics_dict['precision_recall_curve'][1] = \
@@ -79,14 +80,20 @@ def run_test(test, model):
         test.classes_set = list(metrics.classes_set)
         test.status = Test.STATUS_COMPLETED
 
+        if not model.comparable:
+            model.comparable = True
+            db.session.merge(model)
+
         db.session.merge(test)
         db.session.commit()
         # store test data in db
         Data.loads_from_raw_data(model, test, raw_data,
-                                 metrics._labels, metrics._preds)
+                                 metrics._labels, metrics._preds,
+                                 group_by)
     except Exception, exc:
         test.status = Test.STATUS_ERROR
         test.error = str(exc)
+        db.session.rollback()
         db.session.merge(test)
         db.session.commit()
         return 'Failed'

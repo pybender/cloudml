@@ -3,21 +3,23 @@ from flask import request
 from flask.ext.restful import reqparse
 from werkzeug.datastructures import FileStorage
 from sqlalchemy import and_
+from sqlalchemy import func
 from sqlalchemy.sql.expression import asc, desc
 from sqlalchemy.orm import undefer
-from sqlalchemy import orm
+from sqlalchemy.orm.exc import NoResultFound
 
 from api.decorators import render
 from api import db, api
 from api.utils import crossdomain, ERR_NO_SUCH_MODEL, odesk_error_response
-from api.models import Model, Test, Data
-from api.exceptions import MethodException
+from api.models import Model, Test, Data, ImportHandler
 from api.tasks import train_model, run_test
+from api.resources import BaseResource, qs2list
 
 from core.trainer.store import load_trainer
 from core.trainer.trainer import Trainer
 from core.trainer.config import FeatureModel
-from core.importhandler.importhandler import ExtractionPlan
+from core.importhandler.importhandler import ExtractionPlan,\
+    RequestImportHandler
 
 get_parser = reqparse.RequestParser()
 get_parser.add_argument('show', type=str)
@@ -33,131 +35,20 @@ model_parser.add_argument('features', type=str)
 model_parser.add_argument('trainer', type=FileStorage, location='files')
 
 
-class BaseResource(restful.Resource):
-    MODEL = None
-    GET_ACTIONS = ()
-    OBJECT_NAME = 'model'
-    NEED_PAGING = False
-    GET_PARAMS = (('show', str), )
-    PAGING_PARAMS = (('page', int), )
-
-    def get(self, action=None, **kwargs):
-        if action:
-            if action in self.GET_ACTIONS:
-                return getattr(self, "_get_%s_action" % action)(**kwargs)
-            else:
-                return odesk_error_response(404, ERR_NO_SUCH_MODEL,
-                                            "Invalid action: %s" % action)
-        if self._is_list_method(**kwargs):
-            return self._list(**kwargs)
-        else:
-            return self._details(**kwargs)
-
-    def delete(self, model):
-        """
-        Deletes unused model
-        """
-        model = self.MODEL.query.filter(self.MODEL.name == model).first()
-        if model is None:
-            return odesk_error_response(404, ERR_NO_SUCH_MODEL,
-                                        "Model %s doesn't exist" % model)
-        model.delete()
-        return '', 204
-
-    @render()
-    def _list(self, extra_params=(), **kwargs):
-        """
-        Gets list of models
-
-        GET parameters:
-            * show - list of fields to return
-        """
-        parser_params = extra_params + self.GET_PARAMS
-        if self.NEED_PAGING:
-            parser_params += self.PAGING_PARAMS
-
-        params = self._parse_parameters(parser_params)
-        fields = self._get_fields_to_show(params)
-        opts = self._get_undefer_options(fields)
-        models = self._get_list_query(params, opts, **kwargs)
-        if self.NEED_PAGING:
-            data_paginated = models.paginate(params['page'] or 1, 20, False)
-            data = {'items': qs2list(data_paginated.items, fields),
-                    'pages': data_paginated.pages,
-                    'total': data_paginated.total,
-                    'page': data_paginated.page,
-                    'has_next': data_paginated.has_next,
-                    'has_prev': data_paginated.has_prev,
-                    'per_page': data_paginated.per_page}
-            return {self.list_key: data}
-        else:
-            return {self.list_key: qs2list(models.all(), fields)}
-
-    @property
-    def list_key(self):
-        return '%ss' % self.OBJECT_NAME
-
-    def _is_list_method(self, **kwargs):
-        model = kwargs.get('model')
-        return not model
-
-    def _get_list_query(self, params, opts, **kwargs):
-        return self.MODEL.query.options(*opts)
-
-    def _get_details_query(self, params, opts, **kwargs):
-        raise NotImplemented('Should be implemented in the parent class')
-
-    @render()
-    def _details(self, extra_params=(), **kwargs):
-        """
-        GET model by name
-        """
-        params = self._parse_parameters(extra_params + self.GET_PARAMS)
-        fields = self._get_fields_to_show(params)
-        opts = self._get_undefer_options(fields)
-        model = self._get_details_query(params, opts, **kwargs)
-        return {self.OBJECT_NAME: qs2list(model.one(), fields)}
-
-    def _get_fields_to_show(self, params):
-        fields = params.get('show', None)
-        return fields.split(',') if fields else Model.__public__
-
-    def _parse_parameters(self, extra_params=()):
-        parser = reqparse.RequestParser()
-        for name, param_type in extra_params:
-            parser.add_argument(name, type=param_type)
-        return parser.parse_args()
-
-    def _get_undefer_options(self, fields):
-        def is_model_field(prop):
-            return prop in self.MODEL.__table__._columns.keys()
-
-        opts = []
-        for field in fields:
-            if is_model_field(field):
-                opts.append(undefer(field))
-            else:
-                subfileds = field.split('.')
-                if subfileds:
-                    subfield = subfileds[0]
-                    if is_model_field(subfield):
-                        opts.append(undefer(subfield))
-        return opts
-
-
 class Models(BaseResource):
     """
     Models API methods
     """
     MODEL = Model
-    GET_ACTIONS = ('tests', )
-    decorators = [crossdomain(origin='*')]
-    methods = ['GET', 'OPTIONS', 'PUT', 'POST']
+    GET_ACTIONS = ('tests', 'weights')
+    methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
 
     def _get_list_query(self, params, opts, **kwargs):
         comparable = params.get('comparable', False)
-        # TODO: Look for models with completed tests if comparable
-        return super(Models, self)._get_list_query(params, opts)
+        if comparable:
+            return Model.options(*opts).filter(Model.comparable)
+        else:
+            return super(Models, self)._get_list_query(params, opts)
 
     def _is_list_method(self, **kwargs):
         model = kwargs.get('model')
@@ -176,8 +67,28 @@ class Models(BaseResource):
         param = get_parser.parse_args()
         fields = param.get('show', None)
         fields = fields.split(',') if fields else Test.__public__
-        tests = db.session.query(Test).join(Model).filter(Model.name == model).all()
+        tests = db.session.query(Test).join(Model)\
+            .filter(Model.name == model).all()
         return {'tests': qs2list(tests, fields)}
+
+    @render()
+    def _get_weights_action(self, per_page=50, **kwargs):
+        """
+        Gets list with Model's weighted parameters with pagination.
+        """
+        paging_params = (('ppage', int), ('npage', int),)
+        params = self._parse_parameters(self.GET_PARAMS + paging_params)
+        fields = self._get_fields_to_show(params)
+        wfields = ['positive_weights', 'negative_weights']
+        opts = self._get_undefer_options(fields + wfields)
+        model = self._get_details_query(params, opts, **kwargs).one()
+        ppage = params.get('ppage') or 1
+        npage = params.get('npage') or 1
+        return {self.OBJECT_NAME: qs2list(model, fields),
+                'positive': model.positive_weights
+                [(ppage - 1) * per_page:ppage * per_page],
+                'negative': model.negative_weights
+                [(npage - 1) * per_page:npage * per_page]}
 
     @render(code=201)
     def post(self, model):
@@ -185,13 +96,10 @@ class Models(BaseResource):
         Adds new Trained Model
         """
         param = model_parser.parse_args()
-        try:
-            if not param['features']:
-                return self._upload(model, param)
-            else:
-                return self._add(model, param)
-        except Exception, exc:
-            raise MethodException(exc.message)
+        if not param['features']:
+            return self._upload(model, param)
+        else:
+            return self._add(model, param)
 
     def _add(self, model, param):
         model = Model(model)
@@ -203,6 +111,7 @@ class Models(BaseResource):
         trainer = Trainer(feature_model)
         plan = ExtractionPlan(model.train_importhandler, is_file=False)
         model.import_params = plan.input_params
+        model.import_params.append('group_by')
         model.trainer = trainer
 
         db.session.add(model)
@@ -252,8 +161,34 @@ class Models(BaseResource):
         return {'model': model}
 
 
-api.add_resource(Models, '/cloudml/b/v1/model/<regex("[\w\.]*"):model>',
-                 '/cloudml/b/v1/model/<regex("[\w\.]+"):model>/<regex("[\w\.]+"):action>')
+api.add_resource(Models, '/cloudml/model/<regex("[\w\.]*"):model>',
+                 '/cloudml/model/<regex("[\w\.]+"):model>/<regex("[\w\.]+"):action>')
+
+
+class ImportHandlerResource(BaseResource):
+    """
+    Import handler API methods
+    """
+    MODEL = ImportHandler
+    OBJECT_NAME = 'import_handler'
+    decorators = [crossdomain(origin='*')]
+    methods = ['GET', 'OPTIONS', 'PUT', 'POST']
+
+    @classmethod
+    def get_model_parser(cls):
+        if not hasattr(cls, "_model_parser"):
+            parser = reqparse.RequestParser()
+            parser.add_argument('data', type=str)
+            parser.add_argument('type', type=str)
+            cls._model_parser = parser
+        return cls._model_parser
+
+    def _fill_post_data(self, obj, params):
+        obj.type = params.get('type')
+        obj.data = params.get('data')
+
+api.add_resource(ImportHandlerResource,
+                 '/cloudml/import/handler/<regex("[\w\.]*"):name>')
 
 
 class Tests(BaseResource):
@@ -267,6 +202,10 @@ class Tests(BaseResource):
         return Test.query.options(*opts).join(Model)\
             .filter(Model.name == model,
                     Test.name == test_name)
+
+    def _is_list_method(self, **kwargs):
+        test_name = kwargs.get('test_name')
+        return not test_name
 
     @render(code=201)
     def post(self, model, test_name):
@@ -290,13 +229,15 @@ class Tests(BaseResource):
 
         return {'test': test}
 
-api.add_resource(Tests, '/cloudml/b/v1/model/<regex("[\w\.]+"):model>/test/<regex("[\w\.\-]+"):test_name>')
+api.add_resource(Tests, '/cloudml/model/<regex("[\w\.]+"):model>/test/\
+<regex("[\w\.\-]+"):test_name>')
 
 
 class Datas(BaseResource):
     MODEL = Data
     OBJECT_NAME = 'data'
     NEED_PAGING = True
+    GET_ACTIONS = ('groupped', )
     decorators = [crossdomain(origin='*')]
 
     def _is_list_method(self, **kwargs):
@@ -307,7 +248,7 @@ class Datas(BaseResource):
         model = kwargs.get('model')
         test_name = kwargs.get('test_name')
         return Data.query.options(*opts).join(Test).join(Model)\
-            .filter(and_(Model.name == model, Test.name == test_name)).group_by(Data.group_by_field)
+            .filter(and_(Model.name == model, Test.name == test_name))
 
     def _get_details_query(self, params, opts, **kwargs):
         model = kwargs.get('model')
@@ -318,9 +259,43 @@ class Datas(BaseResource):
             .filter(and_(Model.name == model, Test.name == test_name,
                          Data.id == data_id))
 
-api.add_resource(Datas, '/cloudml/b/v1/model/<regex("[\w\.]+"):model>/test/<regex("[\w\.\-]+"):test_name>/data')
-api.add_resource(Datas,
-                 '/cloudml/b/v1/model/<regex("[\w\.]+"):model>/test/<regex("[\w\.\-]+"):test_name>/data/<regex("[\w\.\-]+"):data_id>')
+    @render()
+    def _get_groupped_action(self, model, test_name, **kwargs):
+        """
+        Groups data by `group_by_field` field.
+        """
+        from ml_metrics import apk
+        import numpy as np
+        test = Test.query.join(Model)\
+            .filter(Model.name == model,
+                    Test.name == test_name).one()
+        datas = db.session.query(Data.group_by_field,
+                                 func.count(Data.group_by_field).label('total'))\
+            .join(Test).join(Model)\
+            .filter(and_(Model.name == model, Test.name == test_name))\
+            .group_by(Data.group_by_field).order_by('total DESC').all()[:100]
+
+        res = []
+        avps = []
+        for d in datas:
+            data_set = Data.query.filter(Data.group_by_field == d[0]).all()
+            labels = [i.label for i in data_set]
+            pred_labels = [i.pred_label for i in data_set]
+            avp = apk(labels, pred_labels)
+            avps.append(avp)
+            res.append({'group_by_field': d[0], 'count': d[1], 'avp': avp} )
+        mavp =np.mean(avps)
+        field_name = test.parameters.get('group_by')
+        return {self.list_key: {'items': res}, 'field_name': field_name, 'mavp': mavp}
+
+
+api.add_resource(Datas, '/cloudml/model/<regex("[\w\.]+"):model>/test/\
+<regex("[\w\.\-]+"):test_name>/data',
+                 '/cloudml/model/<regex("[\w\.]+")\
+:model>/test/<regex("[\w\.\-]+"):test_name>/data/<regex("[\w\.\-]+"):data_id>',
+                 '/cloudml/model/<regex("[\w\.]+"):model>/test/\
+<regex("[\w\.\-]+"):test_name>/action/<regex("[\w\.]+"):action>/data'
+)
 
 
 class CompareReport(restful.Resource):
@@ -349,72 +324,45 @@ class CompareReport(restful.Resource):
         return {'test1': test1, 'test2': test2,
                 'examples1': examples1, 'examples2': examples2}
 
-api.add_resource(CompareReport, '/cloudml/b/v1/reports/compare')
+api.add_resource(CompareReport, '/cloudml/reports/compare')
 
 
 class Predict(restful.Resource):
     decorators = [crossdomain(origin='*')]
 
     @render(code=201)
-    def post(self, model):
-        from core.importhandler.importhandler import ExtractionPlan, RequestImportHandler
+    def post(self, model, import_handler):
         from itertools import izip
-        model = Model.query.filter(Model.name == model).one()
-        data = request.json
-        plan = ExtractionPlan(model.importhandler, is_file=False)
-        import_handler = RequestImportHandler(plan, data)
-        result = []
-        count = 0
-        probabilities = model.trainer.predict(import_handler, ignore_error=False)
-        for prob, label in izip(probabilities['probs'], probabilities['labels']):
-            prob = prob.tolist() if not (prob is None) else []
-            label = label.tolist() if not (label is None)  else []
-            result.append({'item': count,
-                           'label': label,
-                           'probs': prob})
-            count += 1
+        try:
+            importhandler = ImportHandler.query.filter(
+                ImportHandler.name == import_handler).one()
+        except NoResultFound, exc:
+            exc.message = "Import handler %s doesn\'t exist" % import_handler
+            raise exc
+        try:
+            model = Model.query.filter(Model.name == model).one()
+        except Exception, exc:
+            exc.message = "Model %s doesn\'t exist" % model
+            raise exc
+        data = [request.form, ]
+        plan = ExtractionPlan(importhandler.data, is_file=False)
+        request_import_handler = RequestImportHandler(plan, data)
+        probabilities = model.trainer.predict(request_import_handler,
+                                              ignore_error=False)
+        prob = probabilities['probs'][0]
+        label = probabilities['labels'][0]
+        prob = prob.tolist() if not (prob is None) else []
+        label = label.tolist() if not (label is None) else []
+        result = {'label': label,
+                  'probs': prob}
         return result
 
-api.add_resource(Predict, '/cloudml/b/v1/model/<regex("[\w\.]*"):model>/predict')
+api.add_resource(Predict, '/cloudml/model/<regex("[\w\.]*"):model>/\
+<regex("[\w\.]*"):import_handler>/predict')
+
 
 def populate_parser(model):
     parser = reqparse.RequestParser()
     for param in model.import_params:
         parser.add_argument(param, type=str)
     return parser
-
-
-def qs2list(obj, fields):
-    from collections import Iterable
-
-    def model2dict(model):
-        data = {}
-        for field in fields:
-            if hasattr(model, field):
-                data[field] = getattr(model, field)
-            else:
-                subfields = field.split('.')
-                count = len(subfields)
-                val = model
-                el = data
-                for i, subfield in enumerate(subfields):
-                    if not subfield in el:
-                        el[subfield] = {}
-                    if hasattr(val, subfield):
-                        val = getattr(val, subfield)
-                        if i == count - 1:
-                            el[subfield] = val
-                    if isinstance(val, Iterable) and subfield in val:
-                        val = val[subfield]
-                        if i == count - 1:
-                            el[subfield] = val
-                    el = el[subfield]
-        return data
-
-    if isinstance(obj, Iterable):
-        model_list = []
-        for model in obj:
-            model_list.append(model2dict(model))
-        return model_list
-    else:
-        return model2dict(obj)

@@ -18,8 +18,8 @@ angular.module('app.models.controllers', ['app.config', ])
     $scope.objects = opts.objects
   ), ((opts) ->
     $scope.err = "Error while saving: server responded with " +
-        "#{resp.status} " +
-        "(#{resp.data.response.error.message or "no message"}). " +
+        "#{opts.status} " +
+        "(#{opts.data.response.error.message or "no message"}). " +
         "Make sure you filled the form correctly. " +
         "Please contact support if the error will not go away."
   )
@@ -155,6 +155,10 @@ angular.module('app.models.controllers', ['app.config', ])
 
 ($scope, $http, $location, $routeParams, $dialog, settings, Model, Test) ->
   DEFAULT_ACTION = 'model:details'
+  $scope.ppage = 1
+  $scope.npage = 1
+  $scope.positive = []
+  $scope.negative = []
   $scope.action = ($routeParams.action or DEFAULT_ACTION).split ':'
   $scope.$watch 'action', (action) ->
     actionString = action.join(':')
@@ -164,14 +168,14 @@ angular.module('app.models.controllers', ['app.config', ])
 
     switch action[0]
       when "features" then $scope.go 'features,status'
-      when "weights" then  $scope.go 'positive_weights,negative_weights,status'
-      when "test" then
+      when "weights" then  $scope.goWeights(true, true)
+      when "test" then $scope.goTests()
       when "import_handlers"
         if action[1] == 'train'
           $scope.go 'train_importhandler,status,id'
         else
           $scope.go 'importhandler,status,id'
-      else $scope.goDetails()
+      else $scope.go 'status,created_on,target_variable'
 
   if not $scope.model
     if not $routeParams.name
@@ -180,11 +184,6 @@ angular.module('app.models.controllers', ['app.config', ])
 
   $scope.toggleAction = (action) =>
     $scope.action = action
-
-  $scope.goDetails = =>
-    callback = () ->
-      $scope.latest_test = new Test($scope.model.latest_test)
-    $scope.go 'status,created_on,target_variable', callback
 
   $scope.go = (fields, callback) ->
     $scope.model.$load(
@@ -197,12 +196,39 @@ angular.module('app.models.controllers', ['app.config', ])
         $scope.err = data
       )
 
-  $scope.loadTests = () ->
-    (pagination_opts) ->
-      Test.$loadTests(
-        $scope.model.name,
-        show: 'name,created_on,status,parameters,accuracy,data_count'
+  $scope.goWeights = (morePositive, moreNegative) ->
+    $scope.model.$loadWeights(
+      show: 'status'
+      ppage: $scope.ppage
+      npage: $scope.npage
+      ).then ((resp) ->
+        if morePositive
+          $scope.positive.push.apply $scope.positive, resp.data.positive
+        if moreNegative
+          $scope.negative.push.apply $scope.negative, resp.data.negative
+      ), (->
+        $scope.err = data
       )
+
+  $scope.morePositiveWeights  = =>
+    $scope.ppage += 1
+    $scope.goWeights(true, false)
+
+  $scope.moreNegativeWeights  = =>
+    $scope.npage += 1
+    $scope.goWeights(false, true)
+
+  $scope.goTests = () ->
+    Test.$loadTests(
+      $scope.model.name,
+      show: 'name,created_on,status,parameters,accuracy,data_count'
+    ).then ((opts) ->
+      $scope.tests = opts.objects
+    ), ((opts) ->
+      $scope.err = "Error while loading tests: server responded with " +
+        "#{opts.status} " +
+        "(#{opts.data.response.error.message or "no message"}). "
+    )
 
   $scope.saveTrainHandler = =>
     $scope.model.$save(only: ['train_importhandler']).then (() ->
@@ -232,6 +258,7 @@ angular.module('app.models.controllers', ['app.config', ])
       show: 'import_params'
       ).then (->
         $scope.params = $scope.model.import_params
+        $scope.params.pop('group_by')
       ), (->
         $scope.err = data
       )
@@ -246,6 +273,33 @@ angular.module('app.models.controllers', ['app.config', ])
         $scope.close()
       ), (() ->
         throw new Error "Unable to start model training"
+      )
+])
+
+.controller('DeleteModelCtrl', [
+  '$scope'
+  '$http'
+  'dialog'
+  'settings'
+  '$location'
+
+  ($scope, $http, dialog, settings, location) ->
+    $scope.model = dialog.model
+
+    $scope.close = ->
+      dialog.close()
+
+    $scope.delete = (result) ->
+      $scope.model.$delete().then (() ->
+        $scope.close()
+        location.path "#/models"
+      ), ((opts) ->
+        if opts.data
+          $scope.err = "Error while deleting model:" +
+            "server responded with " + "#{opts.status} " +
+            "(#{opts.data.response.error.message or "no message"}). "
+        else
+          $scope.err = "Error while deleting model"
       )
 ])
 
@@ -273,5 +327,12 @@ angular.module('app.models.controllers', ['app.config', ])
       )
       d.model = model
       d.open('partials/model_train_popup.html', 'TrainModelCtrl')
+
+    $scope.delete_model = (model)->
+      d = $dialog.dialog(
+        modalFade: false
+      )
+      d.model = model
+      d.open('partials/models/delete_model_popup.html', 'DeleteModelCtrl')
   
 ])

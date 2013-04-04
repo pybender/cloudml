@@ -40,7 +40,7 @@ class BaseConf(DefaultConf):
     supervisord_config_file = ['%(supervisor_config_path)s', 'supervisord.conf']
 
     supervisor__log_path = ['%(var_path)s', 'log', 'supervisor']
-    supervisor_programs = ['celeryd', ]
+    supervisor_programs = ['celeryd', 'celerycam']
     
     rabbitmq_host = 'localhost'
     rabbitmq_port = 5672
@@ -60,8 +60,31 @@ class BaseConf(DefaultConf):
     # Local settings file
     local_settings_file = 'config.py'
 
-    
 
+class DevConf(BaseConf):
+    """Settings specific to dev environment."""
+
+    address = 'cloudml@172.27.68.147'
+
+    sudo_user = 'nmelnik'
+    home_path = '/webapps/cloudml'
+
+    # Code from this branch will be deployed.
+    branch = 'master'
+
+    server_name = '172.27.68.147'
+    # For Apache ServerAdmin directive
+    server_admin = 'ifoukarakis@odesk.com'
+    # Apache will serve WSGI on this port. (Nginx is front-end.)
+    apache_port = 80
+
+
+    # Once on production, this file will replace %(local_settings_file)s
+    # It should be a Jinja2 template, and can make use of fabdeploy config
+    # variables.
+    remote_settings_lfile = 'prod_config.py.tpl'
+
+    
 class StagingConf(BaseConf):
     """Settings specific to production environment."""
 
@@ -120,9 +143,11 @@ class Production1Conf(BaseConf):
 class ProductionConf(BaseConf):
     """Settings specific to production environment."""
 
-    address = 'cloudml@172.27.77.205'
+    #address = 'cloudml@172.27.77.205'
+    address = 'cloudml@172.27.77.141'
 
     sudo_user = 'nmelnik'
+    #django_dir = ''
 
     # Code from this branch will be deployed.
     branch = 'master'

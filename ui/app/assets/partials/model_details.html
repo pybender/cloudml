@@ -11,6 +11,9 @@
         <i title="Train your model" class="icon-tasks"></i>
         Start training
       </button>
+      <button ng-click="delete_model(model)" class="btn btn-danger">
+        <i title="Delete your model. Be careful - you could not recover it!" class="icon-remove"></i> Delete model
+      </button>
     </div>
 </div>
 </h2>
@@ -74,7 +77,7 @@
 
   <div ng-show="action[0] == 'test'" id="tests" ng-controller="ObjectListCtrl">
     <h3>Tests</h3>
-    <div ng-init="init({objectLoader: loadTests()})">
+    <div>
       <ng-include src="'/partials/test_list.html'"></ng-include>
     </div>  
   </div>
@@ -85,14 +88,16 @@
               <div class="span5">
                 <h4>Positive Weights</h4>
                 <div><a><b>List</b></a> | <a>Tree - todo</a></div>
-                <weights-table weights="model.positive_weights">
+                <weights-table weights="positive">
                 </weights-table>
+                <a class="btn" ng-click="morePositiveWeights()">Load More...</a>
               </div>
               <div class="offset1 span5">
                 <h4>Negative Weights</h4>
                 <div><a><b>List</b></a> | <a>Tree - todo</a></div>
-                <weights-table weights="model.negative_weights">
+                <weights-table weights="negative">
                 </weights-table>
+                <a class="btn" ng-click="moreNegativeWeights()">Load More...</a>
               </div>
             </div>
         </div>

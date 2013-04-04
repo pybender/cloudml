@@ -44,6 +44,9 @@ class Model(db.Model, Serializer):
     positive_weights_tree = deferred(db.Column(JSONEncodedDict))
     negative_weights_tree = deferred(db.Column(JSONEncodedDict))
 
+    # True for models with completed tests
+    comparable = db.Column(db.Boolean, nullable=False, default=False)
+
     tests = db.relationship('Test', backref='model',
                             lazy='dynamic')
 
@@ -52,7 +55,8 @@ class Model(db.Model, Serializer):
         self.created_on = datetime.now()
 
     def get_import_handler(self, parameters=None, is_test=False):
-        from core.importhandler.importhandler import ExtractionPlan, ImportHandler
+        from core.importhandler.importhandler import ExtractionPlan, \
+            ImportHandler
         plan = ExtractionPlan(self.importhandler if is_test
                               else self.train_importhandler, is_file=False)
         handler = ImportHandler(plan, parameters)
@@ -62,6 +66,7 @@ class Model(db.Model, Serializer):
         test_handler = self.get_import_handler(parameters, is_test=True)
         metrics = self.trainer.test(test_handler)
         raw_data = self.trainer._raw_data
+        self.trainer.clear_temp_data()
         return metrics, raw_data
 
     def set_trainer(self, trainer):
@@ -83,6 +88,24 @@ class Model(db.Model, Serializer):
 
     def __repr__(self):
         return '<Model %r>' % self.name
+
+
+class ImportHandler(db.Model, Serializer):
+    __public__ = ('id', 'name', 'created_on', 'type')
+
+    TYPE_DB = 'Db'
+    TYPE_REQUEST = 'Request'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50))
+    created_on = db.Column(db.DateTime, default=db.func.now())
+    updated_on = db.Column(db.DateTime, default=db.func.now(),
+                           onupdate=db.func.now())
+    type = db.Column(db.String(15), default=TYPE_DB)
+    data = deferred(db.Column(db.Text))
+
+    def __repr__(self):
+        return '<Import Handler %r>' % self.name
 
 
 class Test(db.Model, Serializer):
@@ -145,7 +168,7 @@ class Data(db.Model, Serializer):
     label = db.Column(db.String(50))
     pred_label = db.Column(db.String(50))
     test_id = db.Column(db.Integer, db.ForeignKey('test.id'))
-    #group_by_field = db.Column(db.String(250))
+    group_by_field = db.Column(db.String(250))
 
     def __init__(self, data_input, test_id, weighted_data_input,
                  label, pred_label):
@@ -157,25 +180,26 @@ class Data(db.Model, Serializer):
         self.pred_label = pred_label
 
     @classmethod
-    def loads_from_raw_data(cls, model, test, raw_data, labels, pred):
+    def loads_from_raw_data(cls, model, test, raw_data, labels, pred, group_by):
         def decode(row):
             for key, val in row.iteritems():
                 try:
                     if isinstance(val, basestring):
                         row[key] = val.encode('ascii', 'ignore')
                 except UnicodeDecodeError, exc:
-                    logging.error('Error while decoding %s: %s', val, exc)
+                    #logging.error('Error while decoding %s: %s', val, exc)
                     row[key] = ""
             return row
 
         from helpers.weights import get_weighted_data
         from itertools import izip
+        print "group_by", group_by
         for row, label, pred in izip(raw_data, labels, pred):
             row = decode(row)
             weighted_data_input = get_weighted_data(model, row)
             data = cls(row, test.id, weighted_data_input,
                        str(label), str(pred))
-            #data.group_by_field = row['opening_id']
+            data.group_by_field = row[group_by]
             db.session.add(data)
         db.session.commit()
 

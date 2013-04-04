@@ -21,6 +21,30 @@ angular.module('app.datas.controllers', ['app.config', ])
       show:'id,label,pred_label,title'}, pagination_opts))
 ])
 
+.controller('GroupedExamplesCtrl', [
+  '$scope'
+  '$http'
+  '$routeParams'
+  'settings'
+  'Data'
+
+($scope, $http, $routeParams, settings, Data) ->
+  $scope.test_name = $routeParams.test_name
+  $scope.model_name = $routeParams.name
+  Data.$loadAllGroupped(
+    model_name: $routeParams.name
+    test_name: $routeParams.test_name
+  ).then ((opts) ->
+    $scope.field_name = opts.field_name
+    $scope.mavp = opts.mavp
+    $scope.objects = opts.objects
+  ), ((opts) ->
+    $scope.err = "Error while loading: server responded with " +
+        "#{opts.status} " +
+        "(#{opts.data.response.error.message or "no message"})."
+  )
+])
+
 .controller('ExampleDetailsCtrl', [
   '$scope'
   '$http'

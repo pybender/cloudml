@@ -83,20 +83,11 @@ angular.module('app.models.model', ['app.config'])
       # ``only``: may contain a list of fields that will be sent to the server
       # (only when PUTting to existing objects, API allows partial update)
       $save: (opts={}) =>
-        #saveData = @toJSON()
         fd = new FormData()
         fd.append("trainer", @trainer)
         fd.append("importhandler", @importhandler)
         fd.append("train_importhandler", @train_importhandler)
         fd.append("features", @features)
-
-        # fields = opts.only || []
-        # if fields.length > 0
-        #   for key in _.keys(saveData)
-        #     if key not in fields
-        #       delete saveData[key]
-
-        #saveData = @prepareSaveJSON(saveData)
         $http(
           method: if @isNew() then "POST" else "PUT"
           #headers: settings.apiRequestDefaultHeaders
@@ -106,6 +97,15 @@ angular.module('app.models.model', ['app.config'])
           transformRequest: angular.identity
         )
         .then((resp) => @loadFromJSON(resp.data['model']))
+
+      $delete: (opts={}) =>
+        $http(
+          method: "DELETE"
+          headers: {'Content-Type':undefined, 'X-Requested-With': null}
+          #headers: settings.apiRequestDefaultHeaders
+          url: "#{settings.apiUrl}model/#{@name}"
+          transformRequest: angular.identity
+        )
 
       # Requests all available jobs from API and return a list of
       # Job instances
@@ -131,6 +131,26 @@ angular.module('app.models.model', ['app.config'])
         ), (-> dfd.reject.apply @, arguments)
 
         dfd.promise
+
+      $loadWeights: (opts) ->
+        if @name == null
+          throw new Error "Can't load model without name"
+
+        $http(
+          method: 'GET'
+          url: settings.apiUrl + "model/#{@name}/weights"
+          headers:
+            'X-Requested-With': null
+          params: _.extend {
+          }, opts
+        ).then ((resp) =>
+          @loaded = true
+          @loadFromJSON(resp.data['model'])
+          return resp
+
+        ), ((resp) =>
+          return resp
+        )
 
       $train: (opts={}) =>
         fd = new FormData()

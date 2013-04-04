@@ -211,6 +211,9 @@ class RequestImportHandler(BaseImportHandler):
         super(RequestImportHandler, self).__init__(plan)
         self._request = request
         self._iterator = self._request.__iter__()
+        datasource = self._plan.datasource[0]
+        if not datasource['type'] == 'http':
+            raise ImportHandlerException('Datasource type should be "http"')
 
     def next(self):
         if self.count % 1000 == 0:

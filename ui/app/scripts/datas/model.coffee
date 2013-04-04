@@ -81,5 +81,24 @@ angular.module('app.datas.model', ['app.config'])
 
         dfd.promise
 
+      @$loadAllGroupped: (opts) ->
+        dfd = $q.defer()
+        $http(
+          method: 'GET'
+          url: "#{settings.apiUrl}model/#{opts.model_name}/test/
+#{opts.test_name}/action/groupped/data"
+          headers: settings.apiRequestDefaultHeaders
+          params: opts
+        )
+        .then ((resp) =>
+          dfd.resolve {
+            field_name: resp.data['field_name']
+            mavp: resp.data['mavp']
+            objects: resp.data['datas'].items
+          }
+        ), (-> dfd.reject.apply @, arguments)
+
+        dfd.promise
+
     return Data
 ])
