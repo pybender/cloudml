@@ -1,4 +1,5 @@
 import json
+import math
 from flask.ext import restful
 from flask.ext.restful import reqparse
 
@@ -8,6 +9,9 @@ from api import app
 
 
 class BaseResource(restful.Resource):
+    """
+    Base class for any API Resource
+    """
     GET_ACTIONS = ()
     POST_ACTIONS = ()
     PUT_ACTIONS = ()
@@ -16,6 +20,7 @@ class BaseResource(restful.Resource):
     OBJECT_NAME = 'model'
     NEED_PAGING = False
     GET_PARAMS = (('show', str), )
+    FILTER_PARAMS = ()
     PAGING_PARAMS = (('page', int), )
     decorators = [crossdomain(origin='*',
                               headers="accept, origin, content-type")]
@@ -97,25 +102,28 @@ class BaseResource(restful.Resource):
         GET parameters:
             * show - list of fields to return
         """
-        parser_params = extra_params + self.GET_PARAMS
+        parser_params = extra_params + self.GET_PARAMS + self.FILTER_PARAMS
         if self.NEED_PAGING:
             parser_params += self.PAGING_PARAMS
         params = self._parse_parameters(parser_params)
         fields = self._get_fields_to_show(params)
-        # opts = self._get_undefer_options(fields)
-        models = self._get_list_query(params, fields)
-        # if self.NEED_PAGING:
-        #     data_paginated = models.paginate(params['page'] or 1, 20, False)
-        #     data = {'items': qs2list(data_paginated.items, fields),
-        #             'pages': data_paginated.pages,
-        #             'total': data_paginated.total,
-        #             'page': data_paginated.page,
-        #             'has_next': data_paginated.has_next,
-        #             'has_prev': data_paginated.has_prev,
-        #             'per_page': data_paginated.per_page}
-        #     return {self.list_key: data}
-        # else:
-        return self._render({self.list_key: models})
+
+        # Removing empty values
+        kw = dict([(k, v) for k, v in kwargs.iteritems() if v])
+        models = self._get_list_query(params, fields, **kw)
+        context = {}
+        if self.NEED_PAGING:
+            context['total'] = total = models.count()
+            context['per_page'] = per_page = params.get('per_page') or 20
+            context['page'] = page = params.get('page')
+            offset = (page - 1) * per_page
+            models = models.skip(offset).limit(per_page)
+            context['pages'] = pages = int(math.ceil(1.0 * total / per_page))
+            context['has_prev'] = page > 1
+            context['has_next'] = page < pages
+
+        context.update({self.list_key: models})
+        return self._render(context)
 
     def _details(self, extra_params=(), **kwargs):
         """
@@ -129,6 +137,10 @@ class BaseResource(restful.Resource):
     # Specific actions for GET
 
     def _get_list_query(self, params, fields, **kwargs):
+        filter_names = [v[0] for v in self.FILTER_PARAMS]
+        filter_params = dict([(k, v) for k, v in params.iteritems()
+                              if not v is None and k in filter_names])
+        kwargs.update(filter_params)
         return self.Model.find(kwargs, fields)
 
     def _get_details_query(self, params, fields, **kwargs):

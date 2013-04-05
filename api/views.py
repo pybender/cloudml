@@ -34,6 +34,7 @@ class Models(BaseResource):
     """
     GET_ACTIONS = ('tests', 'weights')
     PUT_ACTIONS = ('train', )
+    FILTER_PARAMS = (('status', str), ) # ('comparable', bool)
     methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
 
     @property
