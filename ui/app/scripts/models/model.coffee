@@ -51,13 +51,15 @@ angular.module('app.models.model', ['app.config'])
       loadFromJSON: (origData) =>
         data = _.extend {}, origData
         _.extend @, data
-        if origData? and 'latest_test' in origData
-          @latest_test = new Test(origData['latest_test'])
-        @features = angular.toJson(origData['features'], pretty=true)
-        @importhandler = angular.toJson(origData['importhandler'],
+        if origData?
+          if 'features' in origData
+            @features = angular.toJson(origData['features'], pretty=true)
+          if 'importhandler' in origData
+            @importhandler = angular.toJson(origData['importhandler'],
                                         pretty=true)
-        @train_importhandler = angular.toJson(origData['train_importhandler'],
-                                              pretty=true)
+          if 'train_importhandler' in origData
+            @train_importhandler = angular.toJson(
+              origData['train_importhandler'], pretty=true)
 
       $load: (opts) ->
         if @name == null

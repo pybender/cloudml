@@ -89,22 +89,26 @@ class Model(Document):
         return '<Model %r>' % self.name
 
 
-# class ImportHandler(db.Document, Serializer):
-#     __public__ = ('id', 'name', 'created_on', 'type')
+@db.register
+class ImportHandler(Document):
+    TYPE_DB = 'Db'
+    TYPE_REQUEST = 'Request'
+    __collection__ = 'handlers'
+    structure = {
+        'name': unicode,
+        'type': basestring,
+        'created_on': datetime,
+        'updated_on': datetime,
+        'data': dict,
+    }
+    required_fields = ['name', 'created_on', 'updated_on', ]
+    default_values = {'created_on': datetime.utcnow,
+                      'updated_on': datetime.utcnow,
+                      'type': TYPE_DB}
+    use_dot_notation = True
 
-#     TYPE_DB = 'Db'
-#     TYPE_REQUEST = 'Request'
-
-#     id = db.Column(db.Integer, primary_key=True)
-#     name = db.Column(db.String(50))
-#     created_on = db.Column(db.DateTime, default=db.func.now())
-#     updated_on = db.Column(db.DateTime, default=db.func.now(),
-#                            onupdate=db.func.now())
-#     type = db.Column(db.String(15), default=TYPE_DB)
-#     data = deferred(db.Column(db.Text))
-
-#     def __repr__(self):
-#         return '<Import Handler %r>' % self.name
+    def __repr__(self):
+        return '<Import Handler %r>' % self.name
 
 
 # class Test(db.Document, Serializer):

@@ -134,30 +134,34 @@ api.add_resource(Models, '/cloudml/model/<regex("[\w\.]*"):name>',
                  '/cloudml/model/<regex("[\w\.]+"):name>/<regex("[\w\.]+"):action>')
 
 
-# class ImportHandlerResource(BaseResource):
-#     """
-#     Import handler API methods
-#     """
-#     MODEL = ImportHandler
-#     OBJECT_NAME = 'import_handler'
-#     decorators = [crossdomain(origin='*')]
-#     methods = ['GET', 'OPTIONS', 'PUT', 'POST']
+class ImportHandlerResource(BaseResource):
+    """
+    Import handler API methods
+    """
+    @property
+    def Model(self):
+        return db.cloudml.ImportHandler
 
-#     @classmethod
-#     def get_model_parser(cls):
-#         if not hasattr(cls, "_model_parser"):
-#             parser = reqparse.RequestParser()
-#             parser.add_argument('data', type=str)
-#             parser.add_argument('type', type=str)
-#             cls._model_parser = parser
-#         return cls._model_parser
+    OBJECT_NAME = 'import_handler'
+    decorators = [crossdomain(origin='*')]
+    methods = ['GET', 'OPTIONS', 'PUT', 'POST']
 
-#     def _fill_post_data(self, obj, params):
-#         obj.type = params.get('type')
-#         obj.data = params.get('data')
+    @classmethod
+    def _get_model_parser(cls):
+        if not hasattr(cls, "_model_parser"):
+            parser = reqparse.RequestParser()
+            parser.add_argument('data', type=str)
+            parser.add_argument('type', type=str)
+            cls._model_parser = parser
+        return cls._model_parser
 
-# api.add_resource(ImportHandlerResource,
-#                  '/cloudml/import/handler/<regex("[\w\.]*"):name>')
+    def _fill_post_data(self, obj, params, name):
+        obj.name = name
+        obj.type = params.get('type')
+        obj.data = json.loads(params.get('data'))
+
+api.add_resource(ImportHandlerResource,
+                 '/cloudml/import/handler/<regex("[\w\.]*"):name>')
 
 
 # class Tests(BaseResource):

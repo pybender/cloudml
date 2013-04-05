@@ -1397,12 +1397,17 @@ angular.module('app.models.model', ['app.config']).factory('Model', [
         var data, pretty;
         data = _.extend({}, origData);
         _.extend(this, data);
-        if ((origData != null) && __indexOf.call(origData, 'latest_test') >= 0) {
-          this.latest_test = new Test(origData['latest_test']);
+        if (origData != null) {
+          if (__indexOf.call(origData, 'features') >= 0) {
+            this.features = angular.toJson(origData['features'], pretty = true);
+          }
+          if (__indexOf.call(origData, 'importhandler') >= 0) {
+            this.importhandler = angular.toJson(origData['importhandler'], pretty = true);
+          }
+          if (__indexOf.call(origData, 'train_importhandler') >= 0) {
+            return this.train_importhandler = angular.toJson(origData['train_importhandler'], pretty = true);
+          }
         }
-        this.features = angular.toJson(origData['features'], pretty = true);
-        this.importhandler = angular.toJson(origData['importhandler'], pretty = true);
-        return this.train_importhandler = angular.toJson(origData['train_importhandler'], pretty = true);
       };
 
       Model.prototype.$load = function(opts) {
