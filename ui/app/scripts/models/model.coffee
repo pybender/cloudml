@@ -53,6 +53,11 @@ angular.module('app.models.model', ['app.config'])
         _.extend @, data
         if origData? and 'latest_test' in origData
           @latest_test = new Test(origData['latest_test'])
+        @features = angular.toJson(origData['features'], pretty=true)
+        @importhandler = angular.toJson(origData['importhandler'],
+                                        pretty=true)
+        @train_importhandler = angular.toJson(origData['train_importhandler'],
+                                              pretty=true)
 
       $load: (opts) ->
         if @name == null

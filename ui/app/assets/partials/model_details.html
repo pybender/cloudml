@@ -110,19 +110,16 @@
     </div>
     <div ng-show="action[1] == 'train'">
       <h5>Here is import handler file for running tests:</h5>
-      {{ model.train_importhandler }}
       <span ng-click="saveTrainHandler()" class="btn btn-primary">Save</span>
       <textarea name="train_import_handler" ui-codemirror="{ mode: {name: 'javascript', json: true} }" ng-model="model.train_importhandler"> </textarea>
     </div>
     <div ng-show="action[1] == 'test'">
       <h5>Here is import handler file for running tests:</h5>
-      {{ model.importhandler }}
       <span ng-click="saveTestHandler()" class="btn btn-primary">Save</span>
       <textarea name="test_import_handler" ui-codemirror="{ mode: {name: 'javascript', json: true} }" ng-model="model.importhandler"> </textarea>
     </div>
   </div>
   <div ng-show="action[0] == 'features'"  id="features">
-    {{ model.features }}
     <textarea ui-codemirror="{ mode: {name: 'javascript', json: true} }" ng-model="model.features"> </textarea>
   </div>
 </div>

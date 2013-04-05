@@ -1394,12 +1394,15 @@ angular.module('app.models.model', ['app.config']).factory('Model', [
       };
 
       Model.prototype.loadFromJSON = function(origData) {
-        var data;
+        var data, pretty;
         data = _.extend({}, origData);
         _.extend(this, data);
         if ((origData != null) && __indexOf.call(origData, 'latest_test') >= 0) {
-          return this.latest_test = new Test(origData['latest_test']);
+          this.latest_test = new Test(origData['latest_test']);
         }
+        this.features = angular.toJson(origData['features'], pretty = true);
+        this.importhandler = angular.toJson(origData['importhandler'], pretty = true);
+        return this.train_importhandler = angular.toJson(origData['train_importhandler'], pretty = true);
       };
 
       Model.prototype.$load = function(opts) {
