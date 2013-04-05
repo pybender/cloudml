@@ -175,7 +175,7 @@ angular.module('app.models.controllers', ['app.config', ])
           $scope.go 'train_importhandler,status,id'
         else
           $scope.go 'importhandler,status,id'
-      else $scope.go 'status,created_on,target_variable'
+      else $scope.go 'status,created_on,target_variable,error'
 
   if not $scope.model
     if not $routeParams.name
@@ -198,14 +198,16 @@ angular.module('app.models.controllers', ['app.config', ])
 
   $scope.goWeights = (morePositive, moreNegative) ->
     $scope.model.$loadWeights(
-      show: 'status'
+      show: 'status,name'
       ppage: $scope.ppage
       npage: $scope.npage
       ).then ((resp) ->
         if morePositive
-          $scope.positive.push.apply $scope.positive, resp.data.positive
+          $scope.positive.push.apply($scope.positive,
+          $scope.model.positive_weights)
         if moreNegative
-          $scope.negative.push.apply $scope.negative, resp.data.negative
+          $scope.negative.push.apply($scope.negative,
+          $scope.model.negative_weights)
       ), (->
         $scope.err = data
       )

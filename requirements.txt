@@ -17,3 +17,4 @@ celery==3.0.16
 flower==0.4.2
 supervisor
 ml_metrics
+Flask-MongoKit

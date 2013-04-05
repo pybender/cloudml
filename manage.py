@@ -18,14 +18,14 @@ class Celeryd(Command):
     """Runs a Celery worker node."""
 
     def run(self, **kwargs):
-        os.system("celery -A api.tasks worker --loglevel=info")
+        os.system("celery -A api.celery worker -E --loglevel=info")
 
 
 class Flower(Command):
     """Runs a Celery Flower worker node."""
 
     def run(self, **kwargs):
-        os.system("celery -A api.tasks flower --loglevel=info")
+        os.system("celery -A api.celery flower --loglevel=info")
 
 
 def _make_context():

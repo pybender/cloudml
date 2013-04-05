@@ -1,62 +1,95 @@
+import json
 from flask.ext import restful
 from flask.ext.restful import reqparse
-from sqlalchemy.orm import undefer
 
 from api.utils import crossdomain, ERR_NO_SUCH_MODEL, odesk_error_response
 from api.decorators import render
-from api import db
+from api import db, app
+from api.serialization import encode_model
 
 
 class BaseResource(restful.Resource):
-    MODEL = None
     GET_ACTIONS = ()
+    POST_ACTIONS = ()
+    PUT_ACTIONS = ()
+
+    DETAILS_PARAM = 'name'
     OBJECT_NAME = 'model'
     NEED_PAGING = False
     GET_PARAMS = (('show', str), )
     PAGING_PARAMS = (('page', int), )
     decorators = [crossdomain(origin='*', headers="accept, origin, content-type")]
 
+    @property
+    def Model(self):
+        """
+        Returns base DB model of the Resource.
+        """
+        raise NotImplemented()
+
+    @property
+    def list_key(self):
+        """
+        Returns a key name, when list of results returned.
+        """
+        return '%ss' % self.OBJECT_NAME
+
+    # HTTP Methods
+
     def get(self, action=None, **kwargs):
+        """
+        GET model/models.
+            * action - specific action for GET method.
+                Note: action should be in `GET_ACTIONS` list and
+                _get_{{ action }}_action method should be implemented.
+            * ... - list of url parameters. For example parent_name and name.
+        """
         if action:
-            if action in self.GET_ACTIONS:
-                return getattr(self, "_get_%s_action" % action)(**kwargs)
-            else:
-                return odesk_error_response(404, ERR_NO_SUCH_MODEL,
-                                            "Invalid action: %s" % action)
+            return self._apply_action(action, method='GET', **kwargs)
+
         if self._is_list_method(**kwargs):
             return self._list(**kwargs)
         else:
             return self._details(**kwargs)
 
-    @render(code=201)
-    def post(self, name):
+    def post(self, action=None, **kwargs):
         """
         Adds new model
         """
-        parser = self.get_model_parser()
+        if action:
+            return self._apply_action(action, method='POST', **kwargs)
+
+        parser = self._get_model_parser()
         params = parser.parse_args()
 
-        obj = self.MODEL()
-        obj.name = name
-        self._fill_post_data(obj, params)
+        model = self.Model()
+        model = self._fill_post_data(model, params, **kwargs)
+        model.save()
+        return self._render({self.OBJECT_NAME: model._id}, code=201)
 
-        db.session.add(obj)
-        db.session.commit()
-        return {self.OBJECT_NAME: obj}
+    def put(self, action=None, **kwargs):
+        """
+        Updates new model
+        """
+        if action:
+            return self._apply_action(action, method='PUT', **kwargs)
 
-    def delete(self, model):
+        parser = self._get_model_parser(method=method)
+        params = parser.parse_args()
+
+        model = self.Model()
+        model = self._fill_put_data(model, params, **kwargs)
+        model.save()
+        return self._render({self.OBJECT_NAME: model._id}, code=200)
+
+    def delete(self, action=None, **kwargs):
         """
         Deletes unused model
         """
-        model = self.MODEL.query.filter(self.MODEL.name == model).first()
-        if model is None:
-            return odesk_error_response(404, ERR_NO_SUCH_MODEL,
-                                        "Model %s doesn't exist" % model)
-        db.session.delete(model)
-        db.session.commit()
+        model = self._get_details_query(None, ('_id', 'name'), **kwargs)
+        model.collection.remove({'_id': model._id})
         return '', 204
 
-    @render()
     def _list(self, extra_params=(), **kwargs):
         """
         Gets list of models
@@ -69,54 +102,57 @@ class BaseResource(restful.Resource):
             parser_params += self.PAGING_PARAMS
         params = self._parse_parameters(parser_params)
         fields = self._get_fields_to_show(params)
-        opts = self._get_undefer_options(fields)
-        models = self._get_list_query(params, opts, **kwargs)
-        if self.NEED_PAGING:
-            data_paginated = models.paginate(params['page'] or 1, 20, False)
-            data = {'items': qs2list(data_paginated.items, fields),
-                    'pages': data_paginated.pages,
-                    'total': data_paginated.total,
-                    'page': data_paginated.page,
-                    'has_next': data_paginated.has_next,
-                    'has_prev': data_paginated.has_prev,
-                    'per_page': data_paginated.per_page}
-            return {self.list_key: data}
-        else:
-            return {self.list_key: qs2list(models.all(), fields)}
+        # opts = self._get_undefer_options(fields)
+        models = self._get_list_query(params, fields)
+        # if self.NEED_PAGING:
+        #     data_paginated = models.paginate(params['page'] or 1, 20, False)
+        #     data = {'items': qs2list(data_paginated.items, fields),
+        #             'pages': data_paginated.pages,
+        #             'total': data_paginated.total,
+        #             'page': data_paginated.page,
+        #             'has_next': data_paginated.has_next,
+        #             'has_prev': data_paginated.has_prev,
+        #             'per_page': data_paginated.per_page}
+        #     return {self.list_key: data}
+        # else:
+        return self._render({self.list_key: models})
 
-    @property
-    def list_key(self):
-        return '%ss' % self.OBJECT_NAME
-
-    def _is_list_method(self, **kwargs):
-        name = kwargs.get('name')
-        return not name
-
-    def _get_list_query(self, params, opts, **kwargs):
-        return self.MODEL.query.options(*opts)
-
-    def _get_details_query(self, params, opts, **kwargs):
-        name = kwargs.get('name')
-        return db.session.query(self.MODEL).options(*opts)\
-            .filter(self.MODEL.name == name)
-
-    def _fill_post_data(self, obj, params):
-        raise NotImplemented('Should be implemented in the child class')
-
-    @render()
     def _details(self, extra_params=(), **kwargs):
         """
         GET model by name
         """
         params = self._parse_parameters(extra_params + self.GET_PARAMS)
         fields = self._get_fields_to_show(params)
-        opts = self._get_undefer_options(fields)
-        model = self._get_details_query(params, opts, **kwargs)
-        return {self.OBJECT_NAME: qs2list(model.one(), fields)}
+        model = self._get_details_query(params, fields, **kwargs)
+        return self._render({self.OBJECT_NAME: model})
 
-    def _get_fields_to_show(self, params):
-        fields = params.get('show', None)
-        return fields.split(',') if fields else self.MODEL.__public__
+    # Specific actions for GET
+
+    def _get_list_query(self, params, fields, **kwargs):
+        return self.Model.find(kwargs, fields)
+
+    def _get_details_query(self, params, fields, **kwargs):
+        return self.Model.find_one(kwargs, fields)
+
+    def _get_model_parser(self, **kwargs):
+        raise NotImplemented()
+
+    def _fill_post_data(self, obj, params):
+        raise NotImplemented()
+
+    # Utility methods
+
+    def _apply_action(self, action, method='GET', **kwargs):
+        if action in getattr(self, '%s_ACTIONS' % method):
+            method_name = "_%s_%s_action" % (method.lower(), action)
+            return getattr(self, method_name)(**kwargs)
+        else:
+            return odesk_error_response(404, ERR_NO_SUCH_MODEL, "Invalid action \
+for %s method: %s" % (method, action))
+
+    def _is_list_method(self, **kwargs):
+        name = kwargs.get(self.DETAILS_PARAM)
+        return not name
 
     def _parse_parameters(self, extra_params=()):
         parser = reqparse.RequestParser()
@@ -124,21 +160,13 @@ class BaseResource(restful.Resource):
             parser.add_argument(name, type=param_type)
         return parser.parse_args()
 
-    def _get_undefer_options(self, fields):
-        def is_model_field(prop):
-            return prop in self.MODEL.__table__._columns.keys()
+    def _get_fields_to_show(self, params):
+        fields = params.get('show', None)
+        return fields.split(',') if fields else self.MODEL.__public__
 
-        opts = []
-        for field in fields:
-            if is_model_field(field):
-                opts.append(undefer(field))
-            else:
-                subfileds = field.split('.')
-                if subfileds:
-                    subfield = subfileds[0]
-                    if is_model_field(subfield):
-                        opts.append(undefer(subfield))
-        return opts
+    def _render(self, content, code=200):
+        content = json.dumps(content, default=encode_model)
+        return app.response_class(content, mimetype='application/json'), code
 
 
 def qs2list(obj, fields):
