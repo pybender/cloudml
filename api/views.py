@@ -1,28 +1,18 @@
 import json
-from bson import json_util
-from flask import request
-from flask.ext import restful
 
 from flask.ext.restful import reqparse
 from werkzeug.datastructures import FileStorage
-from sqlalchemy import and_
-from sqlalchemy import func
-from sqlalchemy.sql.expression import asc, desc
-from sqlalchemy.orm import undefer
-from sqlalchemy.orm.exc import NoResultFound
 
-from api.decorators import render
 from api import db, api, app
 from api.utils import crossdomain, ERR_NO_SUCH_MODEL, odesk_error_response
-from api import models
-from api.models import Model#, Test, Data, ImportHandler
+#, Test, Data, ImportHandler
 from api.tasks import train_model, run_test
-from api.resources import BaseResource, qs2list
+from api.resources import BaseResource
 
 from core.trainer.store import load_trainer
 from core.trainer.trainer import Trainer
 from core.trainer.config import FeatureModel
-from core.importhandler.importhandler import ExtractionPlan,\
+from core.importhandler.importhandler import ExtractionPlan, \
     RequestImportHandler
 
 get_parser = reqparse.RequestParser()
@@ -30,7 +20,6 @@ get_parser.add_argument('show', type=str)
 
 page_parser = reqparse.RequestParser()
 page_parser.add_argument('page', type=int)
-
 
 model_parser = reqparse.RequestParser()
 model_parser.add_argument('importhandler', type=str)
@@ -43,14 +32,13 @@ class Models(BaseResource):
     """
     Models API methods
     """
-    MODEL = Model
     GET_ACTIONS = ('tests', 'weights')
     PUT_ACTIONS = ('train', )
     methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
 
     @property
     def Model(self):
-        return db.Model
+        return db.cloudml.Model
 
     def _get_model_parser(self, **kwargs):
         """
@@ -134,7 +122,7 @@ class Models(BaseResource):
                                         **kwargs)
         parser = populate_parser(model)
         params = parser.parse_args()
-        train_model.delay(str(model._id), params)
+        train_model.delay(model.name, params)
         model.status = model.STATUS_QUEUED
         model.save()
 

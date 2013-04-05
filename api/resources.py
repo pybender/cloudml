@@ -3,9 +3,8 @@ from flask.ext import restful
 from flask.ext.restful import reqparse
 
 from api.utils import crossdomain, ERR_NO_SUCH_MODEL, odesk_error_response
-from api.decorators import render
-from api import db, app
 from api.serialization import encode_model
+from api import app
 
 
 class BaseResource(restful.Resource):
@@ -18,7 +17,8 @@ class BaseResource(restful.Resource):
     NEED_PAGING = False
     GET_PARAMS = (('show', str), )
     PAGING_PARAMS = (('page', int), )
-    decorators = [crossdomain(origin='*', headers="accept, origin, content-type")]
+    decorators = [crossdomain(origin='*',
+                              headers="accept, origin, content-type")]
 
     @property
     def Model(self):
@@ -74,7 +74,7 @@ class BaseResource(restful.Resource):
         if action:
             return self._apply_action(action, method='PUT', **kwargs)
 
-        parser = self._get_model_parser(method=method)
+        parser = self._get_model_parser(method='PUT')
         params = parser.parse_args()
 
         model = self.Model()
@@ -147,7 +147,8 @@ class BaseResource(restful.Resource):
             method_name = "_%s_%s_action" % (method.lower(), action)
             return getattr(self, method_name)(**kwargs)
         else:
-            return odesk_error_response(404, ERR_NO_SUCH_MODEL, "Invalid action \
+            return odesk_error_response(404, ERR_NO_SUCH_MODEL,
+                                        "Invalid action \
 for %s method: %s" % (method, action))
 
     def _is_list_method(self, **kwargs):
@@ -166,40 +167,5 @@ for %s method: %s" % (method, action))
 
     def _render(self, content, code=200):
         content = json.dumps(content, default=encode_model)
-        return app.response_class(content, mimetype='application/json'), code
-
-
-def qs2list(obj, fields):
-    from collections import Iterable
-
-    def model2dict(model):
-        data = {}
-        for field in fields:
-            if hasattr(model, field):
-                data[field] = getattr(model, field)
-            else:
-                subfields = field.split('.')
-                count = len(subfields)
-                val = model
-                el = data
-                for i, subfield in enumerate(subfields):
-                    if not subfield in el:
-                        el[subfield] = {}
-                    if hasattr(val, subfield):
-                        val = getattr(val, subfield)
-                        if i == count - 1:
-                            el[subfield] = val
-                    if isinstance(val, Iterable) and subfield in val:
-                        val = val[subfield]
-                        if i == count - 1:
-                            el[subfield] = val
-                    el = el[subfield]
-        return data
-
-    if isinstance(obj, Iterable):
-        model_list = []
-        for model in obj:
-            model_list.append(model2dict(model))
-        return model_list
-    else:
-        return model2dict(obj)
+        return app.response_class(content,
+                                  mimetype='application/json'), code

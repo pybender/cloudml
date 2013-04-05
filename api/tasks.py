@@ -1,4 +1,5 @@
 import json
+import logging
 from copy import copy
 from api import celery, db
 
@@ -11,19 +12,17 @@ class InvalidOperationError(Exception):
 
 
 @celery.task
-def train_model(model_id, parameters):
+def train_model(model_name, parameters):
     """
     Train new model
     """
     try:
-        model = db.Model.find_one({'_id': model_id})
+        model = db.cloudml.Model.find_one({'name': model_name})
         if model.status == model.STATUS_TRAINED:
             raise InvalidOperationError("Model already trained")
-
         model.status = model.STATUS_TRAINING
         model.error = ""
         model.save()
-
         feature_model = FeatureModel(json.dumps(model.features),
                                      is_file=False)
         trainer = Trainer(feature_model)
@@ -31,9 +30,11 @@ def train_model(model_id, parameters):
         trainer.train(train_handler)
         trainer.clear_temp_data()
         model.set_trainer(trainer)
+        model.set_weights(**trainer.get_weights())
         model.status = model.STATUS_TRAINED
         model.save()
     except Exception, exc:
+        logging.error(exc)
         model.status = model.STATUS_ERROR
         model.error = str(exc)
         model.save()

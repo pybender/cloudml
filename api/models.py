@@ -9,6 +9,7 @@ from flask.ext.mongokit import Document
 from api import db
 
 
+@db.register
 class Model(Document):
     STATUS_NEW = 'New'
     STATUS_QUEUED = 'Queued'
@@ -86,8 +87,6 @@ class Model(Document):
 
     def __repr__(self):
         return '<Model %r>' % self.name
-
-db.register([Model])
 
 
 # class ImportHandler(db.Document, Serializer):

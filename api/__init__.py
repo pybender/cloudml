@@ -1,29 +1,18 @@
 from flask import Flask
 from werkzeug.routing import BaseConverter
-from flask.ext.mongokit import MongoKit
+from mongokit import Connection
 from flask.ext import restful
 from celery import Celery
-
-from flask.ext.sqlalchemy import SQLAlchemy
-
-
-
 
 
 app = Flask(__name__)
 app.config.from_object('api.config')
 
-db = MongoKit(app)
-db1 = SQLAlchemy(app)
-
+db = Connection()
 
 celery = Celery('cloudml')
 celery.add_defaults(lambda: app.config)
-# celery = Celery(, broker=app.config['BROKER_URL'],
-#                 backend=app.config['CELERY_RESULT_BACKEND'])
-#celery.config_from_object('celeryconfig')
 api = restful.Api(app)
-
 
 
 class RegExConverter(BaseConverter):
@@ -39,5 +28,4 @@ class RegExConverter(BaseConverter):
 app.url_map.converters['regex'] = RegExConverter
 
 
-import models
 import views
