@@ -32,9 +32,10 @@ class Models(BaseResource):
     """
     Models API methods
     """
-    GET_ACTIONS = ('tests', 'weights')
+    GET_ACTIONS = ('weights', )
     PUT_ACTIONS = ('train', )
-    FILTER_PARAMS = (('status', str), ) # ('comparable', bool)
+    FILTER_PARAMS = (('status', str), )
+    # ('comparable', bool)
     methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
 
     @property
@@ -48,17 +49,6 @@ class Models(BaseResource):
         return model_parser
 
     # GET specific methods
-
-    def _get_tests_action(self, name):
-        """
-        Gets list of Trained Model's tests
-        """
-        param = get_parser.parse_args()
-        fields = param.get('show', None)
-        fields = fields.split(',') if fields else Test.__public__
-        tests = db.session.query(Test).join(Model)\
-            .filter(Model.name == model).all()
-        return {'tests': qs2list(tests, fields)}
 
     def _get_weights_action(self, per_page=50, **kwargs):
         """
@@ -106,7 +96,7 @@ class Models(BaseResource):
         plan = ExtractionPlan(params['importhandler'], is_file=False)
         obj.import_params = plan.input_params
         obj.import_params.append('group_by')
-        return obj
+        obj.save()
 
     # PUT specififc methods
 
@@ -128,7 +118,6 @@ class Models(BaseResource):
         model.save()
 
         return self._render({self.OBJECT_NAME: model._id})
-
 
 api.add_resource(Models, '/cloudml/model/<regex("[\w\.]*"):name>',
                  '/cloudml/model/<regex("[\w\.]+"):name>/<regex("[\w\.]+"):action>')
@@ -159,116 +148,122 @@ class ImportHandlerResource(BaseResource):
         obj.name = name
         obj.type = params.get('type')
         obj.data = json.loads(params.get('data'))
+        obj.save()
 
 api.add_resource(ImportHandlerResource,
                  '/cloudml/import/handler/<regex("[\w\.]*"):name>')
 
 
-# class Tests(BaseResource):
-#     MODEL = Test
-#     OBJECT_NAME = 'test'
-#     decorators = [crossdomain(origin='*')]
+class Tests(BaseResource):
+    """
+    Tests API Resource
+    """
+    OBJECT_NAME = 'test'
 
-#     def _get_details_query(self, params, opts, **kwargs):
-#         model = kwargs.get('model')
-#         test_name = kwargs.get('test_name')
-#         return Test.query.options(*opts).join(Model)\
-#             .filter(Model.name == model,
-#                     Test.name == test_name)
+    @property
+    def Model(self):
+        return db.cloudml.Model
 
-#     def _is_list_method(self, **kwargs):
-#         test_name = kwargs.get('test_name')
-#         return not test_name
+    def _get_list_query(self, params, fields, **kwargs):
+        model_name = kwargs.get('model')
+        fields = ["tests.%s" % f for f in fields]
+        model = self.Model.find_one({'name': model_name}, fields)
+        return model.tests
 
-#     @render(code=201)
-#     def post(self, model, test_name):
-#         opts = [undefer(field) for field in ('importhandler', 'trainer',
-#             'positive_weights', 'negative_weights',
-#             'positive_weights_tree', 'negative_weights_tree')]
-#         model = Model.query.options(*opts).filter(
-#             Model.name == model,
-#             Model.status == Model.STATUS_TRAINED).first()
+    def _get_details_query(self, params, fields, **kwargs):
+        model_name = kwargs.get('model')
+        test_num = int(kwargs.get('name'))
+        fields = ["tests.%s" % f for f in fields]
+        model = self.Model.find_one({'name': model_name}, fields)
+        return model.tests[test_num]
 
-#         parser = populate_parser(model)
-#         parameters = parser.parse_args()
+    def _fill_post_data(self, obj, params, model, name):
+        parser = populate_parser(obj)
+        parameters = parser.parse_args()
+        test = db.cloudml.Test()
+        test.status = test.STATUS_QUEUED
+        test.parameters = parameters
+        total = len(obj.tests)
+        test.name = "Test%s" % (total + 1)
+        obj.tests.append(test)
+        obj.save(check_keys=False)
+        run_test.run(obj.name, total)
 
-#         test = Test(model)
-#         test.status = Test.STATUS_QUEUED
-#         test.parameters = parameters
-#         db.session.add(test)
-#         db.session.commit()
+    def _get_post_model(self, params, **kwargs):
+        model = kwargs.get('model')
+        return self.Model.find_one({'name': model})
 
-#         run_test.delay(test, test.model)
-
-#         return {'test': test}
-
-# api.add_resource(Tests, '/cloudml/model/<regex("[\w\.]+"):model>/test/\
-# <regex("[\w\.\-]+"):test_name>')
-
-
-# class Datas(BaseResource):
-#     MODEL = Data
-#     OBJECT_NAME = 'data'
-#     NEED_PAGING = True
-#     GET_ACTIONS = ('groupped', )
-#     decorators = [crossdomain(origin='*')]
-
-#     def _is_list_method(self, **kwargs):
-#         data_id = kwargs.get('data_id')
-#         return not data_id
-
-#     def _get_list_query(self, params, opts, **kwargs):
-#         model = kwargs.get('model')
-#         test_name = kwargs.get('test_name')
-#         return Data.query.options(*opts).join(Test).join(Model)\
-#             .filter(and_(Model.name == model, Test.name == test_name))
-
-#     def _get_details_query(self, params, opts, **kwargs):
-#         model = kwargs.get('model')
-#         test_name = kwargs.get('test_name')
-#         data_id = kwargs.get('data_id')
-#         return Data.query.options(*opts)\
-#             .join(Test).join(Model)\
-#             .filter(and_(Model.name == model, Test.name == test_name,
-#                          Data.id == data_id))
-
-#     @render()
-#     def _get_groupped_action(self, model, test_name, **kwargs):
-#         """
-#         Groups data by `group_by_field` field.
-#         """
-#         from ml_metrics import apk
-#         import numpy as np
-#         test = Test.query.join(Model)\
-#             .filter(Model.name == model,
-#                     Test.name == test_name).one()
-#         datas = db.session.query(Data.group_by_field,
-#                                  func.count(Data.group_by_field).label('total'))\
-#             .join(Test).join(Model)\
-#             .filter(and_(Model.name == model, Test.name == test_name))\
-#             .group_by(Data.group_by_field).order_by('total DESC').all()[:100]
-
-#         res = []
-#         avps = []
-#         for d in datas:
-#             data_set = Data.query.filter(Data.group_by_field == d[0]).all()
-#             labels = [i.label for i in data_set]
-#             pred_labels = [i.pred_label for i in data_set]
-#             avp = apk(labels, pred_labels)
-#             avps.append(avp)
-#             res.append({'group_by_field': d[0],
-#                         'count': d[1], 'avp': avp})
-#         mavp = np.mean(avps)
-#         field_name = test.parameters.get('group_by')
-#         return {self.list_key: {'items': res}, 'field_name': field_name, 'mavp': mavp}
+api.add_resource(Tests, '/cloudml/model/<regex("[\w\.]+"):model>/test/\
+<regex("[\w\.\-]+"):name>', '/cloudml/model/<regex("[\w\.]+"):model>/tests')
 
 
-# api.add_resource(Datas, '/cloudml/model/<regex("[\w\.]+"):model>/test/\
-# <regex("[\w\.\-]+"):test_name>/data',
-#                  '/cloudml/model/<regex("[\w\.]+")\
-# :model>/test/<regex("[\w\.\-]+"):test_name>/data/<regex("[\w\.\-]+"):data_id>',
-#                  '/cloudml/model/<regex("[\w\.]+"):model>/test/\
-# <regex("[\w\.\-]+"):test_name>/action/<regex("[\w\.]+"):action>/data')
+class Datas(BaseResource):
+    @property
+    def Model(self):
+        return db.cloudml.Model
+
+    OBJECT_NAME = 'data'
+    NEED_PAGING = True
+    GET_ACTIONS = ('groupped', )
+    DETAILS_PARAM = 'example_num'
+    decorators = [crossdomain(origin='*')]
+
+    def _get_list_query(self, params, fields, **kwargs):
+        model_name = kwargs.get('model')
+        test_num = int(kwargs.get('test_num'))
+        fields = ["tests.examples.%s" % f for f in fields]
+        model = self.Model.find_one({'name': model_name}, fields)
+        return model.tests[test_num]['examples']
+
+    def _paginate(self, models, page=1, per_page=20):
+        total = len(models)
+        offset = (page - 1) * per_page
+        return total, models[offset: offset + per_page]
+
+    def _get_details_query(self, params, fields, **kwargs):
+        model_name = kwargs.get('model')
+        test_num = int(kwargs.get('test_num'))
+        example_num = int(kwargs.get('example_num'))
+        fields = ["tests.examples.%s" % f for f in fields]
+        model = self.Model.find_one({'name': model_name}, fields)
+        return model.tests[test_num]['examples'][example_num]
+
+    def _get_groupped_action(self, **kwargs):
+        """
+        Groups data by `group_by_field` field.
+        """
+        from ml_metrics import apk
+        import numpy as np
+        test = Test.query.join(Model)\
+            .filter(Model.name == model,
+                    Test.name == test_name).one()
+        datas = db.session.query(Data.group_by_field,
+                                 func.count(Data.group_by_field).label('total'))\
+            .join(Test).join(Model)\
+            .filter(and_(Model.name == model, Test.name == test_name))\
+            .group_by(Data.group_by_field).order_by('total DESC').all()[:100]
+
+        res = []
+        avps = []
+        for d in datas:
+            data_set = Data.query.filter(Data.group_by_field == d[0]).all()
+            labels = [i.label for i in data_set]
+            pred_labels = [i.pred_label for i in data_set]
+            avp = apk(labels, pred_labels)
+            avps.append(avp)
+            res.append({'group_by_field': d[0],
+                        'count': d[1], 'avp': avp})
+        mavp = np.mean(avps)
+        field_name = test.parameters.get('group_by')
+        return {self.list_key: {'items': res}, 'field_name': field_name, 'mavp': mavp}
+
+
+api.add_resource(Datas, '/cloudml/model/<regex("[\w\.]+"):model>/test/\
+<regex("[\w\.\-]+"):test_num>/data',
+                 '/cloudml/model/<regex("[\w\.]+")\
+:model>/test/<regex("[\w\.\-]+"):test_num>/data/<regex("[\w\.\-]+"):example_num>',
+                 '/cloudml/model/<regex("[\w\.]+"):model>/test/\
+<regex("[\w\.\-]+"):test_num>/action/<regex("[\w\.]+"):action>/data')
 
 
 # class CompareReport(restful.Resource):

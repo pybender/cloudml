@@ -18,7 +18,7 @@ angular.module('app.datas.controllers', ['app.config', ])
     (pagination_opts) ->
       Data.$loadAll(_.extend({model_name: $routeParams.name,
       test_name: $routeParams.test_name,
-      show:'id,label,pred_label,title'}, pagination_opts))
+      show:'name,label,pred_label,title'}, pagination_opts))
 ])
 
 .controller('GroupedExamplesCtrl', [

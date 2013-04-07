@@ -184,7 +184,7 @@ angular.module('app.datas.controllers', ['app.config']).controller('TestExamples
         return Data.$loadAll(_.extend({
           model_name: $routeParams.name,
           test_name: $routeParams.test_name,
-          show: 'id,label,pred_label,title'
+          show: 'name,label,pred_label,title'
         }, pagination_opts));
       };
     };
@@ -311,13 +311,13 @@ angular.module('app.datas.model', ['app.config']).factory('Data', [
             test_name: test_name
           };
           return dfd.resolve({
-            pages: resp.data['datas'].pages,
-            page: resp.data['datas'].page,
-            total: resp.data['datas'].total,
-            per_page: resp.data['datas'].per_page,
+            pages: resp.data.pages,
+            page: resp.data.page,
+            total: resp.data.total,
+            per_page: resp.data.per_page,
             objects: (function() {
               var _i, _len, _ref, _results;
-              _ref = resp.data['datas'].items;
+              _ref = resp.data.datas;
               _results = [];
               for (_i = 0, _len = _ref.length; _i < _len; _i++) {
                 obj = _ref[_i];
@@ -1835,11 +1835,8 @@ angular.module('app.testresults.controllers', ['app.config']).controller('TestDi
         },
         transformRequest: angular.identity
       }).success(function(data, status, headers, config) {
-        var test;
         $scope.success = true;
         data['test']['model_name'] = model.name;
-        test = new Test(data['test']);
-        $location.path(test.objectUrl());
         return dialog.close(result);
       }).error(function(data, status, headers, config) {
         return $scope.httpError = true;
@@ -1857,6 +1854,7 @@ angular.module('app.testresults.controllers', ['app.config']).controller('TestDi
         model_name: $routeParams.name,
         name: $routeParams.test_name
       });
+      $scope.test_num = $routeParams.test_name;
     }
     DEFAULT_ACTION = 'test:details';
     $scope.action = ($routeParams.action || DEFAULT_ACTION).split(':');

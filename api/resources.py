@@ -65,11 +65,10 @@ class BaseResource(restful.Resource):
             return self._apply_action(action, method='POST', **kwargs)
 
         parser = self._get_model_parser()
-        params = parser.parse_args()
+        params = parser.parse_args() if parser else []
 
-        model = self.Model()
+        model = self._get_post_model(params, **kwargs)
         self._fill_post_data(model, params, **kwargs)
-        model.save()
         return self._render({self.OBJECT_NAME: model._id}, code=201)
 
     def put(self, action=None, **kwargs):
@@ -84,7 +83,6 @@ class BaseResource(restful.Resource):
 
         model = self.Model()
         model = self._fill_put_data(model, params, **kwargs)
-        model.save()
         return self._render({self.OBJECT_NAME: model._id}, code=200)
 
     def delete(self, action=None, **kwargs):
@@ -111,19 +109,25 @@ class BaseResource(restful.Resource):
         # Removing empty values
         kw = dict([(k, v) for k, v in kwargs.iteritems() if v])
         models = self._get_list_query(params, fields, **kw)
+
         context = {}
         if self.NEED_PAGING:
-            context['total'] = total = models.count()
             context['per_page'] = per_page = params.get('per_page') or 20
-            context['page'] = page = params.get('page')
-            offset = (page - 1) * per_page
-            models = models.skip(offset).limit(per_page)
+            context['page'] = page = params.get('page') or 1
+            total, models = self._paginate(models, page, per_page)
+            context['total'] = total
             context['pages'] = pages = int(math.ceil(1.0 * total / per_page))
             context['has_prev'] = page > 1
             context['has_next'] = page < pages
 
         context.update({self.list_key: models})
         return self._render(context)
+
+    def _paginate(self, models, page, per_page=20):
+        total = models.count()
+        offset = (page - 1) * per_page
+        models = models.skip(offset).limit(per_page)
+        return total, models
 
     def _details(self, extra_params=(), **kwargs):
         """
@@ -147,11 +151,18 @@ class BaseResource(restful.Resource):
         return self.Model.find_one(kwargs, fields)
 
     def _get_model_parser(self, **kwargs):
+        return None
+
+    def _fill_post_data(self, obj, params, **kwargs):
         raise NotImplemented()
 
-    def _fill_post_data(self, obj, params):
-        raise NotImplemented()
-
+    def _get_post_model(self, params, **kwargs):
+        """
+        It should be overridden when it's subdocument resource.
+        In this case parent model already exist and we need to
+        add elements in subdocument.
+        """
+        return self.Model()
     # Utility methods
 
     def _apply_action(self, action, method='GET', **kwargs):
@@ -175,7 +186,7 @@ for %s method: %s" % (method, action))
 
     def _get_fields_to_show(self, params):
         fields = params.get('show', None)
-        return fields.split(',') if fields else self.MODEL.__public__
+        return fields.split(',') if fields else ('name', )
 
     def _render(self, content, code=200):
         content = json.dumps(content, default=encode_model)

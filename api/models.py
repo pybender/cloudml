@@ -10,7 +10,73 @@ from api import db
 
 
 @db.register
+class TestExample(Document):
+    __collection__ = 'example'
+    structure = {
+        'created_on': datetime,
+        'data_input': dict,
+        'weighted_data_input': dict,
+
+        'name': None,
+        'label': None,
+        'pred_label': None,
+        'group_by_field': None,
+    }
+    default_values = {'created_on': datetime.utcnow}
+    required_fields = ['created_on', ]
+
+
+@db.register
+class Test(Document):
+    STATUS_QUEUED = 'Queued'
+    STATUS_IN_PROGRESS = 'In Progress'
+    STATUS_COMPLETED = 'Completed'
+    STATUS_ERROR = 'Error'
+
+    __collection__ = 'tests'
+    structure = {
+        'name': basestring,
+        'status': basestring,
+        'error': basestring,
+        'created_on': datetime,
+        'updated_on': datetime,
+        'data': dict,
+        'parameters': dict,
+        'classes_set': list,
+        'accuracy': float,
+        'metrics': dict,
+        # Raw test data
+        'examples': list,
+    }
+    required_fields = ['name', 'created_on', 'updated_on',
+                       'status']
+    default_values = {'created_on': datetime.utcnow,
+                      'updated_on': datetime.utcnow,
+                      'status': STATUS_QUEUED}
+    use_dot_notation = True
+
+    def __repr__(self):
+        return '<Test %r>' % self.name
+
+    @classmethod
+    def generate_name(cls, model, base_name='Test'):
+        count = model.tests.count()
+        return "%s-%s" % (base_name, count + 1)
+
+    @property
+    def data_count(self):
+        return self.data.count()
+
+    @property
+    def model_name(self):
+        return self.model.name
+
+
+@db.register
 class Model(Document):
+    """
+    Represents Model details and it's Tests.
+    """
     STATUS_NEW = 'New'
     STATUS_QUEUED = 'Queued'
     STATUS_TRAINING = 'Training'
@@ -19,9 +85,10 @@ class Model(Document):
 
     __collection__ = 'models'
     structure = {
-        'name': unicode,
+        'name': basestring,
         'status': basestring,
         'created_on': datetime,
+        'updated_on': datetime,
         'error': basestring,
 
         'features': dict,
@@ -52,11 +119,13 @@ class Model(Document):
         'positive_weights': list,
         'negative_weights': list,
         'comparable': bool,
+        'tests': list,
     }
     required_fields = ['name', 'created_on', ]
     default_values = {'created_on': datetime.utcnow,
+                      'updated_on': datetime.utcnow,
                       'status': STATUS_NEW,
-                      'comparable': False}
+                      'comparable': False, }
     use_dot_notation = True
 
     def get_import_handler(self, parameters=None, is_test=False):
@@ -68,12 +137,14 @@ class Model(Document):
         handler = ImportHandler(plan, parameters)
         return handler
 
-    # def run_test(self, parameters=True):
-    #     test_handler = self.get_import_handler(parameters, is_test=True)
-    #     metrics = self.trainer.test(test_handler)
-    #     raw_data = self.trainer._raw_data
-    #     self.trainer.clear_temp_data()
-    #     return metrics, raw_data
+    def run_test(self, parameters=True):
+        trainer = pickle.loads(self.trainer)
+        test_handler = self.get_import_handler(parameters, is_test=True)
+        metrics = trainer.test(test_handler)
+        raw_data = trainer._raw_data
+        # TODO:
+        #trainer.clear_temp_data()
+        return metrics, raw_data
 
     def set_trainer(self, trainer):
         self.trainer = Binary(pickle.dumps(trainer))
@@ -109,54 +180,6 @@ class ImportHandler(Document):
 
     def __repr__(self):
         return '<Import Handler %r>' % self.name
-
-
-# class Test(db.Document, Serializer):
-#     __public__ = ('id', 'name', 'created_on', 'accuracy',
-#                   'parameters', 'status', 'error')
-#     __all_public__ = ('id', 'name', 'created_on', 'accuracy', 'parameters',
-#                       'classes_set', 'metrics',
-#                       'status', 'error', 'model_name')
-#     STATUS_QUEUED = 'Queued'
-#     STATUS_IN_PROGRESS = 'In Progress'
-#     STATUS_COMPLETED = 'Completed'
-#     STATUS_ERROR = 'Error'
-
-#     id = db.Column(db.Integer, primary_key=True)
-#     name = db.Column(db.String(50))
-#     status = db.Column(db.String(10), default=STATUS_IN_PROGRESS)
-#     error = db.Column(db.Text)
-#     created_on = db.Column(db.DateTime)
-#     model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
-
-#     # Import params
-#     parameters = db.Column(JSONEncodedDict)
-#     data = db.relationship('Data', backref='test', lazy='dynamic')
-#     classes_set = db.Column(JSONEncodedDict)
-
-#     accuracy = db.Column(db.Float)
-#     metrics = deferred(db.Column(JSONEncodedDict))
-
-#     def __init__(self, model):
-#         self.model_id = model.id
-#         self.name = Test.generate_name(model)
-#         self.created_on = datetime.now()
-
-#     def __repr__(self):
-#         return '<Test %r>' % self.name
-
-#     @classmethod
-#     def generate_name(cls, model, base_name='Test'):
-#         count = model.tests.count()
-#         return "%s-%s" % (base_name, count + 1)
-
-#     @property
-#     def data_count(self):
-#         return self.data.count()
-
-#     @property
-#     def model_name(self):
-#         return self.model.name
 
 
 # class Data(db.Document, Serializer):

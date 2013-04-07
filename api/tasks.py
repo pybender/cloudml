@@ -1,10 +1,14 @@
 import json
 import logging
 from copy import copy
+from itertools import izip
+
 from api import celery, db
 
 from core.trainer.trainer import Trainer
 from core.trainer.config import FeatureModel
+from api.models import Test
+from helpers.weights import get_weighted_data
 
 
 class InvalidOperationError(Exception):
@@ -43,59 +47,81 @@ def train_model(model_name, parameters):
     return "Model trained at %s" % trainer.train_time
 
 
-def run_test(test, model):
+@celery.task
+def run_test(model_name, test_num):
     """
     Running tests for trained model
     """
-    pass
-    # try:
-    #     if model.status != Model.STATUS_TRAINED:
-    #         raise InvalidOperationError("Train model before")
+    model = db.cloudml.Model.find_one({'name': model_name})
+    test = Test(model.tests[test_num])
+    try:
+        if model.status != model.STATUS_TRAINED:
+            raise InvalidOperationError("Train model before")
+        test.status = Test.STATUS_IN_PROGRESS
+        test.error = ""
+        model.tests[test_num] = test
+        model.save(check_keys=False)
 
-    #     test.status = Test.STATUS_IN_PROGRESS
-    #     test.error = ""
-    #     db.session.merge(test)
-    #     db.session.commit()
-    #     parameters = copy(test.parameters)
-    #     group_by = parameters.pop('group_by')
-    #     metrics, raw_data = model.run_test(parameters)
-    #     test.accuracy = metrics.accuracy
+        parameters = copy(test.parameters)
+        group_by = parameters.pop('group_by')
+        metrics, raw_data = model.run_test(parameters)
+        test.accuracy = metrics.accuracy
 
-    #     metrics_dict = metrics.get_metrics_dict()
+        metrics_dict = metrics.get_metrics_dict()
 
-    #     # TODO: Refactor this. Here are possible issues with conformity
-    #     # between labels and values
-    #     confusion_matrix = metrics_dict['confusion_matrix']
-    #     confusion_matrix_ex = []
-    #     for i, val in enumerate(metrics.classes_set):
-    #         confusion_matrix_ex.append((val, confusion_matrix[i]))
-    #     metrics_dict['confusion_matrix'] = confusion_matrix_ex
-    #     n = len(raw_data) / 100 or 1
-    #     metrics_dict['roc_curve'][1] = metrics_dict['roc_curve'][1][0::n]
-    #     metrics_dict['roc_curve'][0] = metrics_dict['roc_curve'][0][0::n]
-    #     metrics_dict['precision_recall_curve'][1] = \
-    #         metrics_dict['precision_recall_curve'][1][0::n]
-    #     metrics_dict['precision_recall_curve'][0] = \
-    #         metrics_dict['precision_recall_curve'][0][0::n]
-    #     test.metrics = metrics_dict
-    #     test.classes_set = list(metrics.classes_set)
-    #     test.status = Test.STATUS_COMPLETED
+        # TODO: Refactor this. Here are possible issues with conformity
+        # between labels and values
+        confusion_matrix = metrics_dict['confusion_matrix']
+        confusion_matrix_ex = []
+        for i, val in enumerate(metrics.classes_set):
+            confusion_matrix_ex.append((val, confusion_matrix[i]))
+        metrics_dict['confusion_matrix'] = confusion_matrix_ex
+        n = len(raw_data) / 100 or 1
+        metrics_dict['roc_curve'][1] = metrics_dict['roc_curve'][1][0::n]
+        metrics_dict['roc_curve'][0] = metrics_dict['roc_curve'][0][0::n]
+        metrics_dict['precision_recall_curve'][1] = \
+            metrics_dict['precision_recall_curve'][1][0::n]
+        metrics_dict['precision_recall_curve'][0] = \
+            metrics_dict['precision_recall_curve'][0][0::n]
+        test.metrics = metrics_dict
+        test.classes_set = list(metrics.classes_set)
+        test.status = Test.STATUS_COMPLETED
 
-    #     if not model.comparable:
-    #         model.comparable = True
-    #         db.session.merge(model)
+        if not model.comparable:
+            model.comparable = True
 
-    #     db.session.merge(test)
-    #     db.session.commit()
-    #     # store test data in db
-    #     Data.loads_from_raw_data(model, test, raw_data,
-    #                              metrics._labels, metrics._preds,
-    #                              group_by)
-    # except Exception, exc:
-    #     test.status = Test.STATUS_ERROR
-    #     test.error = str(exc)
-    #     db.session.rollback()
-    #     db.session.merge(test)
-    #     db.session.commit()
-    #     return 'Failed'
-    # return 'Test completed'
+        # store test examples
+        for row, label, pred in izip(raw_data, metrics._labels,
+                                     metrics._preds):
+            row = decode(row)
+            weighted_data_input = get_weighted_data(model, row)
+            example = db.cloudml.TestExample()
+            example['data_input'] = row
+            example['weighted_data_input'] = dict(weighted_data_input)
+            # TODO: Specify Example title column in raw data
+            example['name'] = row['contractor.dev_profile_title']
+            example['label'] = str(label)
+            example['pred_label'] = str(pred)
+            test.examples.append(example)
+
+        model.tests[test_num] = test
+        model.save(check_keys=False)
+    except Exception, exc:
+        logging.error(exc)
+        test.status = Test.STATUS_ERROR
+        test.error = str(exc)
+        model.tests[test_num] = test
+        model.save(check_keys=False)
+        raise
+    return 'Test completed'
+
+
+def decode(row):
+    for key, val in row.iteritems():
+        try:
+            if isinstance(val, basestring):
+                row[key] = val.encode('ascii', 'ignore')
+        except UnicodeDecodeError, exc:
+            logging.error('Error while decoding %s: %s', val, exc)
+            row[key] = ""
+    return row
