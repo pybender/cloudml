@@ -10,69 +10,6 @@ from api import db
 
 
 @db.register
-class TestExample(Document):
-    __collection__ = 'example'
-    structure = {
-        'created_on': datetime,
-        'data_input': dict,
-        'weighted_data_input': dict,
-
-        'name': None,
-        'label': None,
-        'pred_label': None,
-        'group_by_field': None,
-    }
-    default_values = {'created_on': datetime.utcnow}
-    required_fields = ['created_on', ]
-
-
-@db.register
-class Test(Document):
-    STATUS_QUEUED = 'Queued'
-    STATUS_IN_PROGRESS = 'In Progress'
-    STATUS_COMPLETED = 'Completed'
-    STATUS_ERROR = 'Error'
-
-    __collection__ = 'tests'
-    structure = {
-        'name': basestring,
-        'status': basestring,
-        'error': basestring,
-        'created_on': datetime,
-        'updated_on': datetime,
-        'data': dict,
-        'parameters': dict,
-        'classes_set': list,
-        'accuracy': float,
-        'metrics': dict,
-        # Raw test data
-        'examples': list,
-    }
-    required_fields = ['name', 'created_on', 'updated_on',
-                       'status']
-    default_values = {'created_on': datetime.utcnow,
-                      'updated_on': datetime.utcnow,
-                      'status': STATUS_QUEUED}
-    use_dot_notation = True
-
-    def __repr__(self):
-        return '<Test %r>' % self.name
-
-    @classmethod
-    def generate_name(cls, model, base_name='Test'):
-        count = model.tests.count()
-        return "%s-%s" % (base_name, count + 1)
-
-    @property
-    def data_count(self):
-        return self.data.count()
-
-    @property
-    def model_name(self):
-        return self.model.name
-
-
-@db.register
 class Model(Document):
     """
     Represents Model details and it's Tests.
@@ -119,7 +56,7 @@ class Model(Document):
         'positive_weights': list,
         'negative_weights': list,
         'comparable': bool,
-        'tests': list,
+        #'tests': list,
     }
     required_fields = ['name', 'created_on', ]
     default_values = {'created_on': datetime.utcnow,
@@ -156,8 +93,74 @@ class Model(Document):
         self.negative_weights = calc_weights_css(negative, 'red')
         self.negative_weights.reverse()
 
-    def __repr__(self):
-        return '<Model %r>' % self.name
+
+@db.register
+class Test(Document):
+    STATUS_QUEUED = 'Queued'
+    STATUS_IN_PROGRESS = 'In Progress'
+    STATUS_COMPLETED = 'Completed'
+    STATUS_ERROR = 'Error'
+
+    __collection__ = 'tests'
+    structure = {
+        'name': basestring,
+        'model_name': basestring,
+        'status': basestring,
+        'error': basestring,
+        'created_on': datetime,
+        'updated_on': datetime,
+        'data': dict,
+        'parameters': dict,
+        'classes_set': list,
+        'accuracy': float,
+        'metrics': dict,
+        'model': Model,
+        # Raw test data
+        #'examples': [TestExample ],
+    }
+    required_fields = ['name', 'created_on', 'updated_on',
+                       'status']
+    default_values = {'created_on': datetime.utcnow,
+                      'updated_on': datetime.utcnow,
+                      'status': STATUS_QUEUED}
+    use_dot_notation = True
+    #use_autorefs = True
+
+    @classmethod
+    def generate_name(cls, model, base_name='Test'):
+        count = model.tests.count()
+        return "%s-%s" % (base_name, count + 1)
+
+    @property
+    def data_count(self):
+        return self.data.count()
+
+    @property
+    def model_name(self):
+        return self.model.name
+
+
+@db.register
+class TestExample(Document):
+    __collection__ = 'example'
+
+    structure = {
+        'created_on': datetime,
+        'data_input': dict,
+        'weighted_data_input': dict,
+
+        'name': unicode,
+        'label': unicode,
+        'pred_label': unicode,
+        'group_by_field': unicode,
+        'test': Test,
+
+        'test_name': basestring,
+        'model_name': basestring,
+    }
+    #use_autorefs = True
+    default_values = {'created_on': datetime.utcnow}
+    required_fields = ['created_on', ]
 
 
 @db.register

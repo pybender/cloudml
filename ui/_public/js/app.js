@@ -247,6 +247,8 @@ angular.module('app.datas.model', ['app.config']).factory('Data', [
 
       Data.prototype.weighted_data_input = null;
 
+      Data.prototype._id = null;
+
       /* API methods
       */
 

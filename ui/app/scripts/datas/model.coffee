@@ -18,6 +18,7 @@ angular.module('app.datas.model', ['app.config'])
       test_name: null
       data_input: null
       weighted_data_input: null
+      _id: null
 
       ### API methods ###
 

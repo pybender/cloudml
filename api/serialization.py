@@ -11,7 +11,7 @@ def encode_model(obj):
     if isinstance(obj, mongokit.Document):
         out = encode_model(dict(obj))
     elif isinstance(obj, mongokit.cursor.Cursor):
-        out = encode_model(list(obj))
+        out = [encode_model(item) for item in obj]
     elif isinstance(obj, (list)):
         out = [encode_model(item) for item in obj]
     elif isinstance(obj, (dict)):
@@ -19,7 +19,7 @@ def encode_model(obj):
     elif isinstance(obj, datetime.datetime):
         out = str(obj)
     elif isinstance(obj, ObjectId):
-        out = {'ObjectId': str(obj)}
+        out = str(obj)
     else:
         out = str(obj)
     return out

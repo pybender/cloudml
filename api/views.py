@@ -2,6 +2,7 @@ import json
 
 from flask.ext.restful import reqparse
 from werkzeug.datastructures import FileStorage
+from bson.objectid import ObjectId
 
 from api import db, api, app
 from api.utils import crossdomain, ERR_NO_SUCH_MODEL, odesk_error_response
@@ -162,71 +163,63 @@ class Tests(BaseResource):
 
     @property
     def Model(self):
-        return db.cloudml.Model
+        return db.cloudml.Test
 
     def _get_list_query(self, params, fields, **kwargs):
         model_name = kwargs.get('model')
-        fields = ["tests.%s" % f for f in fields]
-        model = self.Model.find_one({'name': model_name}, fields)
-        return model.tests
+        return self.Model.find({'model_name': model_name}, fields)
 
     def _get_details_query(self, params, fields, **kwargs):
         model_name = kwargs.get('model')
-        test_num = int(kwargs.get('name'))
-        fields = ["tests.%s" % f for f in fields]
-        model = self.Model.find_one({'name': model_name}, fields)
-        return model.tests[test_num]
+        test_name = kwargs.get('name')
+        return self.Model.find_one({'model_name': model_name,
+                                   'name': test_name}, fields)
 
-    def _fill_post_data(self, obj, params, model, name):
-        parser = populate_parser(obj)
+    def post(self, action=None, **kwargs):
+        model_name = kwargs.get('model')
+        model = db.cloudml.Model.find_one({'name': model_name})
+        parser = populate_parser(model)
         parameters = parser.parse_args()
         test = db.cloudml.Test()
         test.status = test.STATUS_QUEUED
         test.parameters = parameters
-        total = len(obj.tests)
-        test.name = "Test%s" % (total + 1)
-        obj.tests.append(test)
-        obj.save(check_keys=False)
-        run_test.run(obj.name, total)
 
-    def _get_post_model(self, params, **kwargs):
-        model = kwargs.get('model')
-        return self.Model.find_one({'name': model})
+        total = db.cloudml.Test.find({'model_name': model.name}).count()
+        test.name = "Test%s" % (total + 1)
+        test.model_name = model.name
+        test.model = model
+        test.save(check_keys=False)
+        run_test.delay(str(test._id))
+        return self._render({self.OBJECT_NAME: test._id}, code=201)
 
 api.add_resource(Tests, '/cloudml/model/<regex("[\w\.]+"):model>/test/\
 <regex("[\w\.\-]+"):name>', '/cloudml/model/<regex("[\w\.]+"):model>/tests')
 
 
-class Datas(BaseResource):
+class TestExamplesResource(BaseResource):
     @property
     def Model(self):
-        return db.cloudml.Model
+        return db.cloudml.TestExample
 
     OBJECT_NAME = 'data'
     NEED_PAGING = True
     GET_ACTIONS = ('groupped', )
-    DETAILS_PARAM = 'example_num'
+    DETAILS_PARAM = 'example_id'
     decorators = [crossdomain(origin='*')]
 
     def _get_list_query(self, params, fields, **kwargs):
         model_name = kwargs.get('model')
-        test_num = int(kwargs.get('test_num'))
-        fields = ["tests.examples.%s" % f for f in fields]
-        model = self.Model.find_one({'name': model_name}, fields)
-        return model.tests[test_num]['examples']
-
-    def _paginate(self, models, page=1, per_page=20):
-        total = len(models)
-        offset = (page - 1) * per_page
-        return total, models[offset: offset + per_page]
+        test_name = kwargs.get('test_name')
+        return self.Model.find({'model_name': model_name,
+                                'test_name': test_name}, fields)
 
     def _get_details_query(self, params, fields, **kwargs):
         model_name = kwargs.get('model')
-        test_num = int(kwargs.get('test_num'))
-        example_num = int(kwargs.get('example_num'))
-        fields = ["tests.examples.%s" % f for f in fields]
-        model = self.Model.find_one({'name': model_name}, fields)
-        return model.tests[test_num]['examples'][example_num]
+        test_name = kwargs.get('test_name')
+        example_id = kwargs.get('example_id')
+        return self.Model.find_one({'model_name': model_name,
+                                    'test_name': test_name,
+                                    '_id': ObjectId(example_id)}, fields)
 
     def _get_groupped_action(self, **kwargs):
         """
@@ -258,12 +251,12 @@ class Datas(BaseResource):
         return {self.list_key: {'items': res}, 'field_name': field_name, 'mavp': mavp}
 
 
-api.add_resource(Datas, '/cloudml/model/<regex("[\w\.]+"):model>/test/\
-<regex("[\w\.\-]+"):test_num>/data',
+api.add_resource(TestExamplesResource, '/cloudml/model/<regex("[\w\.]+"):model>/test/\
+<regex("[\w\.\-]+"):test_name>/data',
                  '/cloudml/model/<regex("[\w\.]+")\
-:model>/test/<regex("[\w\.\-]+"):test_num>/data/<regex("[\w\.\-]+"):example_num>',
+:model>/test/<regex("[\w\.\-]+"):test_name>/data/<regex("[\w\.\-]+"):example_id>',
                  '/cloudml/model/<regex("[\w\.]+"):model>/test/\
-<regex("[\w\.\-]+"):test_num>/action/<regex("[\w\.]+"):action>/data')
+<regex("[\w\.\-]+"):test_name>/action/<regex("[\w\.]+"):action>/data')
 
 
 # class CompareReport(restful.Resource):

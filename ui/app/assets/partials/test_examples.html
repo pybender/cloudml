@@ -21,7 +21,7 @@
           </thead>
           <tbody>
           <tr ng-repeat="data in objects | filter:search | orderBy:'id'" ng-class="{success : data.data_input['hire_outcome']=='1', error : !(data.data_input['hire_outcome']=='1')}">
-            <td><a href="#/models/{{ data.model_name }}/tests/{{ data.test_name }}/examples/{{ $index }}">{{ data.name }}</a></td>
+            <td><a href="#/models/{{ data.model_name }}/tests/{{ data.test_name }}/examples/{{ data._id }}">{{ data.name }}</a></td>
             <td><span>{{ data.label }}</span></td>
             <td><span>{{ data.pred_label }}</span></td>
           </tr>

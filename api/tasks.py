@@ -4,10 +4,11 @@ from copy import copy
 from itertools import izip
 
 from api import celery, db
+from bson.objectid import ObjectId
 
 from core.trainer.trainer import Trainer
 from core.trainer.config import FeatureModel
-from api.models import Test
+from api.models import Test, Model
 from helpers.weights import get_weighted_data
 
 
@@ -48,19 +49,19 @@ def train_model(model_name, parameters):
 
 
 @celery.task
-def run_test(model_name, test_num):
+def run_test(test_id):
     """
     Running tests for trained model
     """
-    model = db.cloudml.Model.find_one({'name': model_name})
-    test = Test(model.tests[test_num])
+    test = db.cloudml.Test.find_one({'_id': ObjectId(test_id)})
+    model = Model(test.model)
     try:
         if model.status != model.STATUS_TRAINED:
-            raise InvalidOperationError("Train model before")
-        test.status = Test.STATUS_IN_PROGRESS
+            raise InvalidOperationError("Train the model before")
+
+        test.status = test.STATUS_IN_PROGRESS
         test.error = ""
-        model.tests[test_num] = test
-        model.save(check_keys=False)
+        test.save()
 
         parameters = copy(test.parameters)
         group_by = parameters.pop('group_by')
@@ -99,19 +100,19 @@ def run_test(model_name, test_num):
             example['data_input'] = row
             example['weighted_data_input'] = dict(weighted_data_input)
             # TODO: Specify Example title column in raw data
-            example['name'] = row['contractor.dev_profile_title']
-            example['label'] = str(label)
-            example['pred_label'] = str(pred)
-            test.examples.append(example)
-
-        model.tests[test_num] = test
-        model.save(check_keys=False)
+            example['name'] = unicode(row['contractor.dev_profile_title'])
+            example['label'] = unicode(label)
+            example['pred_label'] = unicode(pred)
+            example['test'] = test
+            example['test_name'] = test.name
+            example['model_name'] = model.name
+            example.save(check_keys=False)
+        test.save()
     except Exception, exc:
         logging.error(exc)
-        test.status = Test.STATUS_ERROR
+        test.status = test.STATUS_ERROR
         test.error = str(exc)
-        model.tests[test_num] = test
-        model.save(check_keys=False)
+        test.save()
         raise
     return 'Test completed'
 
