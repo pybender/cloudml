@@ -104,8 +104,8 @@ def deploy():
 
     
     #run('cd %(project_path)s/ui; ./scripts/production.sh')
-    run('%(env_path)s/bin/python %(project_path)s/manage.py '
-         'createdb;' % env.conf)
+    # run('%(env_path)s/bin/python %(project_path)s/manage.py '
+    #      'createdb;' % env.conf)
 
     version.activate.run()
 
