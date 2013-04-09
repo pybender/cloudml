@@ -88,7 +88,10 @@ def run_test(test_id):
         test.status = Test.STATUS_COMPLETED
 
         if not model.comparable:
+            # TODO: fix this
+            model = db.cloudml.Model.find_one({'_id': model._id})
             model.comparable = True
+            model.save()
 
         # store test examples
         count = 0

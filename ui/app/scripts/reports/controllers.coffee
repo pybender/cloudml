@@ -58,7 +58,7 @@ angular.module('app.reports.controllers', ['app.config', ])
       $scope.action[0] == 'form'
 
     $scope.loadModelsList = =>
-      Model.$loadAll({comparable: true}
+      Model.$loadAll({comparable: 1}
       ).then ((opts) ->
         $scope.models = opts.objects
         # TODO: Fix this
@@ -74,7 +74,7 @@ angular.module('app.reports.controllers', ['app.config', ])
 
     $scope.loadTestsList = (model) =>
       Test.$loadTests(
-        model.name
+        model.name, {status: "Completed"}
       ).then ((opts) ->
         model.tests = opts.objects
         # TODO: Fix this

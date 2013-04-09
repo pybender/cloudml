@@ -142,11 +142,14 @@ class BaseResource(restful.Resource):
     # Specific actions for GET
 
     def _get_list_query(self, params, fields, **kwargs):
-        filter_names = [v[0] for v in self.FILTER_PARAMS]
-        filter_params = dict([(k, v) for k, v in params.iteritems()
-                              if not v is None and k in filter_names])
+        filter_params = self._prepare_filter_params(params)
         kwargs.update(filter_params)
         return self.Model.find(kwargs, fields)
+
+    def _prepare_filter_params(self, params):
+        filter_names = [v[0] for v in self.FILTER_PARAMS]
+        return dict([(k, v) for k, v in params.iteritems()
+                    if not v is None and k in filter_names])
 
     def _get_details_query(self, params, fields, **kwargs):
         return self.Model.find_one(kwargs, fields)

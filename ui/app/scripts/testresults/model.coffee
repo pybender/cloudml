@@ -15,7 +15,7 @@ angular.module('app.testresults.model', ['app.config'])
       constructor: (opts) ->
         @loadFromJSON opts
 
-      id: null
+      _id: null
       accuracy: null
       created_on: null
       data_count: null
@@ -27,7 +27,7 @@ angular.module('app.testresults.model', ['app.config'])
 
       ### API methods ###
 
-      isNew: -> if @slug == null then true else false
+      isNew: -> if @_id == null then true else false
 
       objectUrl: =>
         return '/models/' + (@model_name || @model.name) + "/tests/" + @name

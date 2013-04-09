@@ -26,8 +26,7 @@ class Models(BaseResource):
     """
     GET_ACTIONS = ('weights', )
     PUT_ACTIONS = ('train', )
-    FILTER_PARAMS = (('status', str), )
-    # ('comparable', bool)
+    FILTER_PARAMS = (('status', str), ('comparable', int))
     methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
 
     @property
@@ -41,6 +40,12 @@ class Models(BaseResource):
         return model_parser
 
     # GET specific methods
+
+    def _prepare_filter_params(self, params):
+        pdict = super(Models, self)._prepare_filter_params(params)
+        if 'comparable' in pdict:
+            pdict['comparable'] = bool(pdict['comparable'])
+        return pdict
 
     def _get_weights_action(self, per_page=50, **kwargs):
         """
@@ -93,15 +98,15 @@ class Models(BaseResource):
 
     # PUT specififc methods
 
-    def _fill_put_data(self, model, param,  **kwargs):
+    def _fill_put_data(self, model, param, **kwargs):
         importhandler = None
         train_importhandler = None
         if param['importhandler']:
             importhandler = json.loads(param['importhandler'])
         if param['train_importhandler']:
             train_importhandler = json.loads(param['train_importhandler'])
-        model.importhandler =  importhandler or model.importhandler
-        model.train_importhandler =  train_importhandler \
+        model.importhandler = importhandler or model.importhandler
+        model.train_importhandler = train_importhandler \
             or model.train_importhandler
         model.save()
         return model
@@ -159,14 +164,16 @@ class Tests(BaseResource):
     Tests API Resource
     """
     OBJECT_NAME = 'test'
+    FILTER_PARAMS = (('status', str), )
 
     @property
     def Model(self):
         return db.cloudml.Test
 
     def _get_list_query(self, params, fields, **kwargs):
-        model_name = kwargs.get('model')
-        return self.Model.find({'model_name': model_name}, fields)
+        params = self._prepare_filter_params(params)
+        params['model_name'] = kwargs.get('model')
+        return self.Model.find(params, fields)
 
     def _get_details_query(self, params, fields, **kwargs):
         model_name = kwargs.get('model')
@@ -251,7 +258,6 @@ class TestExamplesResource(BaseResource):
                                      {'model_name': model_name,
                                       'test_name': test_name},
                                      {'list': []}, REDUCE_FUNC)
-        
         res = []
         avps = []
 
@@ -280,33 +286,40 @@ api.add_resource(TestExamplesResource, '/cloudml/model/\
 /test/<regex("[\w\.\-]+"):test_name>/action/<regex("[\w\.]+"):action>/data')
 
 
-# class CompareReport(restful.Resource):
-#     decorators = [crossdomain(origin='*')]
+class CompareReportResource(BaseResource):
+    """
+    Resource which generated compare 2 tests report
+    """
+    decorators = [crossdomain(origin='*')]
+    GET_PARAMS = (('model1', str),
+                  ('test1', str),
+                  ('model2', str),
+                  ('test2', str),)
 
-#     @render(brief=False)
-#     def get(self):
-#         parser = reqparse.RequestParser()
-#         parser.add_argument('test1', type=str)
-#         parser.add_argument('test2', type=str)
-#         parser.add_argument('model1', type=str)
-#         parser.add_argument('model2', type=str)
-#         parameters = parser.parse_args()
-#         test1 = db.session.query(Test).join(Model)\
-#             .filter(Model.name == parameters['model1'],
-#                     Test.name == parameters['test1']).one()
-#         test2 = db.session.query(Test).join(Model)\
-#             .filter(Model.name == parameters['model2'],
-#                     Test.name == parameters['test2']).one()
-#         examples1 = db.session.query(Data).join(Test)\
-#             .filter(Data.test == test1)\
-#             .order_by(desc(Data.pred_label))[:10]
-#         examples2 = db.session.query(Data).join(Test)\
-#             .filter(Data.test == test2)\
-#             .order_by(desc(Data.pred_label))[:10]
-#         return {'test1': test1, 'test2': test2,
-#                 'examples1': examples1, 'examples2': examples2}
+    def _is_list_method(self, **kwargs):
+        return False
 
-# api.add_resource(CompareReport, '/cloudml/reports/compare')
+    def _details(self, extra_params=(), **kwargs):
+        params = self._parse_parameters(self.GET_PARAMS)
+        test_fields = ('name', 'model_name', 'accuracy', 'metrics')
+        test1 = db.cloudml.Test.find_one({'model_name': params.get('model1'),
+                                          'name': params.get('test1')},
+                                         test_fields)
+        test2 = db.cloudml.Test.find_one({'model_name': params.get('model2'),
+                                          'name': params.get('test2')},
+                                         test_fields)
+        examples_fields = ('name', 'label', 'pred_label', 'weighted_data_input')
+        examples1 = db.cloudml.TestExample.find({'model_name': params.get('model1'),
+                                                 'test_name': params.get('test1')},
+                                                examples_fields).limit(10)
+        examples2 = db.cloudml.TestExample.find({'model_name': params.get('model2'),
+                                                 'test_name': params.get('test2')},
+                                                examples_fields).limit(10)
+        return self._render({'test1': test1, 'test2': test2,
+                             'examples1': examples1,
+                             'examples2': examples2})
+
+api.add_resource(CompareReportResource, '/cloudml/reports/compare')
 
 
 # class Predict(restful.Resource):
