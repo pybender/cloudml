@@ -42,8 +42,8 @@ angular.module('app.testresults.controllers', ['app.config', ])
     ).success((data, status, headers, config) ->
       $scope.success = true
       data['test']['model_name'] = model.name
-      test = new Test(data['test'])
-      $location.path test.objectUrl()
+      # test = new Test(data['test'])
+      # $location.path test.objectUrl()
       dialog.close(result)
     ).error((data, status, headers, config) ->
       $scope.httpError = true
@@ -66,6 +66,7 @@ angular.module('app.testresults.controllers', ['app.config', ])
 
     $scope.test = new Test({model_name: $routeParams.name,
     name: $routeParams.test_name})
+    $scope.test_num = $routeParams.test_name
 
   DEFAULT_ACTION = 'test:details'
   $scope.action = ($routeParams.action or DEFAULT_ACTION).split ':'
@@ -79,7 +80,7 @@ angular.module('app.testresults.controllers', ['app.config', ])
       when "curves" then $scope.go 'status,metrics.roc_curve,
 metrics.precision_recall_curve,metrics.roc_auc'
       when "matrix" then $scope.go 'status,metrics.confusion_matrix'
-      else $scope.go 'name,status,classes_set,created_on,accuracy,data_count,
+      else $scope.go 'name,status,classes_set,created_on,accuracy,
 parameters,error'
 
   $scope.go = (fields, callback) ->

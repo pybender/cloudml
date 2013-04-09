@@ -17,6 +17,7 @@ ERR_NO_MODELS = 1002
 ERR_STORING_MODEL = 1003
 ERR_LOADING_MODEL = 1004
 ERR_INVALID_DATA = 1005
+ERR_INVALID_METHOD = 1006
 
 
 class JSONEncodedDict(TypeDecorator):
@@ -70,7 +71,6 @@ class PickledValue(TypeDecorator):
         return value
 
 
-
 def consumes(content_type=None):
     """
     Annotation that filters requests according to Content-type. If the
@@ -99,7 +99,8 @@ def consumes(content_type=None):
 
 def odesk_error_response(status, code, message, debug=None):
     """
-    Creates a JSON error response that is compliant with https://sites.google.com/a/odesk.com/eng/Home/FunctionalSpecifications/webservices-error-handling-enhancements-frd
+    Creates a JSON error response that is compliant with
+    https://sites.google.com/a/odesk.com/eng/Home/FunctionalSpecifications/webservices-error-handling-enhancements-frd
 
     Keyword arguments
     status -- The HTTP status code to return.

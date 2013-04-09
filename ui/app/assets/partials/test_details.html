@@ -1,11 +1,11 @@
 <h2>
     {{ test.name|capfirst }} Details
     <div class="actions">
-        <a ng-show="test.status == 'Completed'" class="btn" href="#/models/{{ test.model_name }}/tests/{{ test.name }}/examples">
+        <a ng-show="test.status == 'Completed'" class="btn" href="#/models/{{ test.model_name }}/tests/{{ test_num }}/examples">
             <i class="status-icon icon-search"></i><small> Browse examples</small>
           </a>
-        <a ng-show="test.status == 'Completed'" class="btn" href="#/models/{{ test.model_name }}/tests/{{ test.name }}/grouped_examples">
-            <i class="status-icon icon-search"></i><small>Grouped examples</small>
+        <a ng-show="test.status == 'Completed'" class="btn" href="#/models/{{ test.model_name }}/tests/{{ test_num }}/grouped_examples">
+            <i class="status-icon icon-search"></i><small> Average Precision</small>
           </a>
     </div>
 </h2>

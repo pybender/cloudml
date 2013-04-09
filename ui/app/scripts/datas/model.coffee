@@ -18,6 +18,7 @@ angular.module('app.datas.model', ['app.config'])
       test_name: null
       data_input: null
       weighted_data_input: null
+      _id: null
 
       ### API methods ###
 
@@ -67,13 +68,13 @@ angular.module('app.datas.model', ['app.config'])
         .then ((resp) =>
           extra = {loaded: true, model_name: model_name, test_name: test_name}
           dfd.resolve {
-            pages: resp.data['datas'].pages
-            page: resp.data['datas'].page
-            total: resp.data['datas'].total
-            per_page: resp.data['datas'].per_page
+            pages: resp.data.pages
+            page: resp.data.page
+            total: resp.data.total
+            per_page: resp.data.per_page
             objects: (
               new @(_.extend(obj, extra)) \
-              for obj in resp.data['datas'].items)
+              for obj in resp.data.datas)
             _resp: resp
           }
 
@@ -86,7 +87,7 @@ angular.module('app.datas.model', ['app.config'])
         $http(
           method: 'GET'
           url: "#{settings.apiUrl}model/#{opts.model_name}/test/
-#{opts.test_name}/action/groupped/data"
+#{opts.test_name}/action/groupped/data?field=#{opts.field}"
           headers: settings.apiRequestDefaultHeaders
           params: opts
         )

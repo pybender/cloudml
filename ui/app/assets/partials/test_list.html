@@ -10,7 +10,7 @@
       </tr>
   </thead>
   <tbody>
-    <tr ng-repeat="test in tests | filter:search | orderBy:'-id'" ng-class="{error : test.status=='Error', warning : test.status=='In Progress', success : test.status =='Completed'}">
+    <tr ng-repeat="test in tests" ng-class="{error : test.status=='Error', warning : test.status=='In Progress', success : test.status =='Completed'}">
       <td><a href="#/models/{{ model.name }}/tests/{{ test.name }}">{{ test.name }}</a></td>
       <td title="{{ test.error }}">{{ test.status }}</td>
       <td>{{ test.created_on|format_date }}</td>

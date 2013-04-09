@@ -1,35 +1,25 @@
-from flask.ext import restful
-from flask import request
+import json
+import logging
+import pickle
 from flask.ext.restful import reqparse
+from flask import request
 from werkzeug.datastructures import FileStorage
-from sqlalchemy import and_
-from sqlalchemy import func
-from sqlalchemy.sql.expression import asc, desc
-from sqlalchemy.orm import undefer
-from sqlalchemy.orm.exc import NoResultFound
+from bson.objectid import ObjectId
+from itertools import izip
 
-from api.decorators import render
 from api import db, api
-from api.utils import crossdomain, ERR_NO_SUCH_MODEL, odesk_error_response
-from api.models import Model, Test, Data, ImportHandler
-from api.tasks import train_model, run_test
-from api.resources import BaseResource, qs2list
-
+from api.utils import crossdomain, ERR_INVALID_DATA, odesk_error_response, \
+    ERR_NO_SUCH_MODEL
+from api.resources import BaseResource
 from core.trainer.store import load_trainer
 from core.trainer.trainer import Trainer
 from core.trainer.config import FeatureModel
-from core.importhandler.importhandler import ExtractionPlan,\
+from core.importhandler.importhandler import ExtractionPlan, \
     RequestImportHandler
-
-get_parser = reqparse.RequestParser()
-get_parser.add_argument('show', type=str)
-
-page_parser = reqparse.RequestParser()
-page_parser.add_argument('page', type=int)
-
+from api.models import Model, Test, TestExample, ImportHandler
 
 model_parser = reqparse.RequestParser()
-model_parser.add_argument('importhandler', type=str)
+model_parser.add_argument('importhandler', type=str, default=None)
 model_parser.add_argument('train_importhandler', type=str)
 model_parser.add_argument('features', type=str)
 model_parser.add_argument('trainer', type=FileStorage, location='files')
@@ -39,143 +29,124 @@ class Models(BaseResource):
     """
     Models API methods
     """
-    MODEL = Model
-    GET_ACTIONS = ('tests', 'weights')
+    GET_ACTIONS = ('weights', )
+    PUT_ACTIONS = ('train', )
+    FILTER_PARAMS = (('status', str), ('comparable', int))
     methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
 
-    def _get_list_query(self, params, opts, **kwargs):
-        comparable = params.get('comparable', False)
-        if comparable:
-            return Model.options(*opts).filter(Model.comparable)
-        else:
-            return super(Models, self)._get_list_query(params, opts)
+    @property
+    def Model(self):
+        return db.cloudml.Model
 
-    def _is_list_method(self, **kwargs):
-        model = kwargs.get('model')
-        return not model
-
-    def _get_details_query(self, params, opts, **kwargs):
-        model = kwargs.get('model')
-        return db.session.query(self.MODEL).options(*opts)\
-            .filter(self.MODEL.name == model)
-
-    @render()
-    def _get_tests_action(self, model):
+    def _get_model_parser(self, **kwargs):
         """
-        Gets list of Trained Model's tests
+        Returns Model parser that used when POST model.
         """
-        param = get_parser.parse_args()
-        fields = param.get('show', None)
-        fields = fields.split(',') if fields else Test.__public__
-        tests = db.session.query(Test).join(Model)\
-            .filter(Model.name == model).all()
-        return {'tests': qs2list(tests, fields)}
+        return model_parser
 
-    @render()
+    # GET specific methods
+
+    def _prepare_filter_params(self, params):
+        pdict = super(Models, self)._prepare_filter_params(params)
+        if 'comparable' in pdict:
+            pdict['comparable'] = bool(pdict['comparable'])
+        return pdict
+
     def _get_weights_action(self, per_page=50, **kwargs):
         """
         Gets list with Model's weighted parameters with pagination.
         """
         paging_params = (('ppage', int), ('npage', int),)
         params = self._parse_parameters(self.GET_PARAMS + paging_params)
-        fields = self._get_fields_to_show(params)
-        wfields = ['positive_weights', 'negative_weights']
-        opts = self._get_undefer_options(fields + wfields)
-        model = self._get_details_query(params, opts, **kwargs).one()
+
+        # Paginate weights
         ppage = params.get('ppage') or 1
         npage = params.get('npage') or 1
-        return {self.OBJECT_NAME: qs2list(model, fields),
-                'positive': model.positive_weights
-                [(ppage - 1) * per_page:ppage * per_page],
-                'negative': model.negative_weights
-                [(npage - 1) * per_page:npage * per_page]}
+        fields = self._get_fields_to_show(params)
+        fields_dict = {'positive_weights': {'$slice': [(ppage - 1) * per_page,
+                                                       per_page]},
+                       'negative_weights': {'$slice': [(npage - 1) * per_page,
+                                                       per_page]}}
+        for field in fields:
+            fields_dict[field] = ""
 
-    @render(code=201)
-    def post(self, model):
+        model = self._get_details_query(params, fields_dict, **kwargs)
+        return self._render({self.OBJECT_NAME: model})
+
+    # POST specific methods
+
+    def _fill_post_data(self, obj, params, **kwargs):
         """
-        Adds new Trained Model
+        Fills Model specific fields when uploading trained model or
+        creating new model.
         """
-        param = model_parser.parse_args()
-        if not param['features']:
-            return self._upload(model, param)
+        obj.name = kwargs.get('name')
+        if 'features' in params and params['features']:
+            # Uploading new model
+            feature_model = FeatureModel(params['features'], is_file=False)
+            trainer = Trainer(feature_model)
+            obj.set_trainer(trainer)
+
+            obj.features = json.loads(params['features'])
         else:
-            return self._add(model, param)
+            # Uploading trained model
+            trainer = load_trainer(params['trainer'])
+            obj.status = obj.STATUS_TRAINED
+            obj.set_trainer(trainer)
+            obj.set_weights(**trainer.get_weights())
 
-    def _add(self, model, param):
-        model = Model(model)
-        model.train_importhandler = param['importhandler']
-        model.importhandler = param['importhandler']
-        model.features = param['features']
+        obj.importhandler = json.loads(params['importhandler'])
+        obj.train_importhandler = json.loads(params['importhandler'])
+        plan = ExtractionPlan(params['importhandler'], is_file=False)
+        obj.import_params = plan.input_params
+        obj.save()
 
-        feature_model = FeatureModel(model.features, is_file=False)
-        trainer = Trainer(feature_model)
-        plan = ExtractionPlan(model.train_importhandler, is_file=False)
-        model.import_params = plan.input_params
-        model.import_params.append('group_by')
-        model.trainer = trainer
+    # PUT specififc methods
 
-        db.session.add(model)
-        db.session.commit()
-        return {'model': model}
-
-    def _upload(self, model, param):
-        """
-        Upload already trained Model
-        """
-        param = model_parser.parse_args()
-        model = Model(model)
-        trainer = load_trainer(param['trainer'])
-        model.status = Model.STATUS_TRAINED
-        model.set_trainer(trainer)
-        model.importhandler = param['importhandler']
-        plan = ExtractionPlan(model.importhandler, is_file=False)
-        model.import_params = plan.input_params
-        db.session.add(model)
-        db.session.commit()
-        return {'model': model}
-
-    @render(code=200)
-    def put(self, model, action=None):
-        model = Model.query.filter(Model.name == model).one()
-        if action is None:
-            return self._edit(model)
-        elif action == 'train':
-            return self._train(model)
-
-    def _edit(self, model):
-        param = model_parser.parse_args()
-        model.importhandler = param['importhandler'] or model.importhandler
-        model.train_importhandler = param['train_importhandler'] \
+    def _fill_put_data(self, model, param, **kwargs):
+        importhandler = None
+        train_importhandler = None
+        if param['importhandler']:
+            importhandler = json.loads(param['importhandler'])
+        if param['train_importhandler']:
+            train_importhandler = json.loads(param['train_importhandler'])
+        model.importhandler = importhandler or model.importhandler
+        model.train_importhandler = train_importhandler \
             or model.train_importhandler
-        db.session.commit()
-        return {'model': model}
+        model.save()
+        return model
 
-    def _train(self, model):
+    def _put_train_action(self, **kwargs):
+        from api.tasks import train_model
+        model = self._get_details_query(None, None,
+                                        **kwargs)
         parser = populate_parser(model)
-        parameters = parser.parse_args()
+        params = parser.parse_args()
+        train_model.delay(model.name, params)
+        model.status = model.STATUS_QUEUED
+        model.save()
 
-        model.status = Model.STATUS_QUEUED
-        db.session.commit()
+        return self._render({self.OBJECT_NAME: model._id})
 
-        train_model.delay(model, parameters)
-        return {'model': model}
-
-
-api.add_resource(Models, '/cloudml/model/<regex("[\w\.]*"):model>',
-                 '/cloudml/model/<regex("[\w\.]+"):model>/<regex("[\w\.]+"):action>')
+api.add_resource(Models, '/cloudml/model/<regex("[\w\.]*"):name>',
+                 '/cloudml/model/<regex("[\w\.]+"):name>/\
+<regex("[\w\.]+"):action>')
 
 
 class ImportHandlerResource(BaseResource):
     """
     Import handler API methods
     """
-    MODEL = ImportHandler
+    @property
+    def Model(self):
+        return db.cloudml.ImportHandler
+
     OBJECT_NAME = 'import_handler'
     decorators = [crossdomain(origin='*')]
     methods = ['GET', 'OPTIONS', 'PUT', 'POST']
 
     @classmethod
-    def get_model_parser(cls):
+    def _get_model_parser(cls):
         if not hasattr(cls, "_model_parser"):
             parser = reqparse.RequestParser()
             parser.add_argument('data', type=str)
@@ -183,179 +154,216 @@ class ImportHandlerResource(BaseResource):
             cls._model_parser = parser
         return cls._model_parser
 
-    def _fill_post_data(self, obj, params):
+    def _fill_post_data(self, obj, params, name):
+        obj.name = name
         obj.type = params.get('type')
-        obj.data = params.get('data')
+        obj.data = json.loads(params.get('data'))
+        obj.save()
 
 api.add_resource(ImportHandlerResource,
                  '/cloudml/import/handler/<regex("[\w\.]*"):name>')
 
 
 class Tests(BaseResource):
-    MODEL = Test
+    """
+    Tests API Resource
+    """
     OBJECT_NAME = 'test'
-    decorators = [crossdomain(origin='*')]
+    FILTER_PARAMS = (('status', str), )
 
-    def _get_details_query(self, params, opts, **kwargs):
-        model = kwargs.get('model')
-        test_name = kwargs.get('test_name')
-        return Test.query.options(*opts).join(Model)\
-            .filter(Model.name == model,
-                    Test.name == test_name)
+    @property
+    def Model(self):
+        return db.cloudml.Test
 
-    def _is_list_method(self, **kwargs):
-        test_name = kwargs.get('test_name')
-        return not test_name
+    def _get_list_query(self, params, fields, **kwargs):
+        params = self._prepare_filter_params(params)
+        params['model_name'] = kwargs.get('model')
+        return self.Model.find(params, fields)
 
-    @render(code=201)
-    def post(self, model, test_name):
-        opts = [undefer(field) for field in ('importhandler', 'trainer',
-            'positive_weights', 'negative_weights',
-            'positive_weights_tree', 'negative_weights_tree')]
-        model = Model.query.options(*opts).filter(
-            Model.name == model,
-            Model.status == Model.STATUS_TRAINED).first()
+    def _get_details_query(self, params, fields, **kwargs):
+        model_name = kwargs.get('model')
+        test_name = kwargs.get('name')
+        return self.Model.find_one({'model_name': model_name,
+                                   'name': test_name}, fields)
 
+    def post(self, action=None, **kwargs):
+        from api.tasks import run_test
+        model_name = kwargs.get('model')
+        model = db.cloudml.Model.find_one({'name': model_name})
         parser = populate_parser(model)
         parameters = parser.parse_args()
-
-        test = Test(model)
-        test.status = Test.STATUS_QUEUED
+        test = db.cloudml.Test()
+        test.status = test.STATUS_QUEUED
         test.parameters = parameters
-        db.session.add(test)
-        db.session.commit()
 
-        run_test.delay(test, test.model)
-
-        return {'test': test}
+        total = db.cloudml.Test.find({'model_name': model.name}).count()
+        test.name = "Test%s" % (total + 1)
+        test.model_name = model.name
+        test.model = model
+        test.save(check_keys=False)
+        run_test.delay(str(test._id))
+        return self._render({self.OBJECT_NAME: test._id}, code=201)
 
 api.add_resource(Tests, '/cloudml/model/<regex("[\w\.]+"):model>/test/\
-<regex("[\w\.\-]+"):test_name>')
+<regex("[\w\.\-]+"):name>', '/cloudml/model/<regex("[\w\.]+"):model>/tests')
 
 
-class Datas(BaseResource):
-    MODEL = Data
+REDUCE_FUNC = 'function(obj, prev) {\
+                            prev.list.push({"label": obj.pred_label,\
+                            "pred": obj.label})\
+                      }'
+
+
+class TestExamplesResource(BaseResource):
+    @property
+    def Model(self):
+        return db.cloudml.TestExample
+
     OBJECT_NAME = 'data'
     NEED_PAGING = True
     GET_ACTIONS = ('groupped', )
+    DETAILS_PARAM = 'example_id'
     decorators = [crossdomain(origin='*')]
 
-    def _is_list_method(self, **kwargs):
-        data_id = kwargs.get('data_id')
-        return not data_id
-
-    def _get_list_query(self, params, opts, **kwargs):
-        model = kwargs.get('model')
+    def _get_list_query(self, params, fields, **kwargs):
+        model_name = kwargs.get('model')
         test_name = kwargs.get('test_name')
-        return Data.query.options(*opts).join(Test).join(Model)\
-            .filter(and_(Model.name == model, Test.name == test_name))
+        return self.Model.find({'model_name': model_name,
+                                'test_name': test_name}, fields)
 
-    def _get_details_query(self, params, opts, **kwargs):
-        model = kwargs.get('model')
+    def _get_details_query(self, params, fields, **kwargs):
+        model_name = kwargs.get('model')
         test_name = kwargs.get('test_name')
-        data_id = kwargs.get('data_id')
-        return Data.query.options(*opts)\
-            .join(Test).join(Model)\
-            .filter(and_(Model.name == model, Test.name == test_name,
-                         Data.id == data_id))
+        example_id = kwargs.get('example_id')
+        return self.Model.find_one({'model_name': model_name,
+                                    'test_name': test_name,
+                                    '_id': ObjectId(example_id)}, fields)
 
-    @render()
-    def _get_groupped_action(self, model, test_name, **kwargs):
+    def _get_groupped_action(self, **kwargs):
         """
-        Groups data by `group_by_field` field.
+        Groups data by `group_by_field` field and calculates mean average precision.
+        Note: `group_by_field` should be specified in request parameters.
         """
         from ml_metrics import apk
         import numpy as np
-        test = Test.query.join(Model)\
-            .filter(Model.name == model,
-                    Test.name == test_name).one()
-        datas = db.session.query(Data.group_by_field,
-                                 func.count(Data.group_by_field).label('total'))\
-            .join(Test).join(Model)\
-            .filter(and_(Model.name == model, Test.name == test_name))\
-            .group_by(Data.group_by_field).order_by('total DESC').all()[:100]
+        from operator import itemgetter
 
+        # getting from request parameters fieldname to group.
+        parser = reqparse.RequestParser()
+        parser.add_argument('field', type=str)
+        params = parser.parse_args()
+        group_by_field = params.get('field')
+        if not group_by_field:
+            return odesk_error_response(400, ERR_INVALID_DATA,
+                                        'field parameter is required')
+        model_name = kwargs.get('model')
+        test_name = kwargs.get('test_name')
+        ex_collection = db.cloudml.TestExample.collection
+        groups = ex_collection.group([group_by_field, ],
+                                     {'model_name': model_name,
+                                      'test_name': test_name},
+                                     {'list': []}, REDUCE_FUNC)
         res = []
         avps = []
-        for d in datas:
-            data_set = Data.query.filter(Data.group_by_field == d[0]).all()
-            labels = [i.label for i in data_set]
-            pred_labels = [i.pred_label for i in data_set]
+
+        for group in groups:
+            group_list = group['list']
+            labels = [item['label'] for item in group_list]
+            pred_labels = [item['pred'] for item in group_list]
             avp = apk(labels, pred_labels)
             avps.append(avp)
-            res.append({'group_by_field': d[0], 'count': d[1], 'avp': avp} )
-        mavp =np.mean(avps)
-        field_name = test.parameters.get('group_by')
-        return {self.list_key: {'items': res}, 'field_name': field_name, 'mavp': mavp}
+            res.append({'group_by_field': group[group_by_field],
+                        'count': len(group_list),
+                        'avp': avp})
+        res = sorted(res, key=itemgetter("count"), reverse=True)[:100]
+        mavp = np.mean(avps)
 
+        context = {self.list_key: {'items': res},
+                   'field_name': group_by_field,
+                   'mavp': mavp}
+        return self._render(context)
 
-api.add_resource(Datas, '/cloudml/model/<regex("[\w\.]+"):model>/test/\
-<regex("[\w\.\-]+"):test_name>/data',
+api.add_resource(TestExamplesResource, '/cloudml/model/\
+<regex("[\w\.]+"):model>/test/<regex("[\w\.\-]+"):test_name>/data',
                  '/cloudml/model/<regex("[\w\.]+")\
-:model>/test/<regex("[\w\.\-]+"):test_name>/data/<regex("[\w\.\-]+"):data_id>',
-                 '/cloudml/model/<regex("[\w\.]+"):model>/test/\
-<regex("[\w\.\-]+"):test_name>/action/<regex("[\w\.]+"):action>/data'
-)
+:model>/test/<regex("[\w\.\-]+"):test_name>/data/\
+<regex("[\w\.\-]+"):example_id>', '/cloudml/model/<regex("[\w\.]+"):model>\
+/test/<regex("[\w\.\-]+"):test_name>/action/<regex("[\w\.]+"):action>/data')
 
 
-class CompareReport(restful.Resource):
+class CompareReportResource(BaseResource):
+    """
+    Resource which generated compare 2 tests report
+    """
+    ALLOWED_METHODS = ('get', )
+    decorators = [crossdomain(origin='*')]
+    GET_PARAMS = (('model1', str),
+                  ('test1', str),
+                  ('model2', str),
+                  ('test2', str),)
+
+    def _is_list_method(self, **kwargs):
+        return False
+
+    def _details(self, extra_params=(), **kwargs):
+        params = self._parse_parameters(self.GET_PARAMS)
+        test_fields = ('name', 'model_name', 'accuracy', 'metrics')
+        test1 = db.cloudml.Test.find_one({'model_name': params.get('model1'),
+                                          'name': params.get('test1')},
+                                         test_fields)
+        test2 = db.cloudml.Test.find_one({'model_name': params.get('model2'),
+                                          'name': params.get('test2')},
+                                         test_fields)
+        examples_fields = ('name', 'label', 'pred_label', 'weighted_data_input')
+        examples1 = db.cloudml.TestExample.find({'model_name': params.get('model1'),
+                                                 'test_name': params.get('test1')},
+                                                examples_fields).limit(10)
+        examples2 = db.cloudml.TestExample.find({'model_name': params.get('model2'),
+                                                 'test_name': params.get('test2')},
+                                                examples_fields).limit(10)
+        return self._render({'test1': test1, 'test2': test2,
+                             'examples1': examples1,
+                             'examples2': examples2})
+
+api.add_resource(CompareReportResource, '/cloudml/reports/compare')
+
+
+class Predict(BaseResource):
+    ALLOWED_METHODS = ('post', )
     decorators = [crossdomain(origin='*')]
 
-    @render(brief=False)
-    def get(self):
-        parser = reqparse.RequestParser()
-        parser.add_argument('test1', type=str)
-        parser.add_argument('test2', type=str)
-        parser.add_argument('model1', type=str)
-        parser.add_argument('model2', type=str)
-        parameters = parser.parse_args()
-        test1 = db.session.query(Test).join(Model)\
-            .filter(Model.name == parameters['model1'],
-                    Test.name == parameters['test1']).one()
-        test2 = db.session.query(Test).join(Model)\
-            .filter(Model.name == parameters['model2'],
-                    Test.name == parameters['test2']).one()
-        examples1 = db.session.query(Data).join(Test)\
-            .filter(Data.test == test1)\
-            .order_by(desc(Data.pred_label))[:10]
-        examples2 = db.session.query(Data).join(Test)\
-            .filter(Data.test == test2)\
-            .order_by(desc(Data.pred_label))[:10]
-        return {'test1': test1, 'test2': test2,
-                'examples1': examples1, 'examples2': examples2}
-
-api.add_resource(CompareReport, '/cloudml/reports/compare')
-
-
-class Predict(restful.Resource):
-    decorators = [crossdomain(origin='*')]
-
-    @render(code=201)
     def post(self, model, import_handler):
-        from itertools import izip
-        try:
-            importhandler = ImportHandler.query.filter(
-                ImportHandler.name == import_handler).one()
-        except NoResultFound, exc:
-            exc.message = "Import handler %s doesn\'t exist" % import_handler
-            raise exc
-        try:
-            model = Model.query.filter(Model.name == model).one()
-        except Exception, exc:
-            exc.message = "Model %s doesn\'t exist" % model
-            raise exc
+
+        hndl = db.cloudml.ImportHandler.find_one({'name': import_handler})
+        if hndl is None:
+            msg = "Import handler %s doesn\'t exist" % import_handler
+            logging.error(msg)
+            return odesk_error_response(404, ERR_NO_SUCH_MODEL, msg)
+
+        model = db.cloudml.Model.find_one({'name': model})
+        if hndl is None:
+            msg = "Model %s doesn\'t exist" % model
+            logging.error(msg)
+            return odesk_error_response(404, ERR_NO_SUCH_MODEL, msg)
+
         data = [request.form, ]
-        plan = ExtractionPlan(importhandler.data, is_file=False)
+        # TODO: Fix this dumps -> loads
+        plan = ExtractionPlan(json.dumps(hndl.data), is_file=False)
         request_import_handler = RequestImportHandler(plan, data)
-        probabilities = model.trainer.predict(request_import_handler,
-                                              ignore_error=False)
+        trainer = pickle.loads(model.trainer)
+        probabilities = trainer.predict(request_import_handler,
+                                        ignore_error=False)
+
         prob = probabilities['probs'][0]
-        label = probabilities['labels'][0]
-        prob = prob.tolist() if not (prob is None) else []
-        label = label.tolist() if not (label is None) else []
-        result = {'label': label,
-                  'probs': prob}
-        return result
+        labels = probabilities['labels']
+
+        probs = prob.tolist() if not (prob is None) else []
+        labels = labels.tolist() if not (labels is None) else []
+        prob, label = sorted(zip(probs, labels),
+                             lambda x,y: cmp(x[0], y[0]),
+                             reverse=True)[0]
+        
+        return self._render({'label': label, 'prob': prob}, code=201)
 
 api.add_resource(Predict, '/cloudml/model/<regex("[\w\.]*"):model>/\
 <regex("[\w\.]*"):import_handler>/predict')

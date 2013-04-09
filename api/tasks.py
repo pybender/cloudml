@@ -1,9 +1,15 @@
+import json
+import logging
 from copy import copy
-from api import celery, db
+from itertools import izip
 
-from api.models import Model, Data, Test
+from api import celery, db
+from bson.objectid import ObjectId
+
 from core.trainer.trainer import Trainer
 from core.trainer.config import FeatureModel
+from api.models import Test, Model
+from helpers.weights import get_weighted_data
 
 
 class InvalidOperationError(Exception):
@@ -11,52 +17,53 @@ class InvalidOperationError(Exception):
 
 
 @celery.task
-def train_model(model, parameters):
+def train_model(model_name, parameters):
     """
     Train new model
     """
     try:
-        model = db.session.merge(model)
-        if model.status == Model.STATUS_TRAINED:
+        model = db.cloudml.Model.find_one({'name': model_name})
+        if model.status == model.STATUS_TRAINED:
             raise InvalidOperationError("Model already trained")
-
-        model.status = Model.STATUS_TRAINING
+        model.status = model.STATUS_TRAINING
         model.error = ""
-        db.session.commit()
-
-        feature_model = FeatureModel(model.features, is_file=False)
+        model.save()
+        feature_model = FeatureModel(json.dumps(model.features),
+                                     is_file=False)
         trainer = Trainer(feature_model)
         train_handler = model.get_import_handler(parameters)
         trainer.train(train_handler)
         trainer.clear_temp_data()
         model.set_trainer(trainer)
-        model.status = Model.STATUS_TRAINED
-        db.session.commit()
+        model.set_weights(**trainer.get_weights())
+        model.status = model.STATUS_TRAINED
+        model.save()
     except Exception, exc:
-        model.status = Model.STATUS_ERROR
+        logging.error(exc)
+        model.status = model.STATUS_ERROR
         model.error = str(exc)
-        db.session.merge(model)
-        db.session.commit()
-        return 'Failed'
+        model.save()
+        raise
 
     return "Model trained at %s" % trainer.train_time
 
 
 @celery.task
-def run_test(test, model):
+def run_test(test_id):
     """
     Running tests for trained model
     """
+    test = db.cloudml.Test.find_one({'_id': ObjectId(test_id)})
+    model = Model(test.model)
     try:
-        if model.status != Model.STATUS_TRAINED:
-            raise InvalidOperationError("Train model before")
+        if model.status != model.STATUS_TRAINED:
+            raise InvalidOperationError("Train the model before")
 
-        test.status = Test.STATUS_IN_PROGRESS
+        test.status = test.STATUS_IN_PROGRESS
         test.error = ""
-        db.session.merge(test)
-        db.session.commit()
+        test.save()
+
         parameters = copy(test.parameters)
-        group_by = parameters.pop('group_by')
         metrics, raw_data = model.run_test(parameters)
         test.accuracy = metrics.accuracy
 
@@ -81,20 +88,47 @@ def run_test(test, model):
         test.status = Test.STATUS_COMPLETED
 
         if not model.comparable:
+            # TODO: fix this
+            model = db.cloudml.Model.find_one({'_id': model._id})
             model.comparable = True
-            db.session.merge(model)
+            model.save()
 
-        db.session.merge(test)
-        db.session.commit()
-        # store test data in db
-        Data.loads_from_raw_data(model, test, raw_data,
-                                 metrics._labels, metrics._preds,
-                                 group_by)
+        # store test examples
+        count = 0
+        for row, label, pred in izip(raw_data, metrics._labels,
+                                     metrics._preds):
+            count += 1
+            if count % 100 == 0:
+                logging.info('Stored %d rows' % count)
+            row = decode(row)
+            weighted_data_input = get_weighted_data(model, row)
+            example = db.cloudml.TestExample()
+            example['data_input'] = row
+            example['weighted_data_input'] = dict(weighted_data_input)
+            # TODO: Specify Example title column in raw data
+            example['name'] = unicode(row['contractor.dev_profile_title'])
+            example['label'] = unicode(label)
+            example['pred_label'] = unicode(pred)
+            example['test'] = test
+            example['test_name'] = test.name
+            example['model_name'] = model.name
+            example.save(check_keys=False)
+        test.save()
     except Exception, exc:
-        test.status = Test.STATUS_ERROR
+        logging.error(exc)
+        test.status = test.STATUS_ERROR
         test.error = str(exc)
-        db.session.rollback()
-        db.session.merge(test)
-        db.session.commit()
-        return 'Failed'
+        test.save()
+        raise
     return 'Test completed'
+
+
+def decode(row):
+    for key, val in row.iteritems():
+        try:
+            if isinstance(val, basestring):
+                row[key] = val.encode('ascii', 'ignore')
+        except UnicodeDecodeError, exc:
+            logging.error('Error while decoding %s: %s', val, exc)
+            row[key] = ""
+    return row

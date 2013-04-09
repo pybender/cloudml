@@ -1,6 +1,17 @@
 <div>
   <div>
     <h2>{{ test_name|capfirst }} Examples List</h2>
+
+    <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+    <div>
+      <input type=text ng-model="field" name="field"/>
+      <span class="help-block">could be field from raw data (use "data_input.{{ fieldname }}") or any other field like "label", "pred_label".</span>
+      <button ng-click="update()" class="btn btn-success">
+          <i title="Apply" class="status-icon icon-play"></i>
+          Update
+      </button>
+    </div>
+
     Mean avarage precision: {{ mavp.toFixed(4) }}
     <table class="table table-striped">
         <thead>

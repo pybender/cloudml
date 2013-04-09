@@ -4,26 +4,25 @@
 
     <pagination boundary-links="true" max-size="8" num-pages="pages" current-page="page"></pagination>
 
-    <div ng-show="total == 0">
-          <p>No examples to display.</p>
-    </div>
+    <alert-message ng-show="total == 0" class="alert-warning" msg="No examples to display."></alert-message>
+
     <div ng-show="total">
           <p>Total examples : {{ total }}</p>
     </div>
 
+    <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+
     <table class="table table-striped">
         <thead>
           <tr>
-            <th>Id</th>
-            <th>Params</th>
+            <th>Name</th>
             <th>Original</th>
             <th>Predict</th>
           </tr>
           </thead>
           <tbody>
           <tr ng-repeat="data in objects | filter:search | orderBy:'id'" ng-class="{success : data.data_input['hire_outcome']=='1', error : !(data.data_input['hire_outcome']=='1')}">
-            <td><a href="#/models/{{ data.model_name }}/tests/{{ data.test_name }}/examples/{{ data.id }}">{{ data.id }}</a></td>
-            <td><a href="#/models/{{ data.model_name }}/tests/{{ data.test_name }}/examples/{{ data.id }}">{{ data.title }}</a></td>
+            <td><a href="#/models/{{ data.model_name }}/tests/{{ data.test_name }}/examples/{{ data._id }}">{{ data.name }}</a></td>
             <td><span>{{ data.label }}</span></td>
             <td><span>{{ data.pred_label }}</span></td>
           </tr>

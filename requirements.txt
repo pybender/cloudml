@@ -8,7 +8,7 @@ Werkzeug==0.8.3
 numpy
 scipy
 scikit-learn
--e git+https://github.com/tobiasandtobias/flask-alembic.git#egg=flask-alembic
+#-e git+https://github.com/tobiasandtobias/flask-alembic.git#egg=flask-alembic
 django-fabdeploy-plus==0.3.6
 psycopg2==2.4.6 # sudo apt-get install libpq-dev python-dev
 jsonpath==0.54
@@ -17,3 +17,4 @@ celery==3.0.16
 flower==0.4.2
 supervisor
 ml_metrics
+Flask-MongoKit

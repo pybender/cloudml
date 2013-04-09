@@ -1,5 +1,28 @@
 import json
-from datetime import datetime
+import datetime
+import mongokit
+from bson.objectid import ObjectId
+
+
+def encode_model(obj):
+    if obj is None:
+        return obj
+
+    if isinstance(obj, mongokit.Document):
+        out = encode_model(dict(obj))
+    elif isinstance(obj, mongokit.cursor.Cursor):
+        out = [encode_model(item) for item in obj]
+    elif isinstance(obj, (list)):
+        out = [encode_model(item) for item in obj]
+    elif isinstance(obj, (dict)):
+        out = dict([(k, encode_model(v)) for (k, v) in obj.items()])
+    elif isinstance(obj, datetime.datetime):
+        out = str(obj)
+    elif isinstance(obj, ObjectId):
+        out = str(obj)
+    else:
+        out = str(obj)
+    return out
 
 
 class Serializer(object):
@@ -20,6 +43,8 @@ class Serializer(object):
             if value:
                 dict[public_key] = value
         return dict
+
+
 
 
 class ModelEncoder(json.JSONEncoder):

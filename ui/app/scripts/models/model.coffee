@@ -17,7 +17,7 @@ angular.module('app.models.model', ['app.config'])
       constructor: (opts) ->
         @loadFromJSON opts
 
-      id: null
+      _id: null
       # Unix time of model creation
       created_on: null
       status: null
@@ -38,7 +38,7 @@ angular.module('app.models.model', ['app.config'])
       objectUrl: =>
         return '/models/' + @name
 
-      isNew: -> if @id == null then true else false
+      isNew: -> if @_id == null then true else false
 
       # Returns an object of job properties, for use in e.g. API requests
       # and templates
@@ -51,8 +51,16 @@ angular.module('app.models.model', ['app.config'])
       loadFromJSON: (origData) =>
         data = _.extend {}, origData
         _.extend @, data
-        if origData? and 'latest_test' in origData
-          @latest_test = new Test(origData['latest_test'])
+        if origData?
+          @created_on = String(origData['created_on'])
+          #if 'features' in origData
+          @features = angular.toJson(origData['features'], pretty=true)
+          #if 'importhandler' in origData
+          @importhandler = angular.toJson(origData['importhandler'],
+                                        pretty=true)
+          #if 'train_importhandler' in origData
+          @train_importhandler = angular.toJson(
+              origData['train_importhandler'], pretty=true)
 
       $load: (opts) ->
         if @name == null

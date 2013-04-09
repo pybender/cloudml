@@ -18,7 +18,7 @@ angular.module('app.datas.controllers', ['app.config', ])
     (pagination_opts) ->
       Data.$loadAll(_.extend({model_name: $routeParams.name,
       test_name: $routeParams.test_name,
-      show:'id,label,pred_label,title'}, pagination_opts))
+      show:'name,label,pred_label,title'}, pagination_opts))
 ])
 
 .controller('GroupedExamplesCtrl', [
@@ -31,18 +31,22 @@ angular.module('app.datas.controllers', ['app.config', ])
 ($scope, $http, $routeParams, settings, Data) ->
   $scope.test_name = $routeParams.test_name
   $scope.model_name = $routeParams.name
-  Data.$loadAllGroupped(
-    model_name: $routeParams.name
-    test_name: $routeParams.test_name
-  ).then ((opts) ->
-    $scope.field_name = opts.field_name
-    $scope.mavp = opts.mavp
-    $scope.objects = opts.objects
-  ), ((opts) ->
-    $scope.err = "Error while loading: server responded with " +
-        "#{opts.status} " +
-        "(#{opts.data.response.error.message or "no message"})."
-  )
+  $scope.field = "data_input.hire_outcome"
+  $scope.update = () ->
+    Data.$loadAllGroupped(
+      model_name: $routeParams.name
+      test_name: $routeParams.test_name
+      field: $scope.field
+    ).then ((opts) ->
+      $scope.field_name = opts.field_name
+      $scope.mavp = opts.mavp
+      $scope.objects = opts.objects
+    ), ((opts) ->
+      $scope.err = "Error while loading: server responded with " +
+          "#{opts.status} " +
+          "(#{opts.data.response.error.message or "no message"})."
+    )
+  $scope.update()
 ])
 
 .controller('ExampleDetailsCtrl', [
