@@ -96,9 +96,9 @@ class Models(BaseResource):
     def _fill_put_data(self, model, param,  **kwargs):
         importhandler = None
         train_importhandler = None
-        if not param['importhandler'] == 'undefined':
+        if param['importhandler']:
             importhandler = json.loads(param['importhandler'])
-        if not param['train_importhandler'] == 'undefined':
+        if param['train_importhandler']:
             train_importhandler = json.loads(param['train_importhandler'])
         model.importhandler =  importhandler or model.importhandler
         model.train_importhandler =  train_importhandler \

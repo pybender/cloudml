@@ -52,6 +52,7 @@ angular.module('app.models.model', ['app.config'])
         data = _.extend {}, origData
         _.extend @, data
         if origData?
+          @created_on = String(origData['created_on'])
           #if 'features' in origData
           @features = angular.toJson(origData['features'], pretty=true)
           #if 'importhandler' in origData
