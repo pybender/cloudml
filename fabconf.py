@@ -150,7 +150,7 @@ class ProductionConf(BaseConf):
     #django_dir = ''
 
     # Code from this branch will be deployed.
-    branch = 'MigrateToMongo'
+    branch = 'master'
 
     server_name = 'cloudml.match.odesk.com'
     # For Apache ServerAdmin directive
