@@ -3,7 +3,8 @@ import math
 from flask.ext import restful
 from flask.ext.restful import reqparse
 
-from api.utils import crossdomain, ERR_NO_SUCH_MODEL, odesk_error_response
+from api.utils import crossdomain, ERR_NO_SUCH_MODEL, odesk_error_response, \
+    ERR_INVALID_METHOD
 from api.serialization import encode_model
 from api import app
 
@@ -12,6 +13,7 @@ class BaseResource(restful.Resource):
     """
     Base class for any API Resource
     """
+    ALLOWED_METHODS = ('get', 'post', 'put', 'delete', 'options')
     GET_ACTIONS = ()
     POST_ACTIONS = ()
     PUT_ACTIONS = ()
@@ -38,6 +40,14 @@ class BaseResource(restful.Resource):
         Returns a key name, when list of results returned.
         """
         return '%ss' % self.OBJECT_NAME
+
+    def dispatch_request(self, *args, **kwargs):
+        from flask import request
+        method = request.method.lower()
+        if not method in self.ALLOWED_METHODS:
+            return odesk_error_response(400, ERR_INVALID_METHOD,
+                                        '%s is not allowed' % method)
+        return super(BaseResource, self).dispatch_request(*args, **kwargs)
 
     # HTTP Methods
 

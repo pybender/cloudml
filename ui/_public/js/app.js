@@ -912,7 +912,9 @@ angular.module('app.importhandlers.model', ['app.config']).factory('ImportHandle
         var data, pretty;
         data = _.extend({}, origData);
         _.extend(this, data);
-        return this.data = angular.toJson(origData['data'], pretty = true);
+        if (origData != null) {
+          return this.data = angular.toJson(origData['data'], pretty = true);
+        }
       };
 
       ImportHandler.prototype.$load = function(opts) {

@@ -1,10 +1,14 @@
 import json
+import logging
 from flask.ext.restful import reqparse
+from flask import request
 from werkzeug.datastructures import FileStorage
 from bson.objectid import ObjectId
+from itertools import izip
 
 from api import db, api
-from api.utils import crossdomain, ERR_INVALID_DATA, odesk_error_response
+from api.utils import crossdomain, ERR_INVALID_DATA, odesk_error_response, \
+    ERR_NO_SUCH_MODEL
 from api.resources import BaseResource
 from core.trainer.store import load_trainer
 from core.trainer.trainer import Trainer
@@ -290,6 +294,7 @@ class CompareReportResource(BaseResource):
     """
     Resource which generated compare 2 tests report
     """
+    ALLOWED_METHODS = ('get', )
     decorators = [crossdomain(origin='*')]
     GET_PARAMS = (('model1', str),
                   ('test1', str),
@@ -322,38 +327,37 @@ class CompareReportResource(BaseResource):
 api.add_resource(CompareReportResource, '/cloudml/reports/compare')
 
 
-# class Predict(restful.Resource):
-#     decorators = [crossdomain(origin='*')]
+class Predict(BaseResource):
+    ALLOWED_METHODS = ('get', )
+    decorators = [crossdomain(origin='*')]
 
-#     @render(code=201)
-#     def post(self, model, import_handler):
-#         from itertools import izip
-#         try:
-#             importhandler = ImportHandler.query.filter(
-#                 ImportHandler.name == import_handler).one()
-#         except NoResultFound, exc:
-#             exc.message = "Import handler %s doesn\'t exist" % import_handler
-#             raise exc
-#         try:
-#             model = Model.query.filter(Model.name == model).one()
-#         except Exception, exc:
-#             exc.message = "Model %s doesn\'t exist" % model
-#             raise exc
-#         data = [request.form, ]
-#         plan = ExtractionPlan(importhandler.data, is_file=False)
-#         request_import_handler = RequestImportHandler(plan, data)
-#         probabilities = model.trainer.predict(request_import_handler,
-#                                               ignore_error=False)
-#         prob = probabilities['probs'][0]
-#         label = probabilities['labels'][0]
-#         prob = prob.tolist() if not (prob is None) else []
-#         label = label.tolist() if not (label is None) else []
-#         result = {'label': label,
-#                   'probs': prob}
-#         return result
+    def get(self, model, import_handler):
+        hndl = db.cloudml.ImportHandler.find_one({'name': import_handler})
+        if hndl is None:
+            msg = "Import handler %s doesn\'t exist" % import_handler
+            logging.error(msg)
+            return odesk_error_response(404, ERR_NO_SUCH_MODEL, msg)
 
-# api.add_resource(Predict, '/cloudml/model/<regex("[\w\.]*"):model>/\
-# <regex("[\w\.]*"):import_handler>/predict')
+        model = db.cloudml.Model.find_one({'name': model})
+        if hndl is None:
+            msg = "Model %s doesn\'t exist" % model
+            logging.error(msg)
+            return odesk_error_response(404, ERR_NO_SUCH_MODEL, msg)
+
+        data = [request.form, ]
+        # TODO: Fix this dumps -> loads
+        plan = ExtractionPlan(json.dumps(hndl.data), is_file=False)
+        request_import_handler = RequestImportHandler(plan, data)
+        probabilities = model.trainer.predict(request_import_handler,
+                                              ignore_error=False)
+        prob = probabilities['probs'][0]
+        label = probabilities['labels'][0]
+        prob = prob.tolist() if not (prob is None) else []
+        label = label.tolist() if not (label is None) else []
+        return self._render({'label': label, 'probs': prob}, code=201)
+
+api.add_resource(Predict, '/cloudml/model/<regex("[\w\.]*"):model>/\
+<regex("[\w\.]*"):import_handler>/predict')
 
 
 def populate_parser(model):
