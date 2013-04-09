@@ -1,5 +1,6 @@
 import json
 import logging
+import pickle
 from flask.ext.restful import reqparse
 from flask import request
 from werkzeug.datastructures import FileStorage
@@ -328,10 +329,11 @@ api.add_resource(CompareReportResource, '/cloudml/reports/compare')
 
 
 class Predict(BaseResource):
-    ALLOWED_METHODS = ('get', )
+    ALLOWED_METHODS = ('post', )
     decorators = [crossdomain(origin='*')]
 
-    def get(self, model, import_handler):
+    def post(self, model, import_handler):
+
         hndl = db.cloudml.ImportHandler.find_one({'name': import_handler})
         if hndl is None:
             msg = "Import handler %s doesn\'t exist" % import_handler
@@ -348,13 +350,20 @@ class Predict(BaseResource):
         # TODO: Fix this dumps -> loads
         plan = ExtractionPlan(json.dumps(hndl.data), is_file=False)
         request_import_handler = RequestImportHandler(plan, data)
-        probabilities = model.trainer.predict(request_import_handler,
-                                              ignore_error=False)
+        trainer = pickle.loads(model.trainer)
+        probabilities = trainer.predict(request_import_handler,
+                                        ignore_error=False)
+
         prob = probabilities['probs'][0]
-        label = probabilities['labels'][0]
-        prob = prob.tolist() if not (prob is None) else []
-        label = label.tolist() if not (label is None) else []
-        return self._render({'label': label, 'probs': prob}, code=201)
+        labels = probabilities['labels']
+
+        probs = prob.tolist() if not (prob is None) else []
+        labels = labels.tolist() if not (labels is None) else []
+        prob, label = sorted(zip(probs, labels),
+                             lambda x,y: cmp(x[0], y[0]),
+                             reverse=True)[0]
+        
+        return self._render({'label': label, 'prob': prob}, code=201)
 
 api.add_resource(Predict, '/cloudml/model/<regex("[\w\.]*"):model>/\
 <regex("[\w\.]*"):import_handler>/predict')

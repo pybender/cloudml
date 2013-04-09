@@ -201,7 +201,7 @@ class Trainer():
 
         logging.info('Evaluating model...')
         probs = self._classifier.predict_proba(hstack(vectorized_data))
-        return {'probs': probs, 'labels': labels}
+        return {'probs': probs, 'labels': self._classifier.classes_}
 
     def _train_prepare_feature(self, feature, data):
         """
