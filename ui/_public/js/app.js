@@ -193,16 +193,21 @@ angular.module('app.datas.controllers', ['app.config']).controller('TestExamples
   '$scope', '$http', '$routeParams', 'settings', 'Data', function($scope, $http, $routeParams, settings, Data) {
     $scope.test_name = $routeParams.test_name;
     $scope.model_name = $routeParams.name;
-    return Data.$loadAllGroupped({
-      model_name: $routeParams.name,
-      test_name: $routeParams.test_name
-    }).then((function(opts) {
-      $scope.field_name = opts.field_name;
-      $scope.mavp = opts.mavp;
-      return $scope.objects = opts.objects;
-    }), (function(opts) {
-      return $scope.err = "Error while loading: server responded with " + ("" + opts.status + " ") + ("(" + (opts.data.response.error.message || "no message") + ").");
-    }));
+    $scope.field = "data_input.hire_outcome";
+    $scope.update = function() {
+      return Data.$loadAllGroupped({
+        model_name: $routeParams.name,
+        test_name: $routeParams.test_name,
+        field: $scope.field
+      }).then((function(opts) {
+        $scope.field_name = opts.field_name;
+        $scope.mavp = opts.mavp;
+        return $scope.objects = opts.objects;
+      }), (function(opts) {
+        return $scope.err = "Error while loading: server responded with " + ("" + opts.status + " ") + ("(" + (opts.data.response.error.message || "no message") + ").");
+      }));
+    };
+    return $scope.update();
   }
 ]).controller('ExampleDetailsCtrl', [
   '$scope', '$http', '$routeParams', 'settings', 'Data', function($scope, $http, $routeParams, settings, Data) {
@@ -341,7 +346,7 @@ angular.module('app.datas.model', ['app.config']).factory('Data', [
         dfd = $q.defer();
         $http({
           method: 'GET',
-          url: "" + settings.apiUrl + "model/" + opts.model_name + "/test/" + opts.test_name + "/action/groupped/data",
+          url: "" + settings.apiUrl + "model/" + opts.model_name + "/test/" + opts.test_name + "/action/groupped/data?field=" + opts.field,
           headers: settings.apiRequestDefaultHeaders,
           params: opts
         }).then((function(resp) {
@@ -904,9 +909,10 @@ angular.module('app.importhandlers.model', ['app.config']).factory('ImportHandle
       };
 
       ImportHandler.prototype.loadFromJSON = function(origData) {
-        var data;
+        var data, pretty;
         data = _.extend({}, origData);
-        return _.extend(this, data);
+        _.extend(this, data);
+        return this.data = angular.toJson(origData['data'], pretty = true);
       };
 
       ImportHandler.prototype.$load = function(opts) {
@@ -1311,8 +1317,7 @@ angular.module('app.models.controllers', ['app.config']).controller('ModelListCt
     };
   }
 ]);
-var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
-  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
 angular.module('app.models.model', ['app.config']).factory('Model', [
   '$http', '$q', 'settings', function($http, $q, settings) {
@@ -1343,7 +1348,7 @@ angular.module('app.models.model', ['app.config']).factory('Model', [
         this.loadFromJSON(opts);
       }
 
-      Model.prototype.id = null;
+      Model.prototype._id = null;
 
       Model.prototype.created_on = null;
 
@@ -1380,7 +1385,7 @@ angular.module('app.models.model', ['app.config']).factory('Model', [
       };
 
       Model.prototype.isNew = function() {
-        if (this.id === null) {
+        if (this._id === null) {
           return true;
         } else {
           return false;
@@ -1400,15 +1405,9 @@ angular.module('app.models.model', ['app.config']).factory('Model', [
         data = _.extend({}, origData);
         _.extend(this, data);
         if (origData != null) {
-          if (__indexOf.call(origData, 'features') >= 0) {
-            this.features = angular.toJson(origData['features'], pretty = true);
-          }
-          if (__indexOf.call(origData, 'importhandler') >= 0) {
-            this.importhandler = angular.toJson(origData['importhandler'], pretty = true);
-          }
-          if (__indexOf.call(origData, 'train_importhandler') >= 0) {
-            return this.train_importhandler = angular.toJson(origData['train_importhandler'], pretty = true);
-          }
+          this.features = angular.toJson(origData['features'], pretty = true);
+          this.importhandler = angular.toJson(origData['importhandler'], pretty = true);
+          return this.train_importhandler = angular.toJson(origData['train_importhandler'], pretty = true);
         }
       };
 

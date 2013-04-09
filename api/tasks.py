@@ -64,7 +64,6 @@ def run_test(test_id):
         test.save()
 
         parameters = copy(test.parameters)
-        group_by = parameters.pop('group_by')
         metrics, raw_data = model.run_test(parameters)
         test.accuracy = metrics.accuracy
 
@@ -92,8 +91,12 @@ def run_test(test_id):
             model.comparable = True
 
         # store test examples
+        count = 0
         for row, label, pred in izip(raw_data, metrics._labels,
                                      metrics._preds):
+            count += 1
+            if count % 100 == 0:
+                logging.info('Stored %d rows' % count)
             row = decode(row)
             weighted_data_input = get_weighted_data(model, row)
             example = db.cloudml.TestExample()

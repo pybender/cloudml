@@ -81,7 +81,8 @@ class BaseResource(restful.Resource):
         parser = self._get_model_parser(method='PUT')
         params = parser.parse_args()
 
-        model = self.Model()
+        model = self._get_details_query(None, None,
+                                        **kwargs)
         model = self._fill_put_data(model, params, **kwargs)
         return self._render({self.OBJECT_NAME: model._id}, code=200)
 

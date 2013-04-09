@@ -1,29 +1,19 @@
 import json
-
 from flask.ext.restful import reqparse
 from werkzeug.datastructures import FileStorage
 from bson.objectid import ObjectId
 
-from api import db, api, app
-from api.utils import crossdomain, ERR_NO_SUCH_MODEL, odesk_error_response
-#, Test, Data, ImportHandler
-from api.tasks import train_model, run_test
+from api import db, api
+from api.utils import crossdomain, ERR_INVALID_DATA, odesk_error_response
 from api.resources import BaseResource
-
 from core.trainer.store import load_trainer
 from core.trainer.trainer import Trainer
 from core.trainer.config import FeatureModel
 from core.importhandler.importhandler import ExtractionPlan, \
     RequestImportHandler
 
-get_parser = reqparse.RequestParser()
-get_parser.add_argument('show', type=str)
-
-page_parser = reqparse.RequestParser()
-page_parser.add_argument('page', type=int)
-
 model_parser = reqparse.RequestParser()
-model_parser.add_argument('importhandler', type=str)
+model_parser.add_argument('importhandler', type=str, default=None)
 model_parser.add_argument('train_importhandler', type=str)
 model_parser.add_argument('features', type=str)
 model_parser.add_argument('trainer', type=FileStorage, location='files')
@@ -62,8 +52,10 @@ class Models(BaseResource):
         ppage = params.get('ppage') or 1
         npage = params.get('npage') or 1
         fields = self._get_fields_to_show(params)
-        fields_dict = {'positive_weights': {'$slice': [(ppage - 1) * per_page, per_page]},
-                       'negative_weights': {'$slice': [(npage - 1) * per_page, per_page]}}
+        fields_dict = {'positive_weights': {'$slice': [(ppage - 1) * per_page,
+                                                       per_page]},
+                       'negative_weights': {'$slice': [(npage - 1) * per_page,
+                                                       per_page]}}
         for field in fields:
             fields_dict[field] = ""
 
@@ -96,20 +88,25 @@ class Models(BaseResource):
         obj.train_importhandler = json.loads(params['importhandler'])
         plan = ExtractionPlan(params['importhandler'], is_file=False)
         obj.import_params = plan.input_params
-        obj.import_params.append('group_by')
         obj.save()
 
     # PUT specififc methods
 
-    def _fill_put_data(self, model):
-        param = model_parser.parse_args()
-        model.importhandler = param['importhandler'] or model.importhandler
-        model.train_importhandler = param['train_importhandler'] \
+    def _fill_put_data(self, model, param,  **kwargs):
+        importhandler = None
+        train_importhandler = None
+        if not param['importhandler'] == 'undefined':
+            importhandler = json.loads(param['importhandler'])
+        if not param['train_importhandler'] == 'undefined':
+            train_importhandler = json.loads(param['train_importhandler'])
+        model.importhandler =  importhandler or model.importhandler
+        model.train_importhandler =  train_importhandler \
             or model.train_importhandler
-        db.session.commit()
-        return {'model': model}
+        model.save()
+        return model
 
     def _put_train_action(self, **kwargs):
+        from api.tasks import train_model
         model = self._get_details_query(None, None,
                                         **kwargs)
         parser = populate_parser(model)
@@ -121,7 +118,8 @@ class Models(BaseResource):
         return self._render({self.OBJECT_NAME: model._id})
 
 api.add_resource(Models, '/cloudml/model/<regex("[\w\.]*"):name>',
-                 '/cloudml/model/<regex("[\w\.]+"):name>/<regex("[\w\.]+"):action>')
+                 '/cloudml/model/<regex("[\w\.]+"):name>/\
+<regex("[\w\.]+"):action>')
 
 
 class ImportHandlerResource(BaseResource):
@@ -176,6 +174,7 @@ class Tests(BaseResource):
                                    'name': test_name}, fields)
 
     def post(self, action=None, **kwargs):
+        from api.tasks import run_test
         model_name = kwargs.get('model')
         model = db.cloudml.Model.find_one({'name': model_name})
         parser = populate_parser(model)
@@ -194,6 +193,12 @@ class Tests(BaseResource):
 
 api.add_resource(Tests, '/cloudml/model/<regex("[\w\.]+"):model>/test/\
 <regex("[\w\.\-]+"):name>', '/cloudml/model/<regex("[\w\.]+"):model>/tests')
+
+
+REDUCE_FUNC = 'function(obj, prev) {\
+                            prev.list.push({"label": obj.pred_label,\
+                            "pred": obj.label})\
+                      }'
 
 
 class TestExamplesResource(BaseResource):
@@ -223,40 +228,55 @@ class TestExamplesResource(BaseResource):
 
     def _get_groupped_action(self, **kwargs):
         """
-        Groups data by `group_by_field` field.
+        Groups data by `group_by_field` field and calculates mean average precision.
+        Note: `group_by_field` should be specified in request parameters.
         """
         from ml_metrics import apk
         import numpy as np
-        test = Test.query.join(Model)\
-            .filter(Model.name == model,
-                    Test.name == test_name).one()
-        datas = db.session.query(Data.group_by_field,
-                                 func.count(Data.group_by_field).label('total'))\
-            .join(Test).join(Model)\
-            .filter(and_(Model.name == model, Test.name == test_name))\
-            .group_by(Data.group_by_field).order_by('total DESC').all()[:100]
+        from operator import itemgetter
 
+        # getting from request parameters fieldname to group.
+        parser = reqparse.RequestParser()
+        parser.add_argument('field', type=str)
+        params = parser.parse_args()
+        group_by_field = params.get('field')
+        if not group_by_field:
+            return odesk_error_response(400, ERR_INVALID_DATA,
+                                        'field parameter is required')
+        model_name = kwargs.get('model')
+        test_name = kwargs.get('test_name')
+        ex_collection = db.cloudml.TestExample.collection
+        groups = ex_collection.group([group_by_field, ],
+                                     {'model_name': model_name,
+                                      'test_name': test_name},
+                                     {'list': []}, REDUCE_FUNC)
+        
         res = []
         avps = []
-        for d in datas:
-            data_set = Data.query.filter(Data.group_by_field == d[0]).all()
-            labels = [i.label for i in data_set]
-            pred_labels = [i.pred_label for i in data_set]
+
+        for group in groups:
+            group_list = group['list']
+            labels = [item['label'] for item in group_list]
+            pred_labels = [item['pred'] for item in group_list]
             avp = apk(labels, pred_labels)
             avps.append(avp)
-            res.append({'group_by_field': d[0],
-                        'count': d[1], 'avp': avp})
+            res.append({'group_by_field': group[group_by_field],
+                        'count': len(group_list),
+                        'avp': avp})
+        res = sorted(res, key=itemgetter("count"), reverse=True)[:100]
         mavp = np.mean(avps)
-        field_name = test.parameters.get('group_by')
-        return {self.list_key: {'items': res}, 'field_name': field_name, 'mavp': mavp}
 
+        context = {self.list_key: {'items': res},
+                   'field_name': group_by_field,
+                   'mavp': mavp}
+        return self._render(context)
 
-api.add_resource(TestExamplesResource, '/cloudml/model/<regex("[\w\.]+"):model>/test/\
-<regex("[\w\.\-]+"):test_name>/data',
+api.add_resource(TestExamplesResource, '/cloudml/model/\
+<regex("[\w\.]+"):model>/test/<regex("[\w\.\-]+"):test_name>/data',
                  '/cloudml/model/<regex("[\w\.]+")\
-:model>/test/<regex("[\w\.\-]+"):test_name>/data/<regex("[\w\.\-]+"):example_id>',
-                 '/cloudml/model/<regex("[\w\.]+"):model>/test/\
-<regex("[\w\.\-]+"):test_name>/action/<regex("[\w\.]+"):action>/data')
+:model>/test/<regex("[\w\.\-]+"):test_name>/data/\
+<regex("[\w\.\-]+"):example_id>', '/cloudml/model/<regex("[\w\.]+"):model>\
+/test/<regex("[\w\.\-]+"):test_name>/action/<regex("[\w\.]+"):action>/data')
 
 
 # class CompareReport(restful.Resource):

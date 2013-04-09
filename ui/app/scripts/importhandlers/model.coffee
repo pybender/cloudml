@@ -32,6 +32,8 @@ angular.module('app.importhandlers.model', ['app.config'])
       loadFromJSON: (origData) =>
         data = _.extend {}, origData
         _.extend @, data
+        @data = angular.toJson(origData['data'],
+                                        pretty=true)
 
       $load: (opts) ->
         if @name == null

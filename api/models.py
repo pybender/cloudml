@@ -152,7 +152,6 @@ class TestExample(Document):
         'name': unicode,
         'label': unicode,
         'pred_label': unicode,
-        'group_by_field': unicode,
         'test': Test,
 
         'test_name': basestring,

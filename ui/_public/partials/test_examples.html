@@ -4,12 +4,13 @@
 
     <pagination boundary-links="true" max-size="8" num-pages="pages" current-page="page"></pagination>
 
-    <div ng-show="total == 0">
-          <p>No examples to display.</p>
-    </div>
+    <alert-message ng-show="total == 0" class="alert-warning" msg="No examples to display."></alert-message>
+
     <div ng-show="total">
           <p>Total examples : {{ total }}</p>
     </div>
+
+    <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
 
     <table class="table table-striped">
         <thead>

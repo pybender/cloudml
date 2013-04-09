@@ -87,7 +87,7 @@ angular.module('app.datas.model', ['app.config'])
         $http(
           method: 'GET'
           url: "#{settings.apiUrl}model/#{opts.model_name}/test/
-#{opts.test_name}/action/groupped/data"
+#{opts.test_name}/action/groupped/data?field=#{opts.field}"
           headers: settings.apiRequestDefaultHeaders
           params: opts
         )
