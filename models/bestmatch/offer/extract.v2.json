@@ -40,11 +40,11 @@
            {"name": "contractor.dev_billed_assignments", "jsonpath": "$.dev_billed_assignments"},
            {"name": "contractor.dev_total_revenue", "jsonpath": "$.dev_total_revenue"},
 
-           {"name": "contractor.dev_tot_feedback", "jsonpath": "$.dev_total_feedback"},
+           {"name": "contractor.dev_tot_feedback", "jsonpath": "$.dev_tot_feedback"},
            {"name": "contractor.dev_tot_feedback_recent", "jsonpath": "$.dev_tot_feedback_recent"},
            {"name": "contractor.dev_adj_score", "jsonpath": "$.dev_adj_score"},
            {"name": "contractor.dev_adj_score_recent", "jsonpath": "$.dev_adj_score_recent"},
-           {"name": "contractor.dev_rank_percentile", "jsonpath": "$.dev_rank_perecntile"},
+           {"name": "contractor.dev_rank_percentile", "jsonpath": "$.dev_rank_percentile"},
            {"name": "contractor.dev_recent_rank_percentile", "jsonpath": "$.dev_recent_rank_percentile"},
            {"name": "contractor.dev_scores", "jsonpath": "$.dev_scores", "key-path": "$.*.label", "value-path": "$.*.avg_category_score"},
            {"name": "contractor.dev_max_karma", "jsonpath": "$.dev_max_karma"},
