@@ -20,4 +20,5 @@ ml_metrics
 
 pymongo==2.0.1
 -e git+https://github.com/kolia1985/mongokit.git#egg=mongokit
+Flask-mongokit
 
