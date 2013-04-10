@@ -110,6 +110,7 @@ class Test(Document):
         'created_on': datetime,
         'updated_on': datetime,
         'data': dict,
+        'examples_count': int,
         'parameters': dict,
         'classes_set': list,
         'accuracy': float,
@@ -124,7 +125,7 @@ class Test(Document):
                       'updated_on': datetime.utcnow,
                       'status': STATUS_QUEUED}
     use_dot_notation = True
-    #use_autorefs = True
+    use_autorefs = True
 
     @classmethod
     def generate_name(cls, model, base_name='Test'):
@@ -157,7 +158,7 @@ class TestExample(Document):
         'test_name': basestring,
         'model_name': basestring,
     }
-    #use_autorefs = True
+    use_autorefs = True
     default_values = {'created_on': datetime.utcnow}
     required_fields = ['created_on', ]
 

@@ -54,7 +54,7 @@ def run_test(test_id):
     Running tests for trained model
     """
     test = db.cloudml.Test.find_one({'_id': ObjectId(test_id)})
-    model = Model(test.model)
+    model = test.model#Model(test.model)
     try:
         if model.status != model.STATUS_TRAINED:
             raise InvalidOperationError("Train the model before")
@@ -94,9 +94,18 @@ def run_test(test_id):
             model.save()
 
         # store test examples
+        from pmap import pmap
+        from itertools import islice
+        ziped = izip(raw_data, metrics._labels,
+                                     metrics._preds)
+        # n = metrics._preds.size
+        # sliced = []
+        # n = n / 4
+        # for i in range(3):
+        #     sliced.append(islice(ziped, i*n, (i+1)*n -1))
+        # def store(items):
         count = 0
-        for row, label, pred in izip(raw_data, metrics._labels,
-                                     metrics._preds):
+        for row, label, pred in ziped:
             count += 1
             if count % 100 == 0:
                 logging.info('Stored %d rows' % count)
@@ -113,6 +122,9 @@ def run_test(test_id):
             example['test_name'] = test.name
             example['model_name'] = model.name
             example.save(check_keys=False)
+        #pmap(store, sliced)
+
+        test.examples_count = count
         test.save()
     except Exception, exc:
         logging.error(exc)
@@ -129,6 +141,6 @@ def decode(row):
             if isinstance(val, basestring):
                 row[key] = val.encode('ascii', 'ignore')
         except UnicodeDecodeError, exc:
-            logging.error('Error while decoding %s: %s', val, exc)
+            #logging.error('Error while decoding %s: %s', val, exc)
             row[key] = ""
     return row

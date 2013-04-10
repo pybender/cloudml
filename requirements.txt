@@ -17,4 +17,7 @@ celery==3.0.16
 flower==0.4.2
 supervisor
 ml_metrics
-Flask-MongoKit
+
+pymongo==2.0.1
+-e git+https://github.com/kolia1985/mongokit.git#egg=mongokit
+

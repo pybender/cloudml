@@ -106,9 +106,9 @@ class Models(BaseResource):
     def _fill_put_data(self, model, param, **kwargs):
         importhandler = None
         train_importhandler = None
-        if param['importhandler']:
+        if param['importhandler'] and not param['importhandler'] == 'undefined':
             importhandler = json.loads(param['importhandler'])
-        if param['train_importhandler']:
+        if param['train_importhandler'] and not param['train_importhandler'] == 'undefined':
             train_importhandler = json.loads(param['train_importhandler'])
         model.importhandler = importhandler or model.importhandler
         model.train_importhandler = train_importhandler \
@@ -178,7 +178,7 @@ class Tests(BaseResource):
     def _get_list_query(self, params, fields, **kwargs):
         params = self._prepare_filter_params(params)
         params['model_name'] = kwargs.get('model')
-        return self.Model.find(params, fields)
+        return self.Model.find(params,  fields)
 
     def _get_details_query(self, params, fields, **kwargs):
         model_name = kwargs.get('model')
@@ -356,13 +356,11 @@ class Predict(BaseResource):
 
         prob = probabilities['probs'][0]
         labels = probabilities['labels']
-
         probs = prob.tolist() if not (prob is None) else []
         labels = labels.tolist() if not (labels is None) else []
         prob, label = sorted(zip(probs, labels),
                              lambda x,y: cmp(x[0], y[0]),
                              reverse=True)[0]
-        
         return self._render({'label': label, 'prob': prob}, code=201)
 
 api.add_resource(Predict, '/cloudml/model/<regex("[\w\.]*"):model>/\

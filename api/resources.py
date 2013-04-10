@@ -120,7 +120,6 @@ class BaseResource(restful.Resource):
         # Removing empty values
         kw = dict([(k, v) for k, v in kwargs.iteritems() if v])
         models = self._get_list_query(params, fields, **kw)
-
         context = {}
         if self.NEED_PAGING:
             context['per_page'] = per_page = params.get('per_page') or 20
