@@ -11,6 +11,7 @@ from featuretype import FEATURE_TYPE_FACTORIES
 from featuretype import InvalidFeatureTypeException
 from utils import copy_expected
 from transformers import get_transformer
+from scalers import get_scaler
 from collections import OrderedDict
 from classifier_settings import CLASSIFIERS
 
@@ -164,6 +165,10 @@ class FeatureModel(object):
         if feature.get('is-target-variable', False) is True:
             self.target_variable = feature['name']
 
+        # Get Scaler
+        scaler_config = feature.get('scaler', None)
+        scaler = get_scaler(scaler_config)
+
         # Get transformer
         transformer_config = feature.get('transformer', None)
         transformer_type = None
@@ -180,6 +185,7 @@ class FeatureModel(object):
                                           'transformer-type': transformer_type,
                                           'transformer': transformer,
                                           'required': required,
+                                          'scaler': scaler,
                                           'default': default}
 
     def __str__(self):

@@ -12,6 +12,7 @@ import os
 from core.trainer.config import FeatureModel, SchemaException
 from sklearn.feature_extraction.text import TfidfVectorizer
 from core.trainer.featuretype import regex_parse, str_to_int
+from core.trainer.scalers import ScalerException
 
 BASEDIR = 'testdata'
 
@@ -232,6 +233,35 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(result['type']._strategy, str_to_int)
         self.assertIsNone(result['transformer'])
         self.assertFalse(result['required'])
+
+    def test_process_feature_with_scaler(self):
+        from sklearn.preprocessing import MinMaxScaler 
+        feature = {
+            'name': 'another_test_feature',
+            'scaler': {
+                'type': 'ee'
+            }
+        }
+        try:
+            self.config._process_feature(feature)
+        except ScalerException:
+            pass
+
+        feature = {
+            'name': 'another_test_feature',
+            'scaler': {
+                'type': 'MinMaxScaler',
+                'feature_range_max': 3,
+                'copy': False
+            }
+        }
+
+        self.config._process_feature(feature)
+        self.assertIn('another_test_feature', self.config.features)
+        result = self.config.features['another_test_feature']
+        scaler = result['scaler']
+        self.assertIsNotNone(scaler)
+        self.assertIsInstance(scaler, MinMaxScaler)
 
     def test_process_feature_with_transformer(self):
         feature = {
