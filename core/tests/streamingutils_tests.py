@@ -6,7 +6,7 @@ Created on Nov 16, 2012
 import unittest
 import os
 
-from trainer.streamutils import streamingiterload
+from core.trainer.streamutils import streamingiterload
 
 BASEDIR = 'testdata'
 

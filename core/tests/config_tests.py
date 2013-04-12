@@ -9,9 +9,9 @@ Created on Jan 24, 2013
 import unittest
 import os
 
-from trainer.config import FeatureModel, SchemaException
+from core.trainer.config import FeatureModel, SchemaException
 from sklearn.feature_extraction.text import TfidfVectorizer
-from trainer.featuretype import regex_parse, str_to_int
+from core.trainer.featuretype import regex_parse, str_to_int
 
 BASEDIR = 'testdata'
 

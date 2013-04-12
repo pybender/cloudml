@@ -1,7 +1,7 @@
 __author__ = 'ifouk'
 
 import unittest
-from trainer.utils import copy_expected, is_empty
+from core.trainer.utils import copy_expected, is_empty
 
 
 class UtilsTestCase(unittest.TestCase):

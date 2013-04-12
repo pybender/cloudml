@@ -6,7 +6,7 @@ __author__ = 'ifoukarakis'
 from utils import copy_expected
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
-from sklearn.preprocessing import Scaler
+from sklearn.preprocessing import StandardScaler
 
 
 class ScalerDecorator(object):
@@ -28,7 +28,7 @@ class ScalerDecorator(object):
         filtered_params = copy_expected(params, ['copy', 'with_mean',
                                                  'with_std'])
 
-        self._scaler = Scaler(**filtered_params)
+        self._scaler = StandardScaler(**filtered_params)
 
     def _to_column(self, X):
         """

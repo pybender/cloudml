@@ -6,10 +6,10 @@ import unittest
 import os
 import logging
 
-from trainer.config import FeatureModel
-from trainer.trainer import Trainer
+from core.trainer.config import FeatureModel
+from core.trainer.trainer import Trainer
 from jsonpath import jsonpath
-from trainer.store import store_trainer, load_trainer
+from core.trainer.store import store_trainer, load_trainer
 
 BASEDIR = 'testdata'
 TARGET = 'target'

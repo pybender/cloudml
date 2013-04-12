@@ -82,12 +82,12 @@ class FeatureModel(object):
 
         # Filter only valid parameters
         classifier_settings = CLASSIFIERS[self.classifier_type]
-        
+
         defaults = classifier_settings.get('defaults', {})
         self.classifier.update(defaults)
 
         parameters = classifier_settings.get('parameters', [])
-        self.classifier = copy_expected(classifier_config, parameters)
+        self.classifier.update(copy_expected(classifier_config, parameters))
 
         # Trying to load classifier class
         module, name = classifier_settings.get('cls').rsplit(".", 1)

@@ -7,7 +7,7 @@ Created on Jan 24, 2013
 
 """
 import unittest
-from trainer.featuretype import FEATURE_TYPE_FACTORIES, regex_parse,\
+from core.trainer.featuretype import FEATURE_TYPE_FACTORIES, regex_parse,\
     InvalidFeatureTypeException
 
 

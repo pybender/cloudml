@@ -14,7 +14,7 @@ TEST_PATHS = ['tests']
 
 def read_version_string():
     sys.path.insert(0, pjoin(os.getcwd()))
-    from mlaas import __version__
+    from core import __version__
     version = __version__
     sys.path.pop(0)
     return version

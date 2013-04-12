@@ -9,7 +9,7 @@ Created on Jan 24, 2013
 
 import unittest
 
-from trainer.transformers import get_transformer, ScalerDecorator
+from core.trainer.transformers import get_transformer, ScalerDecorator
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.preprocessing import Scaler

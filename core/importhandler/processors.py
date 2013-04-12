@@ -23,7 +23,6 @@ class ProcessException(Exception):
 ###
 ### Functions to use for implementing each strategy
 ###
-
 ###############################################################################
 
 
@@ -36,9 +35,9 @@ def process_primitive(constructor):
         Keyword arguments:
         value -- the value to process for the given feature
         query_item -- the query item currently processing. Must contain a
-                      'target-features' list, with one item. This item must 
+                      'target-features' list, with one item. This item must
                       be a dictionary with the property 'name' set.
-        row_data -- a map containing the values of the current row processed 
+        row_data -- a map containing the values of the current row processed
                     so far.
 
         """
@@ -49,8 +48,9 @@ def process_primitive(constructor):
             result = constructor(value)
 
         return {target_features[0]['name']: result}
-    
+
     return process
+
 
 def process_composite(value, query_item, row_data):
     """
@@ -72,10 +72,9 @@ def process_composite(value, query_item, row_data):
     for feature in target_features:
         if 'expression' not in feature or \
                 'type' not in feature['expression'] or \
-                'value' not in feature ['expression']:
-            raise ProcessException(
-                    'Must define an expression with "type" and "value" for '
-                    'target feature %s' % (feature['name']))
+                'value' not in feature['expression']:
+            raise ProcessException('Must define an expression with "type"\
+and "value" for target feature %s' % (feature['name']))
         expression_type = feature['expression']['type']
         expression_value = feature['expression']['value']
 
@@ -135,7 +134,9 @@ def process_json(value, query_item, row_data):
                 # Treat as a dictionary
                 keys = jsonpath(path_result[0], feature['key-path'])
                 try:
-                    values = map(float, jsonpath(path_result[0], feature['value-path']))
+                    values = map(float,
+                                 jsonpath(path_result[0],
+                                 feature['value-path']))
                 except ValueError as e:
                     raise ProcessException(e)
                 except TypeError as e:

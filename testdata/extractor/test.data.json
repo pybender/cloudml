@@ -5,11 +5,11 @@
 		  "country": "Hobbiton",
 		  "friends": [{
 			  "name": "Frodo",
-			  "race": "hobbit"
+			  "race": "1"
 		  	},
 		  	{
 			  "name": "Thorin",
-			  "race": "dwarf"
+			  "race": "11"
 		  	}
 		  ]
 		},

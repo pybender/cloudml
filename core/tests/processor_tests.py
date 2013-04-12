@@ -3,8 +3,8 @@ __author__ = 'ifouk'
 import unittest
 import os
 
-from importhandler.processors import extract_parameters, \
-    process_string, ProcessException, process_composite, process_json
+from core.importhandler.processors import extract_parameters, \
+    process_primitive, ProcessException, process_composite, process_json
 
 BASEDIR = 'testdata'
 
@@ -54,7 +54,7 @@ class ProcessorCase(unittest.TestCase):
                 {'name': 'test.feature'}
             ]
         }
-        result = process_string('abc', item, row_data)
+        result = process_primitive(str)('abc', item, row_data)
         self.assertDictEqual(result, {'test.feature': 'abc'})
 
     def test_process_string_no_input_value(self):
@@ -67,7 +67,7 @@ class ProcessorCase(unittest.TestCase):
                 {'name': 'test.feature'}
             ]
         }
-        result = process_string(None, item, row_data)
+        result = process_primitive(str)(None, item, row_data)
         self.assertDictEqual(result, {'test.feature': None})
 
     def test_process_string_many_targets(self):
@@ -81,7 +81,7 @@ class ProcessorCase(unittest.TestCase):
                 {'name': 'test.feature2'}
             ]
         }
-        result = process_string('abc', item, row_data)
+        result = process_primitive(str)('abc', item, row_data)
         self.assertDictEqual(result, {'test.feature': 'abc'})
 
     def test_process_expression_valid_data(self):
@@ -94,11 +94,17 @@ class ProcessorCase(unittest.TestCase):
             'target-features': [
                 {
                     'name': 'test.feature1',
-                    'expression': '%(param1)s,%(param2)s'
+                    'expression': {
+                                    "type": "string",
+                                    "value":'%(param1)s,%(param2)s'
+                                  }
                 },
                 {
                     'name': 'test.feature2',
-                    'expression': '%(param3)s %(param1)s'
+                    'expression': {
+                                    "type": "string",
+                                    "value":'%(param3)s %(param1)s'
+                                  }
                 }
             ]
         }
@@ -115,11 +121,17 @@ class ProcessorCase(unittest.TestCase):
             'target-features': [
                 {
                     'name': 'test.feature1',
-                    'expression': '%(param1)s,%(param2)s'
+                    'expression': {
+                        "type": "string", 
+                        "value":'%(param1)s,%(param2)s'
+                        }
                 },
                 {
                     'name': 'test.feature2',
-                    'expression': '%(param3)s %(param1)s'
+                    'expression': {
+                        "type": "string", 
+                        "value":'%(param3)s %(param1)s'
+                        }
                 }
             ]
         }
@@ -174,8 +186,8 @@ class ProcessorCase(unittest.TestCase):
             'name': 'Bilbo',
             'age': '111',
             'friends': {
-                'Frodo': 'hobbit',
-                'Thorin': 'dwarf'
+                'Frodo': 1.0,
+                'Thorin': 11.0
             },
             'notthere': None,
             'friend_names1': 'Frodo,Thorin',

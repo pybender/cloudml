@@ -11,7 +11,7 @@ import unittest
 import os
 
 
-from importhandler.importhandler import ExtractionPlan,\
+from core.importhandler.importhandler import ExtractionPlan,\
     ImportHandlerException, ImportHandler
 
 BASEDIR = 'testdata'
