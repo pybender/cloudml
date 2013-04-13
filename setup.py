@@ -73,7 +73,7 @@ class NoseCommand(Command):
         import nose
         if not os.path.exists('target'):
             os.mkdir('target')
-        nose.run(argv=['', '--with-xunit', '--xunit-file=target/nosetests.xml'])
+        nose.run(argv=['', '--exclude-dir=api','--with-xunit', '--xunit-file=target/nosetests.xml'])
         #argv = ['--with-xunit']
         #nose.main(argv=argv)
 

@@ -236,13 +236,16 @@ class TestExamplesResource(BaseResource):
         model_name = kwargs.get('model')
         test_name = kwargs.get('test_name')
         example_id = kwargs.get('example_id')
+        fields.append('data_input')
         example =  self.Model.find_one({'model_name': model_name,
                                     'test_name': test_name,
-                                    '_id': ObjectId(example_id)}, fields)
-        if example.weighted_data_input is None:
+                                    '_id': ObjectId(example_id)})
+        print example
+        print example['weighted_data_input']
+        if example['weighted_data_input'] == {}:
             model = db.cloudml.Model.find_one({'name': model_name})
-            weighted_data_input = get_weighted_data(model, example.input_data)
-            example.weighted_data_input = dict(weighted_data_input)
+            weighted_data_input = get_weighted_data(model, example['data_input'])
+            example['weighted_data_input'] = dict(weighted_data_input)
             example.save()
         return example
 
