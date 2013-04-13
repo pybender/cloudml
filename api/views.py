@@ -232,12 +232,19 @@ class TestExamplesResource(BaseResource):
                                 'test_name': test_name}, fields)
 
     def _get_details_query(self, params, fields, **kwargs):
+        from helpers.weights import get_weighted_data
         model_name = kwargs.get('model')
         test_name = kwargs.get('test_name')
         example_id = kwargs.get('example_id')
-        return self.Model.find_one({'model_name': model_name,
+        example =  self.Model.find_one({'model_name': model_name,
                                     'test_name': test_name,
                                     '_id': ObjectId(example_id)}, fields)
+        if example.weighted_data_input is None:
+            model = db.cloudml.Model.find_one({'name': model_name})
+            weighted_data_input = get_weighted_data(model, example.input_data)
+            example.weighted_data_input = dict(weighted_data_input)
+            example.save()
+        return example
 
     def _get_groupped_action(self, **kwargs):
         """

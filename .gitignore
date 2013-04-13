@@ -25,6 +25,8 @@ node_modules/*
 npm-debug.log
 local.json
 
+target
+
 *.sublime-project
 *.sublime-workspace
 

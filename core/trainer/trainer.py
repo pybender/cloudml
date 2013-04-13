@@ -219,7 +219,7 @@ class Trainer():
         if feature['transformer'] is not None:
             # Bug here: If transformer is a scaler, we need to transpose data.
             return feature['transformer'].fit_transform(data)
-        elif feature['scaler'] is not None:
+        elif feature.get('scaler', None) is not None:
             return feature['scaler'].fit_transform(self._to_column(data).toarray())
         else:
             return self._to_column(data)
@@ -238,7 +238,7 @@ class Trainer():
         logging.debug('Preparing feature %s for test' % (feature['name'], ))
         if feature['transformer'] is not None:
             return feature['transformer'].transform(data)
-        elif feature['scaler'] is not None:
+        elif feature.get('scaler', None) is not None:
             return feature['scaler'].fit_transform(self._to_column(data).toarray())
         else:
             return self._to_column(data)
