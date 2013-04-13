@@ -9,7 +9,7 @@ __author__ = 'ifoukarakis'
 
 import calendar
 import re
-from functools import wraps
+from functools import update_wrapper
 from datetime import datetime
 
 
@@ -191,16 +191,24 @@ def date_strategy(value, params):
     return default
 
 
+# Note: picle can't picke function decorated object (only when decorator
+# defined as class).
 
-def primitive_type_strategy(constructor):
+class primitive_type_strategy(object):
     """
     Generates a strategy function for a primitive python type.
 
     Keyword arguments:
     constructor: the constructor of the primitive type, e.g., int, float, etc.
     """
-    @wraps(constructor)
-    def strategy(value, params):
+    def __init__(self, constructor):
+        self.constructor = constructor
+        try:
+            functools.update_wrapper(self, constructor)
+        except:
+            pass
+
+    def __call__(self, value, params):
         """
         Convert the input value to a primitive type
 
@@ -208,17 +216,16 @@ def primitive_type_strategy(constructor):
         value -- the value to convert
         params -- params containing the pattern
         """
-        default = constructor()
+        default = self.constructor()
         if params is not None:
             default = params.get('default', default)
         if value is None:
             return default
         try:
-            return constructor(value)
+            return self.constructor(value)
         except ValueError:
             pass
         return default
-    return strategy
 
 
 def ordinal_strategy(value, params={}):

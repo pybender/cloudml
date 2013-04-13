@@ -11,8 +11,8 @@ from core.trainer.trainer import Trainer
 from jsonpath import jsonpath
 from core.trainer.store import store_trainer, load_trainer
 
-BASEDIR = '../../testdata'
-TARGET = '../../target'
+BASEDIR = 'testdata'
+TARGET = 'target'
 
 
 class TrainerTestCase(unittest.TestCase):
