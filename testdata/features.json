@@ -185,7 +185,7 @@
     },
     {
       "name":"contractor.dev_last_worked",
-      "type": "string-to-date",
+      "type": "date",
       "params": {
         "pattern": "%B %d, %Y"
       }

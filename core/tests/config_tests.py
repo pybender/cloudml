@@ -11,7 +11,7 @@ import os
 
 from core.trainer.config import FeatureModel, SchemaException
 from sklearn.feature_extraction.text import TfidfVectorizer
-from core.trainer.featuretype import regex_parse, str_to_int
+from core.trainer.featuretype import regex_parse, primitive_type_strategy
 from core.trainer.scalers import ScalerException
 
 BASEDIR = 'testdata'
@@ -230,7 +230,7 @@ class ConfigTest(unittest.TestCase):
         self.assertIn('another_test_feature', self.config.features)
         result = self.config.features['another_test_feature']
         self.assertEqual('another_test_feature', result['name'])
-        self.assertEqual(result['type']._strategy, str_to_int)
+        self.assertEqual(result['type']._strategy(10, None), primitive_type_strategy(int)(10, None))
         self.assertIsNone(result['transformer'])
         self.assertFalse(result['required'])
 
