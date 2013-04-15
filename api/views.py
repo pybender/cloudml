@@ -7,7 +7,7 @@ from werkzeug.datastructures import FileStorage
 from bson.objectid import ObjectId
 from itertools import izip
 
-from api import db, api
+from api import db, api, connection
 from api.utils import crossdomain, ERR_INVALID_DATA, odesk_error_response, \
     ERR_NO_SUCH_MODEL
 from api.resources import BaseResource
@@ -36,7 +36,7 @@ class Models(BaseResource):
 
     @property
     def Model(self):
-        return db.cloudml.Model
+        return db.Model
 
     def _get_model_parser(self, **kwargs):
         """
@@ -106,9 +106,11 @@ class Models(BaseResource):
     def _fill_put_data(self, model, param, **kwargs):
         importhandler = None
         train_importhandler = None
-        if param['importhandler'] and not param['importhandler'] == 'undefined':
+        if param['importhandler'] and \
+                not param['importhandler'] == 'undefined':
             importhandler = json.loads(param['importhandler'])
-        if param['train_importhandler'] and not param['train_importhandler'] == 'undefined':
+        if param['train_importhandler'] and \
+                not param['train_importhandler'] == 'undefined':
             train_importhandler = json.loads(param['train_importhandler'])
         model.importhandler = importhandler or model.importhandler
         model.train_importhandler = train_importhandler \
@@ -139,7 +141,7 @@ class ImportHandlerResource(BaseResource):
     """
     @property
     def Model(self):
-        return db.cloudml.ImportHandler
+        return db.ImportHandler
 
     OBJECT_NAME = 'import_handler'
     decorators = [crossdomain(origin='*')]
@@ -173,12 +175,12 @@ class Tests(BaseResource):
 
     @property
     def Model(self):
-        return db.cloudml.Test
+        return db.Test
 
     def _get_list_query(self, params, fields, **kwargs):
         params = self._prepare_filter_params(params)
         params['model_name'] = kwargs.get('model')
-        return self.Model.find(params,  fields)
+        return self.Model.find(params, fields)
 
     def _get_details_query(self, params, fields, **kwargs):
         model_name = kwargs.get('model')
@@ -189,14 +191,14 @@ class Tests(BaseResource):
     def post(self, action=None, **kwargs):
         from api.tasks import run_test
         model_name = kwargs.get('model')
-        model = db.cloudml.Model.find_one({'name': model_name})
+        model = db.Model.find_one({'name': model_name})
         parser = populate_parser(model)
         parameters = parser.parse_args()
-        test = db.cloudml.Test()
+        test = db.Test()
         test.status = test.STATUS_QUEUED
         test.parameters = parameters
 
-        total = db.cloudml.Test.find({'model_name': model.name}).count()
+        total = db.Test.find({'model_name': model.name}).count()
         test.name = "Test%s" % (total + 1)
         test.model_name = model.name
         test.model = model
@@ -217,7 +219,7 @@ REDUCE_FUNC = 'function(obj, prev) {\
 class TestExamplesResource(BaseResource):
     @property
     def Model(self):
-        return db.cloudml.TestExample
+        return db.TestExample
 
     OBJECT_NAME = 'data'
     NEED_PAGING = True
@@ -237,21 +239,21 @@ class TestExamplesResource(BaseResource):
         test_name = kwargs.get('test_name')
         example_id = kwargs.get('example_id')
         fields.append('data_input')
-        example =  self.Model.find_one({'model_name': model_name,
-                                    'test_name': test_name,
-                                    '_id': ObjectId(example_id)})
-        print example
-        print example['weighted_data_input']
+        example = self.Model.find_one({'model_name': model_name,
+                                       'test_name': test_name,
+                                       '_id': ObjectId(example_id)})
         if example['weighted_data_input'] == {}:
-            model = db.cloudml.Model.find_one({'name': model_name})
-            weighted_data_input = get_weighted_data(model, example['data_input'])
+            model = db.Model.find_one({'name': model_name})
+            weighted_data_input = get_weighted_data(model,
+                                                    example['data_input'])
             example['weighted_data_input'] = dict(weighted_data_input)
             example.save()
         return example
 
     def _get_groupped_action(self, **kwargs):
         """
-        Groups data by `group_by_field` field and calculates mean average precision.
+        Groups data by `group_by_field` field and calculates mean average
+        precision.
         Note: `group_by_field` should be specified in request parameters.
         """
         from ml_metrics import apk
@@ -268,7 +270,7 @@ class TestExamplesResource(BaseResource):
                                         'field parameter is required')
         model_name = kwargs.get('model')
         test_name = kwargs.get('test_name')
-        ex_collection = db.cloudml.TestExample.collection
+        ex_collection = db.TestExample.collection
         groups = ex_collection.group([group_by_field, ],
                                      {'model_name': model_name,
                                       'test_name': test_name},
@@ -318,19 +320,20 @@ class CompareReportResource(BaseResource):
     def _details(self, extra_params=(), **kwargs):
         params = self._parse_parameters(self.GET_PARAMS)
         test_fields = ('name', 'model_name', 'accuracy', 'metrics')
-        test1 = db.cloudml.Test.find_one({'model_name': params.get('model1'),
-                                          'name': params.get('test1')},
-                                         test_fields)
-        test2 = db.cloudml.Test.find_one({'model_name': params.get('model2'),
-                                          'name': params.get('test2')},
-                                         test_fields)
-        examples_fields = ('name', 'label', 'pred_label', 'weighted_data_input')
-        examples1 = db.cloudml.TestExample.find({'model_name': params.get('model1'),
-                                                 'test_name': params.get('test1')},
-                                                examples_fields).limit(10)
-        examples2 = db.cloudml.TestExample.find({'model_name': params.get('model2'),
-                                                 'test_name': params.get('test2')},
-                                                examples_fields).limit(10)
+        test1 = db.Test.find_one({'model_name': params.get('model1'),
+                                  'name': params.get('test1')},
+                                 test_fields)
+        test2 = db.Test.find_one({'model_name': params.get('model2'),
+                                  'name': params.get('test2')},
+                                 test_fields)
+        examples_fields = ('name', 'label', 'pred_label',
+                           'weighted_data_input')
+        examples1 = db.TestExample.find({'model_name': params.get('model1'),
+                                         'test_name': params.get('test1')},
+                                        examples_fields).limit(10)
+        examples2 = db.TestExample.find({'model_name': params.get('model2'),
+                                         'test_name': params.get('test2')},
+                                        examples_fields).limit(10)
         return self._render({'test1': test1, 'test2': test2,
                              'examples1': examples1,
                              'examples2': examples2})
@@ -344,13 +347,13 @@ class Predict(BaseResource):
 
     def post(self, model, import_handler):
 
-        hndl = db.cloudml.ImportHandler.find_one({'name': import_handler})
+        hndl = db.ImportHandler.find_one({'name': import_handler})
         if hndl is None:
             msg = "Import handler %s doesn\'t exist" % import_handler
             logging.error(msg)
             return odesk_error_response(404, ERR_NO_SUCH_MODEL, msg)
 
-        model = db.cloudml.Model.find_one({'name': model})
+        model = db.Model.find_one({'name': model})
         if hndl is None:
             msg = "Model %s doesn\'t exist" % model
             logging.error(msg)
@@ -369,7 +372,7 @@ class Predict(BaseResource):
         probs = prob.tolist() if not (prob is None) else []
         labels = labels.tolist() if not (labels is None) else []
         prob, label = sorted(zip(probs, labels),
-                             lambda x,y: cmp(x[0], y[0]),
+                             lambda x, y: cmp(x[0], y[0]),
                              reverse=True)[0]
         return self._render({'label': label, 'prob': prob}, code=201)
 

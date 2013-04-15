@@ -1,10 +1,11 @@
 import json
+import logging
 import math
 from flask.ext import restful
 from flask.ext.restful import reqparse
 
 from api.utils import crossdomain, ERR_NO_SUCH_MODEL, odesk_error_response, \
-    ERR_INVALID_METHOD
+    ERR_INVALID_METHOD, ERR_INVALID_DATA
 from api.serialization import encode_model
 from api import app
 
@@ -202,6 +203,12 @@ for %s method: %s" % (method, action))
         return fields.split(',') if fields else ('name', )
 
     def _render(self, content, code=200):
-        content = json.dumps(content, default=encode_model)
+        try:
+            content = json.dumps(content, default=encode_model)
+        except Exception, exc:
+            msg = 'Error when dump data: %s' % exc
+            logging.error(msg)
+            return odesk_error_response(500, ERR_INVALID_DATA, msg)
+
         return app.response_class(content,
                                   mimetype='application/json'), code

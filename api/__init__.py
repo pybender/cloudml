@@ -8,7 +8,8 @@ from celery import Celery
 app = Flask(__name__)
 app.config.from_object('api.config')
 
-db = Connection()
+connection = Connection()
+db = getattr(connection, app.config['DATABASE_NAME'])
 
 celery = Celery('cloudml')
 celery.add_defaults(lambda: app.config)
