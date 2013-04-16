@@ -10,6 +10,14 @@ from api.serialization import encode_model
 from api import app
 
 
+class NotFound(Exception):
+    pass
+
+
+class ValidationError(Exception):
+    pass
+
+
 class BaseResource(restful.Resource):
     """
     Base class for any API Resource
@@ -25,6 +33,8 @@ class BaseResource(restful.Resource):
     GET_PARAMS = (('show', str), )
     FILTER_PARAMS = ()
     PAGING_PARAMS = (('page', int), )
+
+    MESSAGE404 = "Object doesn't exist"
     decorators = [crossdomain(origin='*',
                               headers="accept, origin, content-type")]
 
@@ -48,7 +58,12 @@ class BaseResource(restful.Resource):
         if not method in self.ALLOWED_METHODS:
             return odesk_error_response(400, ERR_INVALID_METHOD,
                                         '%s is not allowed' % method)
-        return super(BaseResource, self).dispatch_request(*args, **kwargs)
+        try:
+            return super(BaseResource, self).dispatch_request(*args, **kwargs)
+        except NotFound, exc:
+            return odesk_error_response(404, ERR_NO_SUCH_MODEL, exc.message)
+        except ValidationError, exc:
+            return odesk_error_response(400, ERR_INVALID_DATA, exc.message)
 
     # HTTP Methods
 
@@ -74,10 +89,15 @@ class BaseResource(restful.Resource):
         """
         if action:
             return self._apply_action(action, method='POST', **kwargs)
-
         parser = self._get_model_parser()
-        params = parser.parse_args() if parser else []
+        try:
+            params = parser.parse_args() if parser else []
+        except Exception, exc:
+            if hasattr(exc, 'data') and 'message' in exc.data:
+                raise ValidationError(exc.data['message'])
+            raise
 
+        self._validate_parameters(params)
         model = self._get_post_model(params, **kwargs)
         self._fill_post_data(model, params, **kwargs)
         return self._render({self.OBJECT_NAME: model._id}, code=201)
@@ -92,8 +112,10 @@ class BaseResource(restful.Resource):
         parser = self._get_model_parser(method='PUT')
         params = parser.parse_args()
 
-        model = self._get_details_query(None, None,
-                                        **kwargs)
+        model = self._get_details_query(None, None, **kwargs)
+        if model is None:
+            raise NotFound(self.MESSAGE404 % kwargs)
+
         model = self._fill_put_data(model, params, **kwargs)
         return self._render({self.OBJECT_NAME: model._id}, code=200)
 
@@ -102,6 +124,9 @@ class BaseResource(restful.Resource):
         Deletes unused model
         """
         model = self._get_details_query(None, ('_id', 'name'), **kwargs)
+        if model is None:
+            raise NotFound(self.MESSAGE404 % kwargs)
+
         model.collection.remove({'_id': model._id})
         return '', 204
 
@@ -147,6 +172,8 @@ class BaseResource(restful.Resource):
         params = self._parse_parameters(extra_params + self.GET_PARAMS)
         fields = self._get_fields_to_show(params)
         model = self._get_details_query(params, fields, **kwargs)
+        if model is None:
+            raise NotFound(self.MESSAGE404 % kwargs)
         return self._render({self.OBJECT_NAME: model})
 
     # Specific actions for GET
@@ -162,10 +189,16 @@ class BaseResource(restful.Resource):
                     if not v is None and k in filter_names])
 
     def _get_details_query(self, params, fields, **kwargs):
-        return self.Model.find_one(kwargs, fields)
+        model = self.Model.find_one(kwargs, fields)
+        return model
 
     def _get_model_parser(self, **kwargs):
         return None
+
+    # Specific methods for POST
+
+    def _validate_parameters(self, params):
+        pass
 
     def _fill_post_data(self, obj, params, **kwargs):
         raise NotImplemented()
@@ -177,6 +210,7 @@ class BaseResource(restful.Resource):
         add elements in subdocument.
         """
         return self.Model()
+
     # Utility methods
 
     def _apply_action(self, action, method='GET', **kwargs):

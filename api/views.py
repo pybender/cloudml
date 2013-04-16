@@ -5,21 +5,20 @@ from flask.ext.restful import reqparse
 from flask import request
 from werkzeug.datastructures import FileStorage
 from bson.objectid import ObjectId
-from itertools import izip
 
-from api import db, api, connection
+from api import api, app
 from api.utils import crossdomain, ERR_INVALID_DATA, odesk_error_response, \
     ERR_NO_SUCH_MODEL
-from api.resources import BaseResource
+from api.resources import BaseResource, NotFound, ValidationError
 from core.trainer.store import load_trainer
 from core.trainer.trainer import Trainer
 from core.trainer.config import FeatureModel
 from core.importhandler.importhandler import ExtractionPlan, \
     RequestImportHandler
-from api.models import Model, Test, TestExample, ImportHandler
 
 model_parser = reqparse.RequestParser()
-model_parser.add_argument('importhandler', type=str, default=None)
+model_parser.add_argument('importhandler', required=True, type=str,
+                          default=None)
 model_parser.add_argument('train_importhandler', type=str)
 model_parser.add_argument('features', type=str)
 model_parser.add_argument('trainer', type=FileStorage, location='files')
@@ -34,9 +33,11 @@ class Models(BaseResource):
     FILTER_PARAMS = (('status', str), ('comparable', int))
     methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
 
+    MESSAGE404 = "Model with name %(name)s doesn't exist"
+
     @property
     def Model(self):
-        return db.Model
+        return app.db.Model
 
     def _get_model_parser(self, **kwargs):
         """
@@ -71,9 +72,18 @@ class Models(BaseResource):
             fields_dict[field] = ""
 
         model = self._get_details_query(params, fields_dict, **kwargs)
+        if model is None:
+            raise NotFound(self.MESSAGE404 % kwargs)
         return self._render({self.OBJECT_NAME: model})
 
     # POST specific methods
+
+    def _validate_parameters(self, params):
+        features = params.get('features')
+        trainer = params.get('trainer')
+        if not features and not trainer:
+            raise ValidationError('Either features, either pickled \
+trained model is required')
 
     def _fill_post_data(self, obj, params, **kwargs):
         """
@@ -141,7 +151,7 @@ class ImportHandlerResource(BaseResource):
     """
     @property
     def Model(self):
-        return db.ImportHandler
+        return app.db.ImportHandler
 
     OBJECT_NAME = 'import_handler'
     decorators = [crossdomain(origin='*')]
@@ -175,7 +185,7 @@ class Tests(BaseResource):
 
     @property
     def Model(self):
-        return db.Test
+        return app.db.Test
 
     def _get_list_query(self, params, fields, **kwargs):
         params = self._prepare_filter_params(params)
@@ -191,14 +201,14 @@ class Tests(BaseResource):
     def post(self, action=None, **kwargs):
         from api.tasks import run_test
         model_name = kwargs.get('model')
-        model = db.Model.find_one({'name': model_name})
+        model = app.db.Model.find_one({'name': model_name})
         parser = populate_parser(model)
         parameters = parser.parse_args()
-        test = db.Test()
+        test = app.db.Test()
         test.status = test.STATUS_QUEUED
         test.parameters = parameters
 
-        total = db.Test.find({'model_name': model.name}).count()
+        total = app.db.Test.find({'model_name': model.name}).count()
         test.name = "Test%s" % (total + 1)
         test.model_name = model.name
         test.model = model
@@ -219,7 +229,7 @@ REDUCE_FUNC = 'function(obj, prev) {\
 class TestExamplesResource(BaseResource):
     @property
     def Model(self):
-        return db.TestExample
+        return app.db.TestExample
 
     OBJECT_NAME = 'data'
     NEED_PAGING = True
@@ -243,7 +253,7 @@ class TestExamplesResource(BaseResource):
                                        'test_name': test_name,
                                        '_id': ObjectId(example_id)})
         if example['weighted_data_input'] == {}:
-            model = db.Model.find_one({'name': model_name})
+            model = app.db.Model.find_one({'name': model_name})
             weighted_data_input = get_weighted_data(model,
                                                     example['data_input'])
             example['weighted_data_input'] = dict(weighted_data_input)
@@ -270,7 +280,7 @@ class TestExamplesResource(BaseResource):
                                         'field parameter is required')
         model_name = kwargs.get('model')
         test_name = kwargs.get('test_name')
-        ex_collection = db.TestExample.collection
+        ex_collection = app.db.TestExample.collection
         groups = ex_collection.group([group_by_field, ],
                                      {'model_name': model_name,
                                       'test_name': test_name},
@@ -320,18 +330,18 @@ class CompareReportResource(BaseResource):
     def _details(self, extra_params=(), **kwargs):
         params = self._parse_parameters(self.GET_PARAMS)
         test_fields = ('name', 'model_name', 'accuracy', 'metrics')
-        test1 = db.Test.find_one({'model_name': params.get('model1'),
+        test1 = app.db.Test.find_one({'model_name': params.get('model1'),
                                   'name': params.get('test1')},
                                  test_fields)
-        test2 = db.Test.find_one({'model_name': params.get('model2'),
+        test2 = app.db.Test.find_one({'model_name': params.get('model2'),
                                   'name': params.get('test2')},
                                  test_fields)
         examples_fields = ('name', 'label', 'pred_label',
                            'weighted_data_input')
-        examples1 = db.TestExample.find({'model_name': params.get('model1'),
+        examples1 = app.db.TestExample.find({'model_name': params.get('model1'),
                                          'test_name': params.get('test1')},
                                         examples_fields).limit(10)
-        examples2 = db.TestExample.find({'model_name': params.get('model2'),
+        examples2 = app.db.TestExample.find({'model_name': params.get('model2'),
                                          'test_name': params.get('test2')},
                                         examples_fields).limit(10)
         return self._render({'test1': test1, 'test2': test2,
@@ -347,13 +357,13 @@ class Predict(BaseResource):
 
     def post(self, model, import_handler):
 
-        hndl = db.ImportHandler.find_one({'name': import_handler})
+        hndl = app.db.ImportHandler.find_one({'name': import_handler})
         if hndl is None:
             msg = "Import handler %s doesn\'t exist" % import_handler
             logging.error(msg)
             return odesk_error_response(404, ERR_NO_SUCH_MODEL, msg)
 
-        model = db.Model.find_one({'name': model})
+        model = app.db.Model.find_one({'name': model})
         if hndl is None:
             msg = "Model %s doesn\'t exist" % model
             logging.error(msg)
