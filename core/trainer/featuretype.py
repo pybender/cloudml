@@ -12,6 +12,8 @@ import re
 from functools import update_wrapper
 from datetime import datetime
 
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+
 
 class FeatureType(object):
     """
@@ -19,7 +21,7 @@ class FeatureType(object):
     functionality for validating feature type configuration.
 
     """
-    def __init__(self, strategy, required_params=None, default_params=None):
+    def __init__(self, strategy, required_params=None, default_params=None, preprocessor=None):
         """
         Invoked whenever creating a feature type.
 
@@ -30,6 +32,7 @@ class FeatureType(object):
 
         """
         self._strategy = strategy
+        self._preprocessor = preprocessor
         if required_params is None:
             self._required = []
         else:
@@ -42,7 +45,8 @@ class FeatureType(object):
             set_params = set(params)
         if set(self._required).issubset(set_params):
             return FeatureTypeInstance(self._strategy, params,
-                                       self._default_params)
+                                       self._default_params,
+                                       self._preprocessor)
         raise InvalidFeatureTypeException('Not all required parameters set')
 
 
@@ -51,9 +55,10 @@ class FeatureTypeInstance(object):
     Decorator object for feature type instances.
 
     """
-    def __init__(self, strategy, params=None, default_params=None):
+    def __init__(self, strategy, params=None, default_params=None, preprocessor=None):
         self._strategy = strategy
         self._params = params
+        self.preprocessor = preprocessor
         self._default_params = default_params
         
     def transform(self, value):
@@ -267,7 +272,8 @@ FEATURE_TYPE_FACTORIES = {
     'numeric': FeatureType(primitive_type_strategy(float), None, {}),
     'date': FeatureType(date_strategy, ['pattern']),
     'map': FeatureType(ordinal_strategy, ['mappings']),
-    'categorical': FeatureType(categorical_strategy, None, {}),
+    'categorical': FeatureType(categorical_strategy, None, {},
+                 preprocessor=LabelEncoder()),
     'text': FeatureType(identity_strategy, None, {}),
     'regex': FeatureType(regex_parse, ['pattern']),
     'composite': CompositeFeatureType()

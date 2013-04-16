@@ -53,5 +53,4 @@ def get_scaler(scaler_config):
             param_name = param_name.replace('_min','')
             param_max = params.pop(param_name + '_max')
             params[param_name] = (param, param_max)
-    print params
     return SCALERS[scaler_type]['class'](**params)

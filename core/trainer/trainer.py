@@ -112,10 +112,16 @@ class Trainer():
         logging.info('Extracting features...')
         for feature_name, feature in self._feature_model.features.iteritems():
             if feature_name != self._feature_model.target_variable:
-                item = self._train_prepare_feature(
-                    feature,
-                    self._vect_data[feature_name])
-                vectorized_data.append(item)
+                if feature.get('input-format', None) == 'dict':
+                    items = self._process_subfeatures(
+                        feature,
+                        self._vect_data[feature_name])
+                    vectorized_data = vectorized_data + items
+                else:
+                    item = self._train_prepare_feature(
+                        feature,
+                        self._vect_data[feature_name])
+                    vectorized_data.append(item)
             else:
                 labels = self._vect_data[feature_name]
         logging.info('Training model...')
@@ -203,6 +209,25 @@ class Trainer():
         probs = self._classifier.predict_proba(hstack(vectorized_data))
         return {'probs': probs, 'labels': self._classifier.classes_}
 
+    def _process_subfeatures(self, feature, data):
+        from collections import defaultdict
+        sub_feature_names = []
+        sub_features = defaultdict(list)
+        for x in data:
+            sub_feature_names = sub_feature_names + x.keys()
+        for x in data:
+            for sub_feature in set(sub_feature_names):
+                sub_features[sub_feature].append(x.get(sub_feature, u""))
+        trans_sub_features = []
+
+        for k, v in sub_features.iteritems():
+            if feature['transformer'] is not None:
+                trans_sub_features.append(feature['transformer'].fit_transform(v))
+            else:
+                trans_sub_features.append(self._to_column(v))
+        return trans_sub_features
+
+
     def _train_prepare_feature(self, feature, data):
         """
         Uses the appropriate vectorizer or scaler on a specific feature and its
@@ -215,9 +240,14 @@ class Trainer():
 
         """
         logging.debug('Preparing feature %s for train' % (feature['name'], ))
+        input_format = feature.get('input-format', None)
+        if input_format == 'list':
+            data = map(lambda x: " ".join(x) if isinstance(x, list) else x, data)
+
+        if feature['type'].preprocessor:
+            data = feature['type'].preprocessor.fit_transform(data)
 
         if feature['transformer'] is not None:
-            # Bug here: If transformer is a scaler, we need to transpose data.
             return feature['transformer'].fit_transform(data)
         elif feature.get('scaler', None) is not None:
             return feature['scaler'].fit_transform(self._to_column(data).toarray())

@@ -169,6 +169,9 @@ class FeatureModel(object):
         scaler_config = feature.get('scaler', None)
         scaler = get_scaler(scaler_config)
 
+        # Get 'input-format'
+        input_format = feature.get('input-format', None)
+
         # Get transformer
         transformer_config = feature.get('transformer', None)
         transformer_type = None
@@ -182,6 +185,7 @@ class FeatureModel(object):
             self.required_feature_names.append(feature['name'])
         self.features[feature['name']] = {'name': feature['name'],
                                           'type': feature_type,
+                                          'input-format': input_format,
                                           'transformer-type': transformer_type,
                                           'transformer': transformer,
                                           'required': required,

@@ -3,23 +3,34 @@
     "hire_outcome": 1,
     "contractor.dev_adj_score_recent": 3.2,
     "contractor.dev_is_looking": "1",
-    "contractor.dev_title": "Python engineer working full time"
+    "contractor.dev_title": ["Python engineer working full time", "Python engineer"],
+    "contractor.dev_title1": {
+        "key1": "Python engineer working full time",
+        "key2": "Python engineer"
+      }
   },
   {
     "hire_outcome": 0,
     "contractor.dev_is_looking": "1",
-    "contractor.dev_title": "Senior Python developer"
+    "contractor.dev_title": ["Senior Python developer"],
+    "contractor.dev_title1": {
+        "key1": "Junior Python engineer working full time",
+        "key2": "Junior python engineer"
+      },
+    "contractor.dev_country": "USA"
   },
   {
     "contractor.dev_adj_score_recent": 4,
-    "contractor.dev_title": "PHP engineer front-end"
+    "contractor.dev_title": "PHP engineer front-end",
+    "contractor.dev_country": "USA"
   },
   {
     "hire_outcome": 1,
     "contractor.dev_adj_score_recent": 3,
     "contractor.dev_is_looking": "1",
     "contractor.dev_title": "best python engineer you've ever heard of",
-    "contractor.dev_recent_hours_fp": 12
+    "contractor.dev_recent_hours_fp": 12,
+    "contractor.dev_country": "Canada"
   },
   {
     "hire_outcome": 0,
@@ -31,6 +42,7 @@
     "hire_outcome": 1,
     "contractor.dev_adj_score_recent": 4,
     "contractor.dev_is_looking": "0",
-    "contractor.dev_title": "PHP engineer front-end"
+    "contractor.dev_title": "PHP engineer front-end",
+    "contractor.dev_country": "USA"
   }
 ]

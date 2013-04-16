@@ -27,7 +27,7 @@ class TrainerTestCase(unittest.TestCase):
         self._trainer.train(self._data)
 
     def test_train(self):
-        self.assertEquals(self._trainer._classifier.coef_.shape, (1, 4))
+        self.assertEquals(self._trainer._classifier.coef_.shape, (1, 14))
         title_feature = self._config.features['contractor.dev_title']
         title_vectorizer = title_feature['transformer']
         self.assertEquals(title_vectorizer.get_feature_names(), ['engineer',

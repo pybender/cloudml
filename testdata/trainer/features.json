@@ -21,12 +21,31 @@
       "is-required":false
     },
     {
+      "name":"contractor.dev_country",
+      "type":"categorical",
+      "is-required":false
+    },
+    {
       "name":"contractor.dev_title",
+      "type": "text",
+      "input-format": "list",
       "transformer":{
         "type":"Tfidf",
         "ngram_range_min":1,
         "ngram_range_max":1,
         "min_df":3
+      }
+    },
+    {
+      "name":"contractor.dev_title1",
+      "type": "text",
+      "input-format": "dict",
+      "default": {},
+      "transformer":{
+        "type":"Tfidf",
+        "ngram_range_min":1,
+        "ngram_range_max":1,
+        "min_df":1
       }
     }
   ]
