@@ -1,0 +1,123 @@
+{
+  "target-schema":"bestmatch",
+  "datasource":[
+    {
+      "name":"request-handler",
+      "type":"http"
+    }
+  ],
+  "queries":[
+    {
+      "name": "retrieve",
+      "items": [
+        {"source": "employer_info", "is-required": true, "process-as": "json", "target-features": [
+           {"name": "employer.op_timezone", "jsonpath": "$.op_timezone"},
+           {"name": "employer.op_country_tz", "jsonpath": "$.op_country_tz" },
+           {"name": "employer.op_tot_jobs_filled", "jsonpath": "$.op_tot_jobs_filled" },
+           {"name": "employer.country", "jsonpath": "$.op_country" }
+          ]
+        },
+        {"source": "contractor_info", "is-required": true, "process-as": "json", "target-features": [
+           {"name": "contractor.dev_is_looking", "jsonpath": "$.dev_is_looking"},
+           {"name": "contractor.dev_is_looking_week", "jsonpath": "$.dev_is_looking_week"},
+           {"name": "contractor.dev_active_interviews", "jsonpath": "$.dev_active_interviews"},
+           {"name": "contractor.dev_availability", "jsonpath": "$.dev_availability"},
+           {"name": "contractor.dev_cur_assignments", "jsonpath": "$.dev_cur_assignments"},
+           {"name": "contractor.dev_last_worked", "jsonpath": "$.dev_last_worked"},
+
+           {"name": "contractor.dev_recent_fp_jobs", "jsonpath": "$.dev_recent_fp_jobs"},
+           {"name": "contractor.dev_total_fp_jobs", "jsonpath": "$.dev_total_fp_jobs"},
+           {"name": "contractor.dev_recent_hourly_jobs", "jsonpath": "$.dev_recent_hourly_jobs"},
+           {"name": "contractor.dev_total_hourly_jobs", "jsonpath": "$.dev_total_hourly_jobs"},
+           {"name": "contractor.dev_recent_hours", "jsonpath": "$.dev_recent_hours"},
+           {"name": "contractor.dev_total_hours_rounded", "jsonpath": "$.dev_total_hours_rounded"},
+
+           {"name": "contractor.dev_billed_assignments", "jsonpath": "$.dev_billed_assignments"},
+           {"name": "contractor.dev_total_revenue", "jsonpath": "$.dev_total_revenue"},
+
+           {"name": "contractor.dev_tot_feedback", "jsonpath": "$.dev_tot_feedback"},
+           {"name": "contractor.dev_tot_feedback_recent", "jsonpath": "$.dev_tot_feedback_recent"},
+           {"name": "contractor.dev_adj_score", "jsonpath": "$.dev_adj_score"},
+           {"name": "contractor.dev_adj_score_recent", "jsonpath": "$.dev_adj_score_recent"},
+           {"name": "contractor.dev_rank_percentile", "jsonpath": "$.dev_rank_percentile"},
+           {"name": "contractor.dev_recent_rank_percentile", "jsonpath": "$.dev_recent_rank_percentile"},
+           {"name": "contractor.dev_scores", "jsonpath": "$.dev_scores", "key-path": "$.*.label", "value-path": "$.*.avg_category_score"},
+           {"name": "contractor.dev_max_karma", "jsonpath": "$.dev_max_karma"},
+ 
+           {"name": "contractor.tsexams", "jsonpath": "$.tsexams", "key-path": "$.*.ts_name", "value-path": "$.*.ts_score" },
+           {"name": "contractor.tsexam_ids", "jsonpath": "$.tsexams.*.ts_ref", "to-csv": true},
+           {"name": "contractor.dev_test_passed_count", "jsonpath": "$.dev_test_passed_count"},
+           {"name": "contractor.dev_skill_test_passed_count", "jsonpath": "$.dev_skill_test_passed_count"},
+
+           {"name": "contractor.dev_profile_title", "jsonpath": "$.dev_profile_title"},
+           {"name": "contractor.dev_blurb", "jsonpath": "$.dev_blurb"},
+           {"name": "contractor.skills", "jsonpath": "$.skills.*.skl_name", "to-csv": true},
+           {"name": "contractor.job_categories", "jsonpath": "$.job_categories.*.level2", "to-csv": true},
+
+           {"name": "contractor.dev_bill_rate", "jsonpath": "$.dev_bill_rate"},
+           {"name": "contractor.dev_expose_full_name", "jsonpath": "$.dev_expose_full_name"},
+           {"name": "contractor.dev_year_exp", "jsonpath": "$.dev_year_exp"},
+           {"name": "contractor.dev_portfolio_items_count", "jsonpath": "$.dev_portfolio_items_count"},
+           {"name": "contractor.dev_eng_skill", "jsonpath": "$.dev_eng_skill"},
+           {"name": "contractor.dev_timezone", "jsonpath": "$.dev_timezone"},
+           {"name": "contractor.dev_country", "jsonpath": "$.dev_country"},
+           {"name": "contractor.dev_region", "jsonpath": "$.dev_region"},
+           {"name": "ja.is_ic", "jsonpath": "$.dev_is_affiliated"}
+        ]},
+
+        {"source": "opening_info", "is-required": true, "process-as": "json", "target-features": [
+           {"name": "opening.title", "jsonpath": "$.op_title"},
+           {"name": "opening.description", "jsonpath": "$.op_job"},
+           {"name": "opening.skills", "jsonpath": "$.op_required_skills"},
+           {"name": "opening.type", "jsonpath": "$.op_job_type"},
+           {"name": "opening.category", "jsonpath": "$.op_job_category_2"},
+           {"name": "opening.budget", "jsonpath": "$.op_amount"},
+           {"name": "opening.buyer.total_jobs", "jsonpath": "$.buyer.op_tot_jobs_posted"},
+
+           {"name": "pref_available_hours", "jsonpath": "$.op_pref_hours_per_week"},
+           {"name": "pref_english", "jsonpath": "$.op_pref_english_skill"},
+           {"name": "pref_feedback", "jsonpath": "$.op_pref_fb_score"},
+           {"name": "pref_group", "jsonpath": "$.op_pref_group_recno"},
+           {"name": "pref_has_portfolio", "jsonpath": "$.op_pref_has_portfolio"},
+           {"name": "pref_rate_min", "jsonpath": "$.op_pref_hourly_rate_min"},
+           {"name": "pref_rate_max", "jsonpath": "$.op_pref_hourly_rate_max"},
+           {"name": "pref_region", "jsonpath": "$.op_pref_location"},
+           {"name": "pref_test", "jsonpath": "$.op_pref_test"},
+           {"name": "pref_odesk_hours", "jsonpath": "$.op_pref_odesk_hours"},
+           {"name": "pref_candidate_type", "jsonpath": "$.op_candidate_type_pref"}
+          ]
+        },
+
+
+        {"source": "application_info", "is-required": true, "process-as": "json", "target-features": [
+           {"name": "ja.bid_rate", "jsonpath": "$.result.hr_pay_rate"},
+           {"name": "ja.bid_amount", "jsonpath": "$.result.fp_pay_amount"},
+           {"name": "opening.pref_count", "jsonpath": "$.result.job_pref_matches.prefs_match"}
+          ]
+        },
+
+        {"source": "feature_info", "is-required": true, "process-as": "json", "target-features": [
+           {"name": "opening.segment", "jsonpath": "$.segment"}
+          ]
+        },
+
+        {"process-as": "composite", "target-features": [{"name": "opening.is_fjp", "expression": {"type": "python", "value": "%(opening.buyer.total_jobs)s == 0"}}]},
+        {"process-as": "composite", "target-features": [{"name": "matches_pref_english", "expression": {"type": "python", "value": "%(contractor.dev_eng_skill)s >= %(pref_english)s"}}]},
+        {"process-as": "composite", "target-features": [{"name": "matches_pref_feedback", "expression": {"type": "python", "value": "%(contractor.dev_adj_score)s >= %(pref_feedback)s"}}]},
+        {"process-as": "composite", "target-features": [{"name": "matches_pref_portfolio", "expression": {"type": "python", "value": "not %(pref_has_portfolio)s or %(pref_has_portfolio)s and %(contractor.dev_portfolio_items_count)s > 0"}}]},
+        {"process-as": "composite", "target-features": [{"name": "matches_pref_rate", "expression": {"type": "python", "value": "%(pref_rate_min)s is not None or %(pref_rate_min)s == 0 and %(pref_rate_max)s == 0 or %(pref_rate_min)s <= %(contractor.dev_bill_rate)s and %(contractor.dev_bill_rate)s <= %(pref_rate_max)s"}}]},
+        {"process-as": "composite", "target-features": [{"name": "matches_pref_region", "expression": {"type": "python", "value": "%(pref_region_id)s == 0 or '%(pref_region)s' == '%(contractor.dev_region)s'"}}]},
+        {"process-as": "composite", "target-features": [{"name": "matches_pref_test", "expression": {"type": "python", "value": "%(pref_test)s == 0 or %(pref_test)s in '%(contractor.tsexam_ids)s'.split(',')"}}]},
+        {"process-as": "composite", "target-features": [{"name": "matches_pref_odesk_hours", "expression": {"type": "python", "value": "%(contractor.dev_total_hours_rounded)s >= %(pref_odesk_hours)s"}}]},
+        {"process-as": "composite", "target-features": [{"name": "matches_pref_ic_ac", "expression": {"type": "python", "value": "'%(pref_candidate_type)s' == 'all' or '%(pref_candidate_type)s' == 'None' or %(ja.is_ic)s and '%(pref_candidate_type)s' == 'individuals' or not %(ja.is_ic)s and '%(pref_candidate_type)s' == 'agencies'"}}]},
+        
+        {"process-as": "composite", "target-features": [{"name": "employer_contractor_countries", "expression": {"type": "string", "value": "%(employer.country)s,%(contractor.dev_country)s"}}]},
+        {"process-as": "composite", "target-features": [{"name": "job_in_contractor_categories", "expression": {"type": "python", "value": "'%(opening.category)s' in '%(contractor.job_categories)s'.split(',')"}}]},
+        {"process-as": "composite", "target-features": [{"name": "matched_category", "expression": {"type": "python", "value": "'%(opening.category)s' if %(job_in_contractor_categories)s else None"}}]},
+        {"process-as": "composite", "target-features": [{"name": "matched_skills", "expression": {"type": "python", "value": "','.join(set('%(opening.skills)s'.split(',')) & set('%(contractor.skills)s'.split(',')))"}}]},
+        {"process-as": "composite", "target-features": [{"name": "matched_skills_ratio", "expression": {"type": "python", "value": "1.0 * len('%(matched_skills)s'.split(',')) / len('%(opening.skills)s'.split(','))"}}]}
+   
+      ]
+    }
+  ]
+}
