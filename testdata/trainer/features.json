@@ -37,6 +37,11 @@
       }
     },
     {
+      "name":"contractor.dev_test",
+      "type": "float",
+      "input-format": "dict"
+    },
+    {
       "name":"contractor.dev_title1",
       "type": "text",
       "input-format": "dict",

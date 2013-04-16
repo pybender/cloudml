@@ -213,13 +213,13 @@ class Trainer():
         from collections import defaultdict
         sub_feature_names = []
         sub_features = defaultdict(list)
+        default = feature['type'].transform(None)
         for x in data:
             sub_feature_names = sub_feature_names + x.keys()
         for x in data:
             for sub_feature in set(sub_feature_names):
-                sub_features[sub_feature].append(x.get(sub_feature, u""))
+                sub_features[sub_feature].append(x.get(sub_feature, default))
         trans_sub_features = []
-
         for k, v in sub_features.iteritems():
             if feature['transformer'] is not None:
                 trans_sub_features.append(feature['transformer'].fit_transform(v))
@@ -323,15 +323,27 @@ class Trainer():
             item = row_data.get(feature_name, None)
             if feature.get('required', True):
                 item = self._find_default(item, feature)
-
+            input_format = feature.get('input-format','plain')
+            print "input_format", input_format
             if ft is not None:
                 try:
-                    result[feature_name] = ft.transform(item)
+                    if input_format == 'plain':
+                            result[feature_name] = ft.transform(item)
+                    elif input_format == 'dict':
+                        if item is None:
+                            item = {}
+                        for k,v in item.iteritems():
+                            item[k] = ft.transform(v)
+                        result[feature_name] = item
+                    elif input_format == 'list':
+                        map(ft.transform, item)
+                        result[feature_name] = item
                 except Exception, e:
                     logging.warn('Error processing feature %s: %s'
-                                 % (feature_name, e.message))
+                                         % (feature_name, e.message))
                     raise ItemParseException('Error processing feature %s: %s'
-                                             % (feature_name, e.message))
+                                                     % (feature_name, e.message))
+
             else:
                 result[feature_name] = item
 

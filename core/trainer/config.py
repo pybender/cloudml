@@ -170,7 +170,7 @@ class FeatureModel(object):
         scaler = get_scaler(scaler_config)
 
         # Get 'input-format'
-        input_format = feature.get('input-format', None)
+        input_format = feature.get('input-format', 'plain')
 
         # Get transformer
         transformer_config = feature.get('transformer', None)

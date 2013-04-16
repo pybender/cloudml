@@ -274,7 +274,7 @@ FEATURE_TYPE_FACTORIES = {
     'map': FeatureType(ordinal_strategy, ['mappings']),
     'categorical': FeatureType(categorical_strategy, None, {},
                  preprocessor=LabelEncoder()),
-    'text': FeatureType(identity_strategy, None, {}),
+    'text': FeatureType(primitive_type_strategy(str), None, {}),
     'regex': FeatureType(regex_parse, ['pattern']),
     'composite': CompositeFeatureType()
 }
