@@ -108,12 +108,16 @@ class CategoricalFeatureType(FeatureType):
         tokenizer = None
         set_params = set()
         split_pattern = None
+        token_pattern = u'(?u)\b\w\w+\b'
         if params is not None:
             split_pattern = params.get('split_pattern', None)
             set_params = set(params)
         if split_pattern:
             tokenizer = tokenizer_dec(tokenizer_func, split_pattern)
+        else:
+            token_pattern = '.+'
         preprocessor = CountVectorizer(tokenizer=tokenizer,
+                                       token_pattern=token_pattern,
                                        min_df=0,
                                        binary=True)
         if set(self._required).issubset(set_params):
@@ -320,7 +324,7 @@ FEATURE_TYPE_FACTORIES = {
     'numeric': FeatureType(primitive_type_strategy(float), None, {}),
     'date': FeatureType(date_strategy, ['pattern']),
     'map': FeatureType(ordinal_strategy, ['mappings']),
-    'categorical1': FeatureType(categorical_strategy, None, {},
+    'categorical_label': FeatureType(categorical_strategy, None, {},
                  preprocessor=LabelEncoder()),
     'categorical': CategoricalFeatureType(),
     'text': FeatureType(primitive_type_strategy(str), None, {}),
