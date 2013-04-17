@@ -29,15 +29,17 @@ class ScalerException(Exception):
     pass
 
 
-def get_scaler(scaler_config):
+def get_scaler(scaler_config, default_scaler):
     if scaler_config is None:
-        scaler_type = DEFAULT_SCALER
+        scaler_type = default_scaler
         scaler_config = {}
     else:
         scaler_type = scaler_config.get('type', None)
     if scaler_type is None:
-        scaler_type = DEFAULT_SCALER
+        scaler_type = default_scaler
         scaler_config = {}
+    if scaler_type is None:
+        return None
 
     if scaler_type not in SCALERS:
         raise ScalerException('Scaler %s do not support' % scaler_type)

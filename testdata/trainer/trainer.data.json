@@ -8,7 +8,8 @@
         "key1": "Python engineer working full time",
         "key2": "Python engineer"
       },
-    "contractor.dev_test": {"python": 1.2, "php": 3.5}
+    "contractor.dev_test": {"python": 1.2, "php": 3.5},
+    "contractor.skills": "microsoft-word,blog-writing,article-writing1"
   },
   {
     "hire_outcome": 0,
@@ -19,12 +20,14 @@
         "key2": "Junior python engineer"
       },
     "contractor.dev_country": "USA",
-    "contractor.dev_test": {"python": 3.2, "php": 4.5 }
+    "contractor.dev_test": {"python": 3.2, "php": 4.5 },
+    "contractor.skills": "microsoft-word,blog-writing,article-writing"
   },
   {
     "contractor.dev_adj_score_recent": 4,
     "contractor.dev_title": "PHP engineer front-end",
-    "contractor.dev_country": "USA"
+    "contractor.dev_country": "USA",
+    "contractor.skills": "microsoft-word,blog-writing,article-writing"
   },
   {
     "hire_outcome": 1,

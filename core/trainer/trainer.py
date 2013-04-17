@@ -157,10 +157,16 @@ class Trainer():
         logging.info('Extracting features...')
         for feature_name, feature in self._feature_model.features.iteritems():
             if feature_name != self._feature_model.target_variable:
-                item = self._test_prepare_feature(
-                    feature,
-                    self._vect_data[feature_name])
-                vectorized_data.append(item)
+                if feature.get('input-format', None) == 'dict':
+                    items = self._process_subfeatures(
+                        feature,
+                        self._vect_data[feature_name])
+                    vectorized_data = vectorized_data + items
+                else:
+                    item = self._test_prepare_feature(
+                        feature,
+                        self._vect_data[feature_name])
+                    vectorized_data.append(item)
             else:
                 labels = self._vect_data[feature_name]
 
@@ -245,7 +251,7 @@ class Trainer():
             data = map(lambda x: " ".join(x) if isinstance(x, list) else x, data)
 
         if feature['type'].preprocessor:
-            data = feature['type'].preprocessor.fit_transform(data)
+            return feature['type'].preprocessor.fit_transform(data)
 
         if feature['transformer'] is not None:
             return feature['transformer'].fit_transform(data)
@@ -266,6 +272,12 @@ class Trainer():
 
         """
         logging.debug('Preparing feature %s for test' % (feature['name'], ))
+        input_format = feature.get('input-format', None)
+        if input_format == 'list':
+            data = map(lambda x: " ".join(x) if isinstance(x, list) else x, data)
+
+        if feature['type'].preprocessor:
+            return feature['type'].preprocessor.fit_transform(data)
         if feature['transformer'] is not None:
             return feature['transformer'].transform(data)
         elif feature.get('scaler', None) is not None:
@@ -324,7 +336,6 @@ class Trainer():
             if feature.get('required', True):
                 item = self._find_default(item, feature)
             input_format = feature.get('input-format', 'plain')
-            #print "input_format", input_format
             if ft is not None:
                 try:
                     if input_format == 'plain':
@@ -369,6 +380,24 @@ class Trainer():
 
         return result
 
+    def get_weights_from_vectorizer(self, feature_name, vectorizer, offset):
+        positive = []
+        negative = []
+         # Vectorizer
+        feature_names = vectorizer.get_feature_names()
+        for j in range(0, len(feature_names)):
+            name = '%s.%s' % (feature_name, feature_names[j])
+            weight = self._classifier.coef_[0][offset + j]
+            weights = {
+                'name': name,
+                'weight': weight
+            }
+            if weight > 0:
+                positive.append(weights)
+            else:
+                negative.append(weights)
+        return feature_names, positive, negative
+
     def get_weights(self):
         positive = []
         negative = []
@@ -377,23 +406,24 @@ class Trainer():
         for feature_name, feature in self._feature_model.features.items():
             if feature_name != self._feature_model.target_variable:
                 transformer = feature['transformer']
+                preprocessor = feature['type'].preprocessor
                 if transformer is not None and hasattr(transformer,
                                                        'get_feature_names'):
-                    # Vectorizer
-                    feature_names = transformer.get_feature_names()
-                    for j in range(0, len(feature_names)):
-                        name = '%s.%s' % (feature_name, feature_names[j])
-                        weight = self._classifier.coef_[0][index + j]
-                        weights = {
-                            'name': name,
-                            'weight': weight
-                        }
-                        if weight > 0:
-                            positive.append(weights)
-                        else:
-                            negative.append(weights)
-
+                    feature_names, p, n = self.get_weights_from_vectorizer(feature_name,
+                                                                           transformer,
+                                                                           index)
                     index += len(feature_names)
+                    positive = positive + p
+                    negative = negative + n
+
+                elif preprocessor is not None and hasattr(preprocessor,
+                                                          'get_feature_names'):
+                    feature_names, p, n = self.get_weights_from_vectorizer(feature_name,
+                                                                           preprocessor,
+                                                                           index)
+                    index += len(feature_names)
+                    positive = positive + p
+                    negative = negative + n
                 else:
                     # Scaler or array
                     weight = self._classifier.coef_[0][index]

@@ -166,8 +166,9 @@ class FeatureModel(object):
             self.target_variable = feature['name']
 
         # Get Scaler
+        default_scaler = feature_type.default_scaler
         scaler_config = feature.get('scaler', None)
-        scaler = get_scaler(scaler_config)
+        scaler = get_scaler(scaler_config, default_scaler)
 
         # Get 'input-format'
         input_format = feature.get('input-format', 'plain')

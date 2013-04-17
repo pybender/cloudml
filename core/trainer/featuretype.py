@@ -13,6 +13,7 @@ from functools import update_wrapper
 from datetime import datetime
 
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+from sklearn.feature_extraction.text import CountVectorizer
 
 
 class FeatureType(object):
@@ -21,7 +22,9 @@ class FeatureType(object):
     functionality for validating feature type configuration.
 
     """
-    def __init__(self, strategy, required_params=None, default_params=None, preprocessor=None):
+    def __init__(self, strategy,
+                 required_params=None, default_params=None,
+                 preprocessor=None, default_scaler='MinMaxScaler'):
         """
         Invoked whenever creating a feature type.
 
@@ -33,6 +36,7 @@ class FeatureType(object):
         """
         self._strategy = strategy
         self._preprocessor = preprocessor
+        self._default_scaler = default_scaler
         if required_params is None:
             self._required = []
         else:
@@ -46,7 +50,8 @@ class FeatureType(object):
         if set(self._required).issubset(set_params):
             return FeatureTypeInstance(self._strategy, params,
                                        self._default_params,
-                                       self._preprocessor)
+                                       self._preprocessor,
+                                       self._default_scaler)
         raise InvalidFeatureTypeException('Not all required parameters set')
 
 
@@ -55,11 +60,13 @@ class FeatureTypeInstance(object):
     Decorator object for feature type instances.
 
     """
-    def __init__(self, strategy, params=None, default_params=None, preprocessor=None):
+    def __init__(self, strategy, params=None, default_params=None,
+                 preprocessor=None, default_scaler=None):
         self._strategy = strategy
         self._params = params
         self.preprocessor = preprocessor
         self._default_params = default_params
+        self.default_scaler = default_scaler
     
     def active_params(self):
         active_params = {}
@@ -72,7 +79,48 @@ class FeatureTypeInstance(object):
         
     def transform(self, value):
         return self._strategy(value, self.active_params())
-    
+
+def tokenizer_func(x, split_pattern):
+    return re.split(split_pattern, x)
+
+class tokenizer_dec(object):
+    def __init__(self, func, split_pattern):
+        self.func = func
+        self.split_pattern = split_pattern
+        try:
+            functools.update_wrapper(self, func)
+        except:
+            pass
+
+    def __call__(self, x):
+        return self.func(x, self.split_pattern)
+
+class CategoricalFeatureType(FeatureType):
+
+    def __init__(self):
+
+        super(CategoricalFeatureType, self).__init__(primitive_type_strategy(str),
+                                                     None,
+                                                     {},
+                                                     None)
+
+    def get_instance(self, params):
+        tokenizer = None
+        set_params = set()
+        split_pattern = None
+        if params is not None:
+            split_pattern = params.get('split_pattern', None)
+            set_params = set(params)
+        if split_pattern:
+            tokenizer = tokenizer_dec(tokenizer_func, split_pattern)
+        preprocessor = CountVectorizer(tokenizer=tokenizer,
+                                       min_df=0,
+                                       binary=True)
+        if set(self._required).issubset(set_params):
+            return FeatureTypeInstance(self._strategy, params,
+                                       self._default_params,
+                                       preprocessor)
+        raise InvalidFeatureTypeException('Not all required parameters set')
 
 
 class CompositeFeatureType(FeatureType):
@@ -254,6 +302,8 @@ def categorical_strategy(value, params={}):
     value -- the categorical value(s)
     params -- params possibly containing the split pattern
     """
+    if value is None:
+        return ""
     if 'split_pattern' not in params:
         return value
     return re.split(params['split_pattern'], value)
@@ -270,8 +320,9 @@ FEATURE_TYPE_FACTORIES = {
     'numeric': FeatureType(primitive_type_strategy(float), None, {}),
     'date': FeatureType(date_strategy, ['pattern']),
     'map': FeatureType(ordinal_strategy, ['mappings']),
-    'categorical': FeatureType(categorical_strategy, None, {},
+    'categorical1': FeatureType(categorical_strategy, None, {},
                  preprocessor=LabelEncoder()),
+    'categorical': CategoricalFeatureType(),
     'text': FeatureType(primitive_type_strategy(str), None, {}),
     'regex': FeatureType(regex_parse, ['pattern']),
     'composite': CompositeFeatureType()

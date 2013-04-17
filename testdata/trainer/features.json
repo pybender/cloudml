@@ -52,6 +52,10 @@
         "ngram_range_max":1,
         "min_df":1
       }
-    }
+    },
+    {"name": "contractor.skills",
+     "type": "categorical",
+     "params": {"split_pattern": "\\s*,\\s*"}
+   }
   ]
 }

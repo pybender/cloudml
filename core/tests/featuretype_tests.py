@@ -77,11 +77,11 @@ class FeatureTypeTest(unittest.TestCase):
         result = ft_instance.transform('This is a test. Price is 4.99$')
         self.assertEqual(4.99, result)
 
-    def test_get_categorical_instance_with_split_pattern(self):
-        factory = FEATURE_TYPE_FACTORIES['categorical']
-        ft_instance = factory.get_instance({'split_pattern': '\\s*,\\s*'})
-        result = ft_instance.transform('python, c++ ,  c# '.strip().lstrip())
-        self.assertEqual(set(result), set(['python', 'c++', 'c#']))
+    # def test_get_categorical_instance_with_split_pattern(self):
+    #     factory = FEATURE_TYPE_FACTORIES['categorical']
+    #     ft_instance = factory.get_instance({'split_pattern': '\\s*,\\s*'})
+    #     result = ft_instance.transform('python, c++ ,  c# '.strip().lstrip())
+    #     self.assertEqual(set(result), set(['python', 'c++', 'c#']))
 
     def test_get_composite_instance_no_chain(self):
         params = {
