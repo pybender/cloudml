@@ -250,7 +250,7 @@ class Trainer():
         if feature['transformer'] is not None:
             return feature['transformer'].fit_transform(data)
         elif feature.get('scaler', None) is not None:
-            return feature['scaler'].fit_transform(self._to_column(data))
+            return feature['scaler'].fit_transform(self._to_column(data).toarray())
         else:
             return self._to_column(data)
 

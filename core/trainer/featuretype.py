@@ -67,7 +67,7 @@ class FeatureTypeInstance(object):
             active_params.update(self._default_params)
         if self._params is not None:
             active_params.update(self._params)
-        return active_params if len(active_params) > 0 else None 
+        return active_params 
         
         
     def transform(self, value):
