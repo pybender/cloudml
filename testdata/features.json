@@ -30,6 +30,7 @@
     },
     {
       "name":"country_pair",
+      "type": "text",
       "transformer":{
         "type":"Count",
         "token_pattern":"[^,]+,[\\w\\s]+"
@@ -37,6 +38,7 @@
     },
     {
       "name":"tsexams",
+      "type": "float",
       "is-required":false,
       "transformer":{
         "type":"Dictionary",
@@ -81,6 +83,7 @@
     },
     {
       "name":"contractor.dev_blurb",
+      "type": "text",
       "transformer":{
         "type":"Tfidf",
         "ngram_range_min":1,
@@ -165,7 +168,8 @@
       "type":"str_to_timezone"
     },
     {
-      "name":"contractor.dev_profile_title",
+      "name": "contractor.dev_profile_title",
+      "type": "text",
       "transformer":{
         "type":"Tfidf",
         "min_df":3
@@ -181,7 +185,7 @@
     },
     {
       "name":"contractor.dev_pay_rate",
-      "type":"int"
+      "type":"float"
     },
     {
       "name":"contractor.dev_last_worked",

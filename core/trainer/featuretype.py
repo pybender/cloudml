@@ -60,21 +60,19 @@ class FeatureTypeInstance(object):
         self._params = params
         self.preprocessor = preprocessor
         self._default_params = default_params
+    
+    def active_params(self):
+        active_params = {}
+        if self._default_params is not None:
+            active_params.update(self._default_params)
+        if self._params is not None:
+            active_params.update(self._params)
+        return active_params if len(active_params) > 0 else None 
+        
         
     def transform(self, value):
-        if self._default_params is None and self._params is None:
-            return self._strategy(value)
-        final_params = {}
-        if self._default_params is not None:
-            final_params.update(self._default_params)
-        if self._params is not None:
-            final_params.update(self._params)
-        return self._strategy(value, final_params)
+        return self._strategy(value, self.active_params())
     
-    # The following is defined to allow pickling (see  
-    # http://stackoverflow.com/questions/14550577/pickling-wrapped-partial-
-    #  functions)
-
 
 
 class CompositeFeatureType(FeatureType):
@@ -283,16 +281,3 @@ FEATURE_TYPE_DEFAULTS = {
     # Default is Jan 1st, 2000
     'date': 946684800
 }
-
-if __name__ == '__main__':
-    params = {
-            'chain': [
-                {'type': 'regex',
-                 'params': {'pattern': '(\d*\.\d+)'}},
-                {'type': 'float'}
-            ],
-            'should': 'ignore'
-        }
-    factory = FEATURE_TYPE_FACTORIES['composite']
-    ft_instance = factory.get_instance(params)
-    result = ft_instance.transform('This is a test. Price is 4.99$')

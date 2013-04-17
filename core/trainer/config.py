@@ -147,9 +147,9 @@ class FeatureModel(object):
         if 'name' not in feature:
             raise SchemaException('Features must have a name')
 
-        #TODO: Revise logic here.
-        #if 'type' not in feature:
-        #    raise SchemaException('Feature %s must have a type')
+        if 'type' not in feature:
+            raise SchemaException('Feature %s must have a type' % 
+                                  feature['name'])
 
         # Check if feature has a type definition
         feature_type = None

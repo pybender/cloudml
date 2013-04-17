@@ -238,6 +238,7 @@ class ConfigTest(unittest.TestCase):
         from sklearn.preprocessing import MinMaxScaler 
         feature = {
             'name': 'another_test_feature',
+            'type': 'int',
             'scaler': {
                 'type': 'ee'
             }
@@ -249,6 +250,7 @@ class ConfigTest(unittest.TestCase):
 
         feature = {
             'name': 'another_test_feature',
+            'type': 'float',
             'scaler': {
                 'type': 'MinMaxScaler',
                 'feature_range_max': 3,
@@ -266,6 +268,7 @@ class ConfigTest(unittest.TestCase):
     def test_process_feature_with_transformer(self):
         feature = {
             'name': 'another_test_feature',
+            'type': 'text',
             'transformer': {
                 'type': 'Tfidf',
                 'ngram_range_min': 1,

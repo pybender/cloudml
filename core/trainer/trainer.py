@@ -250,7 +250,7 @@ class Trainer():
         if feature['transformer'] is not None:
             return feature['transformer'].fit_transform(data)
         elif feature.get('scaler', None) is not None:
-            return feature['scaler'].fit_transform(self._to_column(data).toarray())
+            return feature['scaler'].fit_transform(self._to_column(data))
         else:
             return self._to_column(data)
 
@@ -303,7 +303,7 @@ class Trainer():
                     callback(row)
             except ItemParseException, e:
                 logging.debug('Ignoring item #%d: %s'
-                              % (self._count, e.message))
+                              % (self._count, e))
                 if ignore_error:
                     self._ignored += 1
                 else:
@@ -323,12 +323,12 @@ class Trainer():
             item = row_data.get(feature_name, None)
             if feature.get('required', True):
                 item = self._find_default(item, feature)
-            input_format = feature.get('input-format','plain')
-            print "input_format", input_format
+            input_format = feature.get('input-format', 'plain')
+            #print "input_format", input_format
             if ft is not None:
                 try:
                     if input_format == 'plain':
-                            result[feature_name] = ft.transform(item)
+                        result[feature_name] = ft.transform(item)
                     elif input_format == 'dict':
                         if item is None:
                             item = {}
@@ -338,12 +338,11 @@ class Trainer():
                     elif input_format == 'list':
                         map(ft.transform, item)
                         result[feature_name] = item
-                except Exception, e:
+                except Exception as e:
                     logging.warn('Error processing feature %s: %s'
-                                         % (feature_name, e.message))
+                                 % (feature_name, e))
                     raise ItemParseException('Error processing feature %s: %s'
-                                                     % (feature_name, e.message))
-
+                                             % (feature_name, e))
             else:
                 result[feature_name] = item
 
