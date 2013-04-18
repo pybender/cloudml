@@ -51,14 +51,14 @@ class TransformersTest(unittest.TestCase):
         self.assertIsInstance(transformer, DictVectorizer)
         self.assertEqual(transformer.separator, ',')
 
-    def test_get_transformer_scaler(self):
-        data = {
-            'type': 'Scale',
-            'with_mean': False
-        }
-        transformer = get_transformer(data)
-        self.assertIsInstance(transformer, ScalerDecorator)
-        self.assertEqual(transformer._scaler.with_mean, False)
+#    def test_get_transformer_scaler(self):
+#        data = {
+#            'type': 'Scale',
+#            'with_mean': False
+#        }
+#        transformer = get_transformer(data)
+#        self.assertIsInstance(transformer, ScalerDecorator)
+#        self.assertEqual(transformer._scaler.with_mean, False)
 
     def test_get_transformer_unknown(self):
         data = {

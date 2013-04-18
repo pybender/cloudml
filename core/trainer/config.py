@@ -136,7 +136,8 @@ class FeatureModel(object):
             raise SchemaException('Unknown type: %s' % (config['type']))
 
         try:
-            return factory.get_instance(config.get('params', None))
+            return factory.get_instance(config.get('params', None),
+                                        config.get('input-format', 'plain'))
         except InvalidFeatureTypeException, e:
             raise SchemaException('Cannot create instance of feature type', e)
 
@@ -147,9 +148,9 @@ class FeatureModel(object):
         if 'name' not in feature:
             raise SchemaException('Features must have a name')
 
-        #TODO: Revise logic here.
-        #if 'type' not in feature:
-        #    raise SchemaException('Feature %s must have a type')
+        if 'type' not in feature:
+            raise SchemaException('Feature %s must have a type' % 
+                                  feature['name'])
 
         # Check if feature has a type definition
         feature_type = None
@@ -166,8 +167,12 @@ class FeatureModel(object):
             self.target_variable = feature['name']
 
         # Get Scaler
+        default_scaler = feature_type.default_scaler
         scaler_config = feature.get('scaler', None)
-        scaler = get_scaler(scaler_config)
+        scaler = get_scaler(scaler_config, default_scaler)
+
+        # Get 'input-format'
+        input_format = feature.get('input-format', 'plain')
 
         # Get transformer
         transformer_config = feature.get('transformer', None)
@@ -182,6 +187,7 @@ class FeatureModel(object):
             self.required_feature_names.append(feature['name'])
         self.features[feature['name']] = {'name': feature['name'],
                                           'type': feature_type,
+                                          'input-format': input_format,
                                           'transformer-type': transformer_type,
                                           'transformer': transformer,
                                           'required': required,

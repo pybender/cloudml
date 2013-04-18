@@ -21,13 +21,33 @@
       "is-required":false
     },
     {
+      "name":"contractor.dev_country",
+      "type":"categorical",
+      "is-required":false
+    },
+    {
       "name":"contractor.dev_title",
+      "type": "text",
+      "input-format": "list",
       "transformer":{
         "type":"Tfidf",
         "ngram_range_min":1,
         "ngram_range_max":1,
         "min_df":3
       }
+    },
+    {
+      "name":"contractor.dev_test",
+      "type": "float",
+      "input-format": "dict"
+    },
+    {"name": "contractor.skills",
+     "type": "categorical",
+     "params": {"split_pattern": "\\s*,\\s*"}
+    },
+    {"name":"contractor.dev_scores",
+    "type":"float",
+    "input-format": "dict"
     }
   ]
 }

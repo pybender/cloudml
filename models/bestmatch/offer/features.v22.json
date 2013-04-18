@@ -1,0 +1,80 @@
+{
+  "schema-name": "bestmatch",
+  "classifier": {"type": "logistic regression", "penalty": "l1"},
+
+  "features":[
+    {"name": "made_offer", "type": "boolean", "is-target-variable": true},
+
+    {"name": "employer.op_tot_jobs_filled", "type": "int"},
+    {"name": "employer.country", "type": "categorical"},
+
+    {"name": "contractor.dev_is_looking", "type": "boolean"},
+    {"name": "contractor.dev_is_looking_week", "type": "boolean"},
+    {"name": "contractor.dev_active_interviews", "type": "int"},
+    {"name": "contractor.dev_availability", "type": "int"},
+    {"name": "contractor.dev_cur_assignments", "type": "int"},
+    {"name": "contractor.dev_last_worked", "type": "date", "params": {"pattern": "%B %d, %Y"}, "default": 946684800},
+
+    {"name": "contractor.dev_recent_fp_jobs", "type": "int"},
+    {"name": "contractor.dev_total_fp_jobs", "type": "int"},
+    {"name": "contractor.dev_recent_hourly_jobs", "type": "int", "is-required": false},
+    {"name": "contractor.dev_total_hourly_jobs", "type": "int"},
+    {"name": "contractor.dev_recent_hours", "type": "int"},
+    {"name": "contractor.dev_total_hours_rounded", "type": "int"},
+
+    {"name": "contractor.dev_billed_assignments", "type": "int"},
+    {"name": "contractor.dev_total_revenue", "type": "float"},
+
+    {"name": "contractor.dev_tot_feedback", "type": "int"},
+    {"name": "contractor.dev_tot_feedback_recent", "type": "float"},
+    {"name": "contractor.dev_adj_score", "type": "float"},
+    {"name": "contractor.dev_adj_score_recent", "type": "float"},
+    {"name": "contractor.dev_rank_percentile", "type": "float"},
+    {"name": "contractor.dev_recent_rank_percentile", "type": "float"},
+    {"name": "contractor.dev_scores", "type": "float", "input-format": "dict"},
+ 
+    {"name": "contractor.tsexams", "type": "float", "input-format": "dict"},
+    {"name": "contractor.dev_test_passed_count", "type": "int"},
+    {"name": "contractor.dev_skill_test_passed_count", "type": "int"},
+
+    {"name": "contractor.dev_profile_title", "type": "text", "transformer": {"type": "Tfidf", "min_df": 100}},
+    {"name": "contractor.dev_blurb", "type": "text", "transformer": {"type": "Tfidf", "ngram_range_min": 1, "ngram_range_max": 1,"min_df": 1000, "stop_words": "english"}},
+    {"name": "contractor.skills", "type": "categorical", "params": {"split_pattern": "\\s*,\\s*"}},
+    {"name": "contractor.job_categories", "type": "categorical", "params": {"split_pattern": "\\s*,\\s*"}},
+
+    {"name": "contractor.dev_bill_rate", "type": "float"},
+    {"name": "contractor.dev_expose_full_name", "type": "float", "is-required": false},
+    {"name": "contractor.dev_year_exp","type": "int", "is-required": false},
+    {"name": "contractor.dev_portfolio_items_count", "type": "int"},
+    {"name": "contractor.dev_eng_skill", "type": "int"},
+    {"name": "contractor.dev_country", "type": "categorical"},
+
+    {"name": "opening.title", "type": "text", "transformer": {"type": "Tfidf", "min_df": 100}},
+    {"name": "opening.description", "type": "text", "transformer": {"type": "Tfidf", "min_df": 1000, "stop_words": "english"}},
+    {"name": "opening.skills", "type": "categorical", "params": {"split_pattern": "\\s*,\\s*"}},
+    {"name": "opening.type", "type": "categorical"},
+    {"name": "opening.category", "type": "categorical"},
+    {"name": "opening.segment", "type": "categorical"},
+    {"name": "opening.budget", "type": "float", "is-required": false},
+    {"name": "opening.is_fjp", "type": "boolean"},
+  
+    {"name": "ja.is_ic", "type": "boolean"},
+    {"name": "ja.bid_amount", "type": "float", "is-required": false},
+    {"name": "ja.bid_rate", "type": "float", "is-required": false},
+
+    {"name": "matches_pref_english", "type": "boolean"},
+    {"name": "matches_pref_feedback", "type": "boolean"},
+    {"name": "matches_pref_portfolio", "type": "boolean"},
+    {"name": "matches_pref_rate", "type": "boolean"},
+    {"name": "matches_pref_region", "type": "boolean"},
+    {"name": "matches_pref_test", "type": "boolean"},
+    {"name": "matches_pref_odesk_hours", "type": "boolean"},
+    {"name": "matches_pref_ic_ac", "type": "boolean"},
+
+    {"name": "employer_contractor_countries", "type": "categorical"},
+    {"name": "job_in_contractor_categories", "type": "boolean"}, 
+    {"name": "matched_category", "type": "categorical"},
+    {"name": "matched_skills", "type": "categorical", "params": {"split_pattern": "\\s*,\\s*"}},
+    {"name": "matched_skills_ratio", "type": "float"}
+  ]
+}

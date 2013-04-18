@@ -134,19 +134,6 @@ def get_dict_vectorizer(params):
     return DictVectorizer(**filtered_params)
 
 
-def get_scaler(params):
-    """
-    Creates a scaler. Uses the config under the transformer JSON object.
-
-    Keyword arguments:
-    params -- a map containing the vectorizer's configuration.
-
-    """
-    #filtered_params = copy_expected(params, ['copy', 'with_mean', 'with_std'])
-
-    return ScalerDecorator(params)
-
-
 def get_transformer(transformer):
     if transformer is None:
         return None
@@ -164,14 +151,12 @@ def get_transformer(transformer):
 TRANSFORMER_TO_VECTORIZER = {
     'Dictionary': get_dict_vectorizer,
     'Count': get_count_vectorizer,
-    'Tfidf': get_tfidf_vectorizer,
-    'Scale': get_scaler
+    'Tfidf': get_tfidf_vectorizer
 }
 
 # Default values per transformer type
 TRANSFORMER_DEFAULTS = {
     'Dictionary': {},
     'Count': '',
-    'Tfidf': '',
-    'Scale': 0.0
+    'Tfidf': ''
 }
