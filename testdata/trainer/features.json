@@ -41,21 +41,13 @@
       "type": "float",
       "input-format": "dict"
     },
-    {
-      "name":"contractor.dev_title1",
-      "type": "text",
-      "input-format": "dict",
-      "default": {},
-      "transformer":{
-        "type":"Tfidf",
-        "ngram_range_min":1,
-        "ngram_range_max":1,
-        "min_df":1
-      }
-    },
     {"name": "contractor.skills",
      "type": "categorical",
      "params": {"split_pattern": "\\s*,\\s*"}
-   }
+    },
+    {"name":"contractor.dev_scores",
+    "type":"float",
+    "input-format": "dict"
+    }
   ]
 }

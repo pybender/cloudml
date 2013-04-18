@@ -136,7 +136,8 @@ class FeatureModel(object):
             raise SchemaException('Unknown type: %s' % (config['type']))
 
         try:
-            return factory.get_instance(config.get('params', None))
+            return factory.get_instance(config.get('params', None),
+                                        config.get('input-format', 'plain'))
         except InvalidFeatureTypeException, e:
             raise SchemaException('Cannot create instance of feature type', e)
 

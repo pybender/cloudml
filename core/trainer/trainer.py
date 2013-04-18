@@ -112,16 +112,10 @@ class Trainer():
         logging.info('Extracting features...')
         for feature_name, feature in self._feature_model.features.iteritems():
             if feature_name != self._feature_model.target_variable:
-                if feature.get('input-format', None) == 'dict':
-                    items = self._process_subfeatures(
-                        feature,
-                        self._vect_data[feature_name])
-                    vectorized_data = vectorized_data + items
-                else:
-                    item = self._train_prepare_feature(
-                        feature,
-                        self._vect_data[feature_name])
-                    vectorized_data.append(item)
+                item = self._train_prepare_feature(
+                    feature,
+                    self._vect_data[feature_name])
+                vectorized_data.append(item)
             else:
                 labels = self._vect_data[feature_name]
         logging.info('Training model...')
@@ -157,16 +151,10 @@ class Trainer():
         logging.info('Extracting features...')
         for feature_name, feature in self._feature_model.features.iteritems():
             if feature_name != self._feature_model.target_variable:
-                if feature.get('input-format', None) == 'dict':
-                    items = self._process_subfeatures(
-                        feature,
-                        self._vect_data[feature_name])
-                    vectorized_data = vectorized_data + items
-                else:
-                    item = self._test_prepare_feature(
-                        feature,
-                        self._vect_data[feature_name])
-                    vectorized_data.append(item)
+                item = self._test_prepare_feature(
+                    feature,
+                    self._vect_data[feature_name])
+                vectorized_data.append(item)
             else:
                 labels = self._vect_data[feature_name]
 
@@ -249,7 +237,6 @@ class Trainer():
         input_format = feature.get('input-format', None)
         if input_format == 'list':
             data = map(lambda x: " ".join(x) if isinstance(x, list) else x, data)
-
         if feature['type'].preprocessor:
             return feature['type'].preprocessor.fit_transform(data)
 

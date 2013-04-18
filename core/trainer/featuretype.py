@@ -13,6 +13,7 @@ from functools import update_wrapper
 from datetime import datetime
 
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+from sklearn.feature_extraction import DictVectorizer
 from sklearn.feature_extraction.text import CountVectorizer
 
 
@@ -43,7 +44,7 @@ class FeatureType(object):
             self._required = required_params
         self._default_params = default_params
 
-    def get_instance(self, params):
+    def get_instance(self, params, input_format=None):
         set_params = set()
         if params is not None:
             set_params = set(params)
@@ -80,6 +81,24 @@ class FeatureTypeInstance(object):
     def transform(self, value):
         return self._strategy(value, self.active_params())
 
+class PrimitiveFeatureType(FeatureType):
+
+    def get_instance(self, params, input_format=None):
+        set_params = set()
+        preprocessor = None
+        if input_format == 'dict':
+            preprocessor = DictVectorizer()
+        if params is not None:
+            set_params = set(params)
+        if set(self._required).issubset(set_params):
+            return FeatureTypeInstance(self._strategy, params,
+                                       self._default_params,
+                                       preprocessor,
+                                       self._default_scaler)
+        raise InvalidFeatureTypeException('Not all required parameters set')
+
+
+
 def tokenizer_func(x, split_pattern):
     return re.split(split_pattern, x)
 
@@ -104,7 +123,7 @@ class CategoricalFeatureType(FeatureType):
                                                      {},
                                                      None)
 
-    def get_instance(self, params):
+    def get_instance(self, params, input_format=None):
         tokenizer = None
         set_params = set()
         split_pattern = None
@@ -141,7 +160,7 @@ class CompositeFeatureType(FeatureType):
         """
         super(CompositeFeatureType, self).__init__(None, None)
         
-    def get_instance(self, params):
+    def get_instance(self, params, input_format=None):
         """
         Iterate over the feature type definitions in "chain" array, and create
         the appropriate composite feature type instance.
@@ -320,7 +339,7 @@ def identity_strategy(value, params={}):
 FEATURE_TYPE_FACTORIES = {
     'boolean': FeatureType(primitive_type_strategy(bool), None, {}),
     'int': FeatureType(primitive_type_strategy(int), None, {}),
-    'float': FeatureType(primitive_type_strategy(float), None, {}),
+    'float': PrimitiveFeatureType(primitive_type_strategy(float), None, {}),
     'numeric': FeatureType(primitive_type_strategy(float), None, {}),
     'date': FeatureType(date_strategy, ['pattern']),
     'map': FeatureType(ordinal_strategy, ['mappings']),

@@ -3,7 +3,7 @@ import logging
 from copy import copy
 from itertools import izip
 
-from api import celery, db
+from api import celery, app
 from bson.objectid import ObjectId
 
 from core.trainer.trainer import Trainer
@@ -22,7 +22,7 @@ def train_model(model_name, parameters):
     Train new model
     """
     try:
-        model = db.cloudml.Model.find_one({'name': model_name})
+        model = app.db.Model.find_one({'name': model_name})
         if model.status == model.STATUS_TRAINED:
             raise InvalidOperationError("Model already trained")
         model.status = model.STATUS_TRAINING
@@ -53,7 +53,7 @@ def run_test(test_id):
     """
     Running tests for trained model
     """
-    test = db.cloudml.Test.find_one({'_id': ObjectId(test_id)})
+    test = app.db.Test.find_one({'_id': ObjectId(test_id)})
     model = test.model#Model(test.model)
     try:
         if model.status != model.STATUS_TRAINED:
@@ -89,7 +89,7 @@ def run_test(test_id):
 
         if not model.comparable:
             # TODO: fix this
-            model = db.cloudml.Model.find_one({'_id': model._id})
+            model = app.db.Model.find_one({'_id': model._id})
             model.comparable = True
             model.save()
 
@@ -121,7 +121,7 @@ def run_test(test_id):
                     logging.info('Stored %d rows' % count)
                 row = decode(row)
                 #weighted_data_input = get_weighted_data(model, row)
-                example = db.cloudml.TestExample()
+                example = app.db.TestExample()
                 example['data_input'] = row
                 #example['weighted_data_input'] = dict(weighted_data_input)
                 # TODO: Specify Example title column in raw data
