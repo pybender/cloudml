@@ -3,6 +3,7 @@ SQLALCHEMY_DATABASE_URI = 'sqlite:///{{ active_var_link }}/cloudml.db'
 STATIC_ROOT = None
 UPLOAD_FOLDER = 'models'
 MAX_CONTENT_LENGTH = 128 * 1024 * 1024
+DATABASE_NAME = 'cloudml'
 
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
