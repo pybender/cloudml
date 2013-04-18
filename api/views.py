@@ -15,6 +15,7 @@ from core.trainer.trainer import Trainer
 from core.trainer.config import FeatureModel
 from core.importhandler.importhandler import ExtractionPlan, \
     RequestImportHandler
+from core.models import Model, Test, TestExample, ImportHandler
 
 model_parser = reqparse.RequestParser()
 model_parser.add_argument('importhandler', required=True, type=str,
