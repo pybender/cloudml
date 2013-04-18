@@ -1,26 +1,40 @@
 import unittest
-import requests
-# from flask.ext.testing import TestCase
+import json
+import httplib
+
+from api.models import Model
+from api import app
+from api.utils import ERR_INVALID_DATA
 
 
+class ModelTests(unittest.TestCase):
+    def setUp(self):
+        self.app = app.test_client()
 
-# class TestViews(TestCase):
-#     def create_app(self):
-#         app = Flask(__name__)
-#         app.config['TESTING'] = True
-#         return app
+    def tearDown(self):
+        pass
 
-#     def test_some_json(self):
-#         response = self.client.get("/ajax/")
-#         self.assertEquals(response, dict(success=True))
+    def test_list(self):
+        resp = self.app.get('/cloudml/model/')
+        self.assertEquals(resp.status_code, httplib.OK)
+        data = json.loads(resp.data)
+        self.assertTrue('models' in data)
 
+    def test_post_with_invalid_data(self):
+        name = 'new'
+        resp = self.app.post('/cloudml/model/%s' % name)
+        self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
+        data = json.loads(resp.data)
+        err_data = data['response']['error']
+        self.assertEquals(err_data['code'], ERR_INVALID_DATA)
+        self.assertEquals(err_data['message'],
+                          'importhandler is required in values')
 
-# class TestModelsResource(unittest.TestCase):
-#     def test_list(self):
-#         r = requests.get('http://127.0.0.1:5000/cloudml/model/?show=name%2Cstatus%2Ccreated_on%2Cimport_params%2Cerror')
-#         print r.status_code
-#         raise
-
-
-if __name__ == '__main__':
-    unittest.main()
+        post_data = {'importhandler': 'smth'}
+        resp = self.app.post('/cloudml/model/%s' % name, data=post_data)
+        self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
+        data = json.loads(resp.data)
+        err_data = data['response']['error']
+        self.assertEquals(err_data['code'], ERR_INVALID_DATA)
+        self.assertEquals(err_data['message'],
+                          'Either features, either pickled trained model is required')

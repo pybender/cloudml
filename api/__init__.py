@@ -4,11 +4,15 @@ from mongokit import Connection
 from flask.ext import restful
 from celery import Celery
 
-
 app = Flask(__name__)
 app.config.from_object('api.config')
 
-db = Connection()
+connection = Connection()
+db_name = app.config['DATABASE_NAME']
+if app.config.get('TESTING'):
+    db_name += '-test'
+
+app.db = getattr(connection, db_name)
 
 celery = Celery('cloudml')
 celery.add_defaults(lambda: app.config)

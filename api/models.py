@@ -6,10 +6,10 @@ import pickle
 from bson import Binary
 from flask.ext.mongokit import Document
 
-from api import db
+from api import connection
 
 
-@db.register
+@connection.register
 class Model(Document):
     """
     Represents Model details and it's Tests.
@@ -94,7 +94,7 @@ class Model(Document):
         self.negative_weights.reverse()
 
 
-@db.register
+@connection.register
 class Test(Document):
     STATUS_QUEUED = 'Queued'
     STATUS_IN_PROGRESS = 'In Progress'
@@ -141,7 +141,7 @@ class Test(Document):
         return self.model.name
 
 
-@db.register
+@connection.register
 class TestExample(Document):
     __collection__ = 'example'
 
@@ -163,7 +163,7 @@ class TestExample(Document):
     required_fields = ['created_on', ]
 
 
-@db.register
+@connection.register
 class ImportHandler(Document):
     TYPE_DB = 'Db'
     TYPE_REQUEST = 'Request'
@@ -183,64 +183,3 @@ class ImportHandler(Document):
 
     def __repr__(self):
         return '<Import Handler %r>' % self.name
-
-
-# class Data(db.Document, Serializer):
-#     __public__ = ('id', 'created_on', 'data_input', 'label', 'pred_label')
-#     __all_public__ = ('id', 'created_on', 'data_input',
-#                       'weighted_data_input', 'label', 'pred_label')
-
-#     id = db.Column(db.Integer, primary_key=True)
-#     created_on = db.Column(db.DateTime)
-#     data_input = deferred(db.Column(JSONEncodedDict))
-#     weighted_data_input = deferred(db.Column(JSONEncodedDict))
-#     label = db.Column(db.String(50))
-#     pred_label = db.Column(db.String(50))
-#     test_id = db.Column(db.Integer, db.ForeignKey('test.id'))
-#     group_by_field = db.Column(db.String(250))
-
-#     def __init__(self, data_input, test_id, weighted_data_input,
-#                  label, pred_label):
-#         self.data_input = data_input
-#         self.weighted_data_input = weighted_data_input
-#         self.created_on = datetime.now()
-#         self.test_id = test_id
-#         self.label = label
-#         self.pred_label = pred_label
-
-#     @classmethod
-#     def loads_from_raw_data(cls, model, test, raw_data, labels,
-# pred, group_by):
-#         def decode(row):
-#             for key, val in row.iteritems():
-#                 try:
-#                     if isinstance(val, basestring):
-#                         row[key] = val.encode('ascii', 'ignore')
-#                 except UnicodeDecodeError, exc:
-#                     #logging.error('Error while decoding %s: %s', val, exc)
-#                     row[key] = ""
-#             return row
-
-#         from helpers.weights import get_weighted_data
-#         from itertools import izip
-#         print "group_by", group_by
-#         for row, label, pred in izip(raw_data, labels, pred):
-#             row = decode(row)
-#             weighted_data_input = get_weighted_data(model, row)
-#             data = cls(row, test.id, weighted_data_input,
-#                        str(label), str(pred))
-#             data.group_by_field = row[group_by]
-#             db.session.add(data)
-#         db.session.commit()
-
-#     @property
-#     def target_variable(self):
-#         return self.test.model.target_variable
-
-#     @property
-#     def title(self):
-#         # TODO: hack
-#         try:
-#             return self.data_input['contractor.dev_profile_title']
-#         except:
-#             return 'No Title'
