@@ -264,11 +264,11 @@ class Trainer():
             data = map(lambda x: " ".join(x) if isinstance(x, list) else x, data)
 
         if feature['type'].preprocessor:
-            return feature['type'].preprocessor.fit_transform(data)
+            return feature['type'].preprocessor.transform(data)
         if feature['transformer'] is not None:
             return feature['transformer'].transform(data)
         elif feature.get('scaler', None) is not None:
-            return feature['scaler'].fit_transform(self._to_column(data).toarray())
+            return feature['scaler'].transform(self._to_column(data).toarray())
         else:
             return self._to_column(data)
 

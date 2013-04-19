@@ -1,6 +1,7 @@
 import json
 import logging
 import pickle
+import traceback
 from flask.ext.restful import reqparse
 from flask import request
 from werkzeug.datastructures import FileStorage
@@ -8,7 +9,7 @@ from bson.objectid import ObjectId
 
 from api import api, app
 from api.utils import crossdomain, ERR_INVALID_DATA, odesk_error_response, \
-    ERR_NO_SUCH_MODEL
+    ERR_NO_SUCH_MODEL, ERR_UNPICKLING_MODEL
 from api.resources import BaseResource, NotFound, ValidationError
 from core.trainer.store import load_trainer
 from core.trainer.trainer import Trainer
@@ -332,19 +333,19 @@ class CompareReportResource(BaseResource):
         params = self._parse_parameters(self.GET_PARAMS)
         test_fields = ('name', 'model_name', 'accuracy', 'metrics')
         test1 = app.db.Test.find_one({'model_name': params.get('model1'),
-                                  'name': params.get('test1')},
-                                 test_fields)
+                                      'name': params.get('test1')},
+                                     test_fields)
         test2 = app.db.Test.find_one({'model_name': params.get('model2'),
-                                  'name': params.get('test2')},
-                                 test_fields)
+                                      'name': params.get('test2')},
+                                     test_fields)
         examples_fields = ('name', 'label', 'pred_label',
                            'weighted_data_input')
         examples1 = app.db.TestExample.find({'model_name': params.get('model1'),
-                                         'test_name': params.get('test1')},
-                                        examples_fields).limit(10)
+                                             'test_name': params.get('test1')},
+                                            examples_fields).limit(10)
         examples2 = app.db.TestExample.find({'model_name': params.get('model2'),
-                                         'test_name': params.get('test2')},
-                                        examples_fields).limit(10)
+                                             'test_name': params.get('test2')},
+                                            examples_fields).limit(10)
         return self._render({'test1': test1, 'test2': test2,
                              'examples1': examples1,
                              'examples2': examples2})
@@ -374,9 +375,22 @@ class Predict(BaseResource):
         # TODO: Fix this dumps -> loads
         plan = ExtractionPlan(json.dumps(hndl.data), is_file=False)
         request_import_handler = RequestImportHandler(plan, data)
-        trainer = pickle.loads(model.trainer)
-        probabilities = trainer.predict(request_import_handler,
-                                        ignore_error=False)
+        try:
+            trainer = pickle.loads(model.trainer)
+        except Exception, exc:
+            msg = "Model %s can't be unpickled: %s" % (model.name,
+                                                       exc)
+            logging.error(msg)
+            return odesk_error_response(400, ERR_UNPICKLING_MODEL,
+                                        msg, traceback=traceback.format_exc())
+        try:
+            probabilities = trainer.predict(request_import_handler,
+                                            ignore_error=False)
+        except Exception, exc:
+            msg = "Predict error: %s:%s" % (exc.__class__.__name__, exc)
+            logging.error(msg)
+            return odesk_error_response(500, ERR_UNPICKLING_MODEL,
+                                        msg, traceback=traceback.format_exc())
 
         prob = probabilities['probs'][0]
         labels = probabilities['labels']

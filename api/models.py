@@ -169,7 +169,7 @@ class ImportHandler(Document):
     TYPE_REQUEST = 'Request'
     __collection__ = 'handlers'
     structure = {
-        'name': unicode,
+        'name': basestring,
         'type': basestring,
         'created_on': datetime,
         'updated_on': datetime,

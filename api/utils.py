@@ -18,6 +18,8 @@ ERR_STORING_MODEL = 1003
 ERR_LOADING_MODEL = 1004
 ERR_INVALID_DATA = 1005
 ERR_INVALID_METHOD = 1006
+ERR_PICKLING_MODEL = 1007
+ERR_UNPICKLING_MODEL = 1008
 
 
 class JSONEncodedDict(TypeDecorator):
@@ -97,7 +99,7 @@ def consumes(content_type=None):
     return _consumes_decorator
 
 
-def odesk_error_response(status, code, message, debug=None):
+def odesk_error_response(status, code, message, debug=None, traceback=None):
     """
     Creates a JSON error response that is compliant with
     https://sites.google.com/a/odesk.com/eng/Home/FunctionalSpecifications/webservices-error-handling-enhancements-frd
@@ -114,9 +116,9 @@ def odesk_error_response(status, code, message, debug=None):
     result = {'response': {
               'server_time': time(),
               'error': {'status': status, 'code': code,
-                        'message': message}}}
+                        'message': message, 'traceback': traceback}}}
     if app.debug:
-        result['response']['error']['debug'] = debug
+        result['response']['error']['debug'] = app.debug
 
     response = jsonify(result)
     response.status_code = status
