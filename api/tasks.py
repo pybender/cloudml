@@ -64,7 +64,7 @@ def run_test(test_id):
         test.save()
 
         parameters = copy(test.parameters)
-        metrics, raw_data = model.run_test(parameters, callback)
+        metrics, raw_data = model.run_test(parameters)
         test.accuracy = metrics.accuracy
 
         metrics_dict = metrics.get_metrics_dict()
