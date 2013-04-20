@@ -157,6 +157,7 @@ class ProductionConf(BaseConf):
     server_admin = 'nmelnik@odesk.com'
     # Apache will serve WSGI on this port. (Nginx is front-end.)
     apache_port = 80
+    gunicorn_port = 5000
 
     # For pip extra index url config
     odeskps_pypi_user = 'nmelnik@odesk.com'
