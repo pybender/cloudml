@@ -57,24 +57,28 @@ def push_key():
 
 @task
 def setup():
-    fabd.mkdirs.run()
+    # fabd.mkdirs.run()
 
-    apache.wsgi_push.run()
-    apache.push_config.run(update_ports=False)
-    apache.graceful.run()  
-    supervisor.push_init_config.run()
-    supervisor.push_configs.run()
-    supervisor.d.run()
+    # apache.wsgi_push.run()
+    # apache.push_config.run(update_ports=False)
+    # apache.graceful.run()  
+    # supervisor.push_init_config.run()
+    # supervisor.push_configs.run()
+    # supervisor.d.run()
 
-    # pip.push_config.run()
+
+
+    # # pip.push_config.run()
+    # # with settings(warn_only=True):
+    # #     postgres.create_user.run()
+    # #     postgres.create_db.run()
+    # #     postgres.grant.run()
     # with settings(warn_only=True):
-    #     postgres.create_user.run()
-    #     postgres.create_db.run()
-    #     postgres.grant.run()
-    with settings(warn_only=True):
-        rabbitmq.add_user.run()
-        rabbitmq.add_vhost.run()
-    rabbitmq.set_permissions.run()
+    #     rabbitmq.add_user.run()
+    #     rabbitmq.add_vhost.run()
+    # rabbitmq.set_permissions.run()
+
+    gunicorn.push_config()
 
 @task
 def qdeploy():
@@ -112,7 +116,7 @@ def deploy():
     supervisor.update.run()
     supervisor.restart_program.run(program='celeryd')
     supervisor.restart_program.run(program='celerycam')
-    supervisor.restart_program.run(program='gunicorn')
+    gunicorn.reload_with_supervisor.run()
     #supervisor.reload.run()
 
     apache.wsgi_touch.run()
