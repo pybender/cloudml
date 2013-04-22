@@ -45,6 +45,9 @@ class FeatureModel(object):
         except ValueError as e:
             raise SchemaException(message='%s %s ' % (config, e))
 
+        if not 'schema-name' in data:
+            raise SchemaException(message="schema-name is missing")
+
         self.schema_name = data['schema-name']
         self.classifier = {}
         self.target_variable = None

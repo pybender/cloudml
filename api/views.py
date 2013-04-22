@@ -13,9 +13,9 @@ from api.utils import crossdomain, ERR_INVALID_DATA, odesk_error_response, \
 from api.resources import BaseResource, NotFound, ValidationError
 from core.trainer.store import load_trainer
 from core.trainer.trainer import Trainer
-from core.trainer.config import FeatureModel
+from core.trainer.config import FeatureModel, SchemaException
 from core.importhandler.importhandler import ExtractionPlan, \
-    RequestImportHandler
+    RequestImportHandler, ImportHandlerException
 from api.models import Model, Test, TestExample, ImportHandler
 
 model_parser = reqparse.RequestParser()
@@ -95,7 +95,11 @@ trained model is required')
         obj.name = kwargs.get('name')
         if 'features' in params and params['features']:
             # Uploading new model
-            feature_model = FeatureModel(params['features'], is_file=False)
+            try:
+                feature_model = FeatureModel(params['features'], is_file=False)
+            except SchemaException, exc:
+                raise ValidationError('Invalid features: %s' % exc)
+
             trainer = Trainer(feature_model)
             obj.set_trainer(trainer)
 
@@ -107,9 +111,13 @@ trained model is required')
             obj.set_trainer(trainer)
             obj.set_weights(**trainer.get_weights())
 
-        obj.importhandler = json.loads(params['importhandler'])
-        obj.train_importhandler = json.loads(params['importhandler'])
-        plan = ExtractionPlan(params['importhandler'], is_file=False)
+        try:
+            obj.train_importhandler = obj.importhandler = \
+                json.loads(params['importhandler'])
+            plan = ExtractionPlan(params['importhandler'], is_file=False)
+        except (ValueError, ImportHandlerException) as exc:
+            raise ValidationError('Invalid Import Handler: %s' % exc)
+
         obj.import_params = plan.input_params
         obj.save()
 
