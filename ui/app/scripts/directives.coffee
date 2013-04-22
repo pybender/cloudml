@@ -262,80 +262,46 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
     }
 )
 
-.directive('scRocCurve', [ ->
+# Directives for creating plots
+
+.directive('scCurves', [ ->
   return {
     restrict: 'E',
-    scope: { metrics: '=' },
+    scope: { curvesDict: '=',
+    xLabel:'@xlabel',
+    yLabel: '@ylabel',
+    showLine: '@showLine',
+    width: '@width',
+    height: '@height'
+    },
     link: (scope, element, attrs) ->
-      createSVG(scope, element)
-      scope.$watch('metrics', updateGraphRocCurve, true)
+      createSVG(scope, element, attrs.width, attrs.height)
+      scope.$watch('curvesDict', updateCurves)
   }
 ])
 
-.directive('scPrecisionRecallCurve', [ ->
-  return {
-    restrict: 'E',
-    scope: { metrics: '=' },
-    link: (scope, element, attrs) ->
-      createSVG(scope, element)
-      scope.$watch('metrics', updateGraphPrecisionRecallCurve, true)
-  }
-])
-
-createSVG = (scope, element) ->
-  scope.margin = {top: 20, right: 20, bottom: 30, left: 20}
-  scope.w = 400
-  scope.h = 300
- 
+createSVG = (scope, element, width=400, height=300) ->
+  scope.margin = {top: 20, right: 20, bottom: 30, left: 210}
   if not scope.svg?
     scope.svg = d3.select(element[0])
     .append("svg")
-    .attr("width", scope.w)
-    .attr("height", scope.h)
+    .attr("width", width)
+    .attr("height", height)
 
-updateGraphRocCurve = (metrics, oldVal, scope) ->
-  data = []
-  if !metrics
+updateCurves = (curvesDict, oldVal, scope) ->
+  if !curvesDict
     return
-
-  data = zip(metrics[0], metrics[1])
   chart = nv.models.lineChart()
+  chart.xAxis.orient('bottom')
+    .axisLabel(scope.xLabel)
+    .tickFormat(d3.format(',r'))
+  chart.yAxis.orient('left')
+    .axisLabel(scope.yLabel)
+    .tickFormat(d3.format(',.f'))
 
-  chart.xAxis
-  .axisLabel('False-positive rate')
-  .tickFormat(d3.format(',r'))
-
-  chart.yAxis
-  .axisLabel('True-positive rate')
-  .tickFormat(d3.format(',.2f'))
-
-  rocCurve = ->
-    roc_data = []
-    line_data = []
-    step = 1 / data.length
-    for i in [0...data.length]
-      roc_data.push({x: data[i][0], y: data[i][1] })
-      line_data.push({x: step*i, y: step*i })
-    return [
-      {
-        values: roc_data,
-        key: "ROC Curve",
-        color: "#000eff",
-        "stroke-width": "10px"
-      },
-      {
-        values: line_data,
-        key: "line",
-        color: "red",
-        "stroke-width": "1px",
-        "stroke-dasharray": "10,10"
-      }
-    ]
-
-  scope.svg.datum(rocCurve())
+  scope.svg.datum(getPlotData(curvesDict, scope.showLine))
   .transition().duration(500)
   .call(chart)
-
   nv.utils.windowResize(chart.update)
 
 zip = () ->
@@ -344,38 +310,19 @@ zip = () ->
   for i in [0...length]
     arr[i] for arr in arguments
 
-updateGraphPrecisionRecallCurve = (metrics, oldVal, scope) ->
-  data = []
-  if !metrics
-    return
+getPlotData = (curvesDict, addLine) ->
+  plots_data = []
+  for plotName, plotData of curvesDict
+    if plotData? && plotData[0]? && plotData[1]?
+      data = zip(plotData[0], plotData[1])
+      step = 1 / data.length
+      values = ({x: data[i][0], y: data[i][1]} for i in [0...data.length])
+      plots_data.push({"values": values, key: plotName})
 
-  data = zip(metrics[1], metrics[0])
-  chart = nv.models.lineChart()
-
-  chart.xAxis
-  .axisLabel('Recall')
-  .tickFormat(d3.format(',r'))
-
-  chart.yAxis
-  .axisLabel('Precision')
-  .tickFormat(d3.format(',.2f'))
-
-  curve = ->
-    zipped_data = []
-    step = 1 / data.length
-    for i in [0...data.length]
-      zipped_data.push({x: data[i][0], y: data[i][1] })
-    return [
-      {
-        values: zipped_data,
-        key: "Precision-Recall curve",
-        color: "#000eff",
-        "stroke-width": "10px"
-      }
-    ]
-
-  scope.svg.datum(curve())
-  .transition().duration(500)
-  .call(chart)
-
-  nv.utils.windowResize(chart.update)
+  if addLine && data?
+    line_data = ({x: step*i, y: step*i } for i in [0...data.length])
+    plots_data.push({
+      values: line_data,
+      key: "line"
+    })
+  return plots_data

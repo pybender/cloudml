@@ -77,8 +77,7 @@ angular.module('app.testresults.controllers', ['app.config', ])
       else "action=#{actionString}")
 
     switch action[0]
-      when "curves" then $scope.go 'status,metrics.roc_curve,
-metrics.precision_recall_curve,metrics.roc_auc'
+      when "curves" then $scope.goMetrics()
       when "matrix" then $scope.go 'status,metrics.confusion_matrix'
       else $scope.go 'name,status,classes_set,created_on,accuracy,
 parameters,error,examples_count'
@@ -93,4 +92,13 @@ parameters,error,examples_count'
       ), (->
         $scope.err = 'Error'
       )
+
+  $scope.goMetrics = (fields, callback) ->
+    $scope.go('status,metrics.roc_curve,
+metrics.precision_recall_curve,metrics.roc_auc',
+    () =>
+      $scope.rocCurve = {'ROC curve': $scope.test.metrics.roc_curve}
+      pr = $scope.test.metrics.precision_recall_curve
+      $scope.prCurve = {'Precision-Recall curve': [pr[1], pr[0]]}
+    )
 ])

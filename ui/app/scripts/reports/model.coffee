@@ -37,11 +37,21 @@ angular.module('app.reports.model', ['app.config'])
           params: params
         ).then ((resp) =>
           @generated = true
+          @tests = []
+          @rocCurves = {}
+          @precisionRecallCurves = {}
           for key, value of resp.data
             # Adding different count of tests to compare
             if key.indexOf('test') == 0
               test = new Test(resp.data[key])
+              @tests.push(test)
               eval("_this." + key + "=test")
+              auc = test.metrics.roc_auc.toFixed(4)
+              @rocCurves[test.fullName() + " (AUC = " + auc + ")"] =
+              test.metrics.roc_curve
+              @precisionRecallCurves[test.fullName()] =
+              test.metrics.precision_recall_curve.reverse()
+
             # Adding test examples
             if key.indexOf('examples') == 0
               num = key.replace('examples', '')

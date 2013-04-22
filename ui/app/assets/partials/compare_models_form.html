@@ -124,57 +124,43 @@
     </table>
 </div>
 
-<div ng-show="action[0]=='report' && section=='metrics'  && !generating">
-    <h4>Metrics and Charts</h4>
-    <table class="table table-bordered">
-        <colgroup>
-            <col style="width:100px;">
-        </colgroup>
-        <thead>
-            <tr>
-                <th></th>
-                <th><a target="_blank" href="#{{ report.test1.objectUrl() }}">{{ report.test1.fullName() }}</a></th>
-                <th><a target="_blank" href="#{{ report.test2.objectUrl() }}">{{ report.test2.fullName() }}</a></th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <th>Accuracy</th>
-                <td>{{ report.test1.accuracy.toFixed(4) }}</td>
-                <td>{{ report.test2.accuracy.toFixed(4) }}</td>
-            </tr>
-            <tr>
-                <th>Area under ROC curve</th>
-                <td>{{ report.test1.metrics["roc_auc"].toFixed(4) }}</td>
-                <td>{{ report.test2.metrics["roc_auc"].toFixed(4) }}</td>
-            </tr>
-            <tr>
-                <th>Confusion Matrix</th>
-                <td>
-                    <confusion-matrix matrix=report.test1.metrics["confusion_matrix"] ></confusion-matrix>
-                </td>
-                <td>
-                    <confusion-matrix matrix=report.test2.metrics["confusion_matrix"] ></confusion-matrix>
-                </td>
-            </tr>
-            <tr>
-                <th>ROC curve</th>
-                <td>
-                    <sc-roc-curve metrics="report.test1.metrics.roc_curve"></sc-roc-curve>
-                </td>
-                <td>
-                    <sc-roc-curve metrics="report.test2.metrics.roc_curve"></sc-roc-curve>
-                </td>
-            </tr>
-            <tr>
-                <th>Precision Recall curve</th>
-                <td>
-                    <sc-precision-recall-curve metrics="report.test1.metrics.precision_recall_curve"></sc-precision-recall-curve>
-                </td>
-                <td>
-                    <sc-precision-recall-curve metrics="report.test2.metrics.precision_recall_curve"></sc-precision-recall-curve>
-                </td>
-            </tr> 
-        </tbody>
-    </table>
+<div ng-show="action[0]=='report' && section=='metrics' && !generating">
+  <h4>Metrics</h4>
+  <table class="table table-bordered">
+      <colgroup>
+          <col style="width:100px;">
+      </colgroup>
+      <thead>
+          <tr>
+              <th></th>
+              <th><a target="_blank" href="#{{ report.test1.objectUrl() }}">{{ report.test1.fullName() }}</a></th>
+              <th><a target="_blank" href="#{{ report.test2.objectUrl() }}">{{ report.test2.fullName() }}</a></th>
+          </tr>
+      </thead>
+      <tbody>
+          <tr>
+              <th>Accuracy</th>
+              <td>{{ report.test1.accuracy.toFixed(4) }}</td>
+              <td>{{ report.test2.accuracy.toFixed(4) }}</td>
+          </tr>
+          <tr>
+              <th>Confusion Matrix</th>
+              <td>
+                  <confusion-matrix matrix=report.test1.metrics["confusion_matrix"] ></confusion-matrix>
+              </td>
+              <td>
+                  <confusion-matrix matrix=report.test2.metrics["confusion_matrix"] ></confusion-matrix>
+              </td>
+          </tr>
+      </tbody>
+  </table>
+  <hr />
+  <div class="span5">
+    <h4>ROC curves</h4>
+    <sc-curves xlabel="False-positive rate" ylabel="True-positive rate" curves-dict="report.rocCurves" show-line="1" width="500"></sc-curves>
+  </div>
+  <div class="span5 offset1">
+    <h4>Precision Recall curves</h4>
+    <sc-curves xlabel="Recall" ylabel="Precision" curves-dict="report.precisionRecallCurves" width="500"></sc-curves>
+  </div>
 </div>
