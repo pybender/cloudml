@@ -1,7 +1,7 @@
 import logging
 import json
 from datetime import datetime
-import pickle
+import cPickle as pickle
 
 from bson import Binary
 from flask.ext.mongokit import Document
@@ -74,13 +74,13 @@ class Model(Document):
         handler = ImportHandler(plan, parameters)
         return handler
 
-    def run_test(self, parameters=True):
+    def run_test(self, parameters=True, callback=None):
         trainer = pickle.loads(self.trainer)
         test_handler = self.get_import_handler(parameters, is_test=True)
-        metrics = trainer.test(test_handler)
+        metrics = trainer.test(test_handler, callback=callback)
         raw_data = trainer._raw_data
         # TODO:
-        #trainer.clear_temp_data()
+        trainer.clear_temp_data()
         return metrics, raw_data
 
     def set_trainer(self, trainer):
@@ -169,7 +169,7 @@ class ImportHandler(Document):
     TYPE_REQUEST = 'Request'
     __collection__ = 'handlers'
     structure = {
-        'name': unicode,
+        'name': basestring,
         'type': basestring,
         'created_on': datetime,
         'updated_on': datetime,

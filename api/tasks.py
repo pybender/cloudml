@@ -144,11 +144,14 @@ def run_test(test_id):
 
 
 def decode(row):
+    from decimal import Decimal
     for key, val in row.iteritems():
         try:
             if isinstance(val, basestring):
                 row[key] = val.encode('ascii', 'ignore')
-        except UnicodeDecodeError, exc:
+            if isinstance(val, Decimal):
+                row[key] = val.to_eng_string()
+        except UnicodeDecodeError:
             #logging.error('Error while decoding %s: %s', val, exc)
             row[key] = ""
     return row

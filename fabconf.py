@@ -113,32 +113,6 @@ class StagingConf(BaseConf):
     remote_settings_lfile = 'staging_config.py.tpl'
 
 
-class Production1Conf(BaseConf):
-    """Settings specific to production environment."""
-
-    #address = 'cloudml@172.27.77.242'
-    address = 'cloudml@172.27.77.141'
-
-    sudo_user = 'nmelnik'
-
-    # Code from this branch will be deployed.
-    branch = 'master'
-
-    server_name = 'cloudml.match.odesk.com'
-    # For Apache ServerAdmin directive
-    server_admin = 'nmelnik@odesk.com'
-    # Apache will serve WSGI on this port. (Nginx is front-end.)
-    apache_port = 80
-
-    # For pip extra index url config
-    odeskps_pypi_user = 'nmelnik@odesk.com'
-    odeskps_pypi_password = 'nmelnik'
-
-    # Once on production, this file will replace %(local_settings_file)s
-    # It should be a Jinja2 template, and can make use of fabdeploy config
-    # variables.
-    remote_settings_lfile = 'prod_config.py.tpl'
-
 
 class ProductionConf(BaseConf):
     """Settings specific to production environment."""
@@ -157,12 +131,13 @@ class ProductionConf(BaseConf):
     server_admin = 'nmelnik@odesk.com'
     # Apache will serve WSGI on this port. (Nginx is front-end.)
     apache_port = 80
+    gunicorn_port = 5000
 
     # For pip extra index url config
     odeskps_pypi_user = 'nmelnik@odesk.com'
     odeskps_pypi_password = 'nmelnik'
 
-    supervisor_programs = ['celeryd', 'celerycam']
+    supervisor_programs = ['celeryd', 'celerycam', 'gunicorn']
 
     # Once on production, this file will replace %(local_settings_file)s
     # It should be a Jinja2 template, and can make use of fabdeploy config

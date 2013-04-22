@@ -125,7 +125,7 @@ class Trainer():
         self.train_time = strftime('%Y-%m-%d %H:%M:%S %z', gmtime())
         logging.info('Training completed...')
 
-    def test(self, iterator, percent=0):
+    def test(self, iterator, percent=0, callback=None):
         """
         Test the model using the given data. SciPy vectorizers that were
         populated with data during testing will be used.
@@ -138,7 +138,7 @@ class Trainer():
         vectorized_data = []
         labels = None
 
-        self._prepare_data(iterator)
+        self._prepare_data(iterator, callback)
         count = self._count
         if percent:
             self._count = int(self._count * percent / 100)
@@ -264,11 +264,11 @@ class Trainer():
             data = map(lambda x: " ".join(x) if isinstance(x, list) else x, data)
 
         if feature['type'].preprocessor:
-            return feature['type'].preprocessor.fit_transform(data)
+            return feature['type'].preprocessor.transform(data)
         if feature['transformer'] is not None:
             return feature['transformer'].transform(data)
         elif feature.get('scaler', None) is not None:
-            return feature['scaler'].fit_transform(self._to_column(data).toarray())
+            return feature['scaler'].transform(self._to_column(data).toarray())
         else:
             return self._to_column(data)
 
@@ -294,7 +294,7 @@ class Trainer():
             self._count += 1
             try:
                 data = self._apply_feature_types(row)
-                self._raw_data.append(data)
+                self._raw_data.append(row)
                 for feature_name in self._feature_model.features:
                     self._vect_data[feature_name].append(data[feature_name])
 
