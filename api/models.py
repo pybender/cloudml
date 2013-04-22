@@ -1,7 +1,7 @@
 import logging
 import json
 from datetime import datetime
-import pickle
+import cPickle as pickle
 
 from bson import Binary
 from flask.ext.mongokit import Document

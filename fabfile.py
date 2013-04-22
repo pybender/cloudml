@@ -57,26 +57,26 @@ def push_key():
 
 @task
 def setup():
-    fabd.mkdirs.run()
+    # fabd.mkdirs.run()
 
-    apache.wsgi_push.run()
-    apache.push_config.run(update_ports=False)
-    apache.graceful.run()  
-    supervisor.push_init_config.run()
-    supervisor.push_configs.run()
-    supervisor.d.run()
+    # apache.wsgi_push.run()
+    # apache.push_config.run(update_ports=False)
+    # apache.graceful.run()  
+    # supervisor.push_init_config.run()
+    # supervisor.push_configs.run()
+    # supervisor.d.run()
 
-    # pip.push_config.run()
+    # # pip.push_config.run()
+    # # with settings(warn_only=True):
+    # #     postgres.create_user.run()
+    # #     postgres.create_db.run()
+    # #     postgres.grant.run()
     # with settings(warn_only=True):
-    #     postgres.create_user.run()
-    #     postgres.create_db.run()
-    #     postgres.grant.run()
-    with settings(warn_only=True):
-        rabbitmq.add_user.run()
-        rabbitmq.add_vhost.run()
-    rabbitmq.set_permissions.run()
+    #     rabbitmq.add_user.run()
+    #     rabbitmq.add_vhost.run()
+    # rabbitmq.set_permissions.run()
 
-    nginx.push_gunicorn_config.run()
+    gunicorn.push_nginx_config.run()
     nginx.restart.run()
 
 @task
@@ -93,7 +93,7 @@ def deploy():
     git.push.run()
 
     supervisor.push_configs.run()
-    apache.wsgi_push.run()
+    #apache.wsgi_push.run()
     push_flask_config.run()
     gunicorn.push_config.run()
 
@@ -119,7 +119,7 @@ def deploy():
     gunicorn.reload_with_supervisor.run()
     #supervisor.reload.run()
 
-    apache.wsgi_touch.run()
+   # apache.wsgi_touch.run()
 
 from fabdeploy.apache import PushConfig as StockPushApacheConfig
 from fabdeploy.utils import upload_config_template

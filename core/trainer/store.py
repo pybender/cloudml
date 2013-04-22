@@ -1,6 +1,6 @@
 __author__ = 'ifouk'
 
-import pickle
+import cPickle as pickle
 
 from trainer import Trainer
 

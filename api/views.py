@@ -1,6 +1,6 @@
 import json
 import logging
-import pickle
+import cPickle as pickle
 import traceback
 from flask.ext.restful import reqparse
 from flask import request
