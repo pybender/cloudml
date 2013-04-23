@@ -17,7 +17,7 @@ group by
 order by
   1, 4 desc;
 
-
+create temporary table autohide_tmp as
 select
   qi.application,
   qi.opening,
@@ -25,8 +25,6 @@ select
     when r."Record ID#" in (147, 133, 134, 137, 151, 159) and oja."Status" = 'Rejected' then true
     else false
   end as rejected,
-  qi.employer_info, 
-  qi.contractor_info,
    
   oo."Opening Title" as opening_title,
   oo."Job Description" as opening_description,
@@ -59,19 +57,32 @@ select
   
 from
   "oDesk DB"."JobApplications" oja join
-  agg.b_job_application ja on oja."Record ID#" = ja.application join
-  match.ja_quick_info qi on qi.application = ja.application join
-  agg.b_opening o on qi.opening = o.opening join 
-  "oDesk DB"."Openings" oo on oo."Record ID#" = o.opening join
-  "oDesk DB"."JobCategories" jc on jc."Record ID#" = o.relatedjobcategory join
-  "oDesk DB"."Reasons" r on oja."Related Reason" = r."Record ID#" left outer join
-  "oDesk DB"."AssignmentMessages" am on am."Record ID#" = oja."Related AssignmentMessage for Candidate Referral Cover Letter" left outer join
-  sdb.openings so on so."Record ID#" = o.opening left outer join
-  "oDesk DB"."Regions" reg on reg."Record ID#" = oo."PrefLocationRegion"
+  agg.b_job_application ja on oja."Record ID#"::int = ja.application::int join
+  match.ja_quick_info qi on qi.application::int = ja.application::int join
+  agg.b_opening o on qi.opening::int = o.opening::int join 
+  "oDesk DB"."Openings" oo on oo."Record ID#"::int = o.opening::int join
+  "oDesk DB"."JobCategories" jc on jc."Record ID#"::int = o.relatedjobcategory::int join
+  "oDesk DB"."Reasons" r on oja."Related Reason"::int = r."Record ID#"::int left outer join
+  "oDesk DB"."AssignmentMessages" am on am."Record ID#"::int = oja."Related AssignmentMessage for Candidate Referral Cover Letter"::int left outer join
+  sdb.openings so on so."Record ID#"::int = o.opening::int left outer join
+  "oDesk DB"."Regions" reg on reg."Record ID#"::int = oo."PrefLocationRegion"::int
 where
   oja."CreatedType" = 'Professional' and
   o.include_in_stats = true and
-  qi.file_provenance_date between '%(start_date)' and '%(end_date)';
+  qi.file_provenance_date between '%(start_date)s' and '%(end_date)s';
+
+select 
+  autohide_tmp.*,
+  qi.employer_info, 
+  qi.contractor_info
+from 
+  autohide_tmp join match.ja_quick_info qi on autohide_tmp.application::int = qi.application::int
+where
+  qi.file_provenance_date between '%(start_date)s' and '%(end_date)s';
+
+
+
+--  qi.file_provenance_date between '%(start_date)' and '%(end_date)';
 
 
 

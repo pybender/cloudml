@@ -1,5 +1,5 @@
 {
-  "schema-name": "bestmatch",
+  "schema-name": "bestmatch.autohide",
   "classifier": {"type": "logistic regression", "penalty": "l1"},
 
   "features":[
