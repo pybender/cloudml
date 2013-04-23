@@ -166,7 +166,13 @@ def extract_parameters(expression):
     Returns a list with all parameter names for the given expression. Checks
     for all parameters in the format %(name)s
     """
-    return EXPRESSION_RE.findall(expression)
+    if isinstance(expression, str):
+        return EXPRESSION_RE.findall(expression)
+    else:
+        params = set()
+        for subexpression in expression:
+            params |= set(EXPRESSION_RE.findall(subexpression))
+        return list(params)
 
 
 PROCESS_STRATEGIES = {

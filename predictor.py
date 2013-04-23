@@ -128,7 +128,7 @@ def main(argv=None):
         iterator = None
         if args.input is not None:
             # Read evaluation data from file.
-            with open(args.test, 'r') as eval_fp:
+            with open(args.input, 'r') as eval_fp:
                 iterator = streamingiterload(eval_fp)
         elif args.extraction is not None:
             # Use import handler
