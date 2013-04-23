@@ -139,7 +139,7 @@ class ImportHandler(BaseImportHandler):
         datasource = self._plan.datasource[0]
 
         self._validate_input_params(params)
-        if isinstance(self._query['sql'], str):
+        if not isinstance(self._query['sql'], list):
             self._query['sql'] = [self._query['sql']]
         sql = map(lambda x: x % params, self._query['sql'])
         iter_func = self._get_db_iter(datasource)
