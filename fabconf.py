@@ -114,6 +114,36 @@ class StagingConf(BaseConf):
 
 
 
+
+class TestConf(BaseConf):
+    """Settings specific to production environment."""
+
+    #address = 'cloudml@172.27.77.205'
+    address = 'cloudmltest@172.27.77.141'
+
+    sudo_user = 'nmelnik'
+    home_path = '/webapps/cloudmltest'
+
+    # Code from this branch will be deployed.
+    branch = 'master'
+
+    server_name = 'cloudmltest.match.odesk.com'
+    # For Apache ServerAdmin directive
+    server_admin = 'nmelnik@odesk.com'
+    # Apache will serve WSGI on this port. (Nginx is front-end.)
+    gunicorn_port = 5001
+
+    # For pip extra index url config
+    odeskps_pypi_user = 'nmelnik@odesk.com'
+    odeskps_pypi_password = 'nmelnik'
+
+    supervisor_programs = ['celeryd', 'celerycam', 'gunicorn']
+
+    # Once on production, this file will replace %(local_settings_file)s
+    # It should be a Jinja2 template, and can make use of fabdeploy config
+    # variables.
+    remote_settings_lfile = 'prod_config.py.tpl'
+
 class ProductionConf(BaseConf):
     """Settings specific to production environment."""
 
