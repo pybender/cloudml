@@ -101,6 +101,7 @@ trained model is required')
                 raise ValidationError('Invalid features: %s' % exc)
 
             trainer = Trainer(feature_model)
+            obj.save()
             obj.set_trainer(trainer)
 
             obj.features = json.loads(params['features'])
@@ -108,6 +109,7 @@ trained model is required')
             # Uploading trained model
             trainer = load_trainer(params['trainer'])
             obj.status = obj.STATUS_TRAINED
+            obj.save()
             obj.set_trainer(trainer)
             obj.set_weights(**trainer.get_weights())
 
@@ -384,7 +386,10 @@ class Predict(BaseResource):
         plan = ExtractionPlan(json.dumps(hndl.data), is_file=False)
         request_import_handler = RequestImportHandler(plan, data)
         try:
-            trainer = pickle.loads(model.trainer)
+            if model.trainer:
+                trainer = pickle.loads(model.trainer)
+            else:
+                trainer = pickle.loads(model.fs.trainer)
         except Exception, exc:
             msg = "Model %s can't be unpickled: %s" % (model.name,
                                                        exc)

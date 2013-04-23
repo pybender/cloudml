@@ -58,6 +58,7 @@ class Model(Document):
         'comparable': bool,
         #'tests': list,
     }
+    gridfs = {'files':['trainer']}
     required_fields = ['name', 'created_on', ]
     default_values = {'created_on': datetime.utcnow,
                       'updated_on': datetime.utcnow,
@@ -75,7 +76,10 @@ class Model(Document):
         return handler
 
     def run_test(self, parameters=True, callback=None):
-        trainer = pickle.loads(self.trainer)
+        if self.trainer:
+            trainer = pickle.loads(self.trainer)
+        else:
+            trainer = pickle.loads(self.fs.trainer)
         test_handler = self.get_import_handler(parameters, is_test=True)
         metrics = trainer.test(test_handler, callback=callback)
         raw_data = trainer._raw_data
@@ -84,7 +88,7 @@ class Model(Document):
         return metrics, raw_data
 
     def set_trainer(self, trainer):
-        self.trainer = Binary(pickle.dumps(trainer))
+        self.fs.trainer = Binary(pickle.dumps(trainer))
         self.target_variable = trainer._feature_model.target_variable
 
     def set_weights(self, positive, negative):
