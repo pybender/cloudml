@@ -125,7 +125,7 @@ def run_test(test_id):
                 example['data_input'] = row
                 #example['weighted_data_input'] = dict(weighted_data_input)
                 # TODO: Specify Example title column in raw data
-                example['name'] = unicode(row['contractor.dev_profile_title'])
+                example['name'] = unicode(row.get('contractor.dev_profile_title', None))
                 example['label'] = unicode(label)
                 example['pred_label'] = unicode(pred)
                 #example['test'] = test
