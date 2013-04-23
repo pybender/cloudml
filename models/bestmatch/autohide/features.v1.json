@@ -60,7 +60,7 @@
     {"name": "ja.is_ic", "type": "boolean"},
     {"name": "ja.bid_amount", "type": "float", "is-required": false},
     {"name": "ja.bid_rate", "type": "float", "is-required": false},
-    {"name": "ja.cover_letter", "type": "text", "transformer": {"type": "Tfidf", "min_df": "1000", "ngram_range_min": 1, "ngram_range_max": 2, "stop_words": "english"}},
+    {"name": "ja.cover_letter", "type": "text", "transformer": {"type": "Tfidf", "min_df": 1000, "ngram_range_min": 1, "ngram_range_max": 2, "stop_words": "english"}},
 
     {"name": "matches_pref_english", "type": "boolean"},
     {"name": "matches_pref_feedback", "type": "boolean"},
