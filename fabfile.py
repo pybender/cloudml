@@ -7,7 +7,7 @@ from fabdeploy import monkey
 monkey.patch_all()
 import os
 import posixpath
-from fabric.api import task, env, settings, local, run, sudo
+from fabric.api import task, env, settings, local, run, sudo, shell_env
 from fabric.contrib import files
 from fabdeploy.api import *
 
@@ -32,6 +32,10 @@ def prod(**kwargs):
 def dev(**kwargs):
     fabd.conf.run('dev')
 
+@task
+def test(**kwargs):
+    fabd.conf.run('test')
+
 
 @task
 def install():
@@ -41,14 +45,15 @@ def install():
     fabd.mkdirs.run()
 
     rabbitmq.install()
-    apache.install.run()
+    nginx.install.run()
+    #apache.install.run()
     #postgres.install.run()
 
     for app in ['supervisor']:
         pip.install.run(app=app)
 
     pip.install.run(app='virtualenv', upgrade=True)
-    system.aptitude_install.run(packages='liblapack-dev gfortran libpq-dev')
+    system.package_install.run(packages='liblapack-dev gfortran libpq-dev')
 
 
 @task
@@ -57,38 +62,37 @@ def push_key():
 
 @task
 def setup():
-    # fabd.mkdirs.run()
+    fabd.mkdirs.run()
 
     # apache.wsgi_push.run()
     # apache.push_config.run(update_ports=False)
     # apache.graceful.run()  
-    # supervisor.push_init_config.run()
-    # supervisor.push_configs.run()
-    # supervisor.d.run()
+    supervisor.push_init_config.run()
+    supervisor.push_configs.run()
+    supervisor.d.run()
 
-    # # pip.push_config.run()
-    # # with settings(warn_only=True):
-    # #     postgres.create_user.run()
-    # #     postgres.create_db.run()
-    # #     postgres.grant.run()
-    # with settings(warn_only=True):
-    #     rabbitmq.add_user.run()
-    #     rabbitmq.add_vhost.run()
-    # rabbitmq.set_permissions.run()
+    # pip.push_config.run()
+
+    with settings(warn_only=True):
+        rabbitmq.add_user.run()
+        rabbitmq.add_vhost.run()
+    rabbitmq.set_permissions.run()
 
     gunicorn.push_nginx_config.run()
     nginx.restart.run()
 
+
 @task
 def qdeploy():
-    version.work_on.run(0)
+    release.work_on.run(0)
     deploy.run()
+
 
 @task
 def deploy():
     fabd.mkdirs.run()
-    
-    version.create.run()
+
+    release.create.run()
     git.init.run()
     git.push.run()
 
@@ -98,20 +102,20 @@ def deploy():
     gunicorn.push_config.run()
 
     virtualenv.create.run()
-    # with shell_env(LAPACK='/usr/lib/liblapack.so',
-    #      ATLAS='/usr/lib/libatlas.so', BLAS='/usr/lib/libblas.so'):
-    virtualenv.pip_install_req.run()
-    virtualenv.make_relocatable.run()
+    with shell_env(LAPACK='/usr/lib/liblapack.so',
+        ATLAS='/usr/lib/libatlas.so', BLAS='/usr/lib/libblas.so'):
+        virtualenv.pip_install_req.run()
+        virtualenv.make_relocatable.run()
 
     # django.syncdb.run()
     # django.migrate.run()
 
-    
+
     #run('cd %(project_path)s/ui; ./scripts/production.sh')
     # run('%(env_path)s/bin/python %(project_path)s/manage.py '
     #      'createdb;' % env.conf)
 
-    version.activate.run()
+    release.activate.run()
 
     supervisor.update.run()
     supervisor.restart_program.run(program='celeryd')
@@ -119,11 +123,11 @@ def deploy():
     supervisor.restart_program.run(program='gunicorn')
     #gunicorn.reload_with_supervisor.run()
     #supervisor.reload.run()
-
    # apache.wsgi_touch.run()
 
 from fabdeploy.apache import PushConfig as StockPushApacheConfig
 from fabdeploy.utils import upload_config_template
+
 
 class PushAnjularConfig(Task):
     @conf

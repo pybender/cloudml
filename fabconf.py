@@ -29,8 +29,8 @@ class BaseConf(DefaultConf):
     django_dir = 'api'
 
     ui_scripts_dir = ['home_path', 'ui', 'app', 'scripts']
-    active_public_link = ['%(active_src_link)s', 'ui', '_public']
-    active_docs_link = ['%(active_src_link)s', 'docs', 'build', 'html']
+    current_public_link = ['%(current_project_link)s', 'ui', '_public']
+    current_docs_link = ['%(current_project_link)s', 'docs', 'build', 'html']
 
     pip_req_path = ''
     pip_req_name = 'requirements.txt'
@@ -119,6 +119,8 @@ class ProductionConf(BaseConf):
 
     #address = 'cloudml@172.27.77.205'
     address = 'cloudml@172.27.77.141'
+
+    home_path = '/webapps/cloudml'
 
     sudo_user = 'nmelnik'
     #django_dir = ''
