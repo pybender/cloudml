@@ -29,8 +29,8 @@ class BaseConf(DefaultConf):
     django_dir = 'api'
 
     ui_scripts_dir = ['home_path', 'ui', 'app', 'scripts']
-    active_public_link = ['%(active_src_link)s', 'ui', '_public']
-    active_docs_link = ['%(active_src_link)s', 'docs', 'build', 'html']
+    current_public_link = ['%(current_project_link)s', 'ui', '_public']
+    current_docs_link = ['%(current_project_link)s', 'docs', 'build', 'html']
 
     pip_req_path = ''
     pip_req_name = 'requirements.txt'
@@ -114,41 +114,13 @@ class StagingConf(BaseConf):
 
 
 
-
-class TestConf(BaseConf):
-    """Settings specific to production environment."""
-
-    #address = 'cloudml@172.27.77.205'
-    address = 'cloudmltest@172.27.77.141'
-
-    sudo_user = 'nmelnik'
-    home_path = '/webapps/cloudmltest'
-
-    # Code from this branch will be deployed.
-    branch = 'master'
-
-    server_name = 'cloudmltest.match.odesk.com'
-    # For Apache ServerAdmin directive
-    server_admin = 'nmelnik@odesk.com'
-    # Apache will serve WSGI on this port. (Nginx is front-end.)
-    gunicorn_port = 5001
-
-    # For pip extra index url config
-    odeskps_pypi_user = 'nmelnik@odesk.com'
-    odeskps_pypi_password = 'nmelnik'
-
-    supervisor_programs = ['celeryd', 'celerycam', 'gunicorn']
-
-    # Once on production, this file will replace %(local_settings_file)s
-    # It should be a Jinja2 template, and can make use of fabdeploy config
-    # variables.
-    remote_settings_lfile = 'prod_config.py.tpl'
-
 class ProductionConf(BaseConf):
     """Settings specific to production environment."""
 
     #address = 'cloudml@172.27.77.205'
     address = 'cloudml@172.27.77.141'
+
+    home_path = '/webapps/cloudml'
 
     sudo_user = 'nmelnik'
     #django_dir = ''
