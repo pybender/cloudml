@@ -7,7 +7,7 @@ from fabdeploy import monkey
 monkey.patch_all()
 import os
 import posixpath
-from fabric.api import task, env, settings, local, run, sudo, shell_env
+from fabric.api import task, env, settings, local, run, sudo, shell_env, prefix
 from fabric.contrib import files
 from fabdeploy.api import *
 
@@ -102,10 +102,15 @@ def deploy():
     gunicorn.push_config.run()
 
     virtualenv.create.run()
-    with shell_env(LAPACK='/usr/lib/liblapack.so',
-        ATLAS='/usr/lib/libatlas.so', BLAS='/usr/lib/libblas.so'):
-        virtualenv.pip_install_req.run()
-        virtualenv.make_relocatable.run()
+    #with shell_env(LAPACK="/usr/lib/liblapack.so",
+    #    ATLAS="/usr/lib/libatlas.so", BLAS="/usr/lib/libblas.so"):
+    with prefix('export LAPACK=/usr/lib/liblapack.so'):
+        with prefix('export ATLAS=/usr/lib/libatlas.so'):
+            with prefix('export BLAS=/usr/lib/libblas.so'):
+                virtualenv.pip_install.run(app='numpy')
+                virtualenv.pip_install.run(app='scipy')
+                virtualenv.pip_install_req.run()
+                virtualenv.make_relocatable.run()
 
     # django.syncdb.run()
     # django.migrate.run()
