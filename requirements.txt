@@ -1,18 +1,14 @@
 Flask==0.9
 Flask-RESTful==0.1.6
-Flask-SQLAlchemy==0.16
 Flask-Script==0.5.3
 Jinja2==2.6
-SQLAlchemy==0.8.0b2
 Werkzeug==0.8.3
 numpy
 gunicorn
 scipy
 scikit-learn
-django-fabdeploy-plus==0.3.6
 psycopg2==2.4.6 # sudo apt-get install libpq-dev python-dev
 jsonpath==0.54
-fabric==1.4
 celery==3.0.16
 flower==0.4.2
 supervisor

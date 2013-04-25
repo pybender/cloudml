@@ -117,13 +117,11 @@ class StagingConf(BaseConf):
 class ProductionConf(BaseConf):
     """Settings specific to production environment."""
 
-    #address = 'cloudml@172.27.77.205'
     address = 'cloudml@172.27.77.141'
 
     home_path = '/webapps/cloudml'
 
     sudo_user = 'nmelnik'
-    #django_dir = ''
 
     # Code from this branch will be deployed.
     branch = 'master'
@@ -141,7 +139,58 @@ class ProductionConf(BaseConf):
 
     supervisor_programs = ['celeryd', 'celerycam', 'gunicorn']
 
-    # Once on production, this file will replace %(local_settings_file)s
-    # It should be a Jinja2 template, and can make use of fabdeploy config
-    # variables.
+    remote_settings_lfile = 'prod_config.py.tpl'
+
+
+class Production1Conf(BaseConf):
+    """Settings specific to production environment."""
+
+    address = 'cloudml@172.27.85.243'
+
+    home_path = '/webapps/cloudml'
+
+    sudo_user = 'papadimitriou'
+
+    # Code from this branch will be deployed.
+    branch = 'master'
+
+    server_name = 'cloudml1.match.odesk.com'
+    # For Apache ServerAdmin directive
+    server_admin = 'nmelnik@odesk.com'
+    # Apache will serve WSGI on this port. (Nginx is front-end.)
+    gunicorn_port = 5000
+
+    # For pip extra index url config
+    odeskps_pypi_user = 'papadimitriou@odesk.com'
+    odeskps_pypi_password = 'nmelnik'
+
+    supervisor_programs = ['celeryd', 'celerycam', 'gunicorn']
+
+    remote_settings_lfile = 'prod_config.py.tpl'
+
+
+class Production2Conf(BaseConf):
+    """Settings specific to production environment."""
+
+    address = 'cloudml@172.27.65.20'
+
+    home_path = '/webapps/cloudml'
+
+    sudo_user = 'papadimitriou'
+
+    # Code from this branch will be deployed.
+    branch = 'master'
+
+    server_name = 'cloudml2.match.odesk.com'
+    # For Apache ServerAdmin directive
+    server_admin = 'papadimitriou@odesk.com'
+    # Apache will serve WSGI on this port. (Nginx is front-end.)
+    gunicorn_port = 5000
+
+    # For pip extra index url config
+    odeskps_pypi_user = 'nmelnik@odesk.com'
+    odeskps_pypi_password = 'nmelnik'
+
+    supervisor_programs = ['celeryd', 'celerycam', 'gunicorn']
+
     remote_settings_lfile = 'prod_config.py.tpl'

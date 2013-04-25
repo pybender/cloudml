@@ -27,6 +27,13 @@ def staging(**kwargs):
 def prod(**kwargs):
     fabd.conf.run('production')
 
+@task
+def prod1(**kwargs):
+    fabd.conf.run('production1')
+
+@task
+def prod2(**kwargs):
+    fabd.conf.run('production2')
 
 @task
 def dev(**kwargs):
@@ -46,8 +53,6 @@ def install():
 
     rabbitmq.install()
     nginx.install.run()
-    #apache.install.run()
-    #postgres.install.run()
 
     for app in ['supervisor']:
         pip.install.run(app=app)
@@ -64,14 +69,10 @@ def push_key():
 def setup():
     fabd.mkdirs.run()
 
-    # apache.wsgi_push.run()
-    # apache.push_config.run(update_ports=False)
-    # apache.graceful.run()  
     supervisor.push_init_config.run()
+    supervisor.push_d_config.run()
     supervisor.push_configs.run()
     supervisor.d.run()
-
-    # pip.push_config.run()
 
     with settings(warn_only=True):
         rabbitmq.add_user.run()
@@ -97,13 +98,10 @@ def deploy():
     git.push.run()
 
     supervisor.push_configs.run()
-    #apache.wsgi_push.run()
     push_flask_config.run()
     gunicorn.push_config.run()
 
     virtualenv.create.run()
-    #with shell_env(LAPACK="/usr/lib/liblapack.so",
-    #    ATLAS="/usr/lib/libatlas.so", BLAS="/usr/lib/libblas.so"):
     with prefix('export LAPACK=/usr/lib/liblapack.so'):
         with prefix('export ATLAS=/usr/lib/libatlas.so'):
             with prefix('export BLAS=/usr/lib/libblas.so'):
@@ -112,13 +110,8 @@ def deploy():
                 virtualenv.pip_install_req.run()
                 virtualenv.make_relocatable.run()
 
-    # django.syncdb.run()
-    # django.migrate.run()
-
 
     #run('cd %(project_path)s/ui; ./scripts/production.sh')
-    # run('%(env_path)s/bin/python %(project_path)s/manage.py '
-    #      'createdb;' % env.conf)
 
     release.activate.run()
 
@@ -126,9 +119,7 @@ def deploy():
     supervisor.restart_program.run(program='celeryd')
     supervisor.restart_program.run(program='celerycam')
     supervisor.restart_program.run(program='gunicorn')
-    #gunicorn.reload_with_supervisor.run()
-    #supervisor.reload.run()
-   # apache.wsgi_touch.run()
+
 
 from fabdeploy.apache import PushConfig as StockPushApacheConfig
 from fabdeploy.utils import upload_config_template
