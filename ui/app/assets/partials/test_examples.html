@@ -8,12 +8,12 @@
 
     <form class="form-inline well">
       <label>Label: </label>
-      <select ng-model="filter_opts.label">
+      <select class="input-small" ng-model="filter_opts.label">
         <option value="">--- any ---</option>
         <option ng-repeat="label in labels" ng-value="label" ng-selected="label==filter_opts.label">{{ label }}</option>
       </select> &nbsp;
       <label>Predicted Label: </label> {{ selectedPredLabel }}
-      <select ng-model="filter_opts.pred_label">
+      <select class="input-small" ng-model="filter_opts.pred_label">
         <option value="">--- any ---</option>
         <option ng-repeat="label in labels" ng-value="label" ng-selected="label==filter_opts.pred_label">{{ label }}</option>
       </select>
