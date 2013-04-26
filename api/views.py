@@ -194,6 +194,7 @@ class Tests(BaseResource):
     """
     OBJECT_NAME = 'test'
     FILTER_PARAMS = (('status', str), )
+    methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
 
     @property
     def Model(self):

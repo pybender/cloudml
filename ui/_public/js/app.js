@@ -1831,6 +1831,26 @@ angular.module('app.testresults.controllers', ['app.config']).controller('TestDi
       });
     };
   }
+]).controller('DeleteTestCtrl', [
+  '$scope', '$http', 'dialog', 'settings', '$location', function($scope, $http, dialog, settings, location) {
+    $scope.test = dialog.test;
+    $scope.model = dialog.test.model;
+    $scope.close = function() {
+      return dialog.close();
+    };
+    return $scope["delete"] = function(result) {
+      return $scope.test.$delete().then((function() {
+        $scope.close();
+        return location.search('action=test:list&any=' + Math.random());
+      }), (function(opts) {
+        if (opts.data) {
+          return $scope.err = "Error while deleting test:" + "server responded with " + ("" + opts.status + " ") + ("(" + (opts.data.response.error.message || "no message") + "). ");
+        } else {
+          return $scope.err = "Error while deleting test";
+        }
+      }));
+    };
+  }
 ]).controller('TestDetailsCtrl', [
   '$scope', '$http', '$routeParams', 'settings', 'TestResult', '$location', function($scope, $http, $routeParams, settings, Test, $location) {
     var DEFAULT_ACTION;
@@ -1888,6 +1908,28 @@ metrics.precision_recall_curve,metrics.roc_auc', function() {
       });
     };
   }
+]).controller('TestActionsCtrl', [
+  '$scope', '$dialog', function($scope, $dialog) {
+    var _this = this;
+    $scope.init = function(opts) {
+      var model, test;
+      test = opts.test;
+      model = opts.model;
+      if (!test || !model) {
+        throw new Error("Please specify test and model");
+      }
+      opts.test.model = model;
+      return $scope.test = test;
+    };
+    return $scope.delete_test = function(model) {
+      var d;
+      d = $dialog.dialog({
+        modalFade: false
+      });
+      d.test = $scope.test;
+      return d.open('partials/testresults/delete_popup.html', 'DeleteTestCtrl');
+    };
+  }
 ]);
 var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
@@ -1902,6 +1944,8 @@ angular.module('app.testresults.model', ['app.config']).factory('TestResult', [
     TestResult = (function() {
 
       function TestResult(opts) {
+        this.$delete = __bind(this.$delete, this);
+
         this.$save = __bind(this.$save, this);
 
         this.loadFromJSON = __bind(this.loadFromJSON, this);
@@ -2020,6 +2064,18 @@ angular.module('app.testresults.model', ['app.config']).factory('TestResult', [
           data: $.param(saveData)
         }).then(function(resp) {
           return _this.loadFromJSON(resp.data);
+        });
+      };
+
+      TestResult.prototype.$delete = function(opts) {
+        if (opts == null) {
+          opts = {};
+        }
+        return $http({
+          method: "DELETE",
+          headers: settings.apiRequestDefaultHeaders,
+          url: "" + settings.apiUrl + "model/" + this.model.name + "/test/" + this.name,
+          transformRequest: angular.identity
         });
       };
 

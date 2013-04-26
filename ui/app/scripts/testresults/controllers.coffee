@@ -50,6 +50,34 @@ angular.module('app.testresults.controllers', ['app.config', ])
     )
 ])
 
+.controller('DeleteTestCtrl', [
+  '$scope'
+  '$http'
+  'dialog'
+  'settings'
+  '$location'
+
+  ($scope, $http, dialog, settings, location) ->
+    $scope.test = dialog.test
+    $scope.model = dialog.test.model
+
+    $scope.close = ->
+      dialog.close()
+
+    $scope.delete = (result) ->
+      $scope.test.$delete().then (() ->
+        $scope.close()
+        location.search('action=test:list&any=' + Math.random())
+      ), ((opts) ->
+        if opts.data
+          $scope.err = "Error while deleting test:" +
+            "server responded with " + "#{opts.status} " +
+            "(#{opts.data.response.error.message or "no message"}). "
+        else
+          $scope.err = "Error while deleting test"
+      )
+])
+
 .controller('TestDetailsCtrl', [
   '$scope'
   '$http'
@@ -101,4 +129,27 @@ metrics.precision_recall_curve,metrics.roc_auc',
       pr = $scope.test.metrics.precision_recall_curve
       $scope.prCurve = {'Precision-Recall curve': [pr[1], pr[0]]}
     )
+])
+
+.controller('TestActionsCtrl', [
+  '$scope'
+  '$dialog'
+
+  ($scope, $dialog) ->
+    $scope.init = (opts) =>
+      test = opts.test
+      model = opts.model
+      if not test || not model
+        throw new Error "Please specify test and model"
+
+      opts.test.model = model
+      $scope.test = test
+
+    $scope.delete_test = (model)->
+      d = $dialog.dialog(
+        modalFade: false
+      )
+      d.test = $scope.test
+      d.open('partials/testresults/delete_popup.html', 'DeleteTestCtrl')
+  
 ])

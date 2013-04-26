@@ -92,6 +92,14 @@ angular.module('app.testresults.model', ['app.config'])
         )
         .then((resp) => @loadFromJSON(resp.data))
 
+      $delete: (opts={}) =>
+        $http(
+          method: "DELETE"
+          headers: settings.apiRequestDefaultHeaders
+          url: "#{settings.apiUrl}model/#{@model.name}/test/#{@name}"
+          transformRequest: angular.identity
+        )
+
       @$loadTests: (modelName, opts) ->
         dfd = $q.defer()
 
