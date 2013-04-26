@@ -47,7 +47,7 @@ def test(**kwargs):
 @task
 def install():
     users.create.run()
-    ssh.push_key.run(pub_key_file='~/.ssh/id_rsa.pub')
+     #ssh.push_key.run(pub_key_file='~/.ssh/id_rsa.pub')
 
     fabd.mkdirs.run()
 
