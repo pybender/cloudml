@@ -158,9 +158,9 @@ class TestExample(Document):
         'data_input': dict,
         'weighted_data_input': dict,
 
-        'name': unicode,
-        'label': unicode,
-        'pred_label': unicode,
+        'name': basestring,
+        'label': basestring,
+        'pred_label': basestring,
         'test': Test,
 
         'test_name': basestring,
