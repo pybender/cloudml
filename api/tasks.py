@@ -34,9 +34,9 @@ def train_model(model_name, parameters):
         train_handler = model.get_import_handler(parameters)
         trainer.train(train_handler)
         trainer.clear_temp_data()
+        model.status = model.STATUS_TRAINED
         model.set_trainer(trainer)
         model.set_weights(**trainer.get_weights())
-        model.status = model.STATUS_TRAINED
         model.save()
     except Exception, exc:
         logging.error(exc)

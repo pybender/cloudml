@@ -88,23 +88,8 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
 .directive('confusionMatrix', () ->
   return {
     restrict: 'E',
-    template: '<table class="table">
-<thead>
-<tr>
-    <th></th>
-    <th ng-repeat="row in matrix">
-      {{ row.0 }}
-    </th>
-</tr>
-</thead>
-<tbody>
-    <tr ng-repeat="row in matrix">
-        <th>{{ row.0 }}</th>
-        <td ng-repeat="cell in row.1">{{ cell }}</td>
-    </tr>
-</tbody>
-</table>',
-    scope: { matrix: '=' },
+    templateUrl: 'partials/directives/confusion_matrix.html',
+    scope: { matrix: '=', url: '=' },
     replace: true,
     transclude : true,
   }

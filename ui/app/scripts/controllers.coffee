@@ -73,12 +73,18 @@ angular.module('app.controllers', ['app.config', ])
         $scope.load()
       , true)
 
+      $scope.$watch('filter_opts ', (filter_opts, oldVal, scope) ->
+        $scope.load()
+      , true)
+
     $scope.load = =>
       if $scope.loading
         return false
+
       $scope.loading = true
       $scope.objectLoader(
-        page: $scope.page
+        page: $scope.page,
+        filter_opts: $scope.filter_opts,
       ).then ((opts) ->
         $scope.loading = false
         $scope.total = opts.total

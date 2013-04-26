@@ -56,9 +56,11 @@ class Model(Document):
         'positive_weights': list,
         'negative_weights': list,
         'comparable': bool,
+
+        'labels': list,
         #'tests': list,
     }
-    gridfs = {'files':['trainer']}
+    gridfs = {'files': ['trainer']}
     required_fields = ['name', 'created_on', ]
     default_values = {'created_on': datetime.utcnow,
                       'updated_on': datetime.utcnow,
@@ -90,6 +92,8 @@ class Model(Document):
     def set_trainer(self, trainer):
         self.fs.trainer = Binary(pickle.dumps(trainer))
         self.target_variable = trainer._feature_model.target_variable
+        if self.status == self.STATUS_TRAINED:
+            self.labels = trainer._classifier.classes_.tolist()
 
     def set_weights(self, positive, negative):
         from helpers.weights import calc_weights_css
