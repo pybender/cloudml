@@ -15,7 +15,7 @@ from api.utils import  odesk_error_response, ERR_NO_SUCH_MODEL, \
      ERR_NO_SUCH_IMPORT_HANDLER, ERR_PREDICT, ERR_NO_MODELS
 
 
-@app.route('/cloudml/model/', methods=['GET'])
+@app.route('/cloudml/model', methods=['GET'])
 def list_models():
     """
     Lists all known trained models.
@@ -34,7 +34,7 @@ def list_models():
     return jsonify({'models': result})
 
 
-@app.route('/cloudml/import/handler/', methods=['GET'])
+@app.route('/cloudml/import/handler', methods=['GET'])
 def list_import_handlers():
     """
     Lists all known import handlers.
@@ -52,7 +52,7 @@ def list_import_handlers():
 
 
 @app.route('/cloudml/model/<regex("[\w\.]*"):model>/\
-<regex("[\w\.]*"):import_handler>/predict', methods=['GET'])
+<regex("[\w\.]*"):import_handler>/predict', methods=['POST'])
 def predict(model, import_handler):
 
     hndl = app.import_handlers.get(import_handler, None)
