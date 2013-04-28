@@ -19,20 +19,21 @@ def prod2(**kwargs):
 
 @task
 def install():
-    fabd.mkdirs.run()
 
     # TODO: chef
-    users.create.run()
-    ssh.push_key.run(pub_key_file='~/.ssh/id_rsa.pub')
-    pip.install.run(app='supervisor', upgrade=True)
-    pip.install.run(app='virtualenv', upgrade=True)
-    system.package_install.run(packages='liblapack-dev gfortran \
-libpq-dev python-dev')
-    nginx.install.run() 
-    gunicorn.push_nginx_config.run()
-    nginx.restart.run()
+ #    users.create.run()
+ #    ssh.push_key.run(pub_key_file='~/.ssh/id_rsa.pub')
+ #    pip.install.run(app='supervisor', upgrade=True)
+ #    pip.install.run(app='virtualenv', upgrade=True)
+ #    system.package_install.run(packages='liblapack-dev gfortran \
+ # libpq-dev python-dev')
+ #    nginx.install.run() 
+ #    gunicorn.push_nginx_config.run()
+ #    nginx.restart.run()
     # TODO: end chef
 
+
+    fabd.mkdirs.run()
     supervisor.push_d_config.run()
     supervisor.push_configs.run()
     supervisor.d.run()
@@ -65,4 +66,5 @@ def deploy():
     virtualenv.make_relocatable.run()
 
     release.activate.run()
+    supervisor.update.run()
     supervisor.restart_program.run(program='gunicorn')

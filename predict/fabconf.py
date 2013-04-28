@@ -43,3 +43,21 @@ class Production1Conf(BaseConf):
     gunicorn_port = 5000
 
     remote_settings_lfile = 'prod_config.py.tpl'
+
+
+class Production2Conf(BaseConf):
+    """Settings specific to production environment."""
+
+    address = 'cloudml@172.27.65.20'
+    home_path = '/webapps/cloudml'
+    sudo_user = 'nmelnik'
+
+    # Code from this branch will be deployed.
+    branch = 'master'
+
+    server_name = 'cloudml1.match.odesk.com'
+    # For Nginx ServerAdmin directive
+    server_admin = 'papadimitriou@odesk.com'
+    gunicorn_port = 5000
+
+    remote_settings_lfile = 'prod_config.py.tpl'
