@@ -32,7 +32,7 @@ class Production1Conf(BaseConf):
 
     address = 'cloudml@172.27.85.243'
     home_path = '/webapps/cloudml'
-    sudo_user = 'nmelnik'
+    sudo_user = 'papadimitriou'
 
     # Code from this branch will be deployed.
     branch = 'master'
@@ -50,7 +50,7 @@ class Production2Conf(BaseConf):
 
     address = 'cloudml@172.27.65.20'
     home_path = '/webapps/cloudml'
-    sudo_user = 'nmelnik'
+    sudo_user = 'papadimitriou'
 
     # Code from this branch will be deployed.
     branch = 'master'

@@ -18,7 +18,7 @@ def prod2(**kwargs):
 
 
 @task
-def install():
+def setup():
 
     # TODO: chef
  #    users.create.run()
