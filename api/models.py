@@ -101,6 +101,12 @@ class Model(Document):
         self.negative_weights = calc_weights_css(negative, 'red')
         self.negative_weights.reverse()
 
+    def delete(self):
+        params = {'model_name': self.name}
+        app.db.TestExample.collection.remove(params)
+        app.db.Test.collection.remove(params)
+        self.collection.remove({'_id': self._id})
+
 
 @connection.register
 class Test(Document):

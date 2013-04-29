@@ -48,7 +48,8 @@ class BaseTestCase(unittest.TestCase):
 
 
 class ModelTests(BaseTestCase):
-    FIXTURES = ('models.json', )
+    MODEL_NAME = 'TrainedModel'
+    FIXTURES = ('models.json', 'tests.json', 'examples.json')
 
     def test_list(self):
         resp = self.app.get('/cloudml/model/')
@@ -108,6 +109,30 @@ No target schema defined in config')
     #     print resp.data
     #     self.assertEquals(resp.status_code, httplib.CREATED)
     #     self.assertTrue('model' in resp.data)
+
+    def test_delete(self):
+        url = '/cloudml/model/' + self.MODEL_NAME
+        resp = self.app.get(url)
+        self.assertEquals(resp.status_code, httplib.OK)
+
+        resp = self.app.delete(url)
+        self.assertEquals(resp.status_code, 204)
+
+        model = app.db.Model.find_one({'name': self.MODEL_NAME})
+        self.assertEquals(model, None, model)
+
+        # Check wheither tests and examples was deleted
+        params = {'model_name': self.MODEL_NAME}
+        tests = app.db.Test.find(params).count()
+        self.assertFalse(tests, "%s tests was not deleted" % tests)
+        other_examples = app.db.Test.find().count()
+        self.assertTrue(other_examples, "All tests was deleted!")
+
+        examples = app.db.TestExample.find(params).count()
+        self.assertFalse(examples, "%s test examples was not \
+deleted" % examples)
+        other_examples = app.db.TestExample.find().count()
+        self.assertTrue(other_examples, "All examples was deleted!")
 
     def _checkValidationErrors(self, uri, post_data, message,
                                code=ERR_INVALID_DATA,
