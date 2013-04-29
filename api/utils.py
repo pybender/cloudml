@@ -5,7 +5,6 @@ import pickle
 import logging
 from time import time
 
-from sqlalchemy.types import TypeDecorator, VARCHAR
 
 from flask import make_response, request, current_app, jsonify
 from api import app
@@ -20,57 +19,6 @@ ERR_INVALID_DATA = 1005
 ERR_INVALID_METHOD = 1006
 ERR_PICKLING_MODEL = 1007
 ERR_UNPICKLING_MODEL = 1008
-
-
-class JSONEncodedDict(TypeDecorator):
-    """Represents an immutable structure as a json-encoded string.
-
-    Usage::
-
-        JSONEncodedDict(255)
-
-    """
-
-    impl = VARCHAR
-
-    def process_bind_param(self, value, dialect):
-        if value is not None:
-            value = json.dumps(value)
-
-        return value
-
-    def process_result_value(self, value, dialect):
-        if value is not None:
-            try:
-                value = json.loads(value)
-            except ValueError, exc:
-                logging.error('Error when loads %s: %s', value, exc)
-                raise
-
-        return value
-
-
-class PickledValue(TypeDecorator):
-    """Represents an structure as a pickled string.
-
-    Usage::
-
-        PickledValue(255)
-
-    """
-
-    impl = VARCHAR
-
-    def process_bind_param(self, value, dialect):
-        if value is not None:
-            value = pickle.dumps(value)
-
-        return value
-
-    def process_result_value(self, value, dialect):
-        if value is not None:
-            value = pickle.loads(value)
-        return value
 
 
 def consumes(content_type=None):
