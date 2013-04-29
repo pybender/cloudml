@@ -45,7 +45,8 @@ App.config([
     })
     .when('/models/:name/tests/:test_name/examples', {
       controller: 'TestExamplesCtrl'
-      templateUrl: '/partials/test_examples.html'
+      templateUrl: '/partials/test_examples.html',
+      reloadOnSearch: false,
     })
     .when('/models/:name/tests/:test_name/grouped_examples', {
       controller: 'GroupedExamplesCtrl'

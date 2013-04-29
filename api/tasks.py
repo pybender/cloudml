@@ -34,9 +34,9 @@ def train_model(model_name, parameters):
         train_handler = model.get_import_handler(parameters)
         trainer.train(train_handler)
         trainer.clear_temp_data()
+        model.status = model.STATUS_TRAINED
         model.set_trainer(trainer)
         model.set_weights(**trainer.get_weights())
-        model.status = model.STATUS_TRAINED
         model.save()
     except Exception, exc:
         logging.error(exc)
@@ -54,7 +54,7 @@ def run_test(test_id):
     Running tests for trained model
     """
     test = app.db.Test.find_one({'_id': ObjectId(test_id)})
-    model = test.model#Model(test.model)
+    model = test.model
     try:
         if model.status != model.STATUS_TRAINED:
             raise InvalidOperationError("Train the model before")
@@ -96,43 +96,33 @@ def run_test(test_id):
         all_count = metrics._preds.size
         test.examples_count = all_count
         test.save()
-        # store test examples
-        from pmap import pmap
-        from itertools import islice
-        #ziped = izip(raw_data, metrics._labels,
-        #                             metrics._preds)
-        
-        sliced = []
-        concurency = 6
-        n = all_count / concurency
-        # for i in range(4):
-        #     sliced.append(islice(ziped, i*n, (i+1)*n -1))
-        for i in range(concurency):
-            start = i*n
-            stop = (i+1)*n -1
-            sliced.append(izip(raw_data[start:stop],
-                               metrics._labels[start:stop],
-                               metrics._preds[start:stop]))
-        def store(items):
+
+        def store_examples(items):
             count = 0
             for row, label, pred in items:
                 count += 1
                 if count % 100 == 0:
                     logging.info('Stored %d rows' % count)
                 row = decode(row)
-                #weighted_data_input = get_weighted_data(model, row)
                 example = app.db.TestExample()
                 example['data_input'] = row
-                #example['weighted_data_input'] = dict(weighted_data_input)
                 # TODO: Specify Example title column in raw data
-                example['name'] = unicode(row.get('contractor.dev_profile_title', None))
-                example['label'] = unicode(label)
-                example['pred_label'] = unicode(pred)
-                #example['test'] = test
+                example['name'] = row.get('contractor.dev_profile_title',
+                                          'noname')
+                example['label'] = str(label)
+                example['pred_label'] = str(pred)
                 example['test_name'] = test.name
                 example['model_name'] = model.name
+                try:
+                    example.validate()
+                except Exception, exc:
+                    logging.error('Problem with saving example #%s: %s',
+                                  count, exc)
+                    continue
                 example.save(check_keys=False)
-        pmap(store, sliced)
+
+        examples = izip(raw_data, metrics._labels, metrics._preds)
+        store_examples(examples)
 
     except Exception, exc:
         logging.error(exc)

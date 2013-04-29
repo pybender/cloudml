@@ -32,6 +32,10 @@ angular.module('app.testresults.model', ['app.config'])
       objectUrl: =>
         return '/models/' + (@model_name || @model.name) + "/tests/" + @name
 
+      examplesUrl: =>
+        model = @model_name || @model.name
+        return "/models/#{model}/tests/#{@name}/examples"
+
       fullName: =>
         if @model? || @model_name
           return (@model_name || @model.name) + " / " + @name
