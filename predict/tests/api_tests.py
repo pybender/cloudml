@@ -1,9 +1,8 @@
 import unittest
 import json
-import httplib
 
 from api import app
-from api.utils import ERR_NO_SUCH_MODEL
+from api.utils import ERR_NO_SUCH_MODEL, ERR_NO_SUCH_IMPORT_HANDLER
 
 
 class ModelTests(unittest.TestCase):
@@ -36,5 +35,22 @@ class ModelTests(unittest.TestCase):
     def test_predict(self):
         rv = self.app.post('/cloudml/model/model/extract/predict')
         self.assertEqual(rv.mimetype, 'application/json')
-        data = json.loads(rv.data)
+        #data = json.loads(rv.data)
         self.assertEqual(rv.status_code, 201)
+
+    def test_predict_no_such_model(self):
+        rv = self.app.post('/cloudml/model/model1/extract/predict')
+        self.assertEqual(rv.mimetype, 'application/json')
+        data = json.loads(rv.data)['response']['error']
+        self.assertEqual(data['message'], "Model model1 doesn't exist")
+        self.assertEqual(data['code'], ERR_NO_SUCH_MODEL)
+        self.assertEqual(rv.status_code, 404)
+
+    def test_predict_no_such_modelhandler(self):
+        rv = self.app.post('/cloudml/model/model/extract1/predict')
+        self.assertEqual(rv.mimetype, 'application/json')
+        data = json.loads(rv.data)['response']['error']
+        self.assertEqual(data['message'],
+                         "Import handler extract1 doesn't exist")
+        self.assertEqual(data['code'], ERR_NO_SUCH_IMPORT_HANDLER)
+        self.assertEqual(rv.status_code, 404)

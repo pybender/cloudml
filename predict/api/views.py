@@ -1,18 +1,15 @@
 import logging
-import json
 import traceback
 
 from flask import request, jsonify
 
-from core.trainer.store import load_trainer
-from core.trainer.trainer import Trainer
 from core.importhandler.importhandler import ExtractionPlan, \
     RequestImportHandler
 
 from api import app
 
-from api.utils import  odesk_error_response, ERR_NO_SUCH_MODEL, \
-     ERR_NO_SUCH_IMPORT_HANDLER, ERR_PREDICT, ERR_NO_MODELS
+from api.utils import odesk_error_response, ERR_NO_SUCH_MODEL, \
+    ERR_NO_SUCH_IMPORT_HANDLER, ERR_PREDICT, ERR_NO_MODELS
 
 
 @app.route('/cloudml/model', methods=['GET'])
@@ -42,11 +39,12 @@ def list_import_handlers():
     logging.info('Request to view available import handlers')
 
     if len(app.import_handlers) == 0:
-        return odesk_error_response(404, ERR_NO_MODELS, 'No import handlers loaded')
+        return odesk_error_response(404, ERR_NO_MODELS,
+                                    'No import handlers loaded')
 
     result = []
     for name, handler in app.import_handlers.items():
-        result.append({'name': name })
+        result.append({'name': name})
 
     return jsonify({'import_handlers': result})
 
