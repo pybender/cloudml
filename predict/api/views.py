@@ -52,7 +52,9 @@ def list_import_handlers():
 @app.route('/cloudml/model/<regex("[\w\.]*"):model>/\
 <regex("[\w\.]*"):import_handler>/predict', methods=['POST'])
 def predict(model, import_handler):
-
+    """
+    Predict labels and probabilities
+    """
     hndl = app.import_handlers.get(import_handler, None)
     if hndl is None:
         msg = "Import handler %s doesn\'t exist" % import_handler
