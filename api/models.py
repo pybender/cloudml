@@ -6,7 +6,7 @@ import cPickle as pickle
 from bson import Binary
 from flask.ext.mongokit import Document
 
-from api import connection
+from api import connection, app
 
 
 @connection.register
@@ -144,9 +144,11 @@ class Test(Document):
     def data_count(self):
         return self.data.count()
 
-    @property
-    def model_name(self):
-        return self.model.name
+    def delete(self):
+        params = dict(test_name=self.name,
+                      model_name=self.model_name)
+        app.db.TestExample.collection.remove(params)
+        self.collection.remove({'_id': self._id})
 
 
 @connection.register

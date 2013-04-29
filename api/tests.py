@@ -130,7 +130,7 @@ def dumpdata(document_list, fixture_name):
 class TestTests(BaseTestCase):
     MODEL_NAME = 'TrainedModel'
     TEST_NAME = 'Test-1'
-    FIXTURES = ('models.json', 'tests.json')
+    FIXTURES = ('models.json', 'tests.json', 'examples.json')
 
     def test_list(self):
         url = self._get_url(self.MODEL_NAME, search='show=name,status')
@@ -165,9 +165,18 @@ class TestTests(BaseTestCase):
 
         resp = self.app.delete(url)
         self.assertEquals(resp.status_code, 204)
-        test = app.db.Test.find_one({'model_name': self.MODEL_NAME,
-                                     'name': self.TEST_NAME})
+        params = {'model_name': self.MODEL_NAME,
+                  'name': self.TEST_NAME}
+        test = app.db.Test.find_one(params)
         self.assertEquals(test, None, test)
+
+        params = {'model_name': self.MODEL_NAME,
+                  'test_name': self.TEST_NAME}
+        examples = app.db.TestExample.find(params).count()
+        self.assertFalse(examples, "%s test examples was not \
+deleted" % examples)
+        other_examples = app.db.TestExample.find().count()
+        self.assertTrue(other_examples, "All examples was deleted!")
 
     def _get_url(self, model, test=None, search=None):
         if test:
