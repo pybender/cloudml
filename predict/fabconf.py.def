@@ -40,7 +40,7 @@ class Production1Conf(BaseConf):
     server_name = 'cloudml1.match.odesk.com'
     # For Nginx ServerAdmin directive
     server_admin = 'papadimitriou@odesk.com'
-    gunicorn_port = 5000
+    gunicorn_port = 5100
 
     remote_settings_lfile = 'prod_config.py.tpl'
 
@@ -58,6 +58,6 @@ class Production2Conf(BaseConf):
     server_name = 'cloudml1.match.odesk.com'
     # For Nginx ServerAdmin directive
     server_admin = 'papadimitriou@odesk.com'
-    gunicorn_port = 5000
+    gunicorn_port = 5100
 
     remote_settings_lfile = 'prod_config.py.tpl'

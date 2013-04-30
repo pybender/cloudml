@@ -23,10 +23,11 @@ def setup():
     # TODO: chef
  #    users.create.run()
  #    ssh.push_key.run(pub_key_file='~/.ssh/id_rsa.pub')
- #    pip.install.run(app='supervisor', upgrade=True)
- #    pip.install.run(app='virtualenv', upgrade=True)
- #    system.package_install.run(packages='liblapack-dev gfortran \
- # libpq-dev python-dev')
+    
+    system.package_install.run(packages='python-dev python-pip liblapack-dev gfortran \
+libpq-dev python-dev')
+    pip.install.run(app='supervisor', upgrade=True)
+    pip.install.run(app='virtualenv', upgrade=True)
  #    nginx.install.run() 
  #    gunicorn.push_nginx_config.run()
  #    nginx.restart.run()

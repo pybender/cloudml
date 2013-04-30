@@ -65,3 +65,9 @@ After that we will can put model's and import_handler's files to::
     /webapps/cloudml/shared/var/models
     /webapps/cloudml/shared/var/import_handlers
 (I can create fab command for simple upload model. Is it necessary?)
+
+Reload gunicorn after upload files::
+    
+    $ fab prod1 gunicorn.reload_with_supervisor
+
+

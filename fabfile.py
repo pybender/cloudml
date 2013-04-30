@@ -52,7 +52,8 @@ def install():
         pip.install.run(app=app)
 
     pip.install.run(app='virtualenv', upgrade=True)
-    system.package_install.run(packages='liblapack-dev gfortran libpq-dev')
+    system.package_install.run(packages='liblapack-dev gfortran libpq-dev\
+npm nodejs')
 
 
 @task
@@ -62,20 +63,24 @@ def push_key():
 
 @task
 def setup():
-    # fabd.mkdirs.run()
+    fabd.mkdirs.run()
 
-    # supervisor.push_init_config.run()
-    # supervisor.push_d_config.run()
-    # supervisor.push_configs.run()
+    supervisor.push_init_config.run()
+    supervisor.push_d_config.run()
+    supervisor.push_configs.run()
     supervisor.d.run()
 
-    # with settings(warn_only=True):
-    #     rabbitmq.add_user.run()
-    #     rabbitmq.add_vhost.run()
-    # rabbitmq.set_permissions.run()
+    with settings(warn_only=True):
+        rabbitmq.add_user.run()
+        rabbitmq.add_vhost.run()
+    rabbitmq.set_permissions.run()
 
     gunicorn.push_nginx_config.run()
     nginx.restart.run()
+
+    # init env for build ui
+    run('cd %(project_path)s/ui; ./scripts/init.sh' % env.conf)
+
 
 
 @task
@@ -105,8 +110,7 @@ def deploy():
     virtualenv.pip_install_req.run()
     virtualenv.make_relocatable.run()
 
-
-    #run('cd %(project_path)s/ui; ./scripts/production.sh')
+    run('cd %(project_path)s/ui; ./scripts/production.sh' % env.conf)
 
     release.activate.run()
 
