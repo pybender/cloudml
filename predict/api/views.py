@@ -80,11 +80,14 @@ def predict(model, import_handler):
         return odesk_error_response(500, ERR_PREDICT,
                                     msg, traceback=traceback.format_exc())
 
-    prob = probabilities['probs'][0]
+    probs = probabilities['probs'][0]
     labels = probabilities['labels']
-    probs = prob.tolist() if not (prob is None) else []
+    probs_with_labels = []
+    probs = probs.tolist() if not (probs is None) else []
     labels = labels.tolist() if not (labels is None) else []
+    for label, prob in zip(labels, probs):
+        probs_with_labels.append({'label': label, 'prob': prob})
     prob, label = sorted(zip(probs, labels),
                          lambda x, y: cmp(x[0], y[0]),
                          reverse=True)[0]
-    return jsonify({'label': label, 'prob': prob}), 201
+    return jsonify({'prediction': label, 'probs': probs_with_labels}), 201

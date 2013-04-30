@@ -35,8 +35,13 @@ class ModelTests(unittest.TestCase):
     def test_predict(self):
         rv = self.app.post('/cloudml/model/model/extract/predict')
         self.assertEqual(rv.mimetype, 'application/json')
-        #data = json.loads(rv.data)
+        data = json.loads(rv.data)
         self.assertEqual(rv.status_code, 201)
+        self.assertEqual(data['prediction'], True)
+        self.assertEqual(data['probs'], [
+            {u'label': False, u'prob': 0.30698654913887147},
+            {u'label': True, u'prob': 0.6930134508611285}
+        ])
 
     def test_predict_no_such_model(self):
         rv = self.app.post('/cloudml/model/model1/extract/predict')
