@@ -21,7 +21,9 @@ class BaseConf(DefaultConf):
                                'supervisord.conf']
 
     supervisor__log_path = ['%(var_path)s', 'log', 'supervisor']
-    supervisor_programs = ['gunicorn']
+    supervisor_programs = ['gunicorn', 'uwsgi']
+    gunicorn_port = 5100
+    uwsgi_port = 5101
 
     # Local settings file
     local_settings_file = 'config.py'

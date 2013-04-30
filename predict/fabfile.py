@@ -21,17 +21,19 @@ def prod2(**kwargs):
 def setup():
 
     # TODO: chef
- #    users.create.run()
- #    ssh.push_key.run(pub_key_file='~/.ssh/id_rsa.pub')
-    
-    system.package_install.run(packages='python-dev python-pip liblapack-dev gfortran \
-libpq-dev python-dev')
-    pip.install.run(app='supervisor', upgrade=True)
-    pip.install.run(app='virtualenv', upgrade=True)
- #    nginx.install.run() 
- #    gunicorn.push_nginx_config.run()
- #    nginx.restart.run()
+#    users.create.run()
+#    ssh.push_key.run(pub_key_file='~/.ssh/id_rsa.pub')
+#   system.package_install.run(packages='python-dev python-pip liblapack-dev gfortran \
+#libpq-dev python-dev')
+#   pip.install.run(app='supervisor', upgrade=True)
+#   pip.install.run(app='virtualenv', upgrade=True)
+#    nginx.install.run() 
+#    gunicorn.push_nginx_config.run()
+#    nginx.restart.run()
     # TODO: end chef
+
+    #uwsgi.install_deps.run()
+    #uwsgi.install.run()
 
 
     fabd.mkdirs.run()
@@ -69,3 +71,4 @@ def deploy():
     release.activate.run()
     supervisor.update.run()
     supervisor.restart_program.run(program='gunicorn')
+    supervisor.restart_program.run(program='uwsgi')
