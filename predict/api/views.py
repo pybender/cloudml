@@ -12,7 +12,6 @@ from api import app
 from api.utils import odesk_error_response, ERR_NO_SUCH_MODEL, \
     ERR_NO_SUCH_IMPORT_HANDLER, ERR_PREDICT, ERR_NO_MODELS
 
-from pprint import pprint
 
 @app.route('/cloudml/model', methods=['GET'])
 def list_models():
