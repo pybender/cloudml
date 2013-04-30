@@ -34,14 +34,14 @@ class BaseConf(DefaultConf):
 
     pip_req_path = ''
     pip_req_name = 'requirements.txt'
-    
+
     supervisor_prefix = 'cloudml_'
     supervisord_config_lfile = 'supervisor/supervisord.conf'
     supervisord_config_file = ['%(supervisor_config_path)s', 'supervisord.conf']
 
     supervisor__log_path = ['%(var_path)s', 'log', 'supervisor']
-    supervisor_programs = ['celeryd', 'celerycam']
-    
+    supervisor_programs = ['celeryd', 'celerycam', 'gunicorn']
+
     rabbitmq_host = 'localhost'
     rabbitmq_port = 5672
     rabbitmq_user = '%(user)s'
@@ -56,7 +56,7 @@ class BaseConf(DefaultConf):
     broker_vhost = '%(rabbitmq_vhost)s'
 
     db_name = 'cloudml'
-    
+
     # Local settings file
     local_settings_file = 'config.py'
 
@@ -78,13 +78,9 @@ class DevConf(BaseConf):
     # Apache will serve WSGI on this port. (Nginx is front-end.)
     apache_port = 80
 
-
-    # Once on production, this file will replace %(local_settings_file)s
-    # It should be a Jinja2 template, and can make use of fabdeploy config
-    # variables.
     remote_settings_lfile = 'prod_config.py.tpl'
 
-    
+
 class StagingConf(BaseConf):
     """Settings specific to production environment."""
 
@@ -100,12 +96,7 @@ class StagingConf(BaseConf):
     # For Apache ServerAdmin directive
     server_admin = 'nmelnik@odesk.com'
     # Apache will serve WSGI on this port. (Nginx is front-end.)
-    apache_port = 5000
     gunicorn_port = 8020
-
-    # For pip extra index url config
-    odeskps_pypi_user = 'nmelnik@odesk.com'
-    odeskps_pypi_password = 'nmelnik'
 
     # Once on production, this file will replace %(local_settings_file)s
     # It should be a Jinja2 template, and can make use of fabdeploy config
@@ -127,70 +118,9 @@ class ProductionConf(BaseConf):
     branch = 'master'
 
     server_name = 'cloudml.match.odesk.com'
-    # For Apache ServerAdmin directive
+    # For Nginx ServerAdmin directive
     server_admin = 'nmelnik@odesk.com'
-    # Apache will serve WSGI on this port. (Nginx is front-end.)
-    apache_port = 80
+    # Gunicorn will serve WSGI on this port. (Nginx is front-end.)
     gunicorn_port = 5000
-
-    # For pip extra index url config
-    odeskps_pypi_user = 'nmelnik@odesk.com'
-    odeskps_pypi_password = 'nmelnik'
-
-    supervisor_programs = ['celeryd', 'celerycam', 'gunicorn']
-
-    remote_settings_lfile = 'prod_config.py.tpl'
-
-
-class Production1Conf(BaseConf):
-    """Settings specific to production environment."""
-
-    address = 'cloudml@172.27.85.243'
-
-    home_path = '/webapps/cloudml'
-
-    sudo_user = 'papadimitriou'
-
-    # Code from this branch will be deployed.
-    branch = 'master'
-
-    server_name = 'cloudml1.match.odesk.com'
-    # For Apache ServerAdmin directive
-    server_admin = 'nmelnik@odesk.com'
-    # Apache will serve WSGI on this port. (Nginx is front-end.)
-    gunicorn_port = 5000
-
-    # For pip extra index url config
-    odeskps_pypi_user = 'papadimitriou@odesk.com'
-    odeskps_pypi_password = 'nmelnik'
-
-    supervisor_programs = ['celeryd', 'celerycam', 'gunicorn']
-
-    remote_settings_lfile = 'prod_config.py.tpl'
-
-
-class Production2Conf(BaseConf):
-    """Settings specific to production environment."""
-
-    address = 'cloudml@172.27.65.20'
-
-    home_path = '/webapps/cloudml'
-
-    sudo_user = 'papadimitriou'
-
-    # Code from this branch will be deployed.
-    branch = 'master'
-
-    server_name = 'cloudml2.match.odesk.com'
-    # For Apache ServerAdmin directive
-    server_admin = 'papadimitriou@odesk.com'
-    # Apache will serve WSGI on this port. (Nginx is front-end.)
-    gunicorn_port = 5000
-
-    # For pip extra index url config
-    odeskps_pypi_user = 'nmelnik@odesk.com'
-    odeskps_pypi_password = 'nmelnik'
-
-    supervisor_programs = ['celeryd', 'celerycam', 'gunicorn']
 
     remote_settings_lfile = 'prod_config.py.tpl'

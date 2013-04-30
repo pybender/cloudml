@@ -16,6 +16,7 @@ ve
 nbproject
 manifest.mf
 build.xml
+fabconf.py
 
 .project
 .settings

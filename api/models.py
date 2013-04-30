@@ -6,7 +6,7 @@ import cPickle as pickle
 from bson import Binary
 from flask.ext.mongokit import Document
 
-from api import connection
+from api import connection, app
 
 
 @connection.register
@@ -56,9 +56,11 @@ class Model(Document):
         'positive_weights': list,
         'negative_weights': list,
         'comparable': bool,
+
+        'labels': list,
         #'tests': list,
     }
-    gridfs = {'files':['trainer']}
+    gridfs = {'files': ['trainer']}
     required_fields = ['name', 'created_on', ]
     default_values = {'created_on': datetime.utcnow,
                       'updated_on': datetime.utcnow,
@@ -90,12 +92,20 @@ class Model(Document):
     def set_trainer(self, trainer):
         self.fs.trainer = Binary(pickle.dumps(trainer))
         self.target_variable = trainer._feature_model.target_variable
+        if self.status == self.STATUS_TRAINED:
+            self.labels = trainer._classifier.classes_.tolist()
 
     def set_weights(self, positive, negative):
         from helpers.weights import calc_weights_css
         self.positive_weights = calc_weights_css(positive, 'green')
         self.negative_weights = calc_weights_css(negative, 'red')
         self.negative_weights.reverse()
+
+    def delete(self):
+        params = {'model_name': self.name}
+        app.db.TestExample.collection.remove(params)
+        app.db.Test.collection.remove(params)
+        self.collection.remove({'_id': self._id})
 
 
 @connection.register
@@ -140,9 +150,11 @@ class Test(Document):
     def data_count(self):
         return self.data.count()
 
-    @property
-    def model_name(self):
-        return self.model.name
+    def delete(self):
+        params = dict(test_name=self.name,
+                      model_name=self.model_name)
+        app.db.TestExample.collection.remove(params)
+        self.collection.remove({'_id': self._id})
 
 
 @connection.register
@@ -154,9 +166,9 @@ class TestExample(Document):
         'data_input': dict,
         'weighted_data_input': dict,
 
-        'name': unicode,
-        'label': unicode,
-        'pred_label': unicode,
+        'name': basestring,
+        'label': basestring,
+        'pred_label': basestring,
         'test': Test,
 
         'test_name': basestring,

@@ -1,24 +1,60 @@
 import unittest
+import os
 import json
 import httplib
 
 from api.models import Model
+from api.serialization import encode_model
 from api import app
 from api.utils import ERR_INVALID_DATA
 
 
-class ModelTests(unittest.TestCase):
+class BaseTestCase(unittest.TestCase):
+    FIXTURES = []
+    _LOADED_COLLECTIONS = []
+
     def setUp(self):
         self.app = app.test_client()
+        self.fixtures_load()
 
     def tearDown(self):
-        pass
+        self.fixtures_cleanup()
+
+    @property
+    def db(self):
+        return app.db
+
+    def fixtures_load(self):
+        for fixture in self.FIXTURES:
+            data = self._load_fixture_data(fixture)
+            for collection_name, documents in data.iteritems():
+                self._LOADED_COLLECTIONS.append(collection_name)
+                collection = self._get_collection(collection_name)
+                collection.insert(documents)
+
+    def fixtures_cleanup(self):
+        for collection_name in self._LOADED_COLLECTIONS:
+            collection = self._get_collection(collection_name)
+            collection.remove()
+
+    def _load_fixture_data(self, filename):
+        filename = os.path.join('./api/fixtures/', filename)
+        content = open(filename, 'rb').read()
+        return json.loads(content)
+
+    def _get_collection(self, name):
+        callable_model = getattr(self.db, name)
+        return callable_model.collection
+
+
+class ModelTests(BaseTestCase):
+    MODEL_NAME = 'TrainedModel'
+    FIXTURES = ('models.json', 'tests.json', 'examples.json')
 
     def test_list(self):
         resp = self.app.get('/cloudml/model/')
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
-        self.assertTrue('models' in data)
         self.assertTrue('models' in data)
         count = app.db.Model.find().count()
         self.assertEquals(count, len(data['models']))
@@ -74,6 +110,30 @@ No target schema defined in config')
     #     self.assertEquals(resp.status_code, httplib.CREATED)
     #     self.assertTrue('model' in resp.data)
 
+    def test_delete(self):
+        url = '/cloudml/model/' + self.MODEL_NAME
+        resp = self.app.get(url)
+        self.assertEquals(resp.status_code, httplib.OK)
+
+        resp = self.app.delete(url)
+        self.assertEquals(resp.status_code, 204)
+
+        model = app.db.Model.find_one({'name': self.MODEL_NAME})
+        self.assertEquals(model, None, model)
+
+        # Check wheither tests and examples was deleted
+        params = {'model_name': self.MODEL_NAME}
+        tests = app.db.Test.find(params).count()
+        self.assertFalse(tests, "%s tests was not deleted" % tests)
+        other_examples = app.db.Test.find().count()
+        self.assertTrue(other_examples, "All tests was deleted!")
+
+        examples = app.db.TestExample.find(params).count()
+        self.assertFalse(examples, "%s test examples was not \
+deleted" % examples)
+        other_examples = app.db.TestExample.find().count()
+        self.assertTrue(other_examples, "All examples was deleted!")
+
     def _checkValidationErrors(self, uri, post_data, message,
                                code=ERR_INVALID_DATA,
                                status_code=httplib.BAD_REQUEST):
@@ -83,3 +143,68 @@ No target schema defined in config')
         err_data = data['response']['error']
         self.assertEquals(err_data['code'], code)
         self.assertEquals(err_data['message'], message)
+
+
+def dumpdata(document_list, fixture_name):
+    content = json.dumps(document_list, default=encode_model)
+    file_path = os.path.join('./api/fixtures/', fixture_name)
+    with open(file_path, 'w') as ffile:
+        ffile.write(content)
+
+
+class TestTests(BaseTestCase):
+    MODEL_NAME = 'TrainedModel'
+    TEST_NAME = 'Test-1'
+    FIXTURES = ('models.json', 'tests.json', 'examples.json')
+
+    def test_list(self):
+        url = self._get_url(self.MODEL_NAME, search='show=name,status')
+        resp = self.app.get(url)
+        self.assertEquals(resp.status_code, httplib.OK)
+        data = json.loads(resp.data)
+        self.assertTrue('tests' in data)
+        tests = app.db.Test.find({'model_name': self.MODEL_NAME})
+        count = tests.count()
+        self.assertEquals(count, len(data['tests']))
+        self.assertTrue(tests[0].name in resp.data, resp.data)
+        self.assertTrue(tests[0].status in resp.data, resp.data)
+        self.assertFalse(tests[0].model_name in resp.data, resp.data)
+
+    def test_details(self):
+        url = self._get_url(self.MODEL_NAME, self.TEST_NAME, 'show=name,status')
+        resp = self.app.get(url)
+        self.assertEquals(resp.status_code, httplib.OK)
+        data = json.loads(resp.data)
+        self.assertTrue('test' in data, data)
+        test_data = data['test']
+        test = app.db.Test.find_one({'model_name': self.MODEL_NAME,
+                                     'name': self.TEST_NAME})
+        self.assertEquals(test.name, test_data['name'], resp.data)
+        self.assertEquals(test.status, test_data['status'], resp.data)
+        self.assertFalse('model_name' in test_data, test_data)
+
+    def test_delete(self):
+        url = self._get_url(self.MODEL_NAME, self.TEST_NAME, 'show=name,status')
+        resp = self.app.get(url)
+        self.assertEquals(resp.status_code, httplib.OK)
+
+        resp = self.app.delete(url)
+        self.assertEquals(resp.status_code, 204)
+        params = {'model_name': self.MODEL_NAME,
+                  'name': self.TEST_NAME}
+        test = app.db.Test.find_one(params)
+        self.assertEquals(test, None, test)
+
+        params = {'model_name': self.MODEL_NAME,
+                  'test_name': self.TEST_NAME}
+        examples = app.db.TestExample.find(params).count()
+        self.assertFalse(examples, "%s test examples was not \
+deleted" % examples)
+        other_examples = app.db.TestExample.find().count()
+        self.assertTrue(other_examples, "All examples was deleted!")
+
+    def _get_url(self, model, test=None, search=None):
+        if test:
+            return '/cloudml/model/%s/test/%s?%s' % (model, test, search)
+        else:
+            return '/cloudml/model/%s/tests?%s' % (model, search)

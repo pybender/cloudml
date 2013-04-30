@@ -7,6 +7,7 @@
         <th>Filter Parameters</th>
         <th>Accuracy</th>
         <th>Examples count</th>
+        <th />
       </tr>
   </thead>
   <tbody>
@@ -17,6 +18,13 @@
       <td><span class="value" ng-repeat="(key, val) in test.parameters">{{ key }}={{ val }}</span></td>
       <td>{{ test.accuracy.toFixed(4) }}</td>
       <td><a href="#/models/{{ model.name }}/tests/{{ test.name }}/examples">{{ test.examples_count }}</a></td>
+      <td ng-controller="TestActionsCtrl">
+        <div ng-init="init({test: test, model: model})">
+        <button ng-click="delete_test(test)" class="btn btn-danger">
+          <i title="Delete your test. Be careful - you could not recover it!" class="icon-remove"></i>
+        </button>
+        </div>
+      </td>
     </tr>
   </tbody>
 </table>

@@ -194,6 +194,7 @@ class Tests(BaseResource):
     """
     OBJECT_NAME = 'test'
     FILTER_PARAMS = (('status', str), )
+    methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
 
     @property
     def Model(self):
@@ -247,17 +248,12 @@ class TestExamplesResource(BaseResource):
     NEED_PAGING = True
     GET_ACTIONS = ('groupped', )
     DETAILS_PARAM = 'example_id'
+    FILTER_PARAMS = (('label', str), ('pred_label', str))
     decorators = [crossdomain(origin='*')]
-
-    def _get_list_query(self, params, fields, **kwargs):
-        model_name = kwargs.get('model')
-        test_name = kwargs.get('test_name')
-        return self.Model.find({'model_name': model_name,
-                                'test_name': test_name}, fields)
 
     def _get_details_query(self, params, fields, **kwargs):
         from helpers.weights import get_weighted_data
-        model_name = kwargs.get('model')
+        model_name = kwargs.get('model_name')
         test_name = kwargs.get('test_name')
         example_id = kwargs.get('example_id')
         fields.append('data_input')
@@ -290,7 +286,7 @@ class TestExamplesResource(BaseResource):
         if not group_by_field:
             return odesk_error_response(400, ERR_INVALID_DATA,
                                         'field parameter is required')
-        model_name = kwargs.get('model')
+        model_name = kwargs.get('model_name')
         test_name = kwargs.get('test_name')
         ex_collection = app.db.TestExample.collection
         groups = ex_collection.group([group_by_field, ],
@@ -318,10 +314,11 @@ class TestExamplesResource(BaseResource):
         return self._render(context)
 
 api.add_resource(TestExamplesResource, '/cloudml/model/\
-<regex("[\w\.]+"):model>/test/<regex("[\w\.\-]+"):test_name>/data',
+<regex("[\w\.]+"):model_name>/test/<regex("[\w\.\-]+"):test_name>/data',
                  '/cloudml/model/<regex("[\w\.]+")\
-:model>/test/<regex("[\w\.\-]+"):test_name>/data/\
-<regex("[\w\.\-]+"):example_id>', '/cloudml/model/<regex("[\w\.]+"):model>\
+:model_name>/test/<regex("[\w\.\-]+"):test_name>/data/\
+<regex("[\w\.\-]+"):example_id>',
+                 '/cloudml/model/<regex("[\w\.]+"):model_name>\
 /test/<regex("[\w\.\-]+"):test_name>/action/<regex("[\w\.]+"):action>/data')
 
 

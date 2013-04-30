@@ -7,7 +7,7 @@ from fabdeploy import monkey
 monkey.patch_all()
 import os
 import posixpath
-from fabric.api import task, env, settings, local, run, sudo, shell_env, prefix
+from fabric.api import task, env, settings, local, run, sudo, prefix
 from fabric.contrib import files
 from fabdeploy.api import *
 
@@ -27,17 +27,11 @@ def staging(**kwargs):
 def prod(**kwargs):
     fabd.conf.run('production')
 
-@task
-def prod1(**kwargs):
-    fabd.conf.run('production1')
-
-@task
-def prod2(**kwargs):
-    fabd.conf.run('production2')
 
 @task
 def dev(**kwargs):
     fabd.conf.run('dev')
+
 
 @task
 def test(**kwargs):
@@ -58,12 +52,14 @@ def install():
         pip.install.run(app=app)
 
     pip.install.run(app='virtualenv', upgrade=True)
-    system.package_install.run(packages='liblapack-dev gfortran libpq-dev')
+    system.package_install.run(packages='liblapack-dev gfortran libpq-dev\
+npm nodejs')
 
 
 @task
 def push_key():
     ssh.push_key.run(pub_key_file='~/.ssh/id_rsa.pub')
+
 
 @task
 def setup():
@@ -82,6 +78,10 @@ def setup():
     gunicorn.push_nginx_config.run()
     nginx.restart.run()
 
+    # init env for build ui
+    run('cd %(project_path)s/ui; ./scripts/init.sh' % env.conf)
+
+
 
 @task
 def qdeploy():
@@ -98,7 +98,7 @@ def deploy():
     git.push.run()
 
     supervisor.push_configs.run()
-    push_flask_config.run()
+    flask.push_flask_config.run()
     gunicorn.push_config.run()
 
     virtualenv.create.run()
@@ -107,11 +107,10 @@ def deploy():
             with prefix('export BLAS=/usr/lib/libblas.so'):
                 virtualenv.pip_install.run(app='numpy')
                 virtualenv.pip_install.run(app='scipy')
-                virtualenv.pip_install_req.run()
-                virtualenv.make_relocatable.run()
+    virtualenv.pip_install_req.run()
+    virtualenv.make_relocatable.run()
 
-
-    #run('cd %(project_path)s/ui; ./scripts/production.sh')
+    run('cd %(project_path)s/ui; ./scripts/production.sh' % env.conf)
 
     release.activate.run()
 
@@ -119,10 +118,6 @@ def deploy():
     supervisor.restart_program.run(program='celeryd')
     supervisor.restart_program.run(program='celerycam')
     supervisor.restart_program.run(program='gunicorn')
-
-
-from fabdeploy.apache import PushConfig as StockPushApacheConfig
-from fabdeploy.utils import upload_config_template
 
 
 class PushAnjularConfig(Task):
@@ -144,42 +139,3 @@ class PushAnjularConfig(Task):
             use_jinja=True)
 
 push_anj_config = PushAnjularConfig()
-
-class PushFlaskConfig(Task):
-    @conf
-    def from_file(self):
-        return os.path.join(
-            self.conf.django_dir, self.conf.remote_settings_lfile)
-
-    @conf
-    def to_file(self):
-        return posixpath.join(
-            self.conf.django_path, self.conf.local_settings_file)
-
-    def do(self):
-        files.upload_template(
-            self.conf.from_file,
-            self.conf.to_file,
-            context=self.conf,
-            use_jinja=True)
-
-push_flask_config = PushFlaskConfig()
-
-class PushApacheConfig(StockPushApacheConfig):
-    def do(self):
-        # Instead of appending Listen directive, just upload the whole
-        # ports.conf template to make sure it has the right contents.
-        # We assume it doesn't contain anything useful anyway.
-        upload_config_template(
-            'apache_ports.config',
-            self.conf.ports_filepath,
-            context=self.conf,
-            use_sudo=True)
-        upload_config_template(
-            'apache.config',
-            self.conf.config_filepath,
-            context=self.conf,
-            use_sudo=True)
-        sudo('a2ensite %(instance_name)s' % self.conf)
-
-push_apache_config = PushApacheConfig()

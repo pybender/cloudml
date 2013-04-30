@@ -123,11 +123,11 @@ class BaseResource(restful.Resource):
         """
         Deletes unused model
         """
-        model = self._get_details_query(None, ('_id', 'name'), **kwargs)
+        model = self._get_details_query(None, None, **kwargs)
         if model is None:
             raise NotFound(self.MESSAGE404 % kwargs)
 
-        model.collection.remove({'_id': model._id})
+        model.delete()
         return '', 204
 
     def _list(self, extra_params=(), **kwargs):
