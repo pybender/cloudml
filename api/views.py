@@ -12,7 +12,7 @@ from api.utils import crossdomain, ERR_INVALID_DATA, odesk_error_response, \
     ERR_NO_SUCH_MODEL, ERR_UNPICKLING_MODEL
 from api.resources import BaseResource, NotFound, ValidationError
 from core.trainer.store import load_trainer
-from core.trainer.trainer import Trainer
+from core.trainer.trainer import Trainer, InvalidTrainerFile
 from core.trainer.config import FeatureModel, SchemaException
 from core.importhandler.importhandler import ExtractionPlan, \
     RequestImportHandler, ImportHandlerException
@@ -107,7 +107,10 @@ trained model is required')
             obj.features = json.loads(params['features'])
         else:
             # Uploading trained model
-            trainer = load_trainer(params['trainer'])
+            try:
+                trainer = load_trainer(params['trainer'])
+            except InvalidTrainerFile, exc:
+                raise ValidationError('Invalid trainer: %s' % exc)
             obj.status = obj.STATUS_TRAINED
             obj.save()
             obj.set_trainer(trainer)

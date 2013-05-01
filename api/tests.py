@@ -48,6 +48,9 @@ class BaseTestCase(unittest.TestCase):
 
 
 class ModelTests(BaseTestCase):
+    """
+    Tests of the Models API.
+    """
     MODEL_NAME = 'TrainedModel'
     FIXTURES = ('models.json', 'tests.json', 'examples.json')
 
@@ -55,15 +58,69 @@ class ModelTests(BaseTestCase):
         resp = self.app.get('/cloudml/model/')
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
-        self.assertTrue('models' in data)
+        self.assertTrue('models' in data, data)
+        models_resp = data['models']
         count = app.db.Model.find().count()
         self.assertEquals(count, len(data['models']))
+        self.assertEquals(models_resp[0].keys(), [u'_id', u'name'])
 
-    def test_post_new_model_with_invalid_data(self):
+        resp = self.app.get('/cloudml/model/?show=created_on,updated_on')
+        self.assertEquals(resp.status_code, httplib.OK)
+        data = json.loads(resp.data)
+        models_resp = data['models']
+        self.assertEquals(models_resp[0].keys(),
+                          [u'updated_on', u'created_on', u'_id'])
+
+    def test_filter(self):
+        resp = self.app.get('/cloudml/model/?status=New')
+        self.assertEquals(resp.status_code, httplib.OK)
+        data = json.loads(resp.data)
+        count = app.db.Model.find({'status': 'New'}).count()
+        self.assertEquals(count, len(data['models']))
+
+        resp = self.app.get('/cloudml/model/?name=Test')
+        self.assertEquals(resp.status_code, httplib.OK)
+        data = json.loads(resp.data)
+        count = app.db.Model.find().count()
+        self.assertEquals(count, len(data['models']), 'No name \
+filter - all models should be returned')
+
+    def test_comparable_filter(self):
+        def _check(comparable):
+            resp = self.app.get('/cloudml/model/?comparable=%d' % comparable)
+            self.assertEquals(resp.status_code, httplib.OK)
+            data = json.loads(resp.data)
+            count = app.db.Model.find({'comparable': comparable}).count()
+            self.assertEquals(count, len(data['models']))
+
+        _check(True)
+        _check(False)
+
+    def test_details(self):
+        model = app.db.Model.find_one({'name': self.MODEL_NAME})
+        resp = self.app.get('/cloudml/model/%s' % self.MODEL_NAME)
+        self.assertEquals(resp.status_code, httplib.OK)
+        data = json.loads(resp.data)
+        self.assertTrue('model' in data, data)
+        model_resp = data['model']
+        self.assertEquals(str(model._id), model_resp['_id'])
+        self.assertEquals(model.name, model_resp['name'])
+
+        resp = self.app.get('/cloudml/model/%s?show=created_on,labels' %
+                            self.MODEL_NAME)
+        self.assertEquals(resp.status_code, httplib.OK)
+        data = json.loads(resp.data)
+        model_resp = data['model']
+        self.assertEquals(model_resp.keys(),
+                          [u'created_on', u'labels', u'_id'])
+        self.assertEquals(model.labels, model_resp['labels'])
+
+    def test_weights(self):
+        # TODO: Add weights to fixtures and implement test
+        pass
+
+    def test_post_with_invalid_features(self):
         uri = '/cloudml/model/new'
-        self._checkValidationErrors(uri, {}, 'importhandler is required in \
-values')
-
         post_data = {'importhandler': 'smth'}
         self._checkValidationErrors(uri, post_data, 'Either features, either \
 pickled trained model is required')
@@ -75,6 +132,11 @@ smth No JSON object could be decoded ')
         post_data = {'importhandler': 'smth', 'features': '{}'}
         self._checkValidationErrors(uri, post_data, 'Invalid features: \
 schema-name is missing')
+
+    def test_post_with_invalid_import_handler(self):
+        uri = '/cloudml/model/new'
+        self._checkValidationErrors(uri, {}, 'importhandler is required in \
+values')
 
         features = open('./conf/features.json', 'r').read()
         post_data = {'importhandler': 'smth',
@@ -88,7 +150,24 @@ No JSON object could be decoded')
         self._checkValidationErrors(uri, post_data, 'Invalid Import Handler: \
 No target schema defined in config')
 
+    def test_post_with_invalid_trainer(self):
+        uri = '/cloudml/model/new'
+        handler = open('./conf/extract.json', 'r').read()
+        trainer = open('./api/fixtures/invalid_model.dat', 'r')
+        post_data = {'importhandler': handler,
+                     'trainer': trainer}
+        self._checkValidationErrors(uri, post_data, 'Invalid trainer: Could \
+not unpickle trainer - could not find MARK')
+
+        handler = open('./conf/extract.json', 'r').read()
+        trainer = open('./api/fixtures/invalid_testmodel.dat', 'r')
+        post_data = {'importhandler': handler,
+                     'trainer': trainer}
+        self._checkValidationErrors(uri, post_data, "Invalid trainer: Could \
+not unpickle trainer - 'module' object has no attribute 'apply_mappings'")
+
     def test_post_new_model(self):
+        count = app.db.Model.find().count()
         name = 'UnitTestModel1'
         features = open('./conf/features.json', 'r').read()
         handler = open('./conf/extract.json', 'r').read()
@@ -97,18 +176,21 @@ No target schema defined in config')
         resp = self.app.post('/cloudml/model/%s' % name, data=post_data)
         self.assertEquals(resp.status_code, httplib.CREATED)
         self.assertTrue('model' in resp.data)
+        new_count = app.db.Model.find().count()
+        self.assertEquals(count + 1, new_count)
 
-    # def test_post_trained_model(self):
-    #     name = 'UnitTestModel2'
-    #     from werkzeug.datastructures import FileStorage
-    #     trainer = None
-    #     handler = open('./conf/extract.json', 'r').read()
-    #     post_data = {'importhandler': handler,
-    #                  'trainer': trainer}
-    #     resp = self.app.post('/cloudml/model/%s' % name, data=post_data)
-    #     print resp.data
-    #     self.assertEquals(resp.status_code, httplib.CREATED)
-    #     self.assertTrue('model' in resp.data)
+    def test_post_trained_model(self):
+        count = app.db.Model.find().count()
+        name = 'UnitTestModel2'
+        handler = open('./conf/extract.json', 'r').read()
+        trainer = open('./model.dat', 'r')
+        post_data = {'importhandler': handler,
+                     'trainer': trainer}
+        resp = self.app.post('/cloudml/model/%s' % name, data=post_data)
+        self.assertEquals(resp.status_code, httplib.CREATED)
+        self.assertTrue('model' in resp.data)
+        new_count = app.db.Model.find().count()
+        self.assertEquals(count + 1, new_count)
 
     def test_delete(self):
         url = '/cloudml/model/' + self.MODEL_NAME
@@ -145,13 +227,6 @@ deleted" % examples)
         self.assertEquals(err_data['message'], message)
 
 
-def dumpdata(document_list, fixture_name):
-    content = json.dumps(document_list, default=encode_model)
-    file_path = os.path.join('./api/fixtures/', fixture_name)
-    with open(file_path, 'w') as ffile:
-        ffile.write(content)
-
-
 class TestTests(BaseTestCase):
     MODEL_NAME = 'TrainedModel'
     TEST_NAME = 'Test-1'
@@ -171,7 +246,8 @@ class TestTests(BaseTestCase):
         self.assertFalse(tests[0].model_name in resp.data, resp.data)
 
     def test_details(self):
-        url = self._get_url(self.MODEL_NAME, self.TEST_NAME, 'show=name,status')
+        url = self._get_url(self.MODEL_NAME, self.TEST_NAME,
+                            'show=name,status')
         resp = self.app.get(url)
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
@@ -183,8 +259,14 @@ class TestTests(BaseTestCase):
         self.assertEquals(test.status, test_data['status'], resp.data)
         self.assertFalse('model_name' in test_data, test_data)
 
+    # def test_post(self):
+    #     url = self._get_url(self.MODEL_NAME)
+    #     resp = self.app.post(url)
+    #     self.assertEquals(resp.status_code, httplib.OK)
+
     def test_delete(self):
-        url = self._get_url(self.MODEL_NAME, self.TEST_NAME, 'show=name,status')
+        url = self._get_url(self.MODEL_NAME, self.TEST_NAME,
+                            'show=name,status')
         resp = self.app.get(url)
         self.assertEquals(resp.status_code, httplib.OK)
 
@@ -208,3 +290,10 @@ deleted" % examples)
             return '/cloudml/model/%s/test/%s?%s' % (model, test, search)
         else:
             return '/cloudml/model/%s/tests?%s' % (model, search)
+
+
+def dumpdata(document_list, fixture_name):
+    content = json.dumps(document_list, default=encode_model)
+    file_path = os.path.join('./api/fixtures/', fixture_name)
+    with open(file_path, 'w') as ffile:
+        ffile.write(content)

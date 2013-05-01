@@ -31,6 +31,13 @@ class ItemParseException(Exception):
         self.Errors = Errors
 
 
+class InvalidTrainerFile(Exception):
+    """
+    Exception to be raised if trainer could not be unpickled from file.
+    """
+    pass
+
+
 class Trainer():
     TYPE_CLASSIFICATION = 'classification'
     TYPE_REGRESSION = 'regression'
