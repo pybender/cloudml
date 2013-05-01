@@ -1,6 +1,7 @@
 import logging
 import traceback
 
+from operator import itemgetter
 from flask import request, jsonify
 
 from core.importhandler.importhandler import ExtractionPlan, \
@@ -74,20 +75,19 @@ def predict(model, import_handler):
     try:
         probabilities = trainer.predict(request_import_handler,
                                         ignore_error=False)
+        if probabilities['labels'] is None:
+            raise Exception('Array with target classes is empty')
+        if probabilities['probs'][0] is None:
+            raise Exception('Array with probabilities is empty')
     except Exception, exc:
         msg = "Predict error: %s:%s" % (exc.__class__.__name__, exc)
         logging.error(msg)
         return odesk_error_response(500, ERR_PREDICT,
                                     msg, traceback=traceback.format_exc())
-
-    probs = probabilities['probs'][0]
-    labels = probabilities['labels']
-    probs_with_labels = []
-    probs = probs.tolist() if not (probs is None) else []
-    labels = labels.tolist() if not (labels is None) else []
-    for label, prob in zip(labels, probs):
-        probs_with_labels.append({'label': label, 'prob': prob})
-    prob, label = sorted(zip(probs, labels),
-                         lambda x, y: cmp(x[0], y[0]),
-                         reverse=True)[0]
-    return jsonify({'prediction': label, 'probs': probs_with_labels}), 201
+   
+    labels = probabilities['labels'].tolist()
+    probs = probabilities['probs'][0].tolist()
+    probs_with_labels = [{'label': label, 'prob': prob} 
+                         for label, prob in zip(labels, probs)]
+    pred_label, pred_prob = max(zip(labels, probs), key=itemgetter(1))
+    return jsonify({'prediction': pred_label, 'probs': probs_with_labels}), 201
