@@ -12,6 +12,15 @@ class ModelTests(unittest.TestCase):
     def tearDown(self):
         pass
 
+    def test_server_health(self):
+        rv = self.app.get('/cloudml/server_health.json')
+        self.assertEqual(rv.mimetype, 'application/json')
+        data = json.loads(rv.data)
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(data['all'], True)
+        self.assertEqual(data['ModelsLoaded'], True)
+        self.assertEqual(data['ImportHandlersLoaded'], True)
+
     def test_model_list(self):
         rv = self.app.get('/cloudml/model')
         self.assertEqual(rv.mimetype, 'application/json')

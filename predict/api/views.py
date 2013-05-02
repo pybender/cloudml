@@ -13,6 +13,18 @@ from api.utils import odesk_error_response, ERR_NO_SUCH_MODEL, \
     ERR_NO_SUCH_IMPORT_HANDLER, ERR_PREDICT, ERR_NO_MODELS
 
 
+@app.route('/cloudml/server_health.json', methods=['GET'])
+def server_health():
+
+    response = {
+        'ModelsLoaded': len(app.models) > 0,
+        'ImportHandlersLoaded': len(app.import_handlers) > 0,
+    }
+    response['all'] = reduce(lambda res, x: res and x,
+                             response.itervalues(), 1)
+    return jsonify(response)
+
+
 @app.route('/cloudml/model', methods=['GET'])
 def list_models():
     """
@@ -84,10 +96,10 @@ def predict(model, import_handler):
         logging.error(msg)
         return odesk_error_response(500, ERR_PREDICT,
                                     msg, traceback=traceback.format_exc())
-   
+
     labels = probabilities['labels'].tolist()
     probs = probabilities['probs'][0].tolist()
-    probs_with_labels = [{'label': label, 'prob': prob} 
+    probs_with_labels = [{'label': label, 'prob': prob}
                          for label, prob in zip(labels, probs)]
     pred_label, pred_prob = max(zip(labels, probs), key=itemgetter(1))
     return jsonify({'prediction': pred_label, 'probs': probs_with_labels}), 201

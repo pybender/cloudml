@@ -35,7 +35,7 @@ class BaseConf(DefaultConf):
     pip_req_path = ''
     pip_req_name = 'requirements.txt'
 
-    supervisor_prefix = 'cloudml_'
+    supervisor_prefix = 'cloudml_ui'
     supervisord_config_lfile = 'supervisor/supervisord.conf'
     supervisord_config_file = ['%(supervisor_config_path)s', 'supervisord.conf']
 
@@ -110,7 +110,7 @@ class ProductionConf(BaseConf):
 
     address = 'cloudml@172.27.77.141'
 
-    home_path = '/webapps/cloudml'
+    home_path = '/webapps/cloudmlui'
 
     sudo_user = 'nmelnik'
 
