@@ -5,7 +5,7 @@
 SETTINGS = {
 
   # Base CloudML API
-  apiUrl: 'http://127.0.0.1:5000/cloudml/b/v1/'
+  apiUrl: 'http://172.27.77.141/api/cloudml/'
 
   apiRequestDefaultHeaders: {
     'Content-Type': 'application/x-www-form-urlencoded'
