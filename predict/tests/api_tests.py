@@ -17,9 +17,17 @@ class ModelTests(unittest.TestCase):
         self.assertEqual(rv.mimetype, 'application/json')
         data = json.loads(rv.data)
         self.assertEqual(rv.status_code, 200)
-        self.assertEqual(data['all'], True)
-        self.assertEqual(data['ModelsLoaded'], True)
-        self.assertEqual(data['ImportHandlersLoaded'], True)
+        self.assertEqual(data['Overall_health'], "OK")
+        self.assertEqual(data['resources'][0]['Models_Loaded'], "OK")
+        self.assertEqual(data['resources'][1]['ImportHandlers_Loaded'], "OK")
+
+        app.models = {}
+        rv = self.app.get('/cloudml/server_health.json')
+        self.assertEqual(rv.mimetype, 'application/json')
+        data = json.loads(rv.data)
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(data['resources'][0]['Models_Loaded'], "ERR")
+        self.assertEqual(data['Overall_health'], "ERR")
 
     def test_model_list(self):
         rv = self.app.get('/cloudml/model')

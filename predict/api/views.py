@@ -2,7 +2,7 @@ import logging
 import traceback
 
 from operator import itemgetter
-from flask import request, jsonify
+from flask import request, jsonify, Response
 
 from core.importhandler.importhandler import ExtractionPlan, \
     RequestImportHandler
@@ -13,16 +13,23 @@ from api.utils import odesk_error_response, ERR_NO_SUCH_MODEL, \
     ERR_NO_SUCH_IMPORT_HANDLER, ERR_PREDICT, ERR_NO_MODELS
 
 
-@app.route('/cloudml/server_health.json', methods=['GET'])
-def server_health():
-
-    response = {
-        'ModelsLoaded': len(app.models) > 0,
-        'ImportHandlersLoaded': len(app.import_handlers) > 0,
-    }
-    response['all'] = reduce(lambda res, x: res and x,
-                             response.itervalues(), 1)
-    return jsonify(response)
+@app.route('/cloudml/server_health.<regex("[\w\.]*"):format>', methods=['GET'])
+def server_health(format):
+    response = {}
+    response['resources'] = []
+    response['resources'].append({'Models_Loaded': len(app.models) > 0})
+    response['resources'].append({'ImportHandlers_Loaded': len(app.import_handlers) > 0})
+    response['Overall_health'] = 'OK' if reduce(lambda res, x: res and x.items()[0][1],
+                                        response['resources'], 1) else 'ERR'
+    for i, v  in enumerate(response['resources']):
+        k = v.keys()[0]
+        response['resources'][i][k] = 'OK' if v[k] else 'ERR'
+    if format == 'json':
+        return jsonify(response)
+    elif format in ('text', 'txt'):
+        resp = "\n".join(["%s - %s" % i.items()[0] for i in response['resources']])
+        resp += "\n\nOverall_health - %s" %  response['Overall_health']
+        return Response(resp, mimetype='text')
 
 
 @app.route('/cloudml/model', methods=['GET'])
