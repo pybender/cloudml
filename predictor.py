@@ -16,6 +16,7 @@ import os
 import sklearn.metrics as metrics
 import sys
 import csv
+import numpy as np
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from core.importhandler.importhandler import ImportHandlerException,\
     ExtractionPlan, ImportHandler
@@ -26,8 +27,8 @@ from core.trainer.trainer import list_to_dict, Trainer
 
 def roc(iterator, trainer, params):
     result = trainer.predict(iterator)
-    probs = result['probs']
-    fpr, tpr, thresholds = metrics.roc_curve(result['labels'], probs[:, 1])
+    probs = result['probs'][:, np.where(result['classes'] == True)]
+    fpr, tpr, thresholds = metrics.roc_curve(result['true_labels'], probs)
     roc_auc = metrics.auc(fpr, tpr)
     logging.info('Area under the ROC curve: %s' % (roc_auc))
 
