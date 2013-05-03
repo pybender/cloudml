@@ -128,8 +128,8 @@ def main(argv=None):
         iterator = None
         if args.input is not None:
             # Read evaluation data from file.
-            with open(args.input, 'r') as eval_fp:
-                iterator = streamingiterload(eval_fp)
+            eval_fp = open(args.input, 'r')
+            iterator = streamingiterload(eval_fp)
         elif args.extraction is not None:
             # Use import handler
             eval_context = list_to_dict(args.eval_params)
@@ -149,6 +149,8 @@ def main(argv=None):
         eval_method = EVALUATION_METHODS.get(args.method)
         if eval_method is not None:
             eval_method(iterator, trainer, list_to_dict(args.params))
+        if args.input is not None:
+            eval_fp.close()
 
     except KeyboardInterrupt:
         ### handle keyboard interrupt ###
@@ -157,10 +159,10 @@ def main(argv=None):
         logging.warn('Invalid extraction plan: %s' % e.message)
         return 1
     except Exception, e:
-        raise e
         indent = len(program_name) * ' '
         sys.stderr.write(program_name + ': ' + repr(e) + '\n')
         sys.stderr.write(indent + '  for help use --help')
+        raise e
         return 2
 
 if __name__ == '__main__':

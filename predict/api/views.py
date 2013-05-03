@@ -94,7 +94,7 @@ def predict(model, import_handler):
     try:
         probabilities = trainer.predict(request_import_handler,
                                         ignore_error=False)
-        if probabilities['labels'] is None:
+        if probabilities['classes'] is None:
             raise Exception('Array with target classes is empty')
         if probabilities['probs'][0] is None:
             raise Exception('Array with probabilities is empty')
@@ -104,9 +104,9 @@ def predict(model, import_handler):
         return odesk_error_response(500, ERR_PREDICT,
                                     msg, traceback=traceback.format_exc())
 
-    labels = probabilities['labels'].tolist()
+    classes = probabilities['classes'].tolist()
     probs = probabilities['probs'][0].tolist()
     probs_with_labels = [{'label': label, 'prob': prob}
-                         for label, prob in zip(labels, probs)]
-    pred_label, pred_prob = max(zip(labels, probs), key=itemgetter(1))
+                         for label, prob in zip(classes, probs)]
+    pred_label, pred_prob = max(zip(classes, probs), key=itemgetter(1))
     return jsonify({'prediction': pred_label, 'probs': probs_with_labels}), 201

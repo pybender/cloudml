@@ -208,7 +208,9 @@ class Trainer():
 
         logging.info('Evaluating model...')
         probs = self._classifier.predict_proba(hstack(vectorized_data))
-        return {'probs': probs, 'labels': self._classifier.classes_}
+        return {'probs': probs, 
+                'labels': labels, 
+                'classes': self._classifier.classes_}
 
     def _process_subfeatures(self, feature, data):
         from collections import defaultdict
