@@ -35,7 +35,7 @@ class BaseConf(DefaultConf):
     pip_req_path = ''
     pip_req_name = 'requirements.txt'
 
-    supervisor_prefix = 'cloudml_ui'
+    supervisor_prefix = 'cloudmlui_'
     supervisord_config_lfile = 'supervisor/supervisord.conf'
     supervisord_config_file = ['%(supervisor_config_path)s', 'supervisord.conf']
 
@@ -112,7 +112,7 @@ class ProductionConf(BaseConf):
 
     home_path = '/webapps/cloudmlui'
 
-    sudo_user = 'nmelnik'
+    sudo_user = 'papadimitriou'
 
     # Code from this branch will be deployed.
     branch = 'master'
