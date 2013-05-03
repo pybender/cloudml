@@ -3,14 +3,16 @@
     <h2>{{ test_name|capfirst }} Examples List</h2>
 
     <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
-    <div>
-      <input type=text ng-model="field" name="field"/>
-      <span class="help-block">could be field from raw data (use "data_input.{{ fieldname }}") or any other field like "label", "pred_label".</span>
+    <form class="form-inline well">
+      <label>Field Name:</label>
+      <input title='could be field from raw data (use "data_input.{{ fieldname }}") or any other field like "label", "pred_label".' type=text ng-model="form.field" name="field"/> &nbsp;
+      <label>Count of examples:</label>
+      <input type=text ng-model="form.count" name="field"/>
       <button ng-click="update()" class="btn btn-success">
           <i title="Apply" class="status-icon icon-play"></i>
           Update
       </button>
-    </div>
+    </form>
 
     Mean avarage precision: {{ mavp.toFixed(4) }}
     <table class="table table-striped">

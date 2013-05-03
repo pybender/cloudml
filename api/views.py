@@ -283,31 +283,39 @@ class TestExamplesResource(BaseResource):
 
         # getting from request parameters fieldname to group.
         parser = reqparse.RequestParser()
+        parser.add_argument('count', type=int)
         parser.add_argument('field', type=str)
         params = parser.parse_args()
         group_by_field = params.get('field')
+        count = params.get('count', 100)
         if not group_by_field:
             return odesk_error_response(400, ERR_INVALID_DATA,
                                         'field parameter is required')
         model_name = kwargs.get('model_name')
         test_name = kwargs.get('test_name')
-        ex_collection = app.db.TestExample.collection
-        groups = ex_collection.group([group_by_field, ],
-                                     {'model_name': model_name,
-                                      'test_name': test_name},
-                                     {'list': []}, REDUCE_FUNC)
+        collection = app.db.TestExample.collection
+        from bson.code import Code
+        _map = Code("emit(this.%s, {pred: this.label,\
+                    label: this.label});" % group_by_field)
+        _reduce = Code("function (key, values) { \
+                         return {'list':  values}; }")
+        params = {'model_name': model_name,
+                  'test_name': test_name}
         res = []
         avps = []
-
-        for group in groups:
-            group_list = group['list']
-            labels = [item['label'] for item in group_list]
-            pred_labels = [item['pred'] for item in group_list]
+        result = collection.map_reduce(_map, _reduce, 'avp',
+                                       query=params, limit=count)
+        for doc in result.find():
+            group = doc['value']
+            group_list = group['list'] if 'list' in group else [group, ]
+            labels = [str(item['label']) for item in group_list]
+            pred_labels = [str(item['pred']) for item in group_list]
             avp = apk(labels, pred_labels)
             avps.append(avp)
-            res.append({'group_by_field': group[group_by_field],
+            res.append({'group_by_field': doc["_id"],
                         'count': len(group_list),
                         'avp': avp})
+
         res = sorted(res, key=itemgetter("count"), reverse=True)[:100]
         mavp = np.mean(avps)
 

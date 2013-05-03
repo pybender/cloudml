@@ -52,12 +52,13 @@ angular.module('app.datas.controllers', ['app.config', ])
 ($scope, $http, $routeParams, settings, Data) ->
   $scope.test_name = $routeParams.test_name
   $scope.model_name = $routeParams.name
-  $scope.field = "data_input.hire_outcome"
+  $scope.form = {'field': "data_input.hire_outcome", 'count': 100 }
   $scope.update = () ->
     Data.$loadAllGroupped(
       model_name: $routeParams.name
       test_name: $routeParams.test_name
-      field: $scope.field
+      field: $scope.form.field,
+      count: $scope.form.count
     ).then ((opts) ->
       $scope.field_name = opts.field_name
       $scope.mavp = opts.mavp
