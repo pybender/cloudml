@@ -186,6 +186,7 @@ class Trainer():
         """
 
         vectorized_data = []
+        true_labels = None
         labels = None
         probs = None
 
@@ -194,21 +195,24 @@ class Trainer():
                      % (self._count, self._ignored))
         if self._ignored == self._count:
             logging.info("Don't have valid records")
-            return {'probs': probs, 'labels': labels}
-        # Get X and y
-        logging.info('Extracting features...')
-        for feature_name, feature in self._feature_model.features.iteritems():
-            if feature_name != self._feature_model.target_variable:
-                item = self._test_prepare_feature(
-                    feature,
-                    self._vect_data[feature_name])
-                vectorized_data.append(item)
-            else:
-                labels = self._vect_data[feature_name]
+        else:
+            # Get X and y
+            logging.info('Extracting features...')
+            for feature_name, feature in self._feature_model.features.iteritems():
+                if feature_name != self._feature_model.target_variable:
+                    item = self._test_prepare_feature(
+                        feature,
+                        self._vect_data[feature_name])
+                    vectorized_data.append(item)
+                else:
+                    true_labels = self._vect_data[feature_name]
 
-        logging.info('Evaluating model...')
-        probs = self._classifier.predict_proba(hstack(vectorized_data))
-        return {'probs': probs, 'labels': self._classifier.classes_}
+            logging.info('Evaluating model...')
+            probs = self._classifier.predict_proba(hstack(vectorized_data))
+        return {'probs': probs,
+                'true_labels': true_labels, 
+                'labels': labels, 
+                'classes': self._classifier.classes_}
 
     def _process_subfeatures(self, feature, data):
         from collections import defaultdict

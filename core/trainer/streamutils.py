@@ -36,6 +36,10 @@ def streamingiterload(stream):
     ### TODO: Consider memory mapping file
     reader = StreamReader()
     for line in stream:
-        obj = reader.process_read(line)
-        if obj is not None:
-            yield obj
+        try:
+            obj = reader.process_read(line)
+            if obj is not None:
+                yield obj
+        except Exception, ex:
+            raise Exception('Failed to read next line from the input stream. '
+                            'Error: %s' % ex)
