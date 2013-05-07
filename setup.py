@@ -129,7 +129,7 @@ setup(
     author='Ioannis Foukarakis',
     author_email='ifoukarakis@odesk.com',
     packages=[
-        'trainer', 'importhandler', 'predictor'
+        'core',
     ],
     package_dir={
         'cloudml': 'core'
