@@ -316,7 +316,7 @@ class TestExamplesResource(BaseResource):
                         'count': len(group_list),
                         'avp': avp})
 
-        res = sorted(res, key=itemgetter("count"), reverse=True)[:100]
+        res = sorted(res, key=itemgetter("count"), reverse=True)
         mavp = np.mean(avps)
 
         context = {self.list_key: {'items': res},
