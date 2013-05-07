@@ -47,9 +47,10 @@ class TestCommand(Command):
 
         tests = TestLoader().loadTestsFromNames(testfiles)
 
-        t = TextTestRunner(verbosity = 2)
+        t = TextTestRunner(verbosity=2)
         res = t.run(tests)
         return not res.wasSuccessful()
+
 
 class NoseCommand(Command):
     description = 'run test suite using nose tests and generate report'
@@ -73,9 +74,11 @@ class NoseCommand(Command):
         import nose
         if not os.path.exists('target'):
             os.mkdir('target')
-        nose.run(argv=['', '--exclude-dir=predict','--with-xunit', '--xunit-file=target/nosetests.xml'])
+        nose.run(argv=['', '--exclude-dir=predict',
+                       '--with-xunit', '--xunit-file=target/nosetests.xml'])
         #argv = ['--with-xunit']
         #nose.main(argv=argv)
+
 
 class CoverageCommand(Command):
     description = 'run test suite and generate coverage report'
@@ -129,10 +132,8 @@ setup(
         'trainer', 'importhandler', 'predictor'
     ],
     package_dir={
-        'trainer': 'trainer',
-        'importhandler': 'importhandler',
-        'predictor': 'predictor'
-        },
+        'cloudml': 'core'
+    },
     url='http://www.odesk.com',
     cmdclass={
         'test': NoseCommand,
@@ -146,6 +147,6 @@ setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.7',
     ],
-    install_requires=['Flask>=0.9', 'jsonpath', 'scipy'],
-    test_requires = ['nose', 'coverage']
+    install_requires=['jsonpath', 'scipy'],
+    test_requires=['nose', 'coverage']
 )
