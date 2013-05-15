@@ -384,7 +384,7 @@ class Trainer():
          # Vectorizer
         feature_names = vectorizer.get_feature_names()
         for j in range(0, len(feature_names)):
-            name = '%s.%s' % (feature_name, feature_names[j])
+            name = '%s->%s' % (feature_name.replace(".", "->"), feature_names[j])
             weight = self._classifier.coef_[0][offset + j]
             weights = {
                 'name': name,
@@ -426,7 +426,7 @@ class Trainer():
                     # Scaler or array
                     weight = self._classifier.coef_[0][index]
                     weights = {
-                        'name': feature_name,
+                        'name': feature_name.replace(".", "->"),
                         'weight': weight
                     }
                     if weight > 0:

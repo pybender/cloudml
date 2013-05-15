@@ -40,12 +40,12 @@ class TrainerTestCase(unittest.TestCase):
 
         self.assertTrue(os.path.exists(path), 'Weights were not stored!!!')
 
-        positive_expected = ['contractor.dev_adj_score_recent',
-                             'contractor.dev_is_looking',
+        positive_expected = ['contractor->dev_adj_score_recent',
+                             'contractor->dev_is_looking',
                              ]
 
         # This is unintentional. Truly!
-        negative_expected = ['contractor.dev_country.usa']
+        negative_expected = ['contractor->dev_country->usa']
 
         with open(path) as fp:
             weights = json.load(fp)
