@@ -7,8 +7,8 @@ Created on Dec 13, 2012
 import json
 import importlib
 
-from featuretype import FEATURE_TYPE_FACTORIES
-from featuretype import InvalidFeatureTypeException
+from feature_types import FEATURE_TYPE_FACTORIES
+from feature_types import InvalidFeatureTypeException
 from utils import copy_expected
 from transformers import get_transformer
 from scalers import get_scaler

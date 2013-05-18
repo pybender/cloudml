@@ -9,7 +9,7 @@ from collections import defaultdict
 from time import gmtime, strftime
 from operator import itemgetter
 from scipy.sparse import hstack, csc_matrix
-from featuretype import FEATURE_TYPE_DEFAULTS
+from feature_types import FEATURE_TYPE_DEFAULTS
 from transformers import TRANSFORMER_DEFAULTS
 from utils import is_empty
 
@@ -210,8 +210,8 @@ class Trainer():
             logging.info('Evaluating model...')
             probs = self._classifier.predict_proba(hstack(vectorized_data))
         return {'probs': probs,
-                'true_labels': true_labels, 
-                'labels': labels, 
+                'true_labels': true_labels,
+                'labels': labels,
                 'classes': self._classifier.classes_}
 
     def _process_subfeatures(self, feature, data):
@@ -231,7 +231,6 @@ class Trainer():
             else:
                 trans_sub_features.append(self._to_column(v))
         return trans_sub_features
-
 
     def _train_prepare_feature(self, feature, data):
         """
@@ -341,7 +340,7 @@ class Trainer():
                     elif input_format == 'dict':
                         if item is None:
                             item = {}
-                        for k,v in item.iteritems():
+                        for k, v in item.iteritems():
                             item[k] = ft.transform(v)
                         result[feature_name] = item
                     elif input_format == 'list':

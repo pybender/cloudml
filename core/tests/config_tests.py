@@ -11,7 +11,8 @@ import os
 
 from core.trainer.config import FeatureModel, SchemaException
 from sklearn.feature_extraction.text import TfidfVectorizer
-from core.trainer.featuretype import regex_parse, primitive_type_strategy
+from core.trainer.feature_types import RegexFeatureTypeInstance, \
+    PrimitiveFeatureTypeInstance
 from core.trainer.scalers import ScalerException
 
 BASEDIR = 'testdata'
@@ -110,7 +111,7 @@ class ConfigTest(unittest.TestCase):
         self.config._process_named_feature_type(named_ft)
         self.assertEqual(2, len(self.config._named_feature_types))
         ft_instance = self.config._named_feature_types['floating_point']
-        self.assertEqual(ft_instance._strategy, regex_parse)
+        self.assertTrue(isinstance(ft_instance, RegexFeatureTypeInstance))
         self.assertEqual(ft_instance._params, named_ft['params'])
 
     def test_process_named_feature_type_unknown_type(self):
@@ -162,7 +163,7 @@ class ConfigTest(unittest.TestCase):
         ft_instance = self.config._process_feature_type(ft)
         # Make sure that it is not added in named feature types
         self.assertEqual(1, len(self.config._named_feature_types))
-        self.assertEqual(ft_instance._strategy, regex_parse)
+        self.assertTrue(isinstance(ft_instance, RegexFeatureTypeInstance))
         self.assertEqual(ft_instance._params, ft['params'])
 
     def test_process_anonymous_feature_type_unknown_type(self):
@@ -230,7 +231,7 @@ class ConfigTest(unittest.TestCase):
         self.assertIn('another_test_feature', self.config.features)
         result = self.config.features['another_test_feature']
         self.assertEqual('another_test_feature', result['name'])
-        self.assertEqual(result['type']._strategy(10, None), primitive_type_strategy(int)(10, None))
+        self.assertTrue(isinstance(result['type'], PrimitiveFeatureTypeInstance))
         self.assertIsNone(result['transformer'])
         self.assertFalse(result['required'])
 

@@ -7,8 +7,8 @@ Created on Jan 24, 2013
 
 """
 import unittest
-from core.trainer.featuretype import FEATURE_TYPE_FACTORIES, regex_parse,\
-    InvalidFeatureTypeException
+from core.trainer.feature_types import FEATURE_TYPE_FACTORIES,\
+    InvalidFeatureTypeException, RegexFeatureTypeInstance
 
 
 class FeatureTypeTest(unittest.TestCase):
@@ -31,7 +31,7 @@ class FeatureTypeTest(unittest.TestCase):
         factory = FEATURE_TYPE_FACTORIES['regex']
         params = {'pattern': '(\d*\.\d+)', 'should': 'ignore'}
         ft_instance = factory.get_instance(params)
-        self.assertEqual(ft_instance._strategy, regex_parse)
+        self.assertTrue(isinstance(ft_instance, RegexFeatureTypeInstance))
         self.assertEqual(ft_instance._params, params)
         result = ft_instance.transform('This is a test. Price is 4.99$')
         self.assertEqual('4.99', result)
