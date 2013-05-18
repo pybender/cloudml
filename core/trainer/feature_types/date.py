@@ -6,7 +6,7 @@ from base import FeatureTypeBase, FeatureTypeInstanceBase
 
 class DateFeatureTypeInstance(FeatureTypeInstanceBase):
 
-    def transform(value):
+    def transform(self, value):
         """
         Convert date to UNIX timestamp.
 
