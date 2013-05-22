@@ -17,7 +17,7 @@ class DateFeatureTypeInstance(FeatureTypeInstanceBase):
         """
         params = self.active_params()
         if value is None:
-            return self.default_value
+            return self._default_value
         try:
             return calendar.timegm(
                 datetime.strptime(value, params['pattern']).timetuple())
@@ -25,11 +25,11 @@ class DateFeatureTypeInstance(FeatureTypeInstanceBase):
             pass
         except TypeError:
             pass
-        return self.default_value
+        return self._default_value
 
 
 class DateFeatureType(FeatureTypeBase):
     instance = DateFeatureTypeInstance
     required_params = ['pattern']
     # Default is Jan 1st, 2000
-    default = 946684800
+    default_value = 946684800
