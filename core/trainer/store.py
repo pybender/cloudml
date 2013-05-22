@@ -3,27 +3,49 @@ __author__ = 'ifouk'
 import cPickle as pickle
 
 from trainer import Trainer, InvalidTrainerFile
+from . import __version__
+
+
+class TrainerStorage(object):
+
+    def __init__(self, trainer):
+        self._classifier = trainer._classifier
+        self._feature_model = trainer._feature_model
+        print __version__
+        self.version = __version__
+
+    @classmethod
+    def load(cls, fp):
+        return cls._load(fp)
+
+    @classmethod
+    def loads(cls, s):
+        return cls._load(s)
+
+    @classmethod
+    def _load(cls, storage):
+        try:
+            if isinstance(storage, basestring):
+                storage = pickle.loads(storage)
+            else:
+                storage = pickle.load(storage)
+        except (pickle.UnpicklingError, AttributeError), exc:
+            raise InvalidTrainerFile("Could not unpickle trainer - %s" % exc)
+        trainer = Trainer(storage._feature_model)
+        trainer.set_classifier(storage._classifier)
+        return trainer
+
+    def dump(self, fp):
+        pickle.dump(self, fp)
+
+    def dumps(self, s):
+        pickle.dump(self, s)
 
 
 def store_trainer(trainer, fp):
-    # Unset data members of the trainer class to reduce its size
-    if hasattr(trainer, '_raw_data'):
-        raw_data = trainer._raw_data
-        trainer._raw_data = None
-    if hasattr(trainer, '_vect_data'):
-        vect_data = trainer._vect_data
-        trainer._vect_data = None
-    # Store class instance
-    pickle.dump(trainer, fp)
-    # Restore data members
-    if hasattr(trainer, '_raw_data'):
-        trainer._raw_data = raw_data
-    if hasattr(trainer, '_vect_data'):
-        trainer._vect_data = vect_data
+    storage = TrainerStorage(trainer)
+    storage.dump(fp)
 
 
 def load_trainer(fp):
-    try:
-        return pickle.load(fp)
-    except (pickle.UnpicklingError, AttributeError), exc:
-        raise InvalidTrainerFile("Could not unpickle trainer - %s" % exc)
+    return TrainerStorage.load(fp)

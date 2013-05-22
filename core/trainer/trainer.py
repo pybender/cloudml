@@ -64,6 +64,9 @@ class Trainer():
         self._ignored = 0
         self.train_time = None
 
+    def set_classifier(self, classifier):
+        self._classifier = classifier
+
     def clear_temp_data(self):
         if hasattr(self, '_raw_data'):
             raw_data = self._raw_data
