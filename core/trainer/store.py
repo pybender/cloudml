@@ -38,8 +38,8 @@ class TrainerStorage(object):
     def dump(self, fp):
         pickle.dump(self, fp)
 
-    def dumps(self, s):
-        pickle.dump(self, s)
+    def dumps(self):
+        return pickle.dumps(self)
 
 
 def store_trainer(trainer, fp):
