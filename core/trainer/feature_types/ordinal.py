@@ -1,6 +1,7 @@
 from base import FeatureTypeBase, FeatureTypeInstanceBase
 
-_author__ = 'nmelnik'
+
+__author__ = 'nmelnik'
 
 
 class OrdinalFeatureTypeInstance(FeatureTypeInstanceBase):
@@ -13,6 +14,7 @@ class OrdinalFeatureTypeInstance(FeatureTypeInstanceBase):
         if 'mappings' not in params:
             return None
         return params['mappings'].get(value, None)
+
 
 class OrdinalFeatureType(FeatureTypeBase):
     instance = OrdinalFeatureTypeInstance

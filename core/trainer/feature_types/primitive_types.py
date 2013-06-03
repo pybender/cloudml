@@ -4,6 +4,9 @@ from base import FeatureTypeBase, FeatureTypeInstanceBase,\
                  InvalidFeatureTypeException
 
 
+__author__ = 'nmelnik'
+
+
 class PrimitiveFeatureTypeInstance(FeatureTypeInstanceBase):
 
     def __init__(self, *args, **kwargs):

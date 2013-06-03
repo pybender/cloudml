@@ -6,7 +6,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from base import FeatureTypeBase, FeatureTypeInstanceBase,\
     InvalidFeatureTypeException
 
-_author__ = 'nmelnik'
+__author__ = 'nmelnik'
 
 
 class CategoricalFeatureTypeInstance(FeatureTypeInstanceBase):

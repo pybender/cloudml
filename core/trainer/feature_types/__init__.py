@@ -10,6 +10,9 @@ from primitive_types import BooleanFeatureType, IntFeatureType,\
 from base import InvalidFeatureTypeException
 
 
+__author__ = 'nmelnik'
+
+
 FEATURE_TYPE_FACTORIES = {
     'boolean': BooleanFeatureType(),
     'int': IntFeatureType(),

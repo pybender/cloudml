@@ -2,7 +2,7 @@ import re
 
 from base import FeatureTypeBase, FeatureTypeInstanceBase
 
-_author__ = 'nmelnik'
+__author__ = 'nmelnik'
 
 
 class RegexFeatureTypeInstance(FeatureTypeInstanceBase):
@@ -18,6 +18,7 @@ class RegexFeatureTypeInstance(FeatureTypeInstanceBase):
         if len(result) > 0:
             return result[0]
         return None
+
 
 class RegexFeatureType(FeatureTypeBase):
     instance = RegexFeatureTypeInstance

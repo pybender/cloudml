@@ -1,7 +1,7 @@
 from base import FeatureTypeBase, FeatureTypeInstanceBase,\
     InvalidFeatureTypeException
 
-_author__ = 'nmelnik'
+__author__ = 'nmelnik'
 
 
 class CompositeFeatureType(FeatureTypeBase):

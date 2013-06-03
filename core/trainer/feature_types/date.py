@@ -3,6 +3,8 @@ import calendar
 
 from base import FeatureTypeBase, FeatureTypeInstanceBase
 
+__author__ = 'nmelnik'
+
 
 class DateFeatureTypeInstance(FeatureTypeInstanceBase):
 
