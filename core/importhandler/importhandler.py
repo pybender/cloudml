@@ -205,6 +205,7 @@ class ImportHandler(BaseImportHandler):
         with open(output, 'w') as fp:
             for row_data in self:
                 fp.write('%s\n' % json.dumps(row_data, cls=DecimalEncoder))
+        fp.close()
 
 
 class RequestImportHandler(BaseImportHandler):
