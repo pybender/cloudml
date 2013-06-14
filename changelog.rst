@@ -1,6 +1,12 @@
 Changelog
 =========
 
+
+Relese 2013-06-14
+-----------------
+* Feature -Added compressing when store data to file
+
+
 Relese 2013-05-22
 -----------------
 * Feature - Changed model pickling process

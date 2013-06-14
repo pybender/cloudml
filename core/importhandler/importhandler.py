@@ -17,6 +17,7 @@ import os
 import sys
 import json
 import logging
+import gzip
 
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
@@ -192,7 +193,7 @@ class ImportHandler(BaseImportHandler):
 
         return db_iter
 
-    def store_data_json(self, output):
+    def store_data_json(self, output, compress=False):
         """
         Stores the given data to file output using JSON format. The output file
         contains multiple JSON objects, each one containing the data of an
@@ -200,11 +201,14 @@ class ImportHandler(BaseImportHandler):
 
         Keyword arguments:
         output -- the file to store the data to.
+        compress -- whether we need to archive data using gzip.
 
         """
-        with open(output, 'w') as fp:
+        open_mthd = gzip.open if compress else open
+        with open_mthd(output, 'w') as fp:
             for row_data in self:
                 fp.write('%s\n' % json.dumps(row_data, cls=DecimalEncoder))
+        fp.close()
 
 
 class RequestImportHandler(BaseImportHandler):
