@@ -212,6 +212,7 @@ class Trainer():
 
             logging.info('Evaluating model...')
             probs = self._classifier.predict_proba(hstack(vectorized_data))
+            labels = self._classifier.classes_[probs.argmax(axis=1)]
         return {'probs': probs,
                 'true_labels': true_labels,
                 'labels': labels,
