@@ -51,15 +51,15 @@ def dump_results_csv(iterator, trainer, params):
     probs = result['probs']
     with open(out, 'w') as csv_fp:
         csv_out = csv.writer(csv_fp)
-        csv_out.writerow(fields + result['classes'].tolist() + ['label'])
+        csv_out.writerow(['label'] + result['classes'].tolist() + fields)
         for i in range(len(probs)):
             row = []
-            row.extend([data[i].get(name, None) for name in fields])
-            row.extend(probs[i])
             if result.get('labels') is not None:
                 row.append(result['labels'][i])
             else:
                 row.append(None)
+            row.extend(probs[i])
+            row.extend([data[i].get(name, None) for name in fields])
             csv_out.writerow(row)
 
 EVALUATION_METHODS = {
