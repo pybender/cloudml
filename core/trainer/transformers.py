@@ -75,6 +75,12 @@ class ScalerDecorator(object):
         return self._scaler.transform(self._to_column(X))
 
 
+class SuppressTransformer:
+    """
+    A vectorizer that suppresses the input feature.
+    """
+    #TODO: Make it a sublcass of vectorizer?
+
 def get_count_vectorizer(params):
     """
     Creates a CountVectorizer. Uses the config under the transformer JSON
@@ -119,6 +125,8 @@ def get_tfidf_vectorizer(params):
                                           params['ngram_range_max'])
 
     return TfidfVectorizer(**filtered_params)
+
+
 
 
 def get_dict_vectorizer(params):
