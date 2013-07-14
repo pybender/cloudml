@@ -130,7 +130,10 @@ class Trainer():
             else:
                 labels = self._vect_data[feature_name]
         logging.info('Training model...')
-        true_data = hstack(vectorized_data)
+        if(len(vectorized_data) == 1):
+            true_data = numpy.array(vectorized_data[0])
+        else:
+            true_data = hstack(vectorized_data)
         logging.info('Number of features: %s' % (true_data.shape[1], ))
         self._classifier.fit(true_data, labels)
         self.train_time = strftime('%Y-%m-%d %H:%M:%S %z', gmtime())
@@ -213,7 +216,11 @@ class Trainer():
                     true_labels = self._vect_data[feature_name]
 
             logging.info('Evaluating model...')
-            probs = self._classifier.predict_proba(hstack(vectorized_data))
+            if(len(vectorized_data) == 1):
+                predict_data = numpy.array(vectorized_data[0])
+            else:
+                predict_data = hstack(vectorized_data)
+            probs = self._classifier.predict_proba(predict_data)
             labels = self._classifier.classes_[probs.argmax(axis=1)]
         return {'probs': probs,
                 'true_labels': true_labels,
