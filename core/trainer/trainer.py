@@ -16,6 +16,7 @@ from utils import is_empty
 from config import FeatureModel, SchemaException
 from metrics import ClassificationModelMetrics, RegressionModelMetrics
 
+from memory_profiler import profile
 
 class ItemParseException(Exception):
     """
@@ -69,10 +70,8 @@ class Trainer():
 
     def clear_temp_data(self):
         if hasattr(self, '_raw_data'):
-            raw_data = self._raw_data
             self._raw_data = None
         if hasattr(self, '_vect_data'):
-            vect_data = self._vect_data
             self._vect_data = None
 
     # TODO: Did you mean this?
@@ -97,7 +96,7 @@ class Trainer():
             raise NotImplemented('Calculating metrics only for classification\
  and regression model implemented')
 
-    def train(self, iterator, percent=0):
+    def train(self, iterator=None, percent=0):
         """
         Train the model using the given data. Appropriate SciPy vectorizers
         will be used to bring data to the appropriate format.
@@ -109,29 +108,45 @@ class Trainer():
         """
         vectorized_data = []
         labels = None
+        from memory_profiler import memory_usage
+        logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
+        
 
-        self._prepare_data(iterator)
+        if iterator:
+            self._prepare_data(iterator)
         if percent:
             self._count = self._count - int(self._count * percent / 100)
             for item in self._vect_data:
                 item = item[:self._count]
         logging.info('Processed %d lines, ignored %s lines'
                      % (self._count, self._ignored))
-
+        logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
+        
         # Get X and y
         logging.info('Extracting features...')
         for feature_name, feature in self._feature_model.features.iteritems():
             if feature_name != self._feature_model.target_variable:
+                
                 item = self._train_prepare_feature(
                     feature,
                     self._vect_data[feature_name])
                 vectorized_data.append(item)
+                logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
             else:
                 labels = self._vect_data[feature_name]
         logging.info('Training model...')
+
+        logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
+        self._vect_data = None
+        logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
         true_data = hstack(vectorized_data)
+        logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
+        vectorized_data = None
+        logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
         logging.info('Number of features: %s' % (true_data.shape[1], ))
         self._classifier.fit(true_data, labels)
+        true_data = None
+        logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
         self.train_time = strftime('%Y-%m-%d %H:%M:%S %z', gmtime())
         logging.info('Training completed...')
 
@@ -148,7 +163,7 @@ class Trainer():
         vectorized_data = []
         labels = None
 
-        self._prepare_data(iterator, callback)
+        self._prepare_data(iterator, callback, save_raw=True)
         count = self._count
         if percent:
             self._count = int(self._count * percent / 100)
@@ -168,6 +183,7 @@ class Trainer():
             else:
                 labels = self._vect_data[feature_name]
 
+        self._vect_data = None
         logging.info('Evaluating model...')
         metr = self.metrics_class(labels, vectorized_data,
                                   self._classifier)
@@ -289,7 +305,7 @@ class Trainer():
         return numpy.transpose(
             csc_matrix([0.0 if item is None else float(item) for item in x]))
 
-    def _prepare_data(self, iterator, callback=None, ignore_error=True):
+    def _prepare_data(self, iterator, callback=None, ignore_error=True, save_raw=False):
         """
         Iterates over input data and stores them by column, ignoring lines
         with required properties missing.
@@ -307,7 +323,8 @@ class Trainer():
             self._count += 1
             try:
                 data = self._apply_feature_types(row)
-                self._raw_data.append(row)
+                if save_raw:
+                    self._raw_data.append(row)
                 for feature_name in self._feature_model.features:
                     self._vect_data[feature_name].append(data[feature_name])
 
