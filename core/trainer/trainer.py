@@ -10,7 +10,7 @@ from time import gmtime, strftime
 from operator import itemgetter
 from scipy.sparse import hstack, csc_matrix
 from feature_types import FEATURE_TYPE_DEFAULTS
-from transformers import TRANSFORMER_DEFAULTS
+from transformers import TRANSFORMER_DEFAULTS, SuppressTransformer
 from utils import is_empty
 
 from config import FeatureModel, SchemaException
@@ -110,7 +110,6 @@ class Trainer():
         labels = None
         from memory_profiler import memory_usage
         logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
-        
 
         if iterator:
             self._prepare_data(iterator)
@@ -130,7 +129,9 @@ class Trainer():
                 item = self._train_prepare_feature(
                     feature,
                     self._vect_data[feature_name])
-                vectorized_data.append(item)
+
+                if item is not None:
+                    vectorized_data.append(item)
                 logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
             else:
                 labels = self._vect_data[feature_name]
@@ -139,10 +140,14 @@ class Trainer():
         logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
         self._vect_data = None
         logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
-        true_data = hstack(vectorized_data)
+        if(len(vectorized_data) == 1):
+            true_data = numpy.array(vectorized_data[0])
+        else:
+            true_data = hstack(vectorized_data)
         logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
         vectorized_data = None
         logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
+
         logging.info('Number of features: %s' % (true_data.shape[1], ))
         self._classifier.fit(true_data, labels)
         true_data = None
@@ -179,7 +184,8 @@ class Trainer():
                 item = self._test_prepare_feature(
                     feature,
                     self._vect_data[feature_name])
-                vectorized_data.append(item)
+                if item is not None:
+                    vectorized_data.append(item)
             else:
                 labels = self._vect_data[feature_name]
 
@@ -227,7 +233,12 @@ class Trainer():
                     true_labels = self._vect_data[feature_name]
 
             logging.info('Evaluating model...')
-            probs = self._classifier.predict_proba(hstack(vectorized_data))
+            if(len(vectorized_data) == 1):
+                predict_data = numpy.array(vectorized_data[0])
+            else:
+                predict_data = hstack(vectorized_data)
+            probs = self._classifier.predict_proba(predict_data)
+            labels = self._classifier.classes_[probs.argmax(axis=1)]
         return {'probs': probs,
                 'true_labels': true_labels,
                 'labels': labels,
@@ -262,7 +273,7 @@ class Trainer():
         data -- a list of the data for extracted for the given feature.
 
         """
-        logging.debug('Preparing feature %s for train' % (feature['name'], ))
+        logging.info('Preparing feature %s for train' % (feature['name'], ))
         input_format = feature.get('input-format', None)
         if input_format == 'list':
             data = map(lambda x: " ".join(x) if isinstance(x, list) else x, data)
@@ -270,7 +281,15 @@ class Trainer():
             return feature['type'].preprocessor.fit_transform(data)
 
         if feature['transformer'] is not None:
-            return feature['transformer'].fit_transform(data)
+            try:
+                transformed_data = feature['transformer'].fit_transform(data)
+            except ValueError as e:
+                logging.warn('Feature %s will be ignored due to '
+                             'transformation error: %s.' %
+                              (feature['name'], str(e)))
+                transformed_data = None
+                feature['tranformer'] = SuppressTransformer()
+            return transformed_data
         elif feature.get('scaler', None) is not None:
             return feature['scaler'].fit_transform(self._to_column(data).toarray())
         else:
@@ -295,7 +314,10 @@ class Trainer():
         if feature['type'].preprocessor:
             return feature['type'].preprocessor.transform(data)
         if feature['transformer'] is not None:
-            return feature['transformer'].transform(data)
+            if isinstance(feature['transformer'], SuppressTransformer):
+                return None
+            else:
+                return feature['transformer'].transform(data)
         elif feature.get('scaler', None) is not None:
             return feature['scaler'].transform(self._to_column(data).toarray())
         else:

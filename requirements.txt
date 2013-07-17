@@ -3,3 +3,4 @@ numpy
 psycopg2==2.4.6
 scipy
 scikit-learn
+memory-profiler
