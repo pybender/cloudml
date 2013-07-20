@@ -108,8 +108,8 @@ class Trainer():
         """
         vectorized_data = []
         labels = None
-        # from memory_profiler import memory_usage
-        # logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
+        from memory_profiler import memory_usage
+        logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
 
         if iterator:
             self._prepare_data(iterator)
@@ -119,7 +119,7 @@ class Trainer():
                 item = item[:self._count]
         logging.info('Processed %d lines, ignored %s lines'
                      % (self._count, self._ignored))
-        #logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
+        logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
         
         # Get X and y
         logging.info('Extracting features...')
@@ -132,26 +132,26 @@ class Trainer():
 
                 if item is not None:
                     vectorized_data.append(item)
-                #logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
+                logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
             else:
                 labels = self._vect_data[feature_name]
         logging.info('Training model...')
 
-        #logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
+        logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
         self._vect_data = None
-        #logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
+        logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
         if(len(vectorized_data) == 1):
             true_data = numpy.array(vectorized_data[0])
         else:
             true_data = hstack(vectorized_data)
-        #logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
+        logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
         vectorized_data = None
-        #logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
+        logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
 
         logging.info('Number of features: %s' % (true_data.shape[1], ))
         self._classifier.fit(true_data, labels)
         true_data = None
-        #logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
+        logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
         self.train_time = strftime('%Y-%m-%d %H:%M:%S %z', gmtime())
         logging.info('Training completed...')
 
