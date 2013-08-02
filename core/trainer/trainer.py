@@ -155,7 +155,7 @@ class Trainer():
         self.train_time = strftime('%Y-%m-%d %H:%M:%S %z', gmtime())
         logging.info('Training completed...')
 
-    def test(self, iterator, percent=0, callback=None):
+    def test(self, iterator, percent=0, callback=None, save_raw=True):
         """
         Test the model using the given data. SciPy vectorizers that were
         populated with data during testing will be used.
@@ -168,7 +168,7 @@ class Trainer():
         vectorized_data = []
         labels = None
 
-        self._prepare_data(iterator, callback, save_raw=True)
+        self._prepare_data(iterator, callback, save_raw=save_raw)
         count = self._count
         if percent:
             self._count = int(self._count * percent / 100)
