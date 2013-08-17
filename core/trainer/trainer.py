@@ -150,8 +150,8 @@ class Trainer():
 
         logging.info('Number of features: %s' % (true_data.shape[1], ))
         self._classifier.fit(true_data, labels)
-        true_data = None
         logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
+        true_data = None
         self.train_time = strftime('%Y-%m-%d %H:%M:%S %z', gmtime())
         logging.info('Training completed...')
 
@@ -165,6 +165,7 @@ class Trainer():
                     names and value the values of the features per column.
 
         """
+        from memory_profiler import memory_usage
         vectorized_data = []
         labels = None
 
@@ -190,9 +191,11 @@ class Trainer():
                 labels = self._vect_data[feature_name]
 
         self._vect_data = None
+        logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
         logging.info('Evaluating model...')
         metr = self.metrics_class(labels, vectorized_data,
                                   self._classifier)
+        logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
         metr.log_metrics()
         return metr
 
