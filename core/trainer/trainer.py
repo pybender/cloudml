@@ -1,5 +1,5 @@
 
-_author__ = 'ifoukarakis'
+_author__ = 'ifoukarakis, papadimitriou'
 
 import json
 import logging
@@ -109,7 +109,8 @@ class Trainer():
         vectorized_data = []
         labels = None
         from memory_profiler import memory_usage
-        logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
+        logging.info("Memory usage: %f" % 
+                     memory_usage(-1, interval=0, timeout=None)[0])
 
         if iterator:
             self._prepare_data(iterator)
@@ -119,7 +120,8 @@ class Trainer():
                 item = item[:self._count]
         logging.info('Processed %d lines, ignored %s lines'
                      % (self._count, self._ignored))
-        logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
+        logging.info("Memory usage: %f" % 
+                     memory_usage(-1, interval=0, timeout=None)[0])
         
         # Get X and y
         logging.info('Extracting features...')
@@ -131,26 +133,33 @@ class Trainer():
                     self._vect_data[feature_name])
 
                 if item is not None:
-                    vectorized_data.append(item)
-                logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
+                    # Convert item to csc_matrix, since hstack fails with arrays
+                    vectorized_data.append(csc_matrix(item))
+                logging.info("Memory usage: %f" % 
+                             memory_usage(-1, interval=0, timeout=None)[0])
             else:
                 labels = self._vect_data[feature_name]
         logging.info('Training model...')
 
-        logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
+        logging.info("Memory usage: %f" % 
+                     memory_usage(-1, interval=0, timeout=None)[0])
         self._vect_data = None
-        logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
+        logging.info("Memory usage: %f" % 
+                     memory_usage(-1, interval=0, timeout=None)[0])
         if(len(vectorized_data) == 1):
             true_data = numpy.array(vectorized_data[0])
         else:
             true_data = hstack(vectorized_data)
-        logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
+        logging.info("Memory usage: %f" % 
+                     memory_usage(-1, interval=0, timeout=None)[0])
         vectorized_data = None
-        logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
+        logging.info("Memory usage: %f" % 
+                     memory_usage(-1, interval=0, timeout=None)[0])
 
         logging.info('Number of features: %s' % (true_data.shape[1], ))
         self._classifier.fit(true_data, labels)
-        logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
+        logging.info("Memory usage: %f" % 
+                     memory_usage(-1, interval=0, timeout=None)[0])
         true_data = None
         self.train_time = strftime('%Y-%m-%d %H:%M:%S %z', gmtime())
         logging.info('Training completed...')
@@ -186,16 +195,19 @@ class Trainer():
                     feature,
                     self._vect_data[feature_name])
                 if item is not None:
+                    # Convert item to csc_matrix, since hstack fails with arrays
                     vectorized_data.append(item)
             else:
                 labels = self._vect_data[feature_name]
 
         self._vect_data = None
-        logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
+        logging.info("Memory usage: %f" % 
+                     memory_usage(-1, interval=0, timeout=None)[0])
         logging.info('Evaluating model...')
         metr = self.metrics_class(labels, vectorized_data,
                                   self._classifier)
-        logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
+        logging.info("Memory usage: %f" % 
+                     memory_usage(-1, interval=0, timeout=None)[0])
         metr.log_metrics()
         return metr
 
@@ -231,7 +243,7 @@ class Trainer():
                     item = self._test_prepare_feature(
                         feature,
                         self._vect_data[feature_name])
-                    vectorized_data.append(item)
+                    vectorized_data.append(csc_matrix(item))
                 else:
                     true_labels = self._vect_data[feature_name]
 
@@ -330,7 +342,8 @@ class Trainer():
         return numpy.transpose(
             csc_matrix([0.0 if item is None else float(item) for item in x]))
 
-    def _prepare_data(self, iterator, callback=None, ignore_error=True, save_raw=False):
+    def _prepare_data(self, iterator, callback=None, 
+                      ignore_error=True, save_raw=False):
         """
         Iterates over input data and stores them by column, ignoring lines
         with required properties missing.
