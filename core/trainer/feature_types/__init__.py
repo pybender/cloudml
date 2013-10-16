@@ -32,3 +32,16 @@ FEATURE_TYPE_DEFAULTS = {
     # Default is Jan 1st, 2000
     'date': 946684800
 }
+
+FEATURE_PARAMS_TYPES = {
+    'pattern': {
+        'type': 'str',
+        'validator': '',  # TODO: validation
+        'help_text': 'Please enter a valid regular expression'
+    },
+    'mappings': {
+        'type': 'dict',
+        'validator': '',  # TODO: validation
+        'help_text': ''
+    },
+}
