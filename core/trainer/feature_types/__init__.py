@@ -42,6 +42,11 @@ FEATURE_PARAMS_TYPES = {
     'mappings': {
         'type': 'dict',
         'validator': '',  # TODO: validation
-        'help_text': ''
+        'help_text': 'Please add parameters to dictionary'
+    },
+    'chain': {
+        'type': 'text',
+        'validator': '',  # TODO: validation
+        'help_text': 'Please enter valid json'
     },
 }
