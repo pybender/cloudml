@@ -48,9 +48,9 @@ class ExtractionPlan(object):
         except ValueError as e:
             raise ImportHandlerException(message='%s %s ' % (config, e))
         
-        if 'target-schema' not in data:
+        if 'target_schema' not in data:
             raise ImportHandlerException('No target schema defined in config')
-        self.schema_name = data['target-schema']
+        self.schema_name = data['target_schema']
 
         if len(data.get('datasource', [])) == 0:
             raise ImportHandlerException('No datasource defined in config')
@@ -86,7 +86,7 @@ class ExtractionPlan(object):
 
         """
         for item in query.get('items'):
-            target_features = item.get('target-features', [])
+            target_features = item.get('target_features', [])
             if len(target_features) == 0:
                 raise ImportHandlerException('Query item must define at least '
                                              'one target feature')
@@ -115,10 +115,10 @@ class BaseImportHandler(object):
         # Hold data of current row processed so far
         row_data = {}
         for item in query['items']:
-            strategy = PROCESS_STRATEGIES.get(item.get('process-as', 'identity'))
+            strategy = PROCESS_STRATEGIES.get(item.get('process_as', 'identity'))
             if strategy is None:
                 raise ImportHandlerException('Unknown strategy %s'
-                                             % item['process-as'])
+                                             % item['process_as'])
             # Get value from query for this item
             source = item.get('source', None)
             item_value = row.get(source, None)
