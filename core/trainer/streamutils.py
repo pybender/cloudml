@@ -4,9 +4,10 @@ Created on Nov 16, 2012
 @author: ifoukarakis
 '''
 import json
+import csv
 
 
-class StreamReader(object):
+class JsonStreamReader(object):
     sbuffer = ''
 
     def __init__(self):
@@ -32,9 +33,21 @@ class StreamReader(object):
                 return obj
 
 
-def streamingiterload(stream):
+def csviterload(stream):
+    reader = csv.DictReader(stream)
+    for obj in reader:
+        for key, value in obj.items():
+            # Try load json field
+            try:
+                obj[key] = json.loads(value)
+            except Exception:
+                pass
+        yield obj
+
+
+def jsoniterload(stream):
     ### TODO: Consider memory mapping file
-    reader = StreamReader()
+    reader = JsonStreamReader()
     for line in stream:
         try:
             obj = reader.process_read(line)
@@ -43,3 +56,16 @@ def streamingiterload(stream):
         except Exception, ex:
             raise Exception('Failed to read next line from the input stream. '
                             'Error: %s' % ex)
+
+
+SOURCE_FORMATS = {
+    'json': jsoniterload,
+    'csv': csviterload,
+}
+
+
+def streamingiterload(stream, source_format='json'):
+    loader = SOURCE_FORMATS.get(source_format)
+    if not loader:
+        loader = SOURCE_FORMATS['json']
+    return loader(stream)

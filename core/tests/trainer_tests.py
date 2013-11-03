@@ -92,6 +92,8 @@ class TrainerTestCase(unittest.TestCase):
         """
         Load test data.
         """
+        from core.trainer.streamutils import streamingiterload
+
         with open(os.path.join(BASEDIR, 'trainer', 'trainer.data.json')) as fp:
             self._data = json.load(fp)
 
