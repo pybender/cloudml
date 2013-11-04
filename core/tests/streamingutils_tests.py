@@ -55,22 +55,22 @@ class ParserTest(unittest.TestCase):
         self.assertEquals(4, len(csv_objects),
                           'Should have loaded 4 items from file (loaded %s)'
                           % (count,))
-        self.assertEquals(1, csv_objects[0]['id'],
+        self.assertEquals('1', csv_objects[0]['id'],
                           'Invalid id for first CSV object')
         self.assertEquals('hire', csv_objects[0]['class'],
                           'Invalid class for first CSV object')
 
-        self.assertEquals(2, csv_objects[1]['id'],
+        self.assertEquals('2', csv_objects[1]['id'],
                           'Invalid id for second CSV object')
         self.assertEquals('hire', csv_objects[1]['class'],
                           'Invalid class for second CSV object')
 
-        self.assertEquals(3, csv_objects[2]['id'],
+        self.assertEquals('3', csv_objects[2]['id'],
                           'Invalid id for third CSV object')
         self.assertEquals('nohire', csv_objects[2]['class'],
                           'Invalid class for third CSV object')
 
-        self.assertEquals(4, csv_objects[3]['id'],
+        self.assertEquals('4', csv_objects[3]['id'],
                           'Invalid id for fourth CSV object')
         self.assertEquals('hire', csv_objects[3]['class'],
                           'Invalid class for fourth CSV object')

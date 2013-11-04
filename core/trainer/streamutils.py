@@ -34,14 +34,20 @@ class JsonStreamReader(object):
 
 
 def csviterload(stream):
-    reader = csv.DictReader(stream)
+    reader = csv.DictReader(
+        stream,
+        quotechar="'",
+        quoting=csv.QUOTE_ALL
+    )
     for obj in reader:
         for key, value in obj.items():
             # Try load json field
-            try:
-                obj[key] = json.loads(value)
-            except Exception:
-                pass
+            strkey = str(obj[key])
+            if strkey.startswith('{') or strkey.startswith('['):
+                try:
+                    obj[key] = json.loads(value)
+                except Exception:
+                    pass
         yield obj
 
 
