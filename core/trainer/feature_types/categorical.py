@@ -26,7 +26,7 @@ class CategoricalFeatureTypeInstance(FeatureTypeInstanceBase):
 
 
 class CategoricalFeatureType(FeatureTypeBase):
-    required_params = ['split_pattern']
+    optional_params = ['split_pattern']
     instance = CategoricalFeatureTypeInstance
 
     def get_instance(self, params, input_format=None):
