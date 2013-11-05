@@ -93,7 +93,7 @@ def main(argv=None):
         test_percent = int(args.test_percent or 0)
         if args.input is not None:
             # Read training data from file
-            file_format = os.path.splitext(args.input)[1]
+            file_format = os.path.splitext(args.input)[1][1:]
             with open(args.input, 'r') as train_fp:
                 trainer.train(streamingiterload(train_fp,
                                                 source_format=file_format),
@@ -108,7 +108,7 @@ def main(argv=None):
                         )
 
             if args.test is not None and args.skip_tests is False:
-                file_format = os.path.splitext(args.test)[1]
+                file_format = os.path.splitext(args.test)[1][1:]
                 with open(args.test, 'r') as test_fp:
                     trainer.test(streamingiterload(test_fp,
                                                    source_format=file_format))

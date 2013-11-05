@@ -133,7 +133,7 @@ def main(argv=None):
         if args.input is not None:
             # Read evaluation data from file.
             eval_fp = open(args.input, 'r')
-            file_format = os.path.splitext(args.input)[1]
+            file_format = os.path.splitext(args.input)[1][1:]
             iterator = streamingiterload(eval_fp, source_format=file_format)
         elif args.extraction is not None:
             # Use import handler
