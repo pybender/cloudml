@@ -11,6 +11,8 @@ class CompositeFeatureType(FeatureTypeBase):
     feature types.
 
     """
+    required_params = ['chain']
+
     def __init__(self):
         """
         Invoked whenever creating a feature type.

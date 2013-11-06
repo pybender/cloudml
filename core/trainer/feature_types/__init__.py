@@ -32,3 +32,22 @@ FEATURE_TYPE_DEFAULTS = {
     # Default is Jan 1st, 2000
     'date': 946684800
 }
+
+FEATURE_PARAMS_TYPES = {
+    'pattern': {
+        'type': 'str',
+        'help_text': 'Please enter a pattern'
+    },
+    'split_pattern': {
+        'type': 'str',
+        'help_text': 'Please enter a pattern'
+    },
+    'mappings': {
+        'type': 'dict',
+        'help_text': 'Please add parameters to dictionary'
+    },
+    'chain': {
+        'type': 'text',
+        'help_text': 'Please enter valid json'
+    },
+}

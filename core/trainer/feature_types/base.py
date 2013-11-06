@@ -53,6 +53,7 @@ class FeatureTypeBase(object):
     # a list containing the required parameters for this
     # feature type
     required_params = []
+    optional_params = []
     default_params = []
     default_value = None
     default_scaler = 'MinMaxScaler'
