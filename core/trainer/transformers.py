@@ -6,6 +6,7 @@ __author__ = 'ifoukarakis'
 from utils import copy_expected
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from sklearn.feature_extraction.text import LdaVectorizer, LsiVectorizer
 from sklearn.preprocessing import StandardScaler
 
 
@@ -80,6 +81,33 @@ class SuppressTransformer:
     A vectorizer that suppresses the input feature.
     """
     #TODO: Make it a sublcass of vectorizer?
+
+def get_lda_vectorizer(params):
+    filtered_params = copy_expected(params, ['charset', 'charset_error',
+                                             'strip_accents', 'lowercase',
+                                             'stop_words', 'token_pattern',
+                                             'analyzer', 'max_df', 'min_df',
+                                             'max_features', 'vocabulary',
+                                             'binary',
+                                             'num_topics','id2word', 'alpha',
+                                             'eta', 'distributed', 'topic_file'])
+
+    return LdaVectorizer(**filtered_params)
+
+def get_lsi_vectorizer(params):
+    filtered_params = copy_expected(params, ['charset', 'charset_error',
+                                             'strip_accents', 'lowercase',
+                                             'stop_words', 'token_pattern',
+                                             'analyzer', 'max_df', 'min_df',
+                                             'max_features', 'vocabulary',
+                                             'binary',
+                                             'num_topics','id2word',
+                                             'distributed', 'onepass',
+                                             'power_iters', 'extra_samples',
+                                             'topic_file'])
+
+    return LsiVectorizer(**filtered_params)
+
 
 def get_count_vectorizer(params):
     """
@@ -159,12 +187,16 @@ def get_transformer(transformer):
 TRANSFORMER_TO_VECTORIZER = {
     'Dictionary': get_dict_vectorizer,
     'Count': get_count_vectorizer,
-    'Tfidf': get_tfidf_vectorizer
+    'Tfidf': get_tfidf_vectorizer,
+    'Lda': get_lda_vectorizer,
+    'Lsi': get_lsi_vectorizer
 }
 
 # Default values per transformer type
 TRANSFORMER_DEFAULTS = {
     'Dictionary': {},
     'Count': '',
-    'Tfidf': ''
+    'Tfidf': '',
+    'Lda': '',
+    'Lsi': ''
 }
