@@ -92,6 +92,8 @@ def get_lda_vectorizer(params):
                                              'num_topics','id2word', 'alpha',
                                              'eta', 'distributed', 'topic_file'])
 
+    if  filtered_params.has_key('num_topics'):
+        filtered_params['num_topics'] = int(filtered_params['num_topics'])
     return LdaVectorizer(**filtered_params)
 
 def get_lsi_vectorizer(params):
@@ -105,6 +107,8 @@ def get_lsi_vectorizer(params):
                                              'distributed', 'onepass',
                                              'power_iters', 'extra_samples',
                                              'topic_file'])
+    if  filtered_params.has_key('num_topics'):
+        filtered_params['num_topics'] = int(filtered_params['num_topics'])
 
     return LsiVectorizer(**filtered_params)
 
