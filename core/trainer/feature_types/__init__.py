@@ -42,6 +42,10 @@ FEATURE_PARAMS_TYPES = {
         'type': 'str',
         'help_text': 'Please enter a pattern'
     },
+    'min_df': {
+        'type': 'int',
+        'help_text': 'Please enter a int value'
+    },
     'mappings': {
         'type': 'dict',
         'help_text': 'Please add parameters to dictionary'
