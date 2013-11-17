@@ -1,6 +1,10 @@
 Changelog
 =========
 
+Relese 2013-11-17
+-----------------
+* Feature - Added support csv format for train model
+
 Relese 2013-11-11
 -----------------
 * Feature - Added Lda/Lsi vectorizers
