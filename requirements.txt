@@ -2,6 +2,7 @@ jsonpath==0.54
 numpy
 psycopg2==2.4.6
 scipy
-scikit-learn
+#scikit-learn
+-e git+https://github.com/nanli0416/scikit-learn.git@feature_extraction_text-ldalsi_vectorizers#egg=scikit-learn
 memory-profiler
 sqlparse

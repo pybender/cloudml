@@ -298,6 +298,7 @@ class Trainer():
         if feature['transformer'] is not None:
             try:
                 transformed_data = feature['transformer'].fit_transform(data)
+                feature['transformer'].num_features = transformed_data.shape[1]
             except ValueError as e:
                 logging.warn('Feature %s will be ignored due to '
                              'transformation error: %s.' %
@@ -440,6 +441,7 @@ class Trainer():
         negative = []
          # Vectorizer
         feature_names = vectorizer.get_feature_names()
+        logging.info('Number of subfeatures %d' % len(feature_names))
         for j in range(0, len(feature_names)):
             name = '%s->%s' % (feature_name.replace(".", "->"), feature_names[j])
             weight = self._classifier.coef_[0][offset + j]
@@ -462,7 +464,23 @@ class Trainer():
             if feature_name != self._feature_model.target_variable:
                 transformer = feature['transformer']
                 preprocessor = feature['type'].preprocessor
-                if transformer is not None and hasattr(transformer,
+                logging.info('Process feature %s' % feature_name )
+                if transformer is not None and hasattr(transformer, 'num_topics'):
+                    logging.info('Number of topics %d' % transformer.num_features )
+                    for j in range(0, transformer.num_features-1):
+                        name = '%s->Topic #%d' % (feature_name.replace(".", "->"), j)
+                        weight = self._classifier.coef_[0][index + j]
+                        weights = {
+                            'name': name,
+                            'weight': weight
+                        }
+                        if weight > 0:
+                            positive.append(weights)
+                        else:
+                            negative.append(weights)
+
+                    index += transformer.num_topics
+                elif transformer is not None and hasattr(transformer,
                                                        'get_feature_names'):
                     feature_names, p, n = self.get_weights_from_vectorizer(feature_name,
                                                                            transformer,
