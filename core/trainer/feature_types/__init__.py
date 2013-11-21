@@ -36,17 +36,22 @@ FEATURE_TYPE_DEFAULTS = {
 FEATURE_PARAMS_TYPES = {
     'pattern': {
         'type': 'str',
-        'validator': '',  # TODO: validation
-        'help_text': 'Please enter a valid regular expression'
+        'help_text': 'Please enter a pattern'
+    },
+    'split_pattern': {
+        'type': 'str',
+        'help_text': 'Please enter a pattern'
+    },
+    'min_df': {
+        'type': 'int',
+        'help_text': 'Please enter a int value'
     },
     'mappings': {
         'type': 'dict',
-        'validator': '',  # TODO: validation
         'help_text': 'Please add parameters to dictionary'
     },
     'chain': {
         'type': 'text',
-        'validator': '',  # TODO: validation
         'help_text': 'Please enter valid json'
     },
 }

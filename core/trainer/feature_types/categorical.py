@@ -26,15 +26,18 @@ class CategoricalFeatureTypeInstance(FeatureTypeInstanceBase):
 
 
 class CategoricalFeatureType(FeatureTypeBase):
+    optional_params = ['split_pattern', 'min_df']
     instance = CategoricalFeatureTypeInstance
 
     def get_instance(self, params, input_format=None):
         tokenizer = None
         set_params = set()
         split_pattern = None
+        min_df = 0
         token_pattern = u'(?u)\b\w\w+\b'
         if params is not None:
             split_pattern = params.get('split_pattern', None)
+            min_df = int(params.get('min_df', 0))
             set_params = set(params)
         if split_pattern:
             tokenizer = tokenizer_dec(tokenizer_func, split_pattern)
@@ -42,7 +45,7 @@ class CategoricalFeatureType(FeatureTypeBase):
             token_pattern = '.+'
         preprocessor = CountVectorizer(tokenizer=tokenizer,
                                        token_pattern=token_pattern,
-                                       min_df=0,
+                                       min_df=min_df,
                                        binary=True)
         if set(self.required_params).issubset(set_params):
             return self.instance(params,

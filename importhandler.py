@@ -44,6 +44,9 @@ def main(argv=None):
                             metavar='user-param')
         parser.add_argument('-V', '--version', action='version',
                             version=program_version_message)
+        parser.add_argument('-f', '--format', dest='format',
+                            help='store extracted data using given format (json or csv).',
+                            metavar='format', default='json')
         parser.add_argument(dest='path',
                             help='file containing extraction plan',
                             metavar='path')
@@ -73,7 +76,10 @@ def main(argv=None):
 
         if args.output is not None:
             logging.info('Storing data to %s...' % args.output)
-            extractor.store_data_json(args.output)
+            getattr(extractor,
+                    'store_data_{}'.format(args.format),
+                    extractor.store_data_json)(args.output)
+
             logging.info('Total %s lines' % (extractor.count, ))
             logging.info('Ignored %s lines' % (extractor.ignored, ))
     except KeyboardInterrupt:
@@ -83,7 +89,6 @@ def main(argv=None):
         logging.warn(e.message)
         return 1
     except Exception, e:
-        raise e
         indent = len(program_name) * ' '
         sys.stderr.write(program_name + ': ' + repr(e) + '\n')
         sys.stderr.write(indent + '  for help use --help')
