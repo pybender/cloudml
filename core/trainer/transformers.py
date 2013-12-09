@@ -185,7 +185,8 @@ def get_transformer(transformer):
     if transformer_type not in TRANSFORMER_TO_VECTORIZER:
         return None
 
-    return TRANSFORMER_TO_VECTORIZER[transformer_type](transformer)
+    params = transformer.get('params', {})
+    return TRANSFORMER_TO_VECTORIZER[transformer_type](params)
 
 
 TRANSFORMER_TO_VECTORIZER = {

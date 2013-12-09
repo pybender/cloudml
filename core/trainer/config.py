@@ -90,8 +90,11 @@ class FeatureModel(object):
         defaults = classifier_settings.get('defaults', {})
         self.classifier.update(defaults)
 
-        parameters = classifier_settings.get('parameters', [])
-        self.classifier.update(copy_expected(classifier_config, parameters))
+        params_from_config = classifier_config.get('params', None)
+        if params_from_config is not None:
+            parameters = classifier_settings.get('parameters', [])
+            self.classifier.update(copy_expected(
+                params_from_config, parameters))
 
         # Trying to load classifier class
         module, name = classifier_settings.get('cls').rsplit(".", 1)
@@ -152,7 +155,7 @@ class FeatureModel(object):
             raise SchemaException('Features must have a name')
 
         if 'type' not in feature:
-            raise SchemaException('Feature %s must have a type' % 
+            raise SchemaException('Feature %s must have a type' %
                                   feature['name'])
 
         # Check if feature has a type definition
