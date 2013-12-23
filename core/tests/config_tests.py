@@ -64,6 +64,25 @@ class ConfigTest(unittest.TestCase):
         self.assertNotIn('type', self.config.classifier)
         self.assertNotIn('should', self.config.classifier)
 
+    def test_process_classifier_class_weight(self):
+        config = {
+            'classifier': {
+                'type': 'logistic regression',
+                'class_weight': {
+                    '0': 1,
+                    '1': 2
+                },
+            }
+        }
+        self.config._process_classifier(config)
+        self.assertEqual(
+            {
+                '0': 1,
+                '1': 2
+            },
+            self.config.classifier['class_weight']
+        )
+
     def test_process_classifier_default_penalty(self):
         config = {
             'classifier': {

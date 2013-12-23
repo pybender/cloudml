@@ -35,6 +35,25 @@ class TrainerTestCase(unittest.TestCase):
             self.assertEquals(title_vectorizer.get_feature_names(), ['engineer',
                                                                      'python'])
 
+    def test_train_class_weight(self):
+        config = {
+            'classifier': {
+                'type': 'logistic regression',
+                'penalty': 'l2',
+                'class_weight': {
+                    '0': 1,
+                    '1': 2
+                },
+            }
+        }
+        self._config._process_classifier(config)
+        self._load_data('json')
+        self.assertEquals(self._trainer._classifier.coef_.shape, (1, 19))
+        title_feature = self._config.features['contractor.dev_title']
+        title_vectorizer = title_feature['transformer']
+        self.assertEquals(title_vectorizer.get_feature_names(), ['engineer',
+                                                                 'python'])
+
     def test_store_feature_weights(self):
         for fmt in FORMATS:
             self._load_data(fmt)
