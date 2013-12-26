@@ -10,7 +10,7 @@ from time import gmtime, strftime
 from operator import itemgetter
 from scipy.sparse import hstack, csc_matrix
 from feature_types import FEATURE_TYPE_DEFAULTS
-from transformers import TRANSFORMER_DEFAULTS, SuppressTransformer
+from transformers import TRANSFORMERS, SuppressTransformer
 from utils import is_empty
 
 from config import FeatureModel, SchemaException
@@ -430,7 +430,7 @@ class Trainer():
             if feature.get('default') is not None:
                 result = feature.get('default')
             elif feature.get('transformer-type') is not None:
-                result = TRANSFORMER_DEFAULTS[feature['transformer-type']]
+                result = TRANSFORMERS[feature['transformer-type']]['default']
             elif feature.get('type') is not None:
                 result = FEATURE_TYPE_DEFAULTS.get(feature['type'], value)
 
