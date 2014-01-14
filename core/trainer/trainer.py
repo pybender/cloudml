@@ -10,7 +10,7 @@ from time import gmtime, strftime
 from operator import itemgetter
 from scipy.sparse import hstack, csc_matrix
 from feature_types import FEATURE_TYPE_DEFAULTS
-from transformers import TRANSFORMER_DEFAULTS, SuppressTransformer
+from transformers import TRANSFORMERS, SuppressTransformer
 from utils import is_empty
 
 from config import FeatureModel, SchemaException
@@ -157,7 +157,7 @@ class Trainer():
                      memory_usage(-1, interval=0, timeout=None)[0])
 
         logging.info('Number of features: %s' % (true_data.shape[1], ))
-        self._classifier.fit(true_data, labels)
+        self._classifier.fit(true_data, [str(l) for l in labels])
         logging.info("Memory usage: %f" % 
                      memory_usage(-1, interval=0, timeout=None)[0])
         true_data = None
@@ -430,7 +430,7 @@ class Trainer():
             if feature.get('default') is not None:
                 result = feature.get('default')
             elif feature.get('transformer-type') is not None:
-                result = TRANSFORMER_DEFAULTS[feature['transformer-type']]
+                result = TRANSFORMERS[feature['transformer-type']]['default']
             elif feature.get('type') is not None:
                 result = FEATURE_TYPE_DEFAULTS.get(feature['type'], value)
 

@@ -89,6 +89,9 @@ and "value" for target feature %s' % (feature['name']))
                 if expression_type == 'string':
                     result[feature['name']] = expression_value % row_data
                 elif expression_type == 'python':
+                    for k, v in row_data.iteritems():
+                        if isinstance(v, basestring):
+                            row_data[k] = v.decode('utf-8')
                     result[feature['name']] = eval(expression_value % row_data)
             except NameError as e:
                 raise ProcessException('%s (expression: %s)' %
