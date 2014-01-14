@@ -166,7 +166,7 @@ class ProcessorCase(unittest.TestCase):
                 {'name': 'age', 'jsonpath': '$.person_info.age'},
                 {
                     'name': 'friends', 'jsonpath': '$.person_info.friends',
-                    'key-path': '$.*.name', 'value-path': '$.*.race'
+                    'key_path': '$.*.name', 'value_path': '$.*.race'
                 },
                 {'name': 'notthere', 'jsonpath': '$.notthere'},
                 {
@@ -186,8 +186,8 @@ class ProcessorCase(unittest.TestCase):
             'name': u'Bilbo',
             'age': u'111',
             'friends': {
-                'Frodo': u'1.0',
-                'Thorin': u'11.0',
+                'Frodo': 1.0,
+                'Thorin': 11.0,
             },
             'notthere': None,
             'friend_names1': u'Frodo,Thorin',
