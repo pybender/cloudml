@@ -228,7 +228,8 @@ class ImportHandler(BaseImportHandler):
         def _encode(data):
             for key, value in data.iteritems():
                 if isinstance(value, basestring):
-                    data[key] = value.encode('utf-8').replace('\r', '')
+                    data[key] = value.encode(
+                        'utf-8', errors='ignore').replace('\r', '')
                 elif isinstance(value, (dict, list)):
                     data[key] = json.dumps(value)
             return data
