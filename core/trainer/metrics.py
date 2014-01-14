@@ -114,7 +114,8 @@ class ClassificationModelMetrics(Metrics):
     def confusion_matrix(self):
         if not hasattr(self, '_confusion_matrix'):
             self._confusion_matrix = \
-                sk_metrics.confusion_matrix(self._labels, self._preds)
+                sk_metrics.confusion_matrix([str(l) for l in self._labels],
+                                            self._preds)
         return self._confusion_matrix
 
     @property

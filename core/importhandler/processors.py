@@ -41,7 +41,7 @@ def process_primitive(constructor):
                     so far.
 
         """
-        target_features = query_item.get('target-features', [])
+        target_features = query_item.get('target_features', [])
 
         result = None
         if value is not None:
@@ -67,7 +67,7 @@ def process_composite(value, query_item, row_data):
 
     """
     result = {}
-    target_features = query_item.get('target-features', [])
+    target_features = query_item.get('target_features', [])
 
     for feature in target_features:
         if 'expression' not in feature or \
@@ -89,6 +89,9 @@ and "value" for target feature %s' % (feature['name']))
                 if expression_type == 'string':
                     result[feature['name']] = expression_value % row_data
                 elif expression_type == 'python':
+                    for k, v in row_data.iteritems():
+                        if isinstance(v, basestring):
+                            row_data[k] = v.decode('utf-8')
                     result[feature['name']] = eval(expression_value % row_data)
             except NameError as e:
                 raise ProcessException('%s (expression: %s)' %
@@ -121,7 +124,7 @@ def process_json(value, query_item, row_data):
 
     result = {}
 
-    target_features = query_item.get('target-features', [])
+    target_features = query_item.get('target_features', [])
     for feature in target_features:
         if 'jsonpath' not in feature:
             raise ProcessException('Target feature %s has no JSONPath'
@@ -130,13 +133,13 @@ def process_json(value, query_item, row_data):
 
         if path_result is not False:
             # Found result in given path
-            if 'key-path' in feature and 'value-path' in feature:
+            if 'key_path' in feature and 'value_path' in feature:
                 # Treat as a dictionary
-                keys = jsonpath(path_result[0], feature['key-path'])
+                keys = jsonpath(path_result[0], feature['key_path'])
                 try:
                     values = map(float,
                                  jsonpath(path_result[0],
-                                 feature['value-path']))
+                                 feature['value_path']))
                 except ValueError as e:
                     raise ProcessException(e)
                 except TypeError as e:

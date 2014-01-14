@@ -3,7 +3,7 @@ from scipy.sparse import csc_matrix
 
 __author__ = 'ifoukarakis'
 
-from utils import copy_expected
+from utils import copy_expected, float_or_int
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.feature_extraction.text import LdaVectorizer, LsiVectorizer
@@ -82,35 +82,19 @@ class SuppressTransformer:
     """
     #TODO: Make it a sublcass of vectorizer?
 
-def get_lda_vectorizer(params):
-    filtered_params = copy_expected(params, ['charset', 'charset_error',
-                                             'strip_accents', 'lowercase',
-                                             'stop_words', 'token_pattern',
-                                             'analyzer', 'max_df', 'min_df',
-                                             'max_features', 'vocabulary',
-                                             'binary',
-                                             'num_topics','id2word', 'alpha',
-                                             'eta', 'distributed', 'topic_file'])
 
-    if  filtered_params.has_key('num_topics'):
-        filtered_params['num_topics'] = int(filtered_params['num_topics'])
-    return LdaVectorizer(**filtered_params)
+def get_lda_vectorizer(params):
+    if 'num_topics' in params:
+        params['num_topics'] = int(params['num_topics'])
+
+    return LdaVectorizer(**params)
+
 
 def get_lsi_vectorizer(params):
-    filtered_params = copy_expected(params, ['charset', 'charset_error',
-                                             'strip_accents', 'lowercase',
-                                             'stop_words', 'token_pattern',
-                                             'analyzer', 'max_df', 'min_df',
-                                             'max_features', 'vocabulary',
-                                             'binary',
-                                             'num_topics','id2word',
-                                             'distributed', 'onepass',
-                                             'power_iters', 'extra_samples',
-                                             'topic_file'])
-    if  filtered_params.has_key('num_topics'):
-        filtered_params['num_topics'] = int(filtered_params['num_topics'])
+    if 'num_topics' in params:
+        params['num_topics'] = int(params['num_topics'])
 
-    return LsiVectorizer(**filtered_params)
+    return LsiVectorizer(**params)
 
 
 def get_count_vectorizer(params):
@@ -122,17 +106,15 @@ def get_count_vectorizer(params):
     params -- a map containing the vectorizer's configuration.
 
     """
-
-    filtered_params = copy_expected(params, ['charset', 'charset_error',
-                                             'strip_accents', 'lowercase',
-                                             'stop_words', 'token_pattern',
-                                             'analyzer', 'max_df', 'min_df',
-                                             'max_features', 'vocabulary',
-                                             'binary'])
     if 'ngram_range_min' in params and 'ngram_range_max' in params:
-        filtered_params['ngram_range'] = (params['ngram_range_min'],
-                                          params['ngram_range_max'])
-    return CountVectorizer(**filtered_params)
+        params['ngram_range'] = (params['ngram_range_min'],
+                                 params['ngram_range_max'])
+    if 'ngram_range_min' in params:
+        del params['ngram_range_min']
+    if 'ngram_range_max' in params:
+        del params['ngram_range_max']
+
+    return CountVectorizer(**params)
 
 
 def get_tfidf_vectorizer(params):
@@ -144,21 +126,15 @@ def get_tfidf_vectorizer(params):
     params -- a map containing the vectorizer's configuration.
 
     """
-    filtered_params = copy_expected(params, ['charset', 'charset_error',
-                                             'strip_accents', 'lowercase',
-                                             'analyzer', 'stop_words',
-                                             'token_pattern', 'max_df',
-                                             'min_df', 'max_features',
-                                             'vocabulary', 'binary',
-                                             'use_idf', 'smooth_idf',
-                                             'sublinear_tf'])
     if 'ngram_range_min' in params and 'ngram_range_max' in params:
-        filtered_params['ngram_range'] = (params['ngram_range_min'],
-                                          params['ngram_range_max'])
+        params['ngram_range'] = (params['ngram_range_min'],
+                                 params['ngram_range_max'])
+    if 'ngram_range_min' in params:
+        del params['ngram_range_min']
+    if 'ngram_range_max' in params:
+        del params['ngram_range_max']
 
-    return TfidfVectorizer(**filtered_params)
-
-
+    return TfidfVectorizer(**params)
 
 
 def get_dict_vectorizer(params):
@@ -169,9 +145,7 @@ def get_dict_vectorizer(params):
     params -- a map containing the vectorizer's configuration.
 
     """
-    filtered_params = copy_expected(params, ['separator', 'sparse'])
-
-    return DictVectorizer(**filtered_params)
+    return DictVectorizer(**params)
 
 
 def get_transformer(transformer):
@@ -182,26 +156,86 @@ def get_transformer(transformer):
     if transformer_type is None:
         return None
 
-    if transformer_type not in TRANSFORMER_TO_VECTORIZER:
+    if transformer_type not in TRANSFORMERS:
         return None
 
-    params = transformer.get('params', {})
-    return TRANSFORMER_TO_VECTORIZER[transformer_type](params)
+    config = TRANSFORMERS[transformer_type]
+
+    filtered_params = copy_expected(
+        transformer, config['parameters'])
+    for param in filtered_params:
+        param_type = config['parameters_types'].get(
+            param, None)
+        if param_type:
+            filtered_params[param] = param_type(filtered_params[param])
+
+    return config['mthd'](filtered_params)
 
 
-TRANSFORMER_TO_VECTORIZER = {
-    'Dictionary': get_dict_vectorizer,
-    'Count': get_count_vectorizer,
-    'Tfidf': get_tfidf_vectorizer,
-    'Lda': get_lda_vectorizer,
-    'Lsi': get_lsi_vectorizer
-}
-
-# Default values per transformer type
-TRANSFORMER_DEFAULTS = {
-    'Dictionary': {},
-    'Count': '',
-    'Tfidf': '',
-    'Lda': '',
-    'Lsi': ''
+TRANSFORMERS = {
+    'Dictionary': {
+        'mthd': get_dict_vectorizer,
+        'parameters': ['separator', 'sparse'],
+        'parameters_types': {},
+        'default': {},  # default value
+        'defaults': {}  # default values of the parameters
+    },
+    'Count': {
+        'mthd': get_count_vectorizer,
+        'parameters': ['charset', 'charset_error',
+                       'strip_accents', 'lowercase',
+                       'stop_words', 'token_pattern',
+                       'analyzer', 'max_df', 'min_df',
+                       'max_features', 'vocabulary',
+                       'binary', 'ngram_range_min',
+                       'ngram_range_max'],
+        'parameters_types': {'min_df': float_or_int, 'max_df': float_or_int},
+        'default': '',
+        'defaults': {}
+    },
+    'Tfidf': {
+        'mthd': get_tfidf_vectorizer,
+        'parameters': ['charset', 'charset_error',
+                       'strip_accents', 'lowercase',
+                       'analyzer', 'stop_words',
+                       'token_pattern', 'max_df',
+                       'min_df', 'max_features',
+                       'vocabulary', 'binary',
+                       'use_idf', 'smooth_idf',
+                       'sublinear_tf', 'ngram_range_min',
+                       'ngram_range_max'],
+        'parameters_types': {'min_df': float_or_int, 'max_df': float_or_int},
+        'default': '',
+        'defaults': {}
+    },
+    'Lda': {
+        'mthd': get_lda_vectorizer,
+        'parameters': ['charset', 'charset_error',
+                        'strip_accents', 'lowercase',
+                        'stop_words', 'token_pattern',
+                        'analyzer', 'max_df', 'min_df',
+                        'max_features', 'vocabulary',
+                        'binary',
+                        'num_topics', 'id2word', 'alpha',
+                        'eta', 'distributed', 'topic_file'],
+        'parameters_types': {'min_df': float_or_int, 'max_df': float_or_int},
+        'default': '',
+        'defaults': {}
+    },
+    'Lsi': {
+        'mthd': get_lsi_vectorizer,
+        'parameters': ['charset', 'charset_error',
+                        'strip_accents', 'lowercase',
+                        'stop_words', 'token_pattern',
+                        'analyzer', 'max_df', 'min_df',
+                        'max_features', 'vocabulary',
+                        'binary',
+                        'num_topics', 'id2word',
+                        'distributed', 'onepass',
+                        'power_iters', 'extra_samples',
+                        'topic_file'],
+        'parameters_types': {'min_df': float_or_int, 'max_df': float_or_int},
+        'default': '',
+        'defaults': {}
+    }
 }
