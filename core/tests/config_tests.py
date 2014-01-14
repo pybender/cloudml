@@ -47,14 +47,16 @@ class ConfigTest(unittest.TestCase):
         config = {
             'classifier': {
                 'type': 'logistic regression',
-                'penalty': 'l1',
-                'dual': False,
-                'C': 1.0,
-                'fit_intercept': True,
-                'intercept_scaling': 1.0,
-                'class_weight': None,
-                'tol': None,
-                'should': 'ignore'
+                'params': {
+                    'penalty': 'l1',
+                    'dual': False,
+                    'C': 1.0,
+                    'fit_intercept': True,
+                    'intercept_scaling': 1.0,
+                    'class_weight': None,
+                    'tol': None,
+                    'should': 'ignore'
+                }
             }
         }
         self.config._process_classifier(config)
@@ -68,10 +70,12 @@ class ConfigTest(unittest.TestCase):
         config = {
             'classifier': {
                 'type': 'logistic regression',
-                'class_weight': {
-                    '0': 1,
-                    '1': 2
-                },
+                'params': {
+                    'class_weight': {
+                        '0': 1,
+                        '1': 2
+                    },
+                }
             }
         }
         self.config._process_classifier(config)
