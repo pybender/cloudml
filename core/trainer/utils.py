@@ -39,3 +39,12 @@ def is_empty(var):
         pass
 
     return False
+
+
+def float_or_int(value):
+    if isinstance(value, (int, float)):
+        return value
+    value = float(value)
+    if int(value) == value:
+        value = int(value)
+    return value
