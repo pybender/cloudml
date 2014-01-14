@@ -45,9 +45,11 @@ def get_scaler(scaler_config, default_scaler):
         raise ScalerException('Scaler %s do not support' % scaler_type)
 
     params = SCALERS[scaler_type]['params'].copy()
-    scaler_params = copy_expected(scaler_config,
-                           SCALERS[scaler_type]['params'].keys())
-    params.update(scaler_params)
+    params_from_config = scaler_config.get('params', None)
+    if params_from_config is not None:
+        scaler_params = copy_expected(
+            params_from_config, SCALERS[scaler_type]['params'].keys())
+        params.update(scaler_params)
     # process range params
     for param_name, param in params.copy().iteritems():
         if param_name.endswith('_min'):
