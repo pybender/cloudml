@@ -157,7 +157,7 @@ class Trainer():
                      memory_usage(-1, interval=0, timeout=None)[0])
 
         logging.info('Number of features: %s' % (true_data.shape[1], ))
-        self._classifier.fit(true_data, labels)
+        self._classifier.fit(true_data, [str(l) for l in labels])
         logging.info("Memory usage: %f" % 
                      memory_usage(-1, interval=0, timeout=None)[0])
         true_data = None
