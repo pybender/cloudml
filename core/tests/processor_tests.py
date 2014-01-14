@@ -48,9 +48,9 @@ class ProcessorCase(unittest.TestCase):
         row_data = {'should', 'ignore'}
         item = {
             'source': 'testme',
-            'process-as': 'string',
-            'is-required': True,
-            'target-features': [
+            'process_as': 'string',
+            'is_required': True,
+            'target_features': [
                 {'name': 'test.feature'}
             ]
         }
@@ -61,9 +61,9 @@ class ProcessorCase(unittest.TestCase):
         row_data = {'should', 'ignore'}
         item = {
             'source': 'testme',
-            'process-as': 'string',
-            'is-required': True,
-            'target-features': [
+            'process_as': 'string',
+            'is_required': True,
+            'target_features': [
                 {'name': 'test.feature'}
             ]
         }
@@ -74,9 +74,9 @@ class ProcessorCase(unittest.TestCase):
         row_data = {'should', 'ignore'}
         item = {
             'source': 'testme',
-            'process-as': 'string',
-            'is-required': True,
-            'target-features': [
+            'process_as': 'string',
+            'is_required': True,
+            'target_features': [
                 {'name': 'test.feature'},
                 {'name': 'test.feature2'}
             ]
@@ -90,8 +90,8 @@ class ProcessorCase(unittest.TestCase):
                     'param3': 'test',
                     'param4': 3}
         item = {
-            'process-as': 'expression',
-            'target-features': [
+            'process_as': 'expression',
+            'target_features': [
                 {
                     'name': 'test.feature1',
                     'expression': {
@@ -117,8 +117,8 @@ class ProcessorCase(unittest.TestCase):
                     'param2': 'value',
                     'param4': 3}
         item = {
-            'process-as': 'expression',
-            'target-features': [
+            'process_as': 'expression',
+            'target_features': [
                 {
                     'name': 'test.feature1',
                     'expression': {
@@ -142,8 +142,8 @@ class ProcessorCase(unittest.TestCase):
     def test_process_expression_without_target_expression(self):
         row_data = {'param1': 42, 'param2': 'value'}
         item = {
-            'process-as': 'expression',
-            'target-features': [
+            'process_as': 'expression',
+            'target_features': [
                 {
                     'name': 'test.feature1'
                 }
@@ -160,8 +160,8 @@ class ProcessorCase(unittest.TestCase):
     def test_process_json(self):
         item = {
             'source': 'contractor',
-            'process-as': 'json',
-            'target-features': [
+            'process_as': 'json',
+            'target_features': [
                 {'name': 'name', 'jsonpath': '$.person_info.name'},
                 {'name': 'age', 'jsonpath': '$.person_info.age'},
                 {
@@ -183,16 +183,17 @@ class ProcessorCase(unittest.TestCase):
 
         result = process_json(self._data, item, {'should', 'ignore'})
         expected = {
-            'name': 'Bilbo',
-            'age': '111',
+            'name': u'Bilbo',
+            'age': u'111',
             'friends': {
-                'Frodo': 1.0,
-                'Thorin': 11.0
+                'Frodo': u'1.0',
+                'Thorin': u'11.0',
             },
             'notthere': None,
-            'friend_names1': 'Frodo,Thorin',
-            'friend_names2': ['Frodo', 'Thorin']
+            'friend_names1': u'Frodo,Thorin',
+            'friend_names2': [u'Frodo', u'Thorin']
         }
+        print result
         self.assertDictEqual(result, expected)
 
 if __name__ == '__main__':
