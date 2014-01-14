@@ -163,7 +163,7 @@ def process_json(value, query_item, row_data):
             elif len(path_result) > 1:
                 # Multiple results from JSONPath
                 result_list = filter(None, path_result)
-                if feature.get('to-csv', False) is True:
+                if feature.get('to_csv', False) is True:
                     result[feature['name']] = ','.join(result_list)
                 else:
                     result[feature['name']] = result_list

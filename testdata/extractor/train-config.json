@@ -1,5 +1,5 @@
 {
-  "target-schema":"bestmatch",
+  "target_schema":"bestmatch",
   "datasource":[
     {
       "name":"odw",
@@ -19,14 +19,14 @@
           "source": "higher_outcome",
           "process-as": "string",
           "is-required": true,
-          "target-features": [
+          "target_features": [
             { "name": "higher_outcome" }
           ]
         },
         { "source": "employer_info",
-          "is-required": true,
+          "is_required": true,
           "process-as": "json",
-          "target-features": [
+          "target_features": [
             { "name": "employer.op_timezone", "jsonpath": "$.op_timezone"},
             { "name": "employer.op_country_tz", "jsonpath": "$.op_country_tz" },
             { "name": "tsexams", "jsonpath": "$.tsexams", "key-path": "$.ts_name", "value-path": "$.ts_score" },
@@ -35,8 +35,8 @@
           ]
         },
         {
-          "process-as": "expression",
-          "target-features": [
+          "process_as": "expression",
+          "target_features": [
             { "name": "country_pair", "expression": "%(employer.country)s,%(contractor.country)s"}
           ]
         }

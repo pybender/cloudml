@@ -1,5 +1,5 @@
 {
-  "target-schema":"bestmatch",
+  "target_schema":"bestmatch",
   "queries":[
     {
       "name":"retrieve",
@@ -7,9 +7,9 @@
       "items": [
         {
           "source": "higher_outcome",
-          "process-as": "string",
-          "is-required": true,
-          "target-features": [
+          "process_as": "string",
+          "is_required": true,
+          "target_features": [
             { "name": "higher_outcome" }
           ]
         }

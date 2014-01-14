@@ -1,5 +1,5 @@
 {
-  "target-schema":"bestmatch",
+  "target_schema":"bestmatch",
   "datasource":[
     {
       "name":"odw",

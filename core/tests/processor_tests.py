@@ -48,9 +48,9 @@ class ProcessorCase(unittest.TestCase):
         row_data = {'should', 'ignore'}
         item = {
             'source': 'testme',
-            'process-as': 'string',
-            'is-required': True,
-            'target-features': [
+            'process_as': 'string',
+            'is_required': True,
+            'target_features': [
                 {'name': 'test.feature'}
             ]
         }
@@ -61,9 +61,9 @@ class ProcessorCase(unittest.TestCase):
         row_data = {'should', 'ignore'}
         item = {
             'source': 'testme',
-            'process-as': 'string',
-            'is-required': True,
-            'target-features': [
+            'process_as': 'string',
+            'is_required': True,
+            'target_features': [
                 {'name': 'test.feature'}
             ]
         }
@@ -74,9 +74,9 @@ class ProcessorCase(unittest.TestCase):
         row_data = {'should', 'ignore'}
         item = {
             'source': 'testme',
-            'process-as': 'string',
-            'is-required': True,
-            'target-features': [
+            'process_as': 'string',
+            'is_required': True,
+            'target_features': [
                 {'name': 'test.feature'},
                 {'name': 'test.feature2'}
             ]
@@ -90,8 +90,8 @@ class ProcessorCase(unittest.TestCase):
                     'param3': 'test',
                     'param4': 3}
         item = {
-            'process-as': 'expression',
-            'target-features': [
+            'process_as': 'expression',
+            'target_features': [
                 {
                     'name': 'test.feature1',
                     'expression': {
@@ -117,8 +117,8 @@ class ProcessorCase(unittest.TestCase):
                     'param2': 'value',
                     'param4': 3}
         item = {
-            'process-as': 'expression',
-            'target-features': [
+            'process_as': 'expression',
+            'target_features': [
                 {
                     'name': 'test.feature1',
                     'expression': {
@@ -142,8 +142,8 @@ class ProcessorCase(unittest.TestCase):
     def test_process_expression_without_target_expression(self):
         row_data = {'param1': 42, 'param2': 'value'}
         item = {
-            'process-as': 'expression',
-            'target-features': [
+            'process_as': 'expression',
+            'target_features': [
                 {
                     'name': 'test.feature1'
                 }
@@ -160,19 +160,19 @@ class ProcessorCase(unittest.TestCase):
     def test_process_json(self):
         item = {
             'source': 'contractor',
-            'process-as': 'json',
-            'target-features': [
+            'process_as': 'json',
+            'target_features': [
                 {'name': 'name', 'jsonpath': '$.person_info.name'},
                 {'name': 'age', 'jsonpath': '$.person_info.age'},
                 {
                     'name': 'friends', 'jsonpath': '$.person_info.friends',
-                    'key-path': '$.*.name', 'value-path': '$.*.race'
+                    'key_path': '$.*.name', 'value_path': '$.*.race'
                 },
                 {'name': 'notthere', 'jsonpath': '$.notthere'},
                 {
                     'name': 'friend_names1',
                     'jsonpath': '$.person_info.friends.*.name',
-                    'to-csv': True
+                    'to_csv': True
                 },
                 {
                     'name': 'friend_names2',
@@ -198,7 +198,7 @@ class ProcessorCase(unittest.TestCase):
     def test_process_readability(self):
         row_data = {'text': """We are close to wrapping up our 10 week Rails Course. This week we will cover a handful of topics commonly encountered in Rails projects. We then wrap up with part 2 of our Reddit on Rails exercise!  By now you should be hard at work on your personal projects. The students in the course just presented in front of the class with some live demos and a brief intro to to the problems their app were solving. Maybe set aside some time this week to show someone your progress, block off 5 minutes and describe what goal you are working towards, the current state of the project (is it almost done, just getting started, needs UI, etc.), and then show them a quick demo of the app. Explain what type of feedback you are looking for (conceptual, design, usability, etc.) and see what they have to say.  As we are wrapping up the course you need to be focused on learning as much as you can, but also making sure you have the tools to succeed after the class is over."""}
         item = {
-            'target-features': [
+            'target_features': [
             {
                 'name': 'test.feature1',
                 'expression': {
@@ -212,7 +212,7 @@ class ProcessorCase(unittest.TestCase):
         result = process_composite('should ignore', item, row_data)
         self.assertDictEqual(result, {'test.feature1': 88.9553})
 
-        item['target-features'][0]['expression']['readability_type'] = 'coleman_liau_index'
+        item['target_features'][0]['expression']['readability_type'] = 'coleman_liau_index'
         result = process_composite('should ignore', item, row_data)
         self.assertDictEqual(result, {'test.feature1': 6.7804})
 
@@ -224,8 +224,8 @@ class ProcessorCase(unittest.TestCase):
     def test_process_expression_encoding(self):
         row_data = {'param1': u'\u2019 value', 'param2': 'test'}
         item = {
-            'process-as': 'expression',
-            'target-features': [
+            'process_as': 'expression',
+            'target_features': [
                 {
                     'name': 'test.feature1',
                     'expression': {
@@ -240,8 +240,8 @@ class ProcessorCase(unittest.TestCase):
 
         row_data = {'param1': u'\u2019 value', 'param2': 'test'}
         item = {
-            'process-as': 'expression',
-            'target-features': [
+            'process_as': 'expression',
+            'target_features': [
                 {
                     'name': 'test.feature1',
                     'expression': {
