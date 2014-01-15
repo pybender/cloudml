@@ -1,6 +1,14 @@
 Changelog
 =========
 
+Relese 2014-01-15
+-----------------
+* Feature - Added process-as readability for composite type
+* Task - Added import math and datatime to pocessors.py
+* Bug - Fixed issue with min_df parameter
+* Bug - Fixed issue with class_weights parameter 
+
+
 Relese 2013-11-17
 -----------------
 * Feature - Added support csv format for train model
