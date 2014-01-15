@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 __author__ = 'ifouk'
 
 import logging
@@ -89,13 +90,15 @@ and "value" for target feature %s' % (feature['name']))
             result[feature['name']] = None
         else:
             try:
-                for k, v in row_data.iteritems():
-                    if isinstance(v, basestring):
-                        row_data[k] = v.encode('utf-8', errors='ignore')
+                #for k, v in row_data.iteritems():
+                    # if isinstance(v, basestring):
+                    #     row_data[k] = v.encode('utf-8', errors='ignore')
                 if expression_type == 'string':
                     result[feature['name']] = expression_value % row_data
                 elif expression_type == 'python':
-                    result[feature['name']] = eval(expression_value % row_data)
+                    value = expression_value % row_data
+                    value = value.decode('utf8', 'ignore')
+                    result[feature['name']] = eval(value)
                 elif expression_type == 'readability':
                     if 'readability_type' not in feature['expression']:
                         raise ProcessException('''Must define an expression
@@ -105,7 +108,9 @@ with "readability_type" for target feature %s''' % (feature['name']))
                         raise ProcessException('''Readability_type "%s" is
 not defined for target feature %s''' % (r_type, feature['name']))
                     r_func = READABILITY_METHODS[r_type]
-                    readability = Readability(expression_value % row_data)
+                    value = expression_value % row_data
+                    value = value.encode('utf8', 'ignore')
+                    readability = Readability(value)
                     result[feature['name']] = getattr(readability, r_func)()
             except NameError as e:
                 raise ProcessException('%s (expression: %s)' %
