@@ -4,8 +4,10 @@ import logging
 import json
 import re
 import math
+import datetime
 
 from jsonpath import jsonpath
+from sklearn.feature_extraction.readability import Readability
 
 EXPRESSION_RE = re.compile('%\(([^\(\)]+)\)s')
 
@@ -87,13 +89,24 @@ and "value" for target feature %s' % (feature['name']))
             result[feature['name']] = None
         else:
             try:
+                for k, v in row_data.iteritems():
+                    if isinstance(v, basestring):
+                        row_data[k] = v.encode('utf-8', errors='ignore')
                 if expression_type == 'string':
                     result[feature['name']] = expression_value % row_data
                 elif expression_type == 'python':
-                    for k, v in row_data.iteritems():
-                        if isinstance(v, basestring):
-                            row_data[k] = v.decode('utf-8')
                     result[feature['name']] = eval(expression_value % row_data)
+                elif expression_type == 'readability':
+                    if 'readability_type' not in feature['expression']:
+                        raise ProcessException('''Must define an expression
+with "readability_type" for target feature %s''' % (feature['name']))
+                    r_type = feature['expression']['readability_type']
+                    if r_type not in READABILITY_METHODS:
+                        raise ProcessException('''Readability_type "%s" is
+not defined for target feature %s''' % (r_type, feature['name']))
+                    r_func = READABILITY_METHODS[r_type]
+                    readability = Readability(expression_value % row_data)
+                    result[feature['name']] = getattr(readability, r_func)()
             except NameError as e:
                 raise ProcessException('%s (expression: %s)' %
                                        (e, expression_value % row_data))
@@ -152,7 +165,7 @@ def process_json(value, query_item, row_data):
             elif len(path_result) > 1:
                 # Multiple results from JSONPath
                 result_list = filter(None, path_result)
-                if feature.get('to-csv', False) is True:
+                if feature.get('to_csv', False) is True:
                     result[feature['name']] = ','.join(result_list)
                 else:
                     result[feature['name']] = result_list
@@ -187,4 +200,15 @@ PROCESS_STRATEGIES = {
     'integer': process_primitive(int),
     'json': process_json,
     'composite': process_composite
+}
+
+READABILITY_METHODS = {
+    'ari': 'ARI',
+    'flesch_reading_ease': 'FleschReadingEase',
+    'flesch_kincaid_grade_level': 'FleschKincaidGradeLevel',
+    'gunning_fog_index': 'GunningFogIndex',
+    'smog_index': 'SMOGIndex',
+    'coleman_liau_index': 'ColemanLiauIndex',
+    'lix': 'LIX',
+    'rix': 'RIX',
 }

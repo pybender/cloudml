@@ -3,6 +3,6 @@ numpy
 psycopg2==2.4.6
 scipy
 #scikit-learn
--e git+https://github.com/nanli0416/scikit-learn.git@feature_extraction_text-ldalsi_vectorizers#egg=scikit-learn
+-e git+https://github.com/nanli0416/scikit-learn.git@new-feat-feature_extraction-text#egg=scikit-learn
 memory-profiler
 sqlparse
