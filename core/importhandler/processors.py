@@ -1,11 +1,17 @@
 # -*- coding: utf-8 -*-
 __author__ = 'ifouk'
 
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
 import logging
 import json
 import re
 import math
 import datetime
+
+
 
 from jsonpath import jsonpath
 from sklearn.feature_extraction.readability import Readability
@@ -95,7 +101,7 @@ and "value" for target feature %s' % (feature['name']))
                     #     row_data[k] = v.encode('utf-8', errors='ignore')
                 
                 value = expression_value % row_data
-                value = value.encode('utf8', 'ignore')
+                value = value.decode('utf8', 'ignore')
                 if expression_type == 'string':
                     result[feature['name']] = value
                 elif expression_type == 'python':
