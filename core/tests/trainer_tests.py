@@ -113,6 +113,22 @@ class TrainerTestCase(unittest.TestCase):
             self.assertEqual(len(old_model.features), len(new_model.features))
             self.assertEqual(old_model.features.keys(), new_model.features.keys())
 
+    def test_test(self):
+        from numpy import ndarray
+        from core.trainer.metrics import ClassificationModelMetrics
+        for fmt in FORMATS:
+            self._load_data(fmt)
+            metrics = self._trainer.test(self._data)
+            self.assertIsInstance(metrics, ClassificationModelMetrics)
+            self.assertEquals(metrics.accuracy, 1.0)
+            self.assertIsInstance(metrics.confusion_matrix, ndarray)
+            precision, recall = metrics.precision_recall_curve
+            self.assertIsInstance(precision, ndarray)
+            self.assertIsInstance(recall, ndarray)
+            fpr, tpr = metrics.roc_curve
+            self.assertIsInstance(fpr, ndarray)
+            self.assertIsInstance(tpr, ndarray)
+
     def _load_data(self, fmt):
         """
         Load test data.
