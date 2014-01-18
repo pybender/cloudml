@@ -129,8 +129,8 @@ class ClassificationModelMetrics(Metrics):
     @property
     def accuracy(self):
         if not hasattr(self, '_accuracy'):
-            self._accuracy = self._classifier.score(self._true_data,
-                                                    self._labels)
+            labels = [str(l) for l in self._labels]
+            self._accuracy = self._classifier.score(self._true_data, labels)
         return self._accuracy
 
     def _get_metrics_names(self):

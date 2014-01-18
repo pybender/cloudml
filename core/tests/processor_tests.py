@@ -220,7 +220,7 @@ class ProcessorCase(unittest.TestCase):
         # encoding test
         row_data = {'text': u'\u2019 We are close to wrapping up our 10 week Rails Course. This week we will cover a handful of topics commonly encountered in Rails projects. We then wrap up with part 2 of our Reddit on Rails exercise!  By now you should be hard at work on your personal projects. The students in the course just presented in front of the class with some live demos and a brief intro to to the problems their app were solving. Maybe set aside some time this week to show someone your progress, block off 5 minutes and describe what goal you are working towards, the current state of the project (is it almost done, just getting started, needs UI, etc.), and then show them a quick demo of the app. Explain what type of feedback you are looking for (conceptual, design, usability, etc.) and see what they have to say.  As we are wrapping up the course you need to be focused on learning as much as you can, but also making sure you have the tools to succeed after the class is over.'}
         result = process_composite('should ignore', item, row_data)
-        self.assertDictEqual(result, {'test.feature1': 6.6912})
+        self.assertDictEqual(result, {'test.feature1': 6.7227})
 
     def test_process_expression_encoding(self):
         row_data = {'param1': u'\u2019 value', 'param2': 'test'}
