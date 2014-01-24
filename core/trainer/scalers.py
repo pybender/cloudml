@@ -1,6 +1,6 @@
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
-from utils import copy_expected
+from utils import parse_parameters
 
 
 DEFAULT_SCALER = "MinMaxScaler"
@@ -8,20 +8,19 @@ DEFAULT_SCALER = "MinMaxScaler"
 SCALERS = {
     'MinMaxScaler': {
         'class': MinMaxScaler,
-        'params': {
+        'defaults': {
             'feature_range_min': 0,
             'feature_range_max': 1,
-            'copy': True
-                  },
-        },
+            'copy': True},
+        'parameters': ['feature_range_min', 'feature_range_max', 'copy']},
     'StandardScaler': {
         'class': StandardScaler,
-        'params': {
+        'defaults': {
             'copy': True,
             'with_std': True,
-            'with_mean': True
-                  },
-        }
+            'with_mean': True},
+        'parameters': ['copy', 'with_std', 'with_mean']
+    }
 }
 
 
@@ -44,12 +43,8 @@ def get_scaler(scaler_config, default_scaler):
     if scaler_type not in SCALERS:
         raise ScalerException('Scaler %s do not support' % scaler_type)
 
-    params = SCALERS[scaler_type]['params'].copy()
-    params_from_config = scaler_config.get('params', None)
-    if params_from_config is not None:
-        scaler_params = copy_expected(
-            params_from_config, SCALERS[scaler_type]['params'].keys())
-        params.update(scaler_params)
+    params = parse_parameters(scaler_config, SCALERS[scaler_type])
+
     # process range params
     for param_name, param in params.copy().iteritems():
         if param_name.endswith('_min'):

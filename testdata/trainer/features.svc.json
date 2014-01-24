@@ -23,9 +23,10 @@
       "name":"contractor.dev_title",
       "transformer":{
         "type":"Tfidf",
-        "ngram_range_min":1,
-        "ngram_range_max":1,
-        "min_df":3
+        "params": {
+          "ngram_range_min":1,
+          "ngram_range_max":1,
+          "min_df":3}
       }
     }
   ]

@@ -39,10 +39,12 @@ class TrainerTestCase(unittest.TestCase):
         config = {
             'classifier': {
                 'type': 'logistic regression',
-                'penalty': 'l2',
-                'class_weight': {
-                    '0': 1,
-                    '1': 2
+                'params': {
+                    'penalty': 'l2',
+                    'class_weight': {
+                        '0': 1,
+                        '1': 2
+                    }
                 },
             }
         }

@@ -19,6 +19,17 @@ def copy_expected(source_params, expected):
     return result
 
 
+def parse_parameters(config, settings):
+    """
+    Parse config parameters according to settings.
+    """
+    defaults = settings.get('defaults', {})
+    source_params = defaults.copy()
+    expected = settings.get('parameters', {})
+    source_params.update(config.get('params', {}))
+    return copy_expected(source_params, expected)
+
+
 def is_empty(var):
     """
     Returns true if item is None or has a length of zero (if this item has

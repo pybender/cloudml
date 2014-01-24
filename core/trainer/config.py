@@ -9,7 +9,7 @@ import importlib
 
 from feature_types import FEATURE_TYPE_FACTORIES
 from feature_types import InvalidFeatureTypeException
-from utils import copy_expected
+from utils import parse_parameters
 from transformers import get_transformer
 from scalers import get_scaler
 from collections import OrderedDict
@@ -85,19 +85,12 @@ class FeatureModel(object):
             raise SchemaException('Invalid classifier type')
 
         # Filter only valid parameters
-        classifier_settings = CLASSIFIERS[self.classifier_type]
-
-        defaults = classifier_settings.get('defaults', {})
-        self.classifier.update(defaults)
-
-        params_from_config = classifier_config.get('params', None)
-        if params_from_config is not None:
-            parameters = classifier_settings.get('parameters', [])
-            self.classifier.update(copy_expected(
-                params_from_config, parameters))
+        settings = CLASSIFIERS[self.classifier_type]
+        params = parse_parameters(classifier_config, settings)
+        self.classifier.update(params)
 
         # Trying to load classifier class
-        module, name = classifier_settings.get('cls').rsplit(".", 1)
+        module, name = settings.get('cls').rsplit(".", 1)
         module = importlib.import_module(module)
         self.classifier_cls = getattr(module, name)
 

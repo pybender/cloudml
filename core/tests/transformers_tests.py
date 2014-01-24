@@ -20,9 +20,9 @@ class TransformersTest(unittest.TestCase):
     def test_get_transformer_count(self):
         data = {
             'type': 'Count',
-            'ngram_range_min': 1,
-            'ngram_range_max': 3,
-            'min_df': 10, 'max_df': 20
+            'params': {'ngram_range_min': 1,
+                       'ngram_range_max': 3,
+                       'min_df': 10, 'max_df': 20}
         }
         transformer = get_transformer(data)
         self.assertIsInstance(transformer, CountVectorizer)
@@ -33,9 +33,9 @@ class TransformersTest(unittest.TestCase):
     def test_get_transformer_tfidf(self):
         data = {
             'type': 'Tfidf',
-            'ngram_range_min': 1,
-            'ngram_range_max': 3,
-            'min_df': 10
+            'params': {'ngram_range_min': 1,
+                       'ngram_range_max': 3,
+                       'min_df': 10}
         }
         transformer = get_transformer(data)
         self.assertIsInstance(transformer, TfidfVectorizer)
@@ -45,7 +45,7 @@ class TransformersTest(unittest.TestCase):
     def test_get_transformer_dict(self):
         data = {
             'type': 'Dictionary',
-            'separator': ','
+            'params': {'separator': ','}
         }
         transformer = get_transformer(data)
         self.assertIsInstance(transformer, DictVectorizer)
@@ -63,17 +63,18 @@ class TransformersTest(unittest.TestCase):
     def test_get_transformer_unknown(self):
         data = {
             'type': 'MyCustomVectorizer',
-            'ngram_range_min': 1,
-            'ngram_range_max': 3,
-            'min_df': 10, 'max_df': 20
+            'params': {'ngram_range_min': 1,
+                       'ngram_range_max': 3,
+                       'min_df': 10, 'max_df': 20}
         }
         self.assertIsNone(get_transformer(data))
 
     def test_get_transformer_no_type(self):
         data = {
-            'ngram_range_min': 1,
-            'ngram_range_max': 3,
-            'min_df': 10, 'max_df': 20
+            'params': {
+                'ngram_range_min': 1,
+                'ngram_range_max': 3,
+                'min_df': 10, 'max_df': 20}
         }
         self.assertIsNone(get_transformer(data))
 

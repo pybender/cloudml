@@ -3,7 +3,7 @@ from scipy.sparse import csc_matrix
 
 __author__ = 'ifoukarakis'
 
-from utils import copy_expected, float_or_int
+from utils import copy_expected, float_or_int, parse_parameters
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.feature_extraction.text import LdaVectorizer, LsiVectorizer
@@ -17,7 +17,7 @@ class ScalerDecorator(object):
     processing.
 
     """
-    def __init__(self, params):
+    def __init__(self, config):
         """
         Creates a ScalerDecorator. Uses the config under the transformer JSON
         object. Internally, a scaler is created using the given params.
@@ -26,8 +26,8 @@ class ScalerDecorator(object):
         params -- a map containing the scaler's configuration.
 
         """
-        filtered_params = copy_expected(params, ['copy', 'with_mean',
-                                                 'with_std'])
+        filtered_params = copy_expected(
+            config['params'], ['copy', 'with_mean', 'with_std'])
 
         self._scaler = StandardScaler(**filtered_params)
 
@@ -159,17 +159,15 @@ def get_transformer(transformer):
     if transformer_type not in TRANSFORMERS:
         return None
 
-    config = TRANSFORMERS[transformer_type]
-
-    filtered_params = copy_expected(
-        transformer, config['parameters'])
+    settings = TRANSFORMERS[transformer_type]
+    filtered_params = parse_parameters(transformer, settings)
     for param in filtered_params:
-        param_type = config['parameters_types'].get(
+        param_type = settings['parameters_types'].get(
             param, None)
         if param_type:
             filtered_params[param] = param_type(filtered_params[param])
 
-    return config['mthd'](filtered_params)
+    return settings['mthd'](filtered_params)
 
 
 TRANSFORMERS = {
