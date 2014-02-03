@@ -107,8 +107,8 @@ def get_count_vectorizer(params):
 
     """
     if 'ngram_range_min' in params and 'ngram_range_max' in params:
-        params['ngram_range'] = (int(params['ngram_range_min']),
-                                 int(params['ngram_range_max']))
+        params['ngram_range'] = (params['ngram_range_min'],
+                                 params['ngram_range_max'])
     if 'ngram_range_min' in params:
         del params['ngram_range_min']
     if 'ngram_range_max' in params:
@@ -127,8 +127,8 @@ def get_tfidf_vectorizer(params):
 
     """
     if 'ngram_range_min' in params and 'ngram_range_max' in params:
-        params['ngram_range'] = (int(params['ngram_range_min']),
-                                 int(params['ngram_range_max']))
+        params['ngram_range'] = (params['ngram_range_min'],
+                                 params['ngram_range_max'])
     if 'ngram_range_min' in params:
         del params['ngram_range_min']
     if 'ngram_range_max' in params:
@@ -187,7 +187,8 @@ TRANSFORMERS = {
                        'max_features', 'vocabulary',
                        'binary', 'ngram_range_min',
                        'ngram_range_max'],
-        'parameters_types': {'min_df': float_or_int, 'max_df': float_or_int},
+        'parameters_types': {'min_df': float_or_int, 'max_df': float_or_int,
+                             'ngram_range_min': int, 'ngram_range_max': int},
         'default': '',
         'defaults': {}
     },
@@ -202,7 +203,8 @@ TRANSFORMERS = {
                        'use_idf', 'smooth_idf',
                        'sublinear_tf', 'ngram_range_min',
                        'ngram_range_max'],
-        'parameters_types': {'min_df': float_or_int, 'max_df': float_or_int},
+        'parameters_types': {'min_df': float_or_int, 'max_df': float_or_int,
+                            'ngram_range_min': int, 'ngram_range_max': int},
         'default': '',
         'defaults': {}
     },
