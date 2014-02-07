@@ -17,7 +17,11 @@ class Metrics(object):
         if(len(self._vectorized_data) == 1):
             self._true_data = numpy.array(self._vectorized_data[0])
         else:
-            self._true_data = hstack(self._vectorized_data)
+            try:
+                self._true_data = hstack(self._vectorized_data)
+            except ValueError:
+                self._true_data = numpy.hstack(self._vectorized_data)
+
         self._vectorized_data = None
         self._probs = classifier.predict_proba(self._true_data)
         self._preds = classifier.predict(self._true_data)
