@@ -25,7 +25,7 @@ class Field(object):
 
     def __init__(self, config):
         self.config = config
-        self.name = config.get('name')
+        self.name = config.get('name')  # unique
         self.type = config.get('type', 'string')
         self.source = config.get('column', None)
         self.jsonpath = config.get('jsonpath', None)
@@ -47,7 +47,7 @@ class Field(object):
         if self.transform == 'json':  # Let's find inner entity with data
             # Parse JSON string
             data = load_json(item_value)
-            for field in entity.entities[self.name].fields.values():
+            for field in entity.json_datasources[self.name].fields.values():
                 value = jsonpath(data, field.jsonpath)[0]
                 result[field.name] = convert_type(field, value)
         else:
@@ -58,11 +58,12 @@ class Field(object):
 class Entity(object):
     def __init__(self, config):
         self.fields = {}
-        self.entities = {}
+        self.json_datasources = {}  # entities, that used as json datasource.
+        self.entities = []  # Nested entities with specific datasources.
 
         self.config = config
         self.datasource_name = config.attrib['datasource']
-        self.name = config.attrib.get('name') or self.datasource_name
+        self.name = config.attrib.get('name')
         self.query = config.attrib.get('query')
         if not self.query and hasattr(config, 'query'):
             self.query = config.query
@@ -73,7 +74,10 @@ class Entity(object):
 
         for entity_config in config.xpath("entity"):
             entity = Entity(entity_config)
-            self.entities[entity.name] = entity
+            if entity.datasource_name in self.fields:
+                self.json_datasources[entity.datasource_name] = entity
+            else:
+                self.entities.append(entity)
 
     def get_iter(self, datasource, params={}):
         query = prepare_query(self.query.text, params,
