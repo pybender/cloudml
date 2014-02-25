@@ -69,7 +69,7 @@ class ExtractorTest(unittest.TestCase):
                                             {'start': '2013-01-27',
                                              'end': '2013-01-30'})
             # Test that all required params are provided.
-            self._extractor._validate_input_params({'start': '2013-01-27',
+            self._extractor.process_input_params({'start': '2013-01-27',
                                              'end': '2013-01-30'})
         except ImportHandlerException:
             #Should not happen
@@ -77,7 +77,7 @@ class ExtractorTest(unittest.TestCase):
 
         try:
             # Test when missing params.
-            self._extractor._validate_input_params({'end': '2013-01-30'})
+            self._extractor.process_input_params({'end': '2013-01-30'})
             self.fail('Should raise exception when param is mising')
         except ImportHandlerException:
             #Should happen
@@ -85,7 +85,7 @@ class ExtractorTest(unittest.TestCase):
 
         try:
             # Test when no params provided.
-            self._extractor._validate_input_params({})
+            self._extractor.process_input_params({})
             self.fail('Should raise exception when param is mising')
         except ImportHandlerException:
             #Should happen
@@ -93,7 +93,7 @@ class ExtractorTest(unittest.TestCase):
 
         try:
             # Test when no params provided.
-            self._extractor._validate_input_params(None)
+            self._extractor.process_input_params(None)
             self.fail('Should raise exception when param is mising')
         except ImportHandlerException:
             #Should happen
