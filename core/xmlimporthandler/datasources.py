@@ -21,7 +21,7 @@ class BaseDataSource(object):
 
 class DbDataSource(BaseDataSource):
     """
-    Database connection
+    Database connection.
     """
     def _get_iter(self, query):
         db_iter = self.DB_ITERS.get(self.config[0].attrib['vendor'])

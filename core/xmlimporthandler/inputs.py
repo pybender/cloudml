@@ -10,7 +10,11 @@ def process_date(value, format):
     return datetime.strptime(value, format)
 
 
-class Input(object):  # TODO: int in documentation.
+class Input(object):
+    """
+    Input parameter configuration.
+    """
+# TODO: int in documentation.
 # We need use int or integer everywhere
     PROCESS_STRATEGIES = {
         'string': process_primitive(str, raise_exc=True),
@@ -32,6 +36,9 @@ class Input(object):  # TODO: int in documentation.
             self.format = "%Y-%m-%d"
 
     def process_value(self, value):
+        """
+        Validates and converts input parameter to corresponding type.
+        """
         if value is None:
             raise ImportHandlerException(
                 'Input parameter %s is required' % self.name)

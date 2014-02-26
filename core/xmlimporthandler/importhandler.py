@@ -100,35 +100,31 @@ class ExtractionPlan(object):
     #         self.input_params.extend(user_params)
 
 
-class BaseImportHandler(object):
-
-    def __init__(self, plan):
-        self._plan = plan
-
-    def _process_row(self, row):
-        return row
-
-
-class ImportHandler(BaseImportHandler):
+class ImportHandler(object):
 
     def __init__(self, plan, params={}):
-        super(ImportHandler, self).__init__(plan)
+        super(ImportHandler, self).__init__()
         self.count = 0
         self.ignored = 0
 
         config = plan._data
 
         self.load_inputs(config)
+        self.process_input_params(params)
+
         self.load_datasources(config)
         self.load_scripts(config)
 
-        self.process_input_params(params)
-
+        # Loading import section
         self.entity = Entity(config['import'].entity)
         self.entity_processor = EntityProcessor(
             self.entity, import_handler=self)
 
     def load_inputs(self, config):
+        """
+        Loads dictionary of the input parameters
+        from import handler configuration.
+        """
         self.inputs = {}
         inputs_conf = config.inputs
         if inputs_conf is not None:
@@ -137,12 +133,18 @@ class ImportHandler(BaseImportHandler):
                 self.inputs[inp.name] = inp
 
     def load_datasources(self, config):
+        """
+        Loads global datasources from configuration.
+        """
         self.datasources = {}
         for ds_config in iterchildren(config.datasources):
             ds = DataSource.factory(ds_config)
             self.datasources[ds.name] = ds
 
     def load_scripts(self, config):
+        """
+        Loads and executes javascript from import handler configuration.
+        """
         self.script_manager = ScriptManager()
         for script in config.xpath("script"):
             self.script_manager.add_js(script.text)
