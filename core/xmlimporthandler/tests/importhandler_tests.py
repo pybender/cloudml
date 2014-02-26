@@ -9,7 +9,8 @@ from core.xmlimporthandler.scripts import ScriptManager
 from core.xmlimporthandler.entities import Field
 from constants import ROW, PARAMS
 
-BASEDIR = '../../testdata'
+BASEDIR = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '../../../testdata'))
 
 
 class ScriptManagerTest(unittest.TestCase):
@@ -36,9 +37,15 @@ class TestField(unittest.TestCase):
 class ExtractionXMLPlanTest(unittest.TestCase):
 
     def setUp(self):
+        self.generic_importhandler_file = os.path.join(BASEDIR,
+                                               'extractorxml',
+                                               'generic-import-handler.xml')
         self.importhandler_file = os.path.join(BASEDIR,
                                                'extractorxml',
                                                'train-import-handler.xml')
+        self.incorrect_importhandler_file = os.path.join(BASEDIR,
+                                               'extractorxml',
+                                               'incorrect-import-handler.xml')
 
     def test_load_valid_plan(self):
         plan = ExtractionPlan(self.importhandler_file)
@@ -48,12 +55,24 @@ class ExtractionXMLPlanTest(unittest.TestCase):
         # user_params = ['start', 'end']
         # self.assertEqual(user_params, plan.input_params)
 
+    def test_load_valid_generic_plan(self):
+        plan = ExtractionPlan(self.generic_importhandler_file)
+
     def test_load_plan_with_syntax_error(self):
         with open(self.importhandler_file, 'r') as fp:
             data = fp.read()
         data = '"' + data
         with self.assertRaises(ImportHandlerException):
             ExtractionPlan(data, is_file=False)
+
+    def test_load_plan_with_schema_error(self):
+        with self.assertRaises(ImportHandlerException) as cm:
+            ExtractionPlan(self.incorrect_importhandler_file)
+        the_exception = cm.exception
+        self.assertEqual(
+            str(the_exception)[:26],
+            'XML file format is invalid'
+        )
 
     # def test_load_plan_with_no_datasource(self):
     #     try:

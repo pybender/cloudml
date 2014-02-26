@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
+import os
 import logging
 from lxml import etree
 from lxml import objectify
@@ -11,6 +12,9 @@ from entities import Entity, EntityProcessor
 from utils import iterchildren
 from exceptions import ImportHandlerException, ProcessException
 from scripts import ScriptManager
+
+
+BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
 
 class ExtractionPlan(object):
@@ -56,8 +60,7 @@ class ExtractionPlan(object):
 
     def _validate_schema(self):
         self._errors = []
-        return
-        with open('schema.xsd', 'r') as schema_fp:
+        with open(os.path.join(BASEDIR, 'schema.xsd'), 'r') as schema_fp:
             xmlschema_doc = etree.parse(schema_fp)
             xmlschema = etree.XMLSchema(xmlschema_doc)
             is_valid = xmlschema(self.data)

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<plan xmlns:buildings="http://www.example.org/NewXMLSchema">
+
+    <!--Inputs required for this import handler to run -->
+    <inputs>
+        <param name="start" type="date" />
+        <param name="end" type="date" />
+    </inputs>
+
+    <datasources>
+        <incorrect>Something that is not expected here</incorrect>
+    </datasources>
+
+    <import>
+
+    </import>
+</plan>
