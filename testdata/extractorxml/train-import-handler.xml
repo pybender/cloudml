@@ -7,6 +7,13 @@
         <param name="start" type="date" />
         <param name="end" type="date" />
     </inputs>
+    <script>
+    <![CDATA[
+        function always99(a) {
+            return 99;
+        }
+    ]]>
+    </script>
 
     <datasources>
         <!--
@@ -15,7 +22,7 @@
         <db name="odw" 
             host="localhost"
             dbname="odw"
-            user="postgres"
+            username="postgres"
             password="postgres"
             vendor="postgres" />
 
@@ -38,6 +45,28 @@
             <field name="employer_info" transform="json" column="employer_info"/>
             <field name="contractor_info" transform="json" column="contractor_info"/>
             <field name="application_id" type="integer" column="application"/>
+
+            <!-- Checking javascript function -->
+            <field name="test_js" type="integer" column="application" script="always99(#{value})" />
+
+            <!-- Checking types processing -->
+            <field name="check_float" type="float" column="float_field" />
+            <field name="check_string" type="string" column="float_field" />
+            <field name="check_int" type="integer" column="int_field" />
+            <field name="check_integer_with_float" type="integer" column="float_field" />
+            <field name="check_boolean" type="boolean" column="float_field" />
+
+            <!-- Checking jsonpath and join -->
+            <field name="autors" column="store" jsonpath="$..author" join=" and " />
+
+            <!-- Checking regex and split -->
+            <field name="say_hello" column="say_hello" regex="(h\w+)"/>
+            <field name="words" column="words" split="\W+"/>
+
+            <field name="date" column="date" dateFormat="%b %d %Y %I:%M%p"/>
+
+            <!-- Checking template -->
+            <field name="template" column="say_hello" template="Greatings: #{value}." split="\W+" join=" and " />
 
             <entity datasource="employer_info">
                 <field name="employer.op_timezone" jsonpath="$.op_timezone" />

@@ -1,12 +1,13 @@
+"""
+Classes to process XML Import Handler import section.
+"""
 import json
-from string import Template
+from datetime import datetime
+import re
 from jsonpath import jsonpath
 
-from exceptions import ProcessException
-
-
-class SqlTemplate(Template):
-    delimiter = '#'
+from exceptions import ProcessException, ImportHandlerException
+from utils import get_key, ParametrizedTemplate
 
 
 def process_primitive(constructor):
@@ -27,22 +28,104 @@ class Field(object):
     }
 
     def __init__(self, config):
-        self.config = config
+        #self.config = config
         self.name = config.get('name')  # unique
         self.type = config.get('type', 'string')
-        self.source = config.get('column', None)
-        self.jsonpath = config.get('jsonpath', None)
-        self.transform = config.get('transform', None)
 
-    def process_value(self, value):
-        if value is not None and self.type is not None:
-            strategy = self.PROCESS_STRATEGIES.get(self.type, None)
-            if strategy is None:
-                raise ImportHandlerException(
-                    'Unknown strategy %s' % self.type)
+        # if entity is using a DB or CSV datasource,
+        # it will use data from this column
+        self.column = config.get('column')
 
-            value = strategy(value)
+        # if entity is a JSON datasource,
+        # it will use this jsonpath to extract data
+        self.jsonpath = config.get('jsonpath')
+        # concatenates values using the defined separator.
+        # Used together with jsonpath only.
+        self.join = config.get('join')
+
+        # applies the given regular expression and
+        # assigns the first match to the value
+        self.regex = config.get('regex')
+        # splits the value to an array of values using
+        # the provided regular expression
+        self.split = config.get('split')
+        # transforms value to a date using the given date/time format
+        self.dateFormat = config.get('dateFormat')
+        # used to define a template for strings. May use variables.
+        self.template = config.get('template')
+        # call the Javascript defined in this element and assign the result
+        # to this field. May use any of the built-in functions or any one
+        # elements.
+        self.script = config.get('script')
+        # transforms this field to a datasource.
+        self.transform = config.get('transform')
+        # used only if transform="csv". Defines the header names for each item
+        # in the CSV field.
+        self.headers = config.get('headers')  # TODO:
+
+        self.validate_attributes()
+
+    def validate_attributes(self):  # TODO:
+        if not self.type in self.PROCESS_STRATEGIES:
+            types = ", ".join(self.PROCESS_STRATEGIES.keys())
+            raise ImportHandlerException(
+                'Type of the field %s is invalid: %s. Choose one of %s' %
+                (self.name, self.type, types))
+
+        if self.type != 'string':
+            def _check_for_string(attr_name):
+                if getattr(self, attr_name):
+                    raise ImportHandlerException('Field %s declaration \
+is invalid: use %s only for string fields' % (self.name, attr_name))
+            _check_for_string('dateFormat')
+
+    def process_value(self, value, script_manager, datasource_type=None):
+        convert_type = True
+
+        if self.jsonpath:
+            value = jsonpath(value, self.jsonpath)
+            if not self.join and isinstance(value, (list, tuple)) \
+                    and len(value) == 1:
+                value = value[0]
+
+        if self.regex:
+            match = re.search(self.regex, value)
+            if match:
+                value = match.group(0)
+            else:
+                return None
+
+        if self.script:
+            value = script_manager.execute_function(self.script, value)
+
+        if self.split:
+            value = re.split(self.split, value)
+
+        if self.join:
+            value = self.join.join(value)
+
+        if self.dateFormat:
+            value = datetime.strptime(value, self.dateFormat)
+            convert_type = False
+
+        if self.template:
+            params = {'value': value}  # TODO: which params also we could use?
+            value = ParametrizedTemplate(self.template).safe_substitute(params)
+
+        if convert_type:
+            value = self.convert_type(value)
+
         return value
+
+    def convert_type(self, value):
+        strategy = self.PROCESS_STRATEGIES.get(self.type)
+        try:
+            if isinstance(value, (list, tuple)):
+                return [strategy(item) for item in value]
+            else:
+                return strategy(value)
+        except ValueError:
+            return None
 
 
 class Entity(object):
@@ -52,12 +135,12 @@ class Entity(object):
     def __init__(self, config):
         self.fields = {}
         self.json_datasources = {}  # entities, that used as json datasource.
-        self.entities = []  # Nested entities with another datasource.
+        self.entities = []  # nested entities with another datasource.
 
-        self.config = config
-        self.datasource_name = config.attrib['datasource']
-        self.name = config.attrib.get('name')
-        self.query = config.attrib.get('query')
+        #self.config = config
+        self.datasource_name = config.get('datasource')
+        self.name = config.get('name')
+        self.query = config.get('query')
         if not self.query and hasattr(config, 'query'):
             self.query = config.query
 
@@ -74,7 +157,7 @@ class Entity(object):
 
     def build_query(self, params):
         target = self.query.get('target')
-        query = SqlTemplate(self.query.text).safe_substitute(params)
+        query = ParametrizedTemplate(self.query.text).safe_substitute(params)
         query = [query]
         if target:
             query.append("SELECT * FROM %s;" % target)
@@ -114,17 +197,21 @@ class EntityProcessor(object):
         return row_data
 
     def process_field(self, field, row):
-        item_value = row.get(field.source, None)
+        item_value = row.get(field.column, None)
         result = {}
+        # TODO: if field.transform == 'csv'
         if field.transform == 'json':  # Let's find inner entity with data
             # Parse JSON string
             data = load_json(item_value)
             json_datasource = self.entity.json_datasources[field.name]
             for sub_field in json_datasource.fields.values():
-                value = jsonpath(data, sub_field.jsonpath)[0]
-                result[sub_field.name] = sub_field.process_value(value)
+                result[sub_field.name] = sub_field.process_value(
+                    data, datasource_type=self.datasource.type,
+                    script_manager=self.import_handler.script_manager)
         else:
-            result[field.name] = field.process_value(item_value)
+            result[field.name] = field.process_value(
+                item_value, datasource_type=self.datasource.type,
+                script_manager=self.import_handler.script_manager)
         return result
 
 

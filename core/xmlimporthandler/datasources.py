@@ -13,6 +13,7 @@ class BaseDataSource(object):
     def __init__(self, config):
         self.config = config
         self.name = config.get('name')  # unique
+        self.type = config.tag
 
     def _get_iter(self, query=None):
         raise Exception('Not implemented')

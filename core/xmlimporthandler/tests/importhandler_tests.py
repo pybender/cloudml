@@ -1,19 +1,45 @@
 import unittest
 import os
-
+from mock import patch
+from datetime import datetime
 
 from core.xmlimporthandler.importhandler import ExtractionPlan, \
     ImportHandlerException, ImportHandler
+from core.xmlimporthandler.scripts import ScriptManager
+from core.xmlimporthandler.entities import Field
+from constants import ROW, PARAMS
 
 BASEDIR = '../../testdata'
+
+
+class ScriptManagerTest(unittest.TestCase):
+    def test_script(self):
+        manager = ScriptManager()
+        self.assertEqual(manager._exec('1+2'), 3)
+
+    def test_manager(self):
+        manager = ScriptManager()
+        manager.add_js("""function intToBoolean(a) {
+            return a == 1;
+        }""")
+        self.assertEqual(manager._exec('intToBoolean(1)'), True)
+
+
+class TestField(unittest.TestCase):
+    def test_field_declaration_validation(self):
+        return
+        field = Field({
+            'name': 'field_name',
+            'type': 'int'})
+        self.assertEqual(field._exec('1+2'), 3)
 
 
 class ExtractionXMLPlanTest(unittest.TestCase):
 
     def setUp(self):
         self.importhandler_file = os.path.join(BASEDIR,
-                                           'extractorxml',
-                                           'train-import-handler.xml')
+                                               'extractorxml',
+                                               'train-import-handler.xml')
 
     def test_load_valid_plan(self):
         plan = ExtractionPlan(self.importhandler_file)
@@ -50,27 +76,60 @@ class ExtractionXMLPlanTest(unittest.TestCase):
     #         # Should happen
     #         pass
 
-class ExtractorTest(unittest.TestCase):
+
+def db_iter_mock(*args, **kwargs):
+    for r in [ROW] * 2:
+        yield r
+
+
+class ImportHandlerTest(unittest.TestCase):
     def setUp(self):
         self._plan = ExtractionPlan(os.path.join(BASEDIR,
                                     'extractorxml',
                                     'train-import-handler.xml'))
 
-    def test_imports(self):
-        self._extractor = ImportHandler(self._plan,
-                                            {'start': '2012-12-03',
-                                             'end': '2012-12-04' })
-        print self._extractor.next()
-        raise Exception('raise')
+    @patch('core.xmlimporthandler.datasources.DbDataSource._get_iter',
+           return_value=db_iter_mock())
+    def test_imports(self, mock_db):
+        self.handler = ImportHandler(self._plan, PARAMS)
+        row = self.handler.next()
+        self.assertTrue(mock_db.called)
+
+        # Checking types
+        print row
+        self.assertEqual(row['check_float'], float(ROW["float_field"]))
+        self.assertEqual(row['check_string'], ROW["float_field"])
+        self.assertEqual(row['check_int'], int(ROW["int_field"]))
+        self.assertEqual(row['check_boolean'], True)
+        self.assertEqual(row['check_integer_with_float'], None)
+
+        # Checking subentries as json datasources
+        self.assertEqual(row['employer.country'], 'Philippines')
+
+        # Checking jsonpath and join
+        self.assertEqual(row['autors'], 'Nigel and Evelyn')
+
+        # Checking regex and split
+        self.assertEqual(row['say_hello'], 'hello')
+        self.assertEqual(row['words'], ['Words', 'words', 'words'])
+
+        # Checking javascript func
+        self.assertEqual(row['test_js'], 99)
+
+        # Checking dataFormat
+        self.assertEqual(row['date'], datetime(2014, 6, 1, 13, 33))
+
+        # Checking template
+        self.assertEqual(
+            row['template'],
+            "Greatings: hello and hi and pruvit.")
 
     def test_validate_input_params(self):
         try:
-            self._extractor = ImportHandler(self._plan,
-                                            {'start': '2013-01-27',
-                                             'end': '2013-01-30'})
+            self._extractor = ImportHandler(self._plan, PARAMS)
             # Test that all required params are provided.
             self._extractor.process_input_params({'start': '2013-01-27',
-                                             'end': '2013-01-30'})
+                                                  'end': '2013-01-30'})
         except ImportHandlerException:
             #Should not happen
             self.fail('Should not raise exception when all params are given')

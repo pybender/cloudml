@@ -10,6 +10,7 @@ from inputs import Input
 from entities import Entity, EntityProcessor
 from utils import iterchildren
 from exceptions import ImportHandlerException, ProcessException
+from scripts import ScriptManager
 
 
 class ExtractionPlan(object):
@@ -115,18 +116,36 @@ class ImportHandler(BaseImportHandler):
         self.count = 0
         self.ignored = 0
 
+        config = plan._data
+
+        self.load_inputs(config)
+        self.load_datasources(config)
+        self.load_scripts(config)
+
         self.process_input_params(params)
-        self.load_datasources()
 
-        main_entity = self._plan.import_.getchildren()[0]
-        self.entity = Entity(main_entity)
-        self.entity_processor = EntityProcessor(self.entity, import_handler=self)
+        self.entity = Entity(config['import'].entity)
+        self.entity_processor = EntityProcessor(
+            self.entity, import_handler=self)
 
-    def load_datasources(self):
+    def load_inputs(self, config):
+        self.inputs = {}
+        inputs_conf = config.inputs
+        if inputs_conf is not None:
+            for param_conf in inputs_conf.xpath("param"):
+                inp = Input.factory(param_conf)
+                self.inputs[inp.name] = inp
+
+    def load_datasources(self, config):
         self.datasources = {}
-        for ds_config in iterchildren(self._plan.datasources):
+        for ds_config in iterchildren(config.datasources):
             ds = DataSource.factory(ds_config)
             self.datasources[ds.name] = ds
+
+    def load_scripts(self, config):
+        self.script_manager = ScriptManager()
+        for script in config.xpath("script"):
+            self.script_manager.add_js(script.text)
 
     def next(self):
         if self.count % 10 == 0:
@@ -147,22 +166,15 @@ class ImportHandler(BaseImportHandler):
 
         Keyword arguments
         params -- the parameters to check
-
         """
-        logging.info('Process input parameters.')
+        logging.info('Validate input parameters.')
         self.params = {}
-
-        param_set = set()
-        if params is not None:
-            param_set = set(params.keys())
-
-        required_set = set([param.get('name') for param in self._plan._data.inputs.iterchildren()])
+        param_set = set(params.keys() if params else ())
+        required_set = set(self.inputs.keys())
         missing = required_set.difference(param_set)
         if len(missing) > 0:
             raise ImportHandlerException('Missing input parameters: %s'
                                          % ', '.join(missing))
-        for name, value in params.iteritems():
-            config = self._plan._data.xpath("//*[@name='%s']" % name)[0]
-            inp = Input.factory(config)
-            inp.validate(value)
-            self.params[name] = value
+
+        for name, inp in self.inputs.iteritems():
+            self.params[name] = inp.process_value(params[name])
