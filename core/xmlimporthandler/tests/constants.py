@@ -6,7 +6,7 @@ PARAMS = {'start': '2012-12-03', 'end': '2012-12-04'}
 
 ROW = {
     "dev_is_looking": "1",
-    "application": 555,
+    "application": '555',
     "contractor_info": {
         "dev_is_looking": "1",
         "dev_is_looking_week": "1",
@@ -24,5 +24,5 @@ ROW = {
     "store": {"book": [{"author": "Nigel"}, {"author": "Evelyn"}]},
     "say_hello": "hello hi pruvit",
     "words": "Words, words, words",
-    "date": "Jun 1 2014  1:33PM"
+    "date": "Jun 1 2014  1:33PM",
 }

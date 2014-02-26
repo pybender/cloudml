@@ -25,6 +25,12 @@
             username="postgres"
             password="postgres"
             vendor="postgres" />
+        <db name="datasource" 
+            host="localhost"
+            dbname="odw"
+            username="postgres"
+            password="postgres"
+            vendor="postgres" />
 
 
         <pig name="pig" connection="host:9876" />
@@ -80,6 +86,9 @@
               <field name="contractor.dev_is_looking_week" jsonpath="$.dev_is_looking_week" />
               <field name="contractor.dev_active_interviews" jsonpath="$.dev_active_interviews" />
               <field name="contractor.dev_availability" type="integer" jsonpath="$.dev_availability" />
+            </entity>
+            <entity name="application_id" datasource="datasource" query="SELECT title FROM applications where id==#{application_id};">
+                <field name="application_title" column="title" />
             </entity>
         </entity>
     </import>

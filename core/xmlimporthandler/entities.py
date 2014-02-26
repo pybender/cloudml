@@ -140,9 +140,13 @@ class Entity(object):
         #self.config = config
         self.datasource_name = config.get('datasource')
         self.name = config.get('name')
-        self.query = config.get('query')
-        if not self.query and hasattr(config, 'query'):
-            self.query = config.query
+
+        if hasattr(config, 'query'):  # query is child element
+            self.query_target = config.query.get('target')
+            self.query = config.query.text
+        else:  # query is attribute
+            self.query = config.get('query')
+            self.query_target = None
 
         for field_config in config.xpath("field"):
             field = Field(field_config)
@@ -156,11 +160,10 @@ class Entity(object):
                 self.entities.append(entity)
 
     def build_query(self, params):
-        target = self.query.get('target')
-        query = ParametrizedTemplate(self.query.text).safe_substitute(params)
+        query = ParametrizedTemplate(self.query).safe_substitute(params)
         query = [query]
-        if target:
-            query.append("SELECT * FROM %s;" % target)
+        if self.query_target:
+            query.append("SELECT * FROM %s;" % self.query_target)
         return query
 
 

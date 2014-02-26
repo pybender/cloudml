@@ -78,7 +78,7 @@ class ExtractionXMLPlanTest(unittest.TestCase):
 
 
 def db_iter_mock(*args, **kwargs):
-    for r in [ROW] * 2:
+    for r in [ROW, {'title': 'Application Title'}]:
         yield r
 
 
@@ -123,6 +123,13 @@ class ImportHandlerTest(unittest.TestCase):
         self.assertEqual(
             row['template'],
             "Greatings: hello and hi and pruvit.")
+
+        # Checking global nested datasources
+        self.assertEqual(row['application_title'], 'Application Title')
+        self.assertEqual(
+            mock_db.call_args_list[1][0][0][0],
+            "SELECT title FROM applications where id==%s;" %
+            ROW['application'])
 
     def test_validate_input_params(self):
         try:
