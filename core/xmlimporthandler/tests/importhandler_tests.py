@@ -31,7 +31,6 @@ class TestField(unittest.TestCase):
         field = Field({
             'name': 'field_name',
             'type': 'int'})
-        self.assertEqual(field._exec('1+2'), 3)
 
 
 class ExtractionXMLPlanTest(unittest.TestCase):
@@ -91,8 +90,8 @@ class ImportHandlerTest(unittest.TestCase):
     @patch('core.xmlimporthandler.datasources.DbDataSource._get_iter',
            return_value=db_iter_mock())
     def test_imports(self, mock_db):
-        self.handler = ImportHandler(self._plan, PARAMS)
-        row = self.handler.next()
+        self._extractor = ImportHandler(self._plan, PARAMS)
+        row = self._extractor.next()
         self.assertTrue(mock_db.called)
 
         # Checking types
@@ -132,35 +131,15 @@ class ImportHandlerTest(unittest.TestCase):
             ROW['application'])
 
     def test_validate_input_params(self):
-        try:
-            self._extractor = ImportHandler(self._plan, PARAMS)
-            # Test that all required params are provided.
-            self._extractor.process_input_params({'start': '2013-01-27',
-                                                  'end': '2013-01-30'})
-        except ImportHandlerException:
-            #Should not happen
-            self.fail('Should not raise exception when all params are given')
-
-        try:
-            # Test when missing params.
+        self._extractor = ImportHandler(self._plan, PARAMS)
+        with self.assertRaisesRegexp(
+                ImportHandlerException, "Missing input parameters"):
             self._extractor.process_input_params({'end': '2013-01-30'})
-            self.fail('Should raise exception when param is mising')
-        except ImportHandlerException:
-            #Should happen
-            pass
 
-        try:
-            # Test when no params provided.
+        with self.assertRaisesRegexp(
+                ImportHandlerException, "Missing input parameters"):
             self._extractor.process_input_params({})
-            self.fail('Should raise exception when param is mising')
-        except ImportHandlerException:
-            #Should happen
-            pass
 
-        try:
-            # Test when no params provided.
+        with self.assertRaisesRegexp(
+                ImportHandlerException, "Missing input parameters"):
             self._extractor.process_input_params(None)
-            self.fail('Should raise exception when param is mising')
-        except ImportHandlerException:
-            #Should happen
-            pass

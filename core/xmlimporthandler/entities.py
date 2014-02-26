@@ -7,13 +7,7 @@ import re
 from jsonpath import jsonpath
 
 from exceptions import ProcessException, ImportHandlerException
-from utils import get_key, ParametrizedTemplate
-
-
-def process_primitive(constructor):
-    def process(value):
-        return constructor(value) if value is not None else None
-    return process
+from utils import get_key, ParametrizedTemplate, process_primitive
 
 
 class Field(object):
@@ -113,19 +107,10 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
             value = ParametrizedTemplate(self.template).safe_substitute(params)
 
         if convert_type:
-            value = self.convert_type(value)
+            strategy = self.PROCESS_STRATEGIES.get(self.type)
+            value = strategy(value)
 
         return value
-
-    def convert_type(self, value):
-        strategy = self.PROCESS_STRATEGIES.get(self.type)
-        try:
-            if isinstance(value, (list, tuple)):
-                return [strategy(item) for item in value]
-            else:
-                return strategy(value)
-        except ValueError:
-            return None
 
 
 class Entity(object):

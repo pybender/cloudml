@@ -133,7 +133,7 @@ class ImportHandler(BaseImportHandler):
         inputs_conf = config.inputs
         if inputs_conf is not None:
             for param_conf in inputs_conf.xpath("param"):
-                inp = Input.factory(param_conf)
+                inp = Input(param_conf)
                 self.inputs[inp.name] = inp
 
     def load_datasources(self, config):
