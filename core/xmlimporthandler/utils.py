@@ -27,18 +27,20 @@ def get_key(config, key):
     return val
 
 
-def convert_single_or_list(value, process_fn):
+def convert_single_or_list(value, process_fn, raise_exc=False):
     try:
         if isinstance(value, (list, tuple)):
             return [process_fn(item) for item in value]
         else:
             return process_fn(value)
     except ValueError:
+        if raise_exc:
+            raise
         return None
 
 
-def process_primitive(strategy):
+def process_primitive(strategy, raise_exc=False):
     def process(value, **kwargs):
-        return convert_single_or_list(value, strategy) \
+        return convert_single_or_list(value, strategy, raise_exc) \
             if value is not None else None
     return process

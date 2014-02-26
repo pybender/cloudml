@@ -17,6 +17,7 @@ class Field(object):
     PROCESS_STRATEGIES = {
         'string': process_primitive(str),
         'float': process_primitive(float),
+        # TODO: how do we need convert '1'?
         'boolean': process_primitive(bool),
         'integer': process_primitive(int)
     }
@@ -98,7 +99,8 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
         if self.join:
             value = self.join.join(value)
 
-        if self.dateFormat:
+        # TODO: could we use python formats for date?
+        if self.dateFormat:  # TODO: would be returned datetime, Is it OK?
             value = datetime.strptime(value, self.dateFormat)
             convert_type = False
 
