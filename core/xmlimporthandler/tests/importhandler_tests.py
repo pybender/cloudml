@@ -13,6 +13,7 @@ from constants import ROW, PARAMS
 BASEDIR = '../../testdata'
 
 
+
 class ScriptManagerTest(unittest.TestCase):
     def test_script(self):
         manager = ScriptManager()
@@ -53,6 +54,17 @@ invalid date in format %A %d. %B %Y: 11/03/02"):
         with self.assertRaisesRegexp(
                 ImportHandlerException, "Input parameter created is required"):
             inp.process_value(None)
+
+
+class PigXMLPlanTest(unittest.TestCase):
+    def setUp(self):
+        self._plan = ExtractionPlan(os.path.join(BASEDIR,
+                                    'extractorxml',
+                                    'pig-train-import-handler.xml'))
+    def test_pig_datasource(self):
+        self._extractor = ImportHandler(self._plan, PARAMS)
+        row = self._extractor.next()
+
 
 
 class ExtractionXMLPlanTest(unittest.TestCase):

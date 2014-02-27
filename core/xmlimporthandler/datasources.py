@@ -44,6 +44,11 @@ class DbDataSource(BaseDataSource):
 
 class PigDataSource(BaseDataSource):
     def _get_iter(self, query):
+        import boto.emr
+        from boto.emr.step import PigStep
+        conn = boto.emr.connect_to_region('us-west-2')
+        
+
         pass
 
 
