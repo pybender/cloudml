@@ -44,9 +44,14 @@ class DbDataSource(BaseDataSource):
 
 class PigDataSource(BaseDataSource):
     def _get_iter(self, query):
+        S3_LOG_URI = 's3://<my log uri>/jobflow_logs'
         import boto.emr
         from boto.emr.step import PigStep
         conn = boto.emr.connect_to_region('us-west-2')
+        step = PigStep()
+        jobid = conn.run_jobflow(name='Cloudml jobflow',
+                         log_uri=S3_LOG_URI,
+                          steps=[step])
         
 
         pass
