@@ -7,6 +7,7 @@ from core.xmlimporthandler.importhandler import ExtractionPlan, \
     ImportHandlerException, ImportHandler
 from core.xmlimporthandler.scripts import ScriptManager
 from core.xmlimporthandler.entities import Field
+from core.xmlimporthandler.inputs import Input
 from constants import ROW, PARAMS
 
 BASEDIR = os.path.abspath(
@@ -28,10 +29,31 @@ class ScriptManagerTest(unittest.TestCase):
 
 class TestField(unittest.TestCase):
     def test_field_declaration_validation(self):
-        return
-        field = Field({
-            'name': 'field_name',
-            'type': 'int'})
+        with self.assertRaises(ImportHandlerException):
+            field = Field({
+                'name': 'field_name',
+                'type': 'int'})
+
+
+class TestInput(unittest.TestCase):
+    def test_params_validation(self):
+    # <!-- Boolean parameter -->
+    # <param name="only_fjp" type="boolean" />
+        inp = Input(dict(name="application", type="integer", regex="\d+"))
+        self.assertEqual(inp.process_value('1'), 1)
+        self.assertRaises(ImportHandlerException, inp.process_value, 'str')
+        self.assertRaises(ImportHandlerException, inp.process_value, '-1')
+
+        inp = Input(dict(name="created", type="date", format="%A %d. %B %Y"))
+        self.assertEqual(inp.process_value('Monday 11. March 2002'),
+                         datetime(2002, 3, 11, 0, 0))
+        with self.assertRaisesRegexp(
+                ImportHandlerException, "Value of the input parameter created \
+invalid date in format %A %d. %B %Y: 11/03/02"):
+            inp.process_value('11/03/02')
+        with self.assertRaisesRegexp(
+                ImportHandlerException, "Input parameter created is required"):
+            inp.process_value(None)
 
 
 class ExtractionXMLPlanTest(unittest.TestCase):

@@ -4,6 +4,9 @@ from utils import ParametrizedTemplate
 
 
 class ScriptManager(object):
+    """
+    Manages and executes javascript using V8.
+    """
     def __init__(self):
         self.context = PyV8.JSContext()
         self.context.enter()

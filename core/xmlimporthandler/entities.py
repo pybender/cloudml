@@ -17,6 +17,7 @@ class Field(object):
     PROCESS_STRATEGIES = {
         'string': process_primitive(str),
         'float': process_primitive(float),
+        # TODO: how do we need convert '1'?
         'boolean': process_primitive(bool),
         'integer': process_primitive(int)
     }
@@ -59,7 +60,17 @@ class Field(object):
 
         self.validate_attributes()
 
+    @property
+    def is_datasource_field(self):
+        """
+        Determines whether it's a datasource field for a nested entity.
+        """
+        return self.transform in ('json', 'csv')
+
     def validate_attributes(self):  # TODO:
+        """
+        Validates field configuration.
+        """
         if not self.type in self.PROCESS_STRATEGIES:
             types = ", ".join(self.PROCESS_STRATEGIES.keys())
             raise ImportHandlerException(
@@ -74,6 +85,9 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
             _check_for_string('dateFormat')
 
     def process_value(self, value, script_manager, datasource_type=None):
+        """
+        Processes value according to a field configuration.
+        """
         convert_type = True
 
         if self.jsonpath:
@@ -98,7 +112,8 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
         if self.join:
             value = self.join.join(value)
 
-        if self.dateFormat:
+        # TODO: could we use python formats for date?
+        if self.dateFormat:  # TODO: would be returned datetime, Is it OK?
             value = datetime.strptime(value, self.dateFormat)
             convert_type = False
 
@@ -119,10 +134,11 @@ class Entity(object):
     """
     def __init__(self, config):
         self.fields = {}
-        self.json_datasources = {}  # entities, that used as json datasource.
-        self.entities = []  # nested entities with another datasource.
+        # entities, that used as json or csv field as datasource.
+        self.nested_entities_field_ds = {}
+        # nested entities with another datasource.
+        self.nested_entities_global_ds = []
 
-        #self.config = config
         self.datasource_name = config.get('datasource')
         self.name = config.get('name')
 
@@ -133,23 +149,47 @@ class Entity(object):
             self.query = config.get('query')
             self.query_target = None
 
-        for field_config in config.xpath("field"):
-            field = Field(field_config)
-            self.fields[field.name] = field
-
-        for entity_config in config.xpath("entity"):
-            entity = Entity(entity_config)
-            if entity.datasource_name in self.fields:
-                self.json_datasources[entity.datasource_name] = entity
-            else:
-                self.entities.append(entity)
+        self.load_fields(config)
+        self.load_nested_entities(config)
 
     def build_query(self, params):
+        """
+        Returns query defined in the entity with applied parameters.
+        """
+        if not self.query:
+            return None
+
         query = ParametrizedTemplate(self.query).safe_substitute(params)
         query = [query]
         if self.query_target:
             query.append("SELECT * FROM %s;" % self.query_target)
         return query
+
+    def load_fields(self, config):
+        """
+        Loads entity fields dictionary.
+        """
+        for field_config in config.xpath("field"):
+            field = Field(field_config)
+            self.fields[field.name] = field
+
+    def load_nested_entities(self, config):
+        """
+        Loads nested entities with global datasource
+        and that use csv/json field as datasource.
+        """
+        for entity_config in config.xpath("entity"):
+            entity = Entity(entity_config)
+            if self.uses_field_datasource(entity):
+                self.nested_entities_field_ds[entity.datasource_name] = entity
+            else:
+                self.nested_entities_global_ds.append(entity)
+
+    def uses_field_datasource(self, nested_entity):
+        """
+        Determines whether the nested entity use csv/json field as datasource.
+        """
+        return nested_entity.datasource_name in self.fields
 
 
 class EntityProcessor(object):
@@ -162,45 +202,58 @@ class EntityProcessor(object):
         params.update(extra_params)
         self.params = params
 
+        # Building the iterator for the entity
         query = entity.build_query(params)
         self.datasource = import_handler.datasources.get(
             entity.datasource_name)
         self.iterator = self.datasource._get_iter(query)
 
     def process_next(self):
+        """
+        Returns entity's processed next row data.
+        """
         row = self.iterator.next()
         row_data = {}
         for field in self.entity.fields.values():
             row_data.update(self.process_field(field, row))
 
         # Nested entities using a global datasource
-        for nested_entity in self.entity.entities:
+        for nested_entity in self.entity.nested_entities_global_ds:
             nested_processor = EntityProcessor(
                 nested_entity,
                 self.import_handler,
                 extra_params=row_data)
             # NOTE: Nested entity datasource should return only one row. Right?
-            nested_row = nested_processor.process_next()
-            row_data.update(nested_row)
+            row_data.update(nested_processor.process_next())
         return row_data
 
     def process_field(self, field, row):
         item_value = row.get(field.column, None)
         result = {}
-        # TODO: if field.transform == 'csv'
-        if field.transform == 'json':  # Let's find inner entity with data
-            # Parse JSON string
-            data = load_json(item_value)
-            json_datasource = self.entity.json_datasources[field.name]
-            for sub_field in json_datasource.fields.values():
-                result[sub_field.name] = sub_field.process_value(
-                    data, datasource_type=self.datasource.type,
-                    script_manager=self.import_handler.script_manager)
+        kwargs = dict(datasource_type=self.datasource.type,
+                      script_manager=self.import_handler.script_manager)
+        if field.is_datasource_field:
+            nested_entity = self._get_entity_for_datasource_field(field)
+            if nested_entity is None:
+                # No one use this field datasource
+                return result
+
+            if field.transform == 'json':
+                data = load_json(item_value)
+                for sub_field in nested_entity.fields.values():
+                    result[sub_field.name] = sub_field.process_value(
+                        data, **kwargs)
+            elif field.transform == 'csv':
+                raise Exception('Not implemented yet')  # TODO:
         else:
-            result[field.name] = field.process_value(
-                item_value, datasource_type=self.datasource.type,
-                script_manager=self.import_handler.script_manager)
+            result[field.name] = field.process_value(item_value, **kwargs)
         return result
+
+    def _get_entity_for_datasource_field(self, field):
+        """
+        Returns nested entity, that use this csv/json field as datasource.
+        """
+        return self.entity.nested_entities_field_ds.get(field.name)
 
 
 def load_json(val):
