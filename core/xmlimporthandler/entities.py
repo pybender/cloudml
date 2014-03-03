@@ -158,11 +158,7 @@ class Entity(object):
         """
         if not self.query:
             return None
-
         query = ParametrizedTemplate(self.query).safe_substitute(params)
-        query = [query]
-        if self.query_target:
-            query.append("SELECT * FROM %s;" % self.query_target)
         return query
 
     def load_fields(self, config):
@@ -206,7 +202,8 @@ class EntityProcessor(object):
         query = entity.build_query(params)
         self.datasource = import_handler.datasources.get(
             entity.datasource_name)
-        self.iterator = self.datasource._get_iter(query)
+        self.iterator = self.datasource._get_iter(query,
+                         self.entity.query_target)
 
     def process_next(self):
         """

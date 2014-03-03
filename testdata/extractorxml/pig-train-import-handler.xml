@@ -25,12 +25,10 @@
 
     <import>
         <entity name="application" datasource="pig">
-            <query target="results">
-                <![CDATA[CREATE TABLE results AS
-  SELECT qi.*, 'class' || (trunc(random() * 2) + 1)::char hire_outcome 
-  FROM public.ja_quick_info qi where qi.file_provenance_date >= '#{start}'
-  AND qi.file_provenance_date < '#{end}' 
-  LIMIT(100);
+            <query>
+                <![CDATA[
+ja_quick_info = 
+  LOAD 's3://odesk-match-prod/ja_quick_info/2012/12/applied-01.gz' USING TextLoader AS (line:chararray);
   ]]>
             </query>
             <!-- "Convert" fields to datasources -->

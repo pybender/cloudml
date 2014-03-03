@@ -160,7 +160,7 @@ class ImportHandlerTest(unittest.TestCase):
         # Checking global nested datasources
         self.assertEqual(row['application_title'], 'Application Title')
         self.assertEqual(
-            mock_db.call_args_list[1][0][0][0],
+            mock_db.call_args_list[1][0][0],
             "SELECT title FROM applications where id==%s;" %
             ROW['application'])
 

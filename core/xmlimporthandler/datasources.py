@@ -1,3 +1,4 @@
+import logging
 from exceptions import ImportHandlerException
 from core.importhandler.db import postgres_iter
 
@@ -15,7 +16,7 @@ class BaseDataSource(object):
         self.name = config.get('name')  # unique
         self.type = config.tag
 
-    def _get_iter(self, query=None):
+    def _get_iter(self, query=None, query_target=None):
         raise Exception('Not implemented')
 
 
@@ -23,7 +24,10 @@ class DbDataSource(BaseDataSource):
     """
     Database connection.
     """
-    def _get_iter(self, query):
+    def _get_iter(self, query, query_target=None):
+        query = [query]
+        if query_target:
+            query.append("SELECT * FROM %s;" % query_target)
         db_iter = self.DB_ITERS.get(self.config[0].attrib['vendor'])
 
         if db_iter is None:
@@ -43,16 +47,47 @@ class DbDataSource(BaseDataSource):
 
 
 class PigDataSource(BaseDataSource):
-    def _get_iter(self, query):
-        S3_LOG_URI = 's3://<my log uri>/jobflow_logs'
+    S3_LOG_URI = 's3://odesk-match-prod/cloudml/logs'
+    AMAZON_ACCESS_TOKEN = 'AKIAJ3WMYTNKB77YZ5KQ'
+    AMAZON_TOKEN_SECRET = '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'
+    BUCKET_NAME = 'odesk-match-prod'
+
+    def store_query_to_s3(self, query, query_target=None):
+        import boto
+        s3_conn = boto.connect_s3(self.AMAZON_ACCESS_TOKEN,
+                                 self.AMAZON_TOKEN_SECRET)
+        b = s3_conn.get_bucket(self.BUCKET_NAME) # substitute your bucket name here
+        from boto.s3.key import Key
+        k = Key(b)
+        k.key = 'cloudml/pig/' + self.name +'_script.pig'
+        k.set_contents_from_string(query)
+        return 's3://%s/%s' % (self.BUCKET_NAME, k.key)
+         
+    def _get_iter(self, query, query_target=None):
+        
         import boto.emr
         from boto.emr.step import PigStep
-        conn = boto.emr.connect_to_region('us-west-2')
-        step = PigStep()
-        jobid = conn.run_jobflow(name='Cloudml jobflow',
-                         log_uri=S3_LOG_URI,
-                          steps=[step])
-        
+
+        conn = boto.emr.connect_to_region('us-west-2',
+                        aws_access_key_id=self.AMAZON_ACCESS_TOKEN,
+                        aws_secret_access_key=self.AMAZON_TOKEN_SECRET)
+        #INPUT=s3://myawsbucket/input,-p,OUTPUT=s3://myawsbucket/output
+        print query
+        pig_file = self.store_query_to_s3(query)
+        print pig_file
+        log_uri = '%s/%s.log'% (self.S3_LOG_URI, self.name)
+        # step = PigStep(self.name,
+        #              pig_file=pig_file,
+        #              pig_versions='latest',
+        #              pig_args=[])
+        # jobid = conn.run_jobflow(name='Cloudml jobflow',
+        #                   log_uri=log_uri,
+        #                   steps=[step])
+        jobid = 'j-2JPEJNOYPGBUQ'
+        status = conn.describe_jobflow(jobid)
+        logging.info(status.state)
+        if status.state in ('FAILED'):
+            raise ImportHandlerException('Emr jobflow %s failed' % jobid)
 
         pass
 
