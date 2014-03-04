@@ -1,4 +1,7 @@
 import logging
+
+import boto
+from boto.s3.key import Key
 from exceptions import ImportHandlerException
 from core.importhandler.db import postgres_iter
 
@@ -52,16 +55,23 @@ class PigDataSource(BaseDataSource):
     AMAZON_TOKEN_SECRET = 'Nr+YEVL9zuDVNsjm0/6aohs/UZp60LjEzCIGcYER'
     BUCKET_NAME = 'odesk-match-prod'
 
-    def store_query_to_s3(self, query, query_target=None):
-        import boto
-        s3_conn = boto.connect_s3(self.AMAZON_ACCESS_TOKEN,
+    def __init__(self, config):
+        super(PigDataSource, self).__init__(config)
+        self.s3_conn = boto.connect_s3(self.AMAZON_ACCESS_TOKEN,
                                  self.AMAZON_TOKEN_SECRET)
-        b = s3_conn.get_bucket(self.BUCKET_NAME) # substitute your bucket name here
-        from boto.s3.key import Key
+
+    def store_query_to_s3(self, query, query_target=None):
+        b =  self.s3_conn.get_bucket(self.BUCKET_NAME) # substitute your bucket name here
         k = Key(b)
         k.key = 'cloudml/pig/' + self.name +'_script.pig'
         k.set_contents_from_string(query)
         return 's3://%s/%s' % (self.BUCKET_NAME, k.key)
+
+    def get_log(self, log_uri):
+        b =  self.s3_conn.get_bucket(self.BUCKET_NAME) # substitute your bucket name here
+        k = Key(b)
+        k.key = log_uri
+        return k.get_contents_as_string()
          
     def _get_iter(self, query, query_target=None):
         
@@ -72,21 +82,23 @@ class PigDataSource(BaseDataSource):
                         aws_access_key_id=self.AMAZON_ACCESS_TOKEN,
                         aws_secret_access_key=self.AMAZON_TOKEN_SECRET)
         #INPUT=s3://myawsbucket/input,-p,OUTPUT=s3://myawsbucket/output
-        print query
         pig_file = self.store_query_to_s3(query)
-        print pig_file
         log_uri = '%s/%s.log'% (self.S3_LOG_URI, self.name)
         # step = PigStep(self.name,
         #              pig_file=pig_file,
         #              pig_versions='latest',
         #              pig_args=[])
+        logging.info('Run emr jobflow')
         # jobid = conn.run_jobflow(name='Cloudml jobflow',
         #                   log_uri=log_uri,
         #                   steps=[step])
-        jobid = 'j-2JPEJNOYPGBUQ'
+        jobid = 'j-1IUFTB38IEYIV'
+        logging.info('JobFlowid: %s' % jobid)
         status = conn.describe_jobflow(jobid)
         logging.info(status.state)
+        print self.get_log(log_uri)
         if status.state in ('FAILED'):
+            
             raise ImportHandlerException('Emr jobflow %s failed' % jobid)
 
         pass
