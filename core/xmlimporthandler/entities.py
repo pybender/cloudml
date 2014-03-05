@@ -200,10 +200,10 @@ class EntityProcessor(object):
 
         # Building the iterator for the entity
         query = entity.build_query(params)
-        self.datasource = import_handler.datasources.get(
+        self.datasource = import_handler.plan.datasources.get(
             entity.datasource_name)
-        self.iterator = self.datasource._get_iter(query,
-                         self.entity.query_target)
+        self.iterator = self.datasource._get_iter(
+            query, self.entity.query_target)
 
     def process_next(self):
         """
@@ -228,7 +228,7 @@ class EntityProcessor(object):
         item_value = row.get(field.column, None)
         result = {}
         kwargs = dict(datasource_type=self.datasource.type,
-                      script_manager=self.import_handler.script_manager)
+                      script_manager=self.import_handler.plan.script_manager)
         if field.is_datasource_field:
             nested_entity = self._get_entity_for_datasource_field(field)
             if nested_entity is None:
