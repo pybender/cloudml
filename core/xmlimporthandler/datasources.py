@@ -5,6 +5,7 @@ from boto.s3.key import Key
 from exceptions import ImportHandlerException
 from core.importhandler.db import postgres_iter
 
+logging.basicConfig(level=logging.INFO)
 
 class BaseDataSource(object):
     """
@@ -50,7 +51,7 @@ class DbDataSource(BaseDataSource):
 
 
 class PigDataSource(BaseDataSource):
-    S3_LOG_URI = 's3://odesk-match-prod/cloudml/logs'
+    S3_LOG_URI = '/cloudml/logs'
     AMAZON_ACCESS_TOKEN = 'AKIAJ3WMYTNKB77YZ5KQ'
     AMAZON_TOKEN_SECRET = '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'
     BUCKET_NAME = 'odesk-match-prod'
@@ -67,10 +68,10 @@ class PigDataSource(BaseDataSource):
         k.set_contents_from_string(query)
         return 's3://%s/%s' % (self.BUCKET_NAME, k.key)
 
-    def get_log(self, log_uri):
+    def get_log(self, log_uri, jobid, type):
         b =  self.s3_conn.get_bucket(self.BUCKET_NAME) # substitute your bucket name here
         k = Key(b)
-        k.key = log_uri
+        k.key = "%s/%s/steps/1/stderr" % (log_uri, jobid)
         return k.get_contents_as_string()
          
     def _get_iter(self, query, query_target=None):
@@ -83,7 +84,8 @@ class PigDataSource(BaseDataSource):
                         aws_secret_access_key=self.AMAZON_TOKEN_SECRET)
         #INPUT=s3://myawsbucket/input,-p,OUTPUT=s3://myawsbucket/output
         pig_file = self.store_query_to_s3(query)
-        log_uri = '%s/%s.log'% (self.S3_LOG_URI, self.name)
+        log_path = '%s/%s.log'% (self.S3_LOG_URI, self.name)
+        log_uri = 's3://%s/%s'% (self.BUCKET_NAME, log_path)
         # step = PigStep(self.name,
         #              pig_file=pig_file,
         #              pig_versions='latest',
@@ -96,7 +98,7 @@ class PigDataSource(BaseDataSource):
         logging.info('JobFlowid: %s' % jobid)
         status = conn.describe_jobflow(jobid)
         logging.info(status.state)
-        print self.get_log(log_uri)
+        print self.get_log(log_path, jobid)
         if status.state in ('FAILED'):
             
             raise ImportHandlerException('Emr jobflow %s failed' % jobid)
