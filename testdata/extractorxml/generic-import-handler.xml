@@ -4,7 +4,7 @@
     <inputs>
 
 
-        <param name="application" type="int" regex="\d+" />
+        <param name="application" type="integer" regex="\d+" />
         <param name="date" type="date" />
         <param name="only_fjp" type="boolean" />
     </inputs>
