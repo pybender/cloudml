@@ -1,8 +1,5 @@
 <plan type="online">
 
-    <!-- Links to external scripts may be used so that they are included to javascript context -->
-    <script ref="" />
-
     <!--Inputs required for this import handler to run -->
     <inputs>
 
@@ -11,6 +8,9 @@
         <param name="date" type="date" />
         <param name="only_fjp" type="boolean" />
     </inputs>
+
+    <!-- Links to external scripts may be used so that they are included to javascript context -->
+    <script ref="" />
 
     <datasources>
         <!--
@@ -35,6 +35,8 @@
             <field name="opening" jsonpath="$.result.#{application}.opening_ref" />
             <field name="contractor" jsonpath="$.result.#{application}.developer_ref" />
             <field name="employer" jsonpath="$.result.#{application}.team_ref" />
+
+            <field name="matches_pref_english" script="gt(#{contractor.dev_eng_skill}, #{pref_english})" />
             
             <entity name="opening" datasource="odr" query="opening/f/#{application.opening}.json">
                 <!-- Standard fields extracting according to json path -->
@@ -123,9 +125,6 @@
                 <field name="ja.bid_amount" jsonpath="$.result.fp_pay_amount" />
                 <field name="opening.pref_count" jsonpath="$.result.job_pref_matches.prefs_match" />
             </entity>
-
-
-            <field name="matches_pref_english" script="gt(#{contractor.dev_eng_skill}, #{pref_english})" />
 
         </entity>
     </import>

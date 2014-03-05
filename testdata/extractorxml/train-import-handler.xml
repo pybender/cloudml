@@ -74,14 +74,14 @@
             <!-- Checking template -->
             <field name="template" column="say_hello" template="Greatings: #{value}." split="\W+" join=" and " />
 
-            <entity datasource="employer_info">
+            <entity name="employer_info" datasource="employer_info">
                 <field name="employer.op_timezone" jsonpath="$.op_timezone" />
                 <field name="employer.op_country_tz" jsonpath="$.op_country_tz" />
                 <field name="employer.op_tot_jobs_filled" jsonpath="$.op_tot_jobs_filled" />
                 <field name="employer.country" jsonpath="$.op_country" />
             </entity>
 
-            <entity datasource="contractor_info">
+            <entity name="contractor_info" datasource="contractor_info">
               <field name="contractor.dev_is_looking" jsonpath="$.dev_is_looking" />
               <field name="contractor.dev_is_looking_week" jsonpath="$.dev_is_looking_week" />
               <field name="contractor.dev_active_interviews" jsonpath="$.dev_active_interviews" />

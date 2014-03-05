@@ -1,11 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <!-- GLOBAL TYPES -->
+    <xs:complexType name="fieldType">
+        <xs:annotation>
+            <xs:documentation>
+                "Convert" fields to datasources
+            </xs:documentation>
+        </xs:annotation>
+
+        <xs:attribute type="xs:string" name="name" use="required" />
+        <xs:attribute type="xs:string" name="column" use="optional" />
+        <xs:attribute type="xs:string" name="jsonpath" use="optional" />
+        <xs:attribute name="type" use="optional">
+            <xs:simpleType>
+                <xs:restriction base="xs:string">
+                    <xs:enumeration value="integer"/>
+                    <xs:enumeration value="boolean"/>
+                    <xs:enumeration value="string"/>
+                    <xs:enumeration value="float"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+        <xs:attribute type="xs:string" name="regex" use="optional" />
+        <xs:attribute type="xs:string" name="split" use="optional" />
+        <xs:attribute type="xs:string" name="dateFormat" use="optional" />
+        <xs:attribute type="xs:string" name="join" use="optional" />
+        <xs:attribute type="xs:string" name="template" use="optional" />
+        <xs:attribute type="xs:string" name="script" use="optional" />
+        <xs:attribute name="transform" use="optional">
+            <xs:simpleType>
+                <xs:restriction base="xs:string">
+                    <xs:enumeration value="json"/>
+                    <xs:enumeration value="csv"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+        <xs:attribute type="xs:string" name="headers" use="optional" />
+
+        <!-- TODO: Is it needed here ??? -->
+        <xs:attribute type="xs:string" name="src" use="optional" />
+    </xs:complexType>
+
+    <xs:complexType name="entityType">
+        <xs:annotation>
+            <xs:documentation>
+                Entity
+            </xs:documentation>
+        </xs:annotation>
+
+        <xs:sequence>
+            <xs:element name="query" minOccurs="0" maxOccurs="1">
+                <xs:complexType>
+                    <xs:simpleContent>
+                        <xs:extension
+                            base="xs:string">
+                            <xs:attribute
+                                type="xs:string" name="target" use="optional" />
+                        </xs:extension>
+                    </xs:simpleContent>
+                </xs:complexType>
+            </xs:element>
+
+            <xs:element name="field" type="fieldType" minOccurs="0" maxOccurs="unbounded" />
+
+            <xs:element name="entity" type="entityType" minOccurs="0" maxOccurs="unbounded" />
+        </xs:sequence>
+
+        <xs:attribute type="xs:string" name="name" use="required" />
+        <xs:attribute type="xs:string" name="datasource" use="required" />
+        <xs:attribute type="xs:string" name="query" use="optional" />
+
+    </xs:complexType>
+
+  <!-- MAIN ELEMENT BEGINS -->
   <xs:element name="plan">
     <xs:complexType>
       <xs:sequence>
-        <xs:element name="script" type="scriptType"
-            maxOccurs="unbounded" minOccurs="0">
-        </xs:element>
-        <xs:element name="inputs" maxOccurs="1" minOccurs="0">
+
+        <xs:element name="inputs" minOccurs="0" maxOccurs="1">
             <xs:annotation>
                 <xs:documentation>
                     Inputs required for this import handler to run
@@ -13,26 +86,49 @@
             </xs:annotation>
             <xs:complexType>
                 <xs:sequence>
-                    <xs:element name="param" maxOccurs="unbounded"
-                        minOccurs="0">
+                    <xs:element name="param" minOccurs="0" maxOccurs="unbounded">
                         <xs:complexType>
-                            <xs:simpleContent>
-                                <xs:extension base="xs:string">
-                                    <xs:attribute type="xs:string"
-                                        name="name" use="optional" />
-                                    <xs:attribute type="xs:string"
-                                        name="type" use="optional" />
-                                </xs:extension>
-                            </xs:simpleContent>
+                            <xs:attribute type="xs:string" name="name" use="required" />
+                            <xs:attribute name="type" use="optional">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:enumeration value="int"/>
+                                        <xs:enumeration value="boolean"/>
+                                        <xs:enumeration value="string"/>
+                                        <xs:enumeration value="float"/>
+                                        <xs:enumeration value="date"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:attribute>
+                            <xs:attribute type="xs:string" name="format" use="optional" />
+                            <xs:attribute type="xs:string" name="regex" use="optional" />
                         </xs:complexType>
                     </xs:element>
                 </xs:sequence>
             </xs:complexType>
         </xs:element>
-        <xs:element name="datasources" maxOccurs="1" minOccurs="1">
+
+        <xs:element name="script" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+                <xs:documentation>
+                    Used to define Javascript functions that can be used to transform data
+                </xs:documentation>
+            </xs:annotation>
+            <xs:complexType>
+                <xs:simpleContent>
+                    <xs:extension base="xs:string">
+                        <!-- TODO: ref or src ??? -->
+                        <xs:attribute type="xs:string" name="ref" use="optional"/>
+                    </xs:extension>
+                </xs:simpleContent>
+            </xs:complexType>
+        </xs:element>
+
+        <xs:element name="datasources" minOccurs="1" maxOccurs="1">
             <xs:complexType>
                 <xs:sequence>
-                    <xs:element name="db">
+
+                    <xs:element name="db" minOccurs="0" maxOccurs="unbounded">
                         <xs:annotation>
                             <xs:documentation>
                                 Define data sources to be used. Data
@@ -42,115 +138,126 @@
                         <xs:complexType>
                             <xs:simpleContent>
                                 <xs:extension base="xs:string">
-                                    <xs:attribute type="xs:string"
-                                        name="name" />
-                                    <xs:attribute type="xs:string"
-                                        name="url" />
-                                    <xs:attribute type="xs:string"
-                                        name="username" />
-                                    <xs:attribute type="xs:string"
-                                        name="password" />
-                                    <xs:attribute type="xs:string"
-                                        name="vendor" />
+                                    <xs:attribute type="xs:string" name="name" use="required"/>
+                                    <xs:attribute type="xs:string" name="host" use="required"/>
+                                    <xs:attribute type="xs:string" name="dbname" use="required"/>
+                                    <xs:attribute type="xs:string" name="username" use="required"/>
+                                    <xs:attribute type="xs:string" name="password" use="required"/>
+                                    <xs:attribute type="xs:string" name="vendor" use="required"/>
                                 </xs:extension>
                             </xs:simpleContent>
                         </xs:complexType>
                     </xs:element>
-                    <xs:element name="pig">
-                        <xs:complexType>
-                            <xs:simpleContent>
-                                <xs:extension base="xs:string">
-                                    <xs:attribute type="xs:string"
-                                        name="name" />
-                                    <xs:attribute type="xs:string"
-                                        name="connection" />
-                                </xs:extension>
-                            </xs:simpleContent>
-                        </xs:complexType>
-                    </xs:element>
-                </xs:sequence>
-            </xs:complexType>
-        </xs:element>
-        <xs:element name="import" maxOccurs="1" minOccurs="1">
-            <xs:complexType>
-                <xs:sequence>
-                    <xs:element name="entity">
+
+                    <xs:element name="csv" minOccurs="0" maxOccurs="unbounded">
                         <xs:complexType>
                             <xs:sequence>
-                                <xs:element name="query">
+                                <xs:element name="header" minOccurs="0" maxOccurs="unbounded">
                                     <xs:complexType>
-                                        <xs:simpleContent>
-                                            <xs:extension
-                                                base="xs:string">
-                                                <xs:attribute
-                                                    type="xs:string" name="target" />
-                                            </xs:extension>
-                                        </xs:simpleContent>
-                                    </xs:complexType>
-                                </xs:element>
-                                <xs:element name="field"
-                                    maxOccurs="unbounded" minOccurs="0">
-                                    <xs:annotation>
-                                        <xs:documentation>
-                                            "Convert" fields to
-                                            datasources
-                                        </xs:documentation>
-                                    </xs:annotation>
-                                    <xs:complexType>
-                                        <xs:simpleContent>
-                                            <xs:extension
-                                                base="xs:string">
-                                                <xs:attribute
-                                                    type="xs:string" name="name" use="optional" />
-                                                <xs:attribute
-                                                    type="xs:string" name="transform" use="optional" />
-                                            </xs:extension>
-                                        </xs:simpleContent>
-                                    </xs:complexType>
-                                </xs:element>
-                                <xs:element name="entity"
-                                    maxOccurs="unbounded" minOccurs="0">
-                                    <xs:complexType mixed="true">
-                                        <xs:sequence>
-                                            <xs:element name="field"
-                                                maxOccurs="unbounded" minOccurs="0">
-                                                <xs:complexType>
-                                                    <xs:simpleContent>
-                                                        <xs:extension
-                                                            base="xs:string">
-                                                            <xs:attribute
-                                                                type="xs:string" name="name" use="optional" />
-                                                            <xs:attribute
-                                                                type="xs:string" name="jsonpath" use="optional" />
-                                                        </xs:extension>
-                                                    </xs:simpleContent>
-                                                </xs:complexType>
-                                            </xs:element>
-                                        </xs:sequence>
-                                        <xs:attribute type="xs:string"
-                                            name="datasource" use="optional" />
+                                        <xs:attribute type="xs:string" name="name" use="required" />
+                                        <xs:attribute type="xs:integer" name="index" use="required" />
                                     </xs:complexType>
                                 </xs:element>
                             </xs:sequence>
-                            <xs:attribute type="xs:string"
-                                name="name" />
-                            <xs:attribute type="xs:string"
-                                name="datasource" />
+
+                            <xs:attribute type="xs:string" name="name" use="required" />
+                            <xs:attribute type="xs:string" name="src" use="required" />
+                        </xs:complexType>
+                    </xs:element>
+
+                    <xs:element name="http" minOccurs="0" maxOccurs="unbounded">
+                        <xs:complexType>
+                            <xs:attribute type="xs:string" name="name" use="required" />
+                            <xs:attribute name="method" use="optional" default="GET">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:enumeration value="GET"/>
+                                        <xs:enumeration value="POST"/>
+                                        <xs:enumeration value="PUT"/>
+                                        <xs:enumeration value="DELETE"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:attribute>
+                            <xs:attribute type="xs:string" name="url" use="required" />
+                        </xs:complexType>
+                    </xs:element>
+
+                    <xs:element name="pig" minOccurs="0" maxOccurs="unbounded">
+                        <xs:complexType>
+                            <xs:attribute type="xs:string" name="name" use="required" />
+                            <xs:attribute type="xs:string" name="connection" use="required" />
+                        </xs:complexType>
+                    </xs:element>
+
+                </xs:sequence>
+            </xs:complexType>
+        </xs:element>
+
+        <xs:element name="import" maxOccurs="1" minOccurs="1">
+            <xs:complexType>
+                <xs:sequence>
+                    <xs:element name="entity" type="entityType" minOccurs="0" maxOccurs="unbounded" />
+                </xs:sequence>
+            </xs:complexType>
+        </xs:element>
+
+        <xs:element name="predict" minOccurs="0" maxOccurs="1">
+            <xs:complexType>
+                <xs:sequence>
+                    <xs:element name="model" minOccurs="0" maxOccurs="unbounded">
+                        <xs:complexType>
+                            <xs:sequence>
+                                <xs:element name="positive_label" minOccurs="0" maxOccurs="unbounded">
+                                    <xs:complexType>
+                                        <xs:attribute type="xs:string" name="value" use="optional" />
+                                        <xs:attribute type="xs:string" name="script" use="optional" />
+                                    </xs:complexType>
+                                </xs:element>
+
+                                <xs:element name="weight" minOccurs="0" maxOccurs="unbounded">
+                                    <xs:complexType>
+                                        <xs:attribute type="xs:string" name="label" use="optional" />
+                                        <xs:attribute type="xs:string" name="value" use="optional" />
+                                        <xs:attribute type="xs:string" name="script" use="optional" />
+                                    </xs:complexType>
+                                </xs:element>
+                            </xs:sequence>
+
+                            <xs:attribute type="xs:string" name="name" use="required" />
+                            <xs:attribute type="xs:string" name="value" use="optional" />
+                            <xs:attribute type="xs:string" name="script" use="optional" />
+                        </xs:complexType>
+                    </xs:element>
+
+                    <xs:element name="result" minOccurs="0" maxOccurs="unbounded">
+                        <xs:complexType>
+                            <xs:sequence>
+                                <xs:element name="label" minOccurs="0" maxOccurs="unbounded">
+                                    <xs:complexType>
+                                        <xs:attribute type="xs:string" name="model" use="optional" />
+                                        <xs:attribute type="xs:string" name="script" use="optional" />
+                                    </xs:complexType>
+                                </xs:element>
+
+                                <xs:element name="probability" minOccurs="0" maxOccurs="unbounded">
+                                    <xs:complexType>
+                                        <xs:attribute type="xs:string" name="label" use="optional" />
+                                        <xs:attribute type="xs:string" name="model" use="optional" />
+                                        <xs:attribute type="xs:string" name="script" use="optional" />
+                                    </xs:complexType>
+                                </xs:element>
+                            </xs:sequence>
                         </xs:complexType>
                     </xs:element>
                 </xs:sequence>
             </xs:complexType>
         </xs:element>
-        <xs:element name="predict" type="predictType" maxOccurs="1"
-            minOccurs="0">
-        </xs:element>
+
       </xs:sequence>
-      <xs:attribute type="xs:string" name="type"/>
+
+      <xs:attribute type="xs:string" name="type" use="optional" />
+
     </xs:complexType>
   </xs:element>
 
-    <xs:complexType name="scriptType"></xs:complexType>
-
-
-    <xs:complexType name="predictType"></xs:complexType>
 </xs:schema>

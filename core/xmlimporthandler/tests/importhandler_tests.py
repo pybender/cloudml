@@ -10,7 +10,8 @@ from core.xmlimporthandler.entities import Field
 from core.xmlimporthandler.inputs import Input
 from constants import ROW, PARAMS
 
-BASEDIR = '../../testdata'
+BASEDIR = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '../../../testdata'))
 
 
 
@@ -70,17 +71,18 @@ class PigXMLPlanTest(unittest.TestCase):
 class ExtractionXMLPlanTest(unittest.TestCase):
 
     def setUp(self):
-        self.importhandler_file = os.path.join(BASEDIR,
-                                               'extractorxml',
-                                               'train-import-handler.xml')
+        self.generic_importhandler_file = os.path.join(
+            BASEDIR, 'extractorxml', 'generic-import-handler.xml')
+        self.importhandler_file = os.path.join(
+            BASEDIR, 'extractorxml', 'train-import-handler.xml')
+        self.incorrect_importhandler_file = os.path.join(
+            BASEDIR, 'extractorxml', 'incorrect-import-handler.xml')
 
     def test_load_valid_plan(self):
-        plan = ExtractionPlan(self.importhandler_file)
-        # self.assertEqual(plan.schema_name, 'bestmatch')
-        # self.assertEqual(1, len(plan.datasource))
-        # self.assertEqual('odw', plan.datasource[0]['name'])
-        # user_params = ['start', 'end']
-        # self.assertEqual(user_params, plan.input_params)
+        ExtractionPlan(self.importhandler_file)
+
+    def test_load_valid_generic_plan(self):
+        plan = ExtractionPlan(self.generic_importhandler_file)
 
     def test_load_plan_with_syntax_error(self):
         with open(self.importhandler_file, 'r') as fp:
@@ -89,25 +91,14 @@ class ExtractionXMLPlanTest(unittest.TestCase):
         with self.assertRaises(ImportHandlerException):
             ExtractionPlan(data, is_file=False)
 
-    # def test_load_plan_with_no_datasource(self):
-    #     try:
-    #         ExtractionPlan(os.path.join(BASEDIR,
-    #                                     'extractor',
-    #                                     'train-config-no-datasource.json'))
-    #         self.fail('Should not be able to create plan with no datasource')
-    #     except ImportHandlerException:
-    #         # Should happen
-    #         pass
-
-    # def test_load_plan_with_no_schema_name(self):
-    #     try:
-    #         ExtractionPlan(os.path.join(BASEDIR,
-    #                        'extractor',
-    #                        'train-config-no-queries.json'))
-    #         self.fail('Should not be able to create plan with no queries')
-    #     except ImportHandlerException:
-    #         # Should happen
-    #         pass
+    def test_load_plan_with_schema_error(self):
+        with self.assertRaises(ImportHandlerException) as cm:
+            ExtractionPlan(self.incorrect_importhandler_file)
+        the_exception = cm.exception
+        self.assertEqual(
+            str(the_exception)[:26],
+            'XML file format is invalid'
+        )
 
 
 def db_iter_mock(*args, **kwargs):
