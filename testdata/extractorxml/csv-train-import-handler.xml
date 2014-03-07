@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plan>
+
+    <!--Inputs required for this import handler to run -->
+    <inputs>
+        <param name="start" type="date" />
+        <param name="end" type="date" />
+    </inputs>
+
+    <datasources>
+        <!--
+            Define data sources to be used. Data sources
+        -->
+        <csv name="csvDataSource" src="testdata/sample.data.csv">
+            <!-- Note that some columns are ignored -->
+            <header name="label" index="0" />
+            <header name="money" index="2" />
+        </csv>
+
+    </datasources>
+
+    <import>
+        <entity name="application" datasource="csvDataSource">
+            <field name="class" type="string" column="label"/>
+            <field name="money" type="float" column="money"/>
+        </entity>
+    </import>
+</plan>

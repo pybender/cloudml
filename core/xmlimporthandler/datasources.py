@@ -1,4 +1,6 @@
 import logging
+import csv
+import json
 
 import boto
 from boto.s3.key import Key
@@ -78,6 +80,43 @@ class HttpDataSource(BaseDataSource):
         return iter(resp.json())
 
 
+class CsvDataSource(BaseDataSource):
+    def _get_iter(self, query=None, query_target=None):
+        attrs = self.config[0].attrib
+
+        headers = []
+        for t in self.config[0].xpath('header'):
+            headers.append((t.attrib['name'], int(t.attrib['index'])))
+
+        if 'src' not in attrs:
+            raise ImportHandlerException('No source given')
+
+        def __get_obj(row):
+            if len(headers) == 0:
+                return row
+            obj = {}
+            for name, idx in headers:
+                obj[name] = row[idx]
+            return obj
+
+        with open(attrs['src'], 'r') as stream:
+            if len(headers) > 0:
+                reader = csv.reader(stream)
+            else:
+                reader = csv.DictReader(stream)
+            for row in reader:
+                obj = __get_obj(row)
+                for key, value in obj.items():
+                    # Try load json field
+                    strkey = str(obj[key])
+                    if strkey.startswith('{') or strkey.startswith('['):
+                        try:
+                            obj[key] = json.loads(value)
+                        except Exception:
+                            pass
+                yield obj
+
+
 class PigDataSource(BaseDataSource):
     S3_LOG_URI = '/cloudml/logs'
     AMAZON_ACCESS_TOKEN = 'AKIAJ3WMYTNKB77YZ5KQ'
@@ -139,6 +178,7 @@ class DataSource(object):
         'db': DbDataSource,
         'pig': PigDataSource,
         'http': HttpDataSource,
+        'csv': CsvDataSource
     }
 
     @classmethod

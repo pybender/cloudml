@@ -105,6 +105,20 @@ class HttpXMLPlanTest(unittest.TestCase):
                 self.assertEqual(exc.message[:16], 'Cannot reach url')
 
 
+class CsvXMLPlanTest(unittest.TestCase):
+    def setUp(self):
+        self._plan = ExtractionPlan(os.path.join(BASEDIR,
+                                    'extractorxml',
+                                    'csv-train-import-handler.xml'))
+
+    def test_csv_datasource(self):
+        with HTTMock(http_mock):
+            self._extractor = ImportHandler(self._plan, PARAMS)
+            row = self._extractor.next()
+            self.assertEqual(row['class'], 'hire')
+            self.assertEqual(row['money'], 10)
+
+
 class ExtractionXMLPlanTest(unittest.TestCase):
 
     def setUp(self):
