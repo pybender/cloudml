@@ -82,7 +82,7 @@ class ExtractionXMLPlanTest(unittest.TestCase):
         ExtractionPlan(self.importhandler_file)
 
     def test_load_valid_generic_plan(self):
-        plan = ExtractionPlan(self.generic_importhandler_file)
+        ExtractionPlan(self.generic_importhandler_file)
 
     def test_load_plan_with_syntax_error(self):
         with open(self.importhandler_file, 'r') as fp:

@@ -62,7 +62,7 @@
                 </xs:complexType>
             </xs:element>
 
-            <xs:element name="field" type="fieldType" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="field" type="fieldType" minOccurs="1" maxOccurs="unbounded" />
 
             <xs:element name="entity" type="entityType" minOccurs="0" maxOccurs="unbounded" />
         </xs:sequence>
@@ -92,7 +92,7 @@
                             <xs:attribute name="type" use="optional">
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:enumeration value="int"/>
+                                        <xs:enumeration value="integer"/>
                                         <xs:enumeration value="boolean"/>
                                         <xs:enumeration value="string"/>
                                         <xs:enumeration value="float"/>
@@ -196,7 +196,7 @@
         <xs:element name="import" maxOccurs="1" minOccurs="1">
             <xs:complexType>
                 <xs:sequence>
-                    <xs:element name="entity" type="entityType" minOccurs="0" maxOccurs="unbounded" />
+                    <xs:element name="entity" type="entityType" minOccurs="1" maxOccurs="unbounded" />
                 </xs:sequence>
             </xs:complexType>
         </xs:element>
