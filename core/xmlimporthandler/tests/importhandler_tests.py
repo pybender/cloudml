@@ -1,7 +1,9 @@
-import unittest
 import os
-from mock import patch
+import unittest
 from datetime import datetime
+
+from mock import patch
+from httmock import HTTMock, urlmatch
 
 from core.xmlimporthandler.importhandler import ExtractionPlan, \
     ImportHandlerException, ImportHandler
@@ -12,7 +14,6 @@ from constants import ROW, PARAMS
 
 BASEDIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), '../../../testdata'))
-
 
 
 class ScriptManagerTest(unittest.TestCase):
@@ -66,6 +67,42 @@ invalid date in format %A %d. %B %Y: 11/03/02"):
 #         self._extractor = ImportHandler(self._plan, PARAMS)
 #         row = self._extractor.next()
 
+
+@urlmatch(netloc='test.odesk.com:11000')
+def http_mock(url, request):
+    if url.path == '/opening/f/something.json':
+        return '[{"application": 123456}]'
+    elif url.path == '/some/other/path.json':
+        return '[{"application": 78910}]'
+    return None
+
+
+class HttpXMLPlanTest(unittest.TestCase):
+    def setUp(self):
+        self._plan = ExtractionPlan(os.path.join(BASEDIR,
+                                    'extractorxml',
+                                    'http-train-import-handler.xml'))
+
+    def test_http_datasource(self):
+        with HTTMock(http_mock):
+            self._extractor = ImportHandler(self._plan, PARAMS)
+            row = self._extractor.next()
+            self.assertEqual(row['application_id'], 123456)
+
+    def test_http_query(self):
+        with HTTMock(http_mock):
+            self._plan.entity.query = '/some/other/path.json'
+            self._extractor = ImportHandler(self._plan, PARAMS)
+            row = self._extractor.next()
+            self.assertEqual(row['application_id'], 78910)
+
+    def test_http_404(self):
+        with HTTMock(http_mock):
+            self._plan.entity.query = '/does/not/exist.json'
+            try:
+                self._extractor = ImportHandler(self._plan, PARAMS)
+            except ImportHandlerException as exc:
+                self.assertEqual(exc.message[:16], 'Cannot reach url')
 
 
 class ExtractionXMLPlanTest(unittest.TestCase):

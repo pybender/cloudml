@@ -2,6 +2,9 @@ import logging
 
 import boto
 from boto.s3.key import Key
+import requests
+from requests import ConnectionError
+
 from exceptions import ImportHandlerException
 from core.importhandler.db import postgres_iter
 
@@ -52,7 +55,27 @@ class DbDataSource(BaseDataSource):
 
 
 class HttpDataSource(BaseDataSource):
-    pass
+    def _get_iter(self, query=None, query_target=None):
+        attrs = self.config[0].attrib
+
+        if 'url' not in attrs:
+            raise ImportHandlerException('No url given')
+
+        url = attrs['url']
+        if query:
+            query = query.strip()
+            url = '{0}/{1}'.format(url.rstrip('/'), str(query).lstrip('/'))
+        method = attrs.get('method', 'GET')
+
+        # TODO: params?
+        try:
+            resp = requests.request(
+                method, url, stream=True)
+        except ConnectionError as exc:
+            raise ImportHandlerException('Cannot reach url: {}'.format(
+                str(exc)))
+
+        return iter(resp.json())
 
 
 class PigDataSource(BaseDataSource):

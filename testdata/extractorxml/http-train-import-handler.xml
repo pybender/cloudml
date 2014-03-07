@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plan>
+
+    <!--Inputs required for this import handler to run -->
+    <inputs>
+        <param name="start" type="date" />
+        <param name="end" type="date" />
+    </inputs>
+
+    <datasources>
+        <!--
+            Define data sources to be used. Data sources
+        -->
+        <http name="odr"
+              method="GET"
+              url="http://test.odesk.com:11000" />
+
+    </datasources>
+
+    <import>
+        <entity name="application" datasource="odr">
+            <query>
+                <![CDATA[
+                    opening/f/something.json
+                ]]>
+            </query>
+
+            <field name="application_id" type="integer" column="application"/>
+        </entity>
+    </import>
+</plan>
