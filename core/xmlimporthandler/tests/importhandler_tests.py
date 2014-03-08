@@ -57,14 +57,14 @@ invalid date in format %A %d. %B %Y: 11/03/02"):
             inp.process_value(None)
 
 
-# class PigXMLPlanTest(unittest.TestCase):
-#     def setUp(self):
-#         self._plan = ExtractionPlan(os.path.join(BASEDIR,
-#                                     'extractorxml',
-#                                     'pig-train-import-handler.xml'))
-#     def test_pig_datasource(self):
-#         self._extractor = ImportHandler(self._plan, PARAMS)
-#         row = self._extractor.next()
+class PigXMLPlanTest(unittest.TestCase):
+    def setUp(self):
+        self._plan = ExtractionPlan(os.path.join(BASEDIR,
+                                    'extractorxml',
+                                    'pig-train-import-handler.xml'))
+    def test_pig_datasource(self):
+        self._extractor = ImportHandler(self._plan, PARAMS)
+        row = self._extractor.next()
 
 
 

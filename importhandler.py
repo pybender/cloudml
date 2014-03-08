@@ -19,7 +19,8 @@ from core.importhandler import __version__
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 
-from core.importhandler.importhandler import ImportHandlerException, ExtractionPlan, ImportHandler
+#from core.importhandler.importhandler import ImportHandlerException, ExtractionPlan, ImportHandler
+from core.xmlimporthandler.importhandler import ImportHandlerException, ExtractionPlan, ImportHandler
 
 
 def main(argv=None):
@@ -85,14 +86,14 @@ def main(argv=None):
     except KeyboardInterrupt:
         ### handle keyboard interrupt ###
         return 0
-    except ImportHandlerException, e:
-        logging.warn(e.message)
-        return 1
-    except Exception, e:
-        indent = len(program_name) * ' '
-        sys.stderr.write(program_name + ': ' + repr(e) + '\n')
-        sys.stderr.write(indent + '  for help use --help')
-        return 2
+    # except ImportHandlerException, e:
+    #     logging.warn(e.message)
+    #     return 1
+    # except Exception, e:
+    #     indent = len(program_name) * ' '
+    #     sys.stderr.write(program_name + ': ' + repr(e) + '\n')
+    #     sys.stderr.write(indent + '  for help use --help')
+    #     return 2
 
 if __name__ == '__main__':
     sys.exit(main())

@@ -1,11 +1,14 @@
 import logging
+import time
+import itertools
+import json
 
 import boto
 from boto.s3.key import Key
 from exceptions import ImportHandlerException
 from core.importhandler.db import postgres_iter
 
-logging.basicConfig(level=logging.INFO)
+logging.getLogger('boto').setLevel(logging.INFO)
 
 
 class BaseDataSource(object):
@@ -24,11 +27,21 @@ class BaseDataSource(object):
     def _get_iter(self, query=None, query_target=None):
         raise Exception('Not implemented')
 
+    def get_params(self):
+        raise Exception('Not implemented')
+
 
 class DbDataSource(BaseDataSource):
     """
     Database connection.
     """
+    def get_params(self):
+        res = {}
+        for key, val in self.config[0].attrib.iteritems():
+            if key not in ['name', 'vendor']:
+                res[key] = val
+        return res
+
     def _get_iter(self, query, query_target=None):
         query = [query]
         if query_target:
@@ -74,41 +87,64 @@ class PigDataSource(BaseDataSource):
         k.set_contents_from_string(query)
         return 's3://%s/%s' % (self.BUCKET_NAME, k.key)
 
-    def get_log(self, log_uri, jobid, type):
-        # substitute your bucket name here
+    def get_result(self, name):
         b = self.s3_conn.get_bucket(self.BUCKET_NAME)
         k = Key(b)
-        k.key = "%s/%s/steps/1/stderr" % (log_uri, jobid)
+        k.key = "cloudml/output/%s/part-00000" % name
+        return k.get_contents_as_string()
+
+    def get_log(self, log_uri, jobid, log_type='stdout'):
+        b = self.s3_conn.get_bucket(self.BUCKET_NAME)
+        k = Key(b)
+        k.key = "%s/%s/steps/2/%s" % (log_uri, jobid, log_type)
         return k.get_contents_as_string()
 
     def _get_iter(self, query, query_target=None):
         import boto.emr
-        from boto.emr.step import PigStep
+        from boto.emr.step import PigStep, InstallPigStep
 
         conn = boto.emr.connect_to_region(
             'us-west-2',
             aws_access_key_id=self.AMAZON_ACCESS_TOKEN,
             aws_secret_access_key=self.AMAZON_TOKEN_SECRET)
-        #INPUT=s3://myawsbucket/input,-p,OUTPUT=s3://myawsbucket/output
         pig_file = self.store_query_to_s3(query)
-        log_path = '%s/%s.log' % (self.S3_LOG_URI, self.name)
-        log_uri = 's3://%s/%s' % (self.BUCKET_NAME, log_path)
-        # step = PigStep(self.name,
-        #              pig_file=pig_file,
-        #              pig_versions='latest',
-        #              pig_args=[])
+        log_path = '%s/%s' % (self.S3_LOG_URI, self.name)
+        log_uri = 's3://%s%s' % (self.BUCKET_NAME, log_path)
+        result_uri = "s3://%s/cloudml/output/%s" % (self.BUCKET_NAME, self.name)
+        install_pig_step = InstallPigStep()
+        pig_step = PigStep(self.name,
+                     pig_file=pig_file,
+                     pig_versions='latest',
+                     pig_args=['-p output=%s' % result_uri])
         logging.info('Run emr jobflow')
         # jobid = conn.run_jobflow(name='Cloudml jobflow',
         #                   log_uri=log_uri,
-        #                   steps=[step])
-        jobid = 'j-1IUFTB38IEYIV'
+        #                   steps=[install_pig_step, pig_step])
+        jobid = 'j-38GIN58XI0UVS'
         logging.info('JobFlowid: %s' % jobid)
-        status = conn.describe_jobflow(jobid)
-        logging.info(status.state)
-        print self.get_log(log_path, jobid)
-        if status.state in ('FAILED'):
-            raise ImportHandlerException('Emr jobflow %s failed' % jobid)
-        pass
+        previous_state = None
+        while True:
+            time.sleep(10)
+            status = conn.describe_jobflow(jobid)
+
+            if previous_state != status.state:
+                logging.info("State of jobflow: %s" % status.state)
+            previous_state = status.state
+            if status.state in ('FAILED', ''):
+                logging.info('Stdout:')
+                logging.info(self.get_log(log_path, jobid))
+                logging.info('Stderr:')
+                logging.info(self.get_log(log_path, jobid, 'stderr'))
+                logging.info('Controller:')
+                logging.info(self.get_log(log_path, jobid, 'controller'))
+                raise ImportHandlerException('Emr jobflow %s failed' % jobid)
+            if status.state in ('COMPLETED'):
+                break
+        result = self.get_result(self.name)
+        print result
+        #return itertools.imap(lambda s: json.loads(s),itertools.imap(lambda s: s.strip('\n'), result))
+        return itertools.imap(lambda s: json.loads(s), result.splitlines()[1:])
+
 
 
 class DataSource(object):

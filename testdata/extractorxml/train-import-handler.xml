@@ -22,13 +22,13 @@
         <db name="odw" 
             host="localhost"
             dbname="odw"
-            username="postgres"
+            user="postgres"
             password="postgres"
             vendor="postgres" />
         <db name="datasource" 
             host="localhost"
             dbname="odw"
-            username="postgres"
+            user="postgres"
             password="postgres"
             vendor="postgres" />
 

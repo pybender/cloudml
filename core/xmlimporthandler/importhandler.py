@@ -3,8 +3,10 @@
 
 import os
 import logging
+import json
 from lxml import etree
 from lxml import objectify
+from  decimal import Decimal
 
 from datasources import DataSource
 from inputs import Input
@@ -15,6 +17,13 @@ from scripts import ScriptManager
 
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
+
+
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return "%.2f" % obj
+        return json.JSONEncoder.default(self, obj)
 
 
 class ExtractionPlan(object):
@@ -113,6 +122,26 @@ class ImportHandler(object):
         self.process_input_params(params)
         self.entity_processor = EntityProcessor(
             self.plan.entity, import_handler=self)
+
+    def __iter__(self):
+        return self
+
+    def store_data_json(self, output, compress=False):
+        """
+        Stores the given data to file output using JSON format. The output file
+        contains multiple JSON objects, each one containing the data of an
+        individual row.
+
+        Keyword arguments:
+        output -- the file to store the data to.
+        compress -- whether we need to archive data using gzip.
+
+        """
+        open_mthd = gzip.open if compress else open
+        with open_mthd(output, 'w') as fp:
+            for row_data in self:
+                fp.write('%s\n' % json.dumps(row_data, cls=DecimalEncoder))
+        fp.close()
 
     def next(self):
         if self.count % 10 == 0:

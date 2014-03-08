@@ -141,7 +141,7 @@
                                     <xs:attribute type="xs:string" name="name" use="required"/>
                                     <xs:attribute type="xs:string" name="host" use="required"/>
                                     <xs:attribute type="xs:string" name="dbname" use="required"/>
-                                    <xs:attribute type="xs:string" name="username" use="required"/>
+                                    <xs:attribute type="xs:string" name="user" use="required"/>
                                     <xs:attribute type="xs:string" name="password" use="required"/>
                                     <xs:attribute type="xs:string" name="vendor" use="required"/>
                                 </xs:extension>
