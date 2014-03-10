@@ -137,6 +137,7 @@ class ImportHandler(object):
         compress -- whether we need to archive data using gzip.
 
         """
+        import gzip
         open_mthd = gzip.open if compress else open
         with open_mthd(output, 'w') as fp:
             for row_data in self:

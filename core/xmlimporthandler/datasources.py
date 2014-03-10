@@ -28,7 +28,7 @@ class BaseDataSource(object):
         raise Exception('Not implemented')
 
     def get_params(self):
-        raise Exception('Not implemented')
+        return {}
 
 
 class DbDataSource(BaseDataSource):
@@ -38,7 +38,7 @@ class DbDataSource(BaseDataSource):
     def get_params(self):
         res = {}
         for key, val in self.config[0].attrib.iteritems():
-            if key not in ['name', 'vendor']:
+            if key not in ['name', ]:
                 res[key] = val
         return res
 
