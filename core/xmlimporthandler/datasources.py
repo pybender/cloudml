@@ -73,6 +73,7 @@ class PigDataSource(BaseDataSource):
     AMAZON_ACCESS_TOKEN = 'AKIAJ3WMYTNKB77YZ5KQ'
     AMAZON_TOKEN_SECRET = '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'
     BUCKET_NAME = 'odesk-match-prod'
+    PIG_VERSIONS = '0.11.1'
 
     def __init__(self, config):
         super(PigDataSource, self).__init__(config)
@@ -90,7 +91,7 @@ class PigDataSource(BaseDataSource):
     def get_result(self, name):
         b = self.s3_conn.get_bucket(self.BUCKET_NAME)
         k = Key(b)
-        k.key = "cloudml/output/%s/part-00000" % name
+        k.key = "cloudml/output/%s/part-r-00000" % name
         return k.get_contents_as_string()
 
     def get_log(self, log_uri, jobid, log_type='stdout'):
@@ -111,16 +112,16 @@ class PigDataSource(BaseDataSource):
         log_path = '%s/%s' % (self.S3_LOG_URI, self.name)
         log_uri = 's3://%s%s' % (self.BUCKET_NAME, log_path)
         result_uri = "s3://%s/cloudml/output/%s" % (self.BUCKET_NAME, self.name)
-        install_pig_step = InstallPigStep()
+        install_pig_step = InstallPigStep(pig_versions=self.PIG_VERSIONS)
         pig_step = PigStep(self.name,
                      pig_file=pig_file,
-                     pig_versions='latest',
+                     pig_versions=self.PIG_VERSIONS,
                      pig_args=['-p output=%s' % result_uri])
         logging.info('Run emr jobflow')
-        # jobid = conn.run_jobflow(name='Cloudml jobflow',
-        #                   log_uri=log_uri,
-        #                   steps=[install_pig_step, pig_step])
-        jobid = 'j-38GIN58XI0UVS'
+        jobid = conn.run_jobflow(name='Cloudml jobflow',
+                          log_uri=log_uri,
+                          ami_version='2.2',
+                          steps=[install_pig_step, pig_step])
         logging.info('JobFlowid: %s' % jobid)
         previous_state = None
         while True:
@@ -141,10 +142,10 @@ class PigDataSource(BaseDataSource):
             if status.state in ('COMPLETED'):
                 break
         result = self.get_result(self.name)
-        print result
+        logging.info(result[0:10000])
+        return iter([])
         #return itertools.imap(lambda s: json.loads(s),itertools.imap(lambda s: s.strip('\n'), result))
-        return itertools.imap(lambda s: json.loads(s), result.splitlines()[1:])
-
+        #return itertools.imap(lambda s: json.loads(s), result.splitlines()[1:])
 
 
 class DataSource(object):

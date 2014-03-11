@@ -19,12 +19,12 @@
         <!--
             Define data sources to be used. Data sources
         -->
-        <pig name="pig" connection="host:9876" />
+        <pig name="pig1" connection="host:9876" />
 
     </datasources>
 
     <import>
-        <entity name="application" datasource="pig">
+        <entity name="application" datasource="pig1">
             <query>
                 <![CDATA[
 register 's3://odesk-match-prod/cloudml/udf/json-simple-1.1.1.jar';
@@ -33,6 +33,8 @@ register 's3://odesk-match-prod/cloudml/udf/elephant-bird-pig-3.0.5.jar';
 ja_quick_info = 
   LOAD 's3://odesk-match-prod/ja_quick_info/2012/12/applied-01.gz' USING TextLoader AS (line:chararray);
 ja_quick_info_limited = LIMIT ja_quick_info 2;
+j-1W2GZZJ8HZE6D
+fs -rmr $output
 STORE ja_quick_info_limited INTO  '$output' USING PigStorage(',');
   ]]>
             </query>
