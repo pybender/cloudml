@@ -145,7 +145,7 @@ class ImportHandler(object):
         fp.close()
 
     def next(self):
-        if self.count % 10 == 0:
+        if self.count % 1000 == 0:
             logging.info('Processed %s rows so far' % (self.count, ))
 
         try:

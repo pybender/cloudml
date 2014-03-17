@@ -144,6 +144,7 @@
                                     <xs:attribute type="xs:string" name="user" use="required"/>
                                     <xs:attribute type="xs:string" name="password" use="required"/>
                                     <xs:attribute type="xs:string" name="vendor" use="required"/>
+                                    <xs:attribute type="xs:string" name="port" use="optional"/>
                                 </xs:extension>
                             </xs:simpleContent>
                         </xs:complexType>
@@ -185,7 +186,7 @@
                     <xs:element name="pig" minOccurs="0" maxOccurs="unbounded">
                         <xs:complexType>
                             <xs:attribute type="xs:string" name="name" use="required" />
-                            <xs:attribute type="xs:string" name="connection" use="required" />
+                            <xs:attribute type="xs:string" name="jobid" use="optional" />
                         </xs:complexType>
                     </xs:element>
 

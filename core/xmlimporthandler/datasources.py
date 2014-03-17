@@ -5,6 +5,9 @@ import json
 
 import boto
 from boto.s3.key import Key
+import boto.emr
+from boto.emr.step import PigStep, InstallPigStep
+
 from exceptions import ImportHandlerException
 from core.importhandler.db import postgres_iter
 
@@ -79,6 +82,17 @@ class PigDataSource(BaseDataSource):
         super(PigDataSource, self).__init__(config)
         self.s3_conn = boto.connect_s3(self.AMAZON_ACCESS_TOKEN,
                                        self.AMAZON_TOKEN_SECRET)
+        self.emr_conn = boto.emr.connect_to_region(
+            'us-west-2',
+            aws_access_key_id=self.AMAZON_ACCESS_TOKEN,
+            aws_secret_access_key=self.AMAZON_TOKEN_SECRET)
+        self.jobid = config.get('jobid', None)
+        ts = int(time.time())
+        self.result_path = "/cloudml/output/%s/%d/" % (self.name, ts)
+        self.result_uri = "s3://%s%s" % (self.BUCKET_NAME, self.result_path)
+
+        self.log_path = '%s/%s' % (self.S3_LOG_URI, self.name)
+        self.log_uri = 's3://%s%s' % (self.BUCKET_NAME, self.log_path)
 
     def store_query_to_s3(self, query, query_target=None):
         # substitute your bucket name here
@@ -88,64 +102,86 @@ class PigDataSource(BaseDataSource):
         k.set_contents_from_string(query)
         return 's3://%s/%s' % (self.BUCKET_NAME, k.key)
 
-    def get_result(self, name):
+    def get_result(self):
         b = self.s3_conn.get_bucket(self.BUCKET_NAME)
         k = Key(b)
-        k.key = "cloudml/output/%s/part-r-00000" % name
+        k.key = "%s/part-m-00000" % self.result_path
         return k.get_contents_as_string()
 
-    def get_log(self, log_uri, jobid, log_type='stdout'):
+    def delete_output(self, name):
         b = self.s3_conn.get_bucket(self.BUCKET_NAME)
         k = Key(b)
-        k.key = "%s/%s/steps/2/%s" % (log_uri, jobid, log_type)
+        k.key = "cloudml/output/%s" % name
+        k.delete()
+
+    def get_log(self, log_uri, jobid, step, log_type='stdout'):
+        b = self.s3_conn.get_bucket(self.BUCKET_NAME)
+        k = Key(b)
+        k.key = "%s/%s/steps/%d/%s" % (log_uri, jobid, step, log_type)
+        logging.info('Log uri: %s' % k.key)
         return k.get_contents_as_string()
+
+    def print_logs(self, log_path, step_number):
+        logging.info('Step logs:')
+        try:
+            logging.info('Stdout:')
+            logging.info(self.get_log(log_path, self.jobid, step_number))
+            logging.info('Controller:')
+            logging.info(self.get_log(log_path, self.jobid, step_number, 'controller'))
+            logging.info('Stderr:')
+            logging.info(self.get_log(log_path, self.jobid, step_number, 'stderr'))
+        except:
+            logging.info('Logs are anavailable now (updated every 5 mins)')
+
 
     def _get_iter(self, query, query_target=None):
-        import boto.emr
-        from boto.emr.step import PigStep, InstallPigStep
-
-        conn = boto.emr.connect_to_region(
-            'us-west-2',
-            aws_access_key_id=self.AMAZON_ACCESS_TOKEN,
-            aws_secret_access_key=self.AMAZON_TOKEN_SECRET)
         pig_file = self.store_query_to_s3(query)
-        log_path = '%s/%s' % (self.S3_LOG_URI, self.name)
-        log_uri = 's3://%s%s' % (self.BUCKET_NAME, log_path)
-        result_uri = "s3://%s/cloudml/output/%s" % (self.BUCKET_NAME, self.name)
-        install_pig_step = InstallPigStep(pig_versions=self.PIG_VERSIONS)
+        steps = []
+        if self.jobid is None:
+            install_pig_step = InstallPigStep(pig_versions=self.PIG_VERSIONS)
+            steps.append(install_pig_step)
         pig_step = PigStep(self.name,
                      pig_file=pig_file,
                      pig_versions=self.PIG_VERSIONS,
-                     pig_args=['-p output=%s' % result_uri])
-        logging.info('Run emr jobflow')
-        jobid = conn.run_jobflow(name='Cloudml jobflow',
-                          log_uri=log_uri,
-                          ami_version='2.2',
-                          steps=[install_pig_step, pig_step])
-        logging.info('JobFlowid: %s' % jobid)
+                     pig_args=['-p output=%s' % self.result_uri])
+        pig_step.action_on_failure = 'CONTINUE'
+        steps.append(pig_step)
+        self.delete_output(self.name)
+        if self.jobid is not None:
+            status = self.emr_conn.describe_jobflow(self.jobid)
+            step_number = len(status.steps) + 1
+            logging.info('Use existing emr jobflow: %s' % self.jobid)
+            step_list = self.emr_conn.add_jobflow_steps(self.jobid, steps)
+            step_id = step_list.stepids[0].value
+        else:
+            logging.info('Run emr jobflow')
+            step_number = 2
+            self.jobid = self.emr_conn.run_jobflow(name='Cloudml jobflow',
+                              log_uri=log_uri,
+                              ami_version='2.2',
+                              keep_alive=True,
+                              action_on_failure='CONTINUE',#'CANCEL_AND_WAIT',
+                              steps=steps)
+            logging.info('JobFlowid: %s' % self.jobid)
         previous_state = None
+        logging.info('Step number: %d' % step_number)
+
         while True:
             time.sleep(10)
-            status = conn.describe_jobflow(jobid)
-
+            status = self.emr_conn.describe_jobflow(self.jobid)
+            laststatechangereason = status.laststatechangereason
             if previous_state != status.state:
                 logging.info("State of jobflow: %s" % status.state)
             previous_state = status.state
-            if status.state in ('FAILED', ''):
-                logging.info('Stdout:')
-                logging.info(self.get_log(log_path, jobid))
-                logging.info('Stderr:')
-                logging.info(self.get_log(log_path, jobid, 'stderr'))
-                logging.info('Controller:')
-                logging.info(self.get_log(log_path, jobid, 'controller'))
-                raise ImportHandlerException('Emr jobflow %s failed' % jobid)
-            if status.state in ('COMPLETED'):
+            if status.state in ('FAILED', '') or \
+                (status.state in ('WAITING',) and \
+                laststatechangereason == 'Waiting after step failed'):
+                self.print_logs(self.log_path, step_number)
+                raise ImportHandlerException('Emr jobflow %s failed' % self.jobid)
+            if status.state in ('COMPLETED', 'WAITING'):
                 break
-        result = self.get_result(self.name)
-        logging.info(result[0:10000])
-        return iter([])
-        #return itertools.imap(lambda s: json.loads(s),itertools.imap(lambda s: s.strip('\n'), result))
-        #return itertools.imap(lambda s: json.loads(s), result.splitlines()[1:])
+        result = self.get_result()
+        return itertools.imap(lambda s: json.loads(s), result.splitlines())
 
 
 class DataSource(object):
