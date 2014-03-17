@@ -31,19 +31,17 @@ class BaseDataSource(object):
         raise Exception('Not implemented')
 
     def get_params(self):
-        return {}
+        res = {}
+        for key, val in self.config[0].attrib.iteritems():
+            if key not in ['name', ]:
+                res[key] = val
+        return res
 
 
 class DbDataSource(BaseDataSource):
     """
     Database connection.
     """
-    def get_params(self):
-        res = {}
-        for key, val in self.config[0].attrib.iteritems():
-            if key not in ['name', ]:
-                res[key] = val
-        return res
 
     def _get_iter(self, query, query_target=None):
         query = [query]
@@ -73,8 +71,8 @@ class HttpDataSource(BaseDataSource):
 
 class PigDataSource(BaseDataSource):
     S3_LOG_URI = '/cloudml/logs'
-    AMAZON_ACCESS_TOKEN = 'AKIAJ3WMYTNKB77YZ5KQ'
-    AMAZON_TOKEN_SECRET = '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'
+    AMAZON_ACCESS_TOKEN = 'fill me'
+    AMAZON_TOKEN_SECRET = 'fill me'
     BUCKET_NAME = 'odesk-match-prod'
     PIG_VERSIONS = '0.11.1'
 

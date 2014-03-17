@@ -33,7 +33,7 @@
             vendor="postgres" />
 
 
-        <pig name="pig" connection="host:9876" />
+        <pig name="pig" jobid="jobid" />
 
     </datasources>
 
