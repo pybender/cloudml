@@ -8,10 +8,8 @@
         <param name="end" type="date" />
     </inputs>
     <script>
-    <![CDATA[
-        function always99(a) {
-            return 99;
-        }
+    <![CDATA[def always99(a):
+        return 99
     ]]>
     </script>
 

@@ -87,7 +87,7 @@ class ExtractionPlan(object):
         """
         for script in config.xpath("script"):
             if script.text:
-                self.script_manager.add_js(script.text)
+                self.script_manager.add_python(script.text)
 
     # Schema Validation specific methods
 

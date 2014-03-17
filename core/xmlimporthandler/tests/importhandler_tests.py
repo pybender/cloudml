@@ -22,9 +22,9 @@ class ScriptManagerTest(unittest.TestCase):
 
     def test_manager(self):
         manager = ScriptManager()
-        manager.add_js("""function intToBoolean(a) {
-            return a == 1;
-        }""")
+        manager.add_python("""def intToBoolean(a):
+            return a == 1
+        """)
         self.assertEqual(manager._exec('intToBoolean(1)'), True)
 
 
