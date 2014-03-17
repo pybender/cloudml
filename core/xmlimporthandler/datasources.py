@@ -57,7 +57,8 @@ class DbDataSource(BaseDataSource):
             raise ImportHandlerException(
                 'No database connection details defined')
 
-        conn_params = self.config[0].attrib
+        from copy import deepcopy
+        conn_params = deepcopy(self.config[0].attrib)
         conn_params.pop('name')
         conn_params.pop('vendor')
         conn_string = ' '.join(['%s=%s' % (k, v)
