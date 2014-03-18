@@ -79,42 +79,47 @@ class PigDataSource(BaseDataSource):
 
     def __init__(self, config):
         super(PigDataSource, self).__init__(config)
-        self.s3_conn = boto.connect_s3(self.AMAZON_ACCESS_TOKEN,
-                                       self.AMAZON_TOKEN_SECRET)
+        self.amazon_access_token = self.config.get('amazon_access_token')
+        self.amazon_token_secret = self.config.get('amazon_token_secret')
+        self.pig_version = self.config.get('pig_version', self.PIG_VERSIONS)
+        self.bucket_name = self.config.get('bucket_name', self.BUCKET_NAME)
+
+        self.s3_conn = boto.connect_s3(self.amazon_access_token,
+                                       self.amazon_token_secret)
         self.emr_conn = boto.emr.connect_to_region(
             'us-west-2',
-            aws_access_key_id=self.AMAZON_ACCESS_TOKEN,
-            aws_secret_access_key=self.AMAZON_TOKEN_SECRET)
+            aws_access_key_id=self.amazon_access_token,
+            aws_secret_access_key=self.amazon_token_secret)
         self.jobid = config.get('jobid', None)
         ts = int(time.time())
         self.result_path = "/cloudml/output/%s/%d/" % (self.name, ts)
-        self.result_uri = "s3://%s%s" % (self.BUCKET_NAME, self.result_path)
+        self.result_uri = "s3://%s%s" % (self.bucket_name, self.result_path)
 
         self.log_path = '%s/%s' % (self.S3_LOG_URI, self.name)
-        self.log_uri = 's3://%s%s' % (self.BUCKET_NAME, self.log_path)
+        self.log_uri = 's3://%s%s' % (self.bucket_name, self.log_path)
 
     def store_query_to_s3(self, query, query_target=None):
         # substitute your bucket name here
-        b = self.s3_conn.get_bucket(self.BUCKET_NAME)
+        b = self.s3_conn.get_bucket(self.bucket_name)
         k = Key(b)
         k.key = 'cloudml/pig/' + self.name + '_script.pig'
         k.set_contents_from_string(query)
-        return 's3://%s/%s' % (self.BUCKET_NAME, k.key)
+        return 's3://%s/%s' % (self.bucket_name, k.key)
 
     def get_result(self):
-        b = self.s3_conn.get_bucket(self.BUCKET_NAME)
+        b = self.s3_conn.get_bucket(self.bucket_name)
         k = Key(b)
         k.key = "%s/part-m-00000" % self.result_path
         return k.get_contents_as_string()
 
     def delete_output(self, name):
-        b = self.s3_conn.get_bucket(self.BUCKET_NAME)
+        b = self.s3_conn.get_bucket(self.bucket_name)
         k = Key(b)
         k.key = "cloudml/output/%s" % name
         k.delete()
 
     def get_log(self, log_uri, jobid, step, log_type='stdout'):
-        b = self.s3_conn.get_bucket(self.BUCKET_NAME)
+        b = self.s3_conn.get_bucket(self.bucket_name)
         k = Key(b)
         k.key = "%s/%s/steps/%d/%s" % (log_uri, jobid, step, log_type)
         logging.info('Log uri: %s' % k.key)
@@ -137,11 +142,11 @@ class PigDataSource(BaseDataSource):
         pig_file = self.store_query_to_s3(query)
         steps = []
         if self.jobid is None:
-            install_pig_step = InstallPigStep(pig_versions=self.PIG_VERSIONS)
+            install_pig_step = InstallPigStep(pig_versions=self.pig_version)
             steps.append(install_pig_step)
         pig_step = PigStep(self.name,
                      pig_file=pig_file,
-                     pig_versions=self.PIG_VERSIONS,
+                     pig_versions=self.pig_version,
                      pig_args=['-p output=%s' % self.result_uri])
         pig_step.action_on_failure = 'CONTINUE'
         steps.append(pig_step)

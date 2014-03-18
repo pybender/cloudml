@@ -183,6 +183,10 @@
                         <xs:complexType>
                             <xs:attribute type="xs:string" name="name" use="required" />
                             <xs:attribute type="xs:string" name="jobid" use="optional" />
+                            <xs:attribute type="xs:string" name="amazon_access_token" use="required" />
+                            <xs:attribute type="xs:string" name="amazon_token_secret" use="required" />
+                            <xs:attribute type="xs:string" name="pig_version" use="optional" />
+                            <xs:attribute type="xs:string" name="bucket_name" use="optional" />
                         </xs:complexType>
                     </xs:element>
 

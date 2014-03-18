@@ -8,10 +8,8 @@
         <param name="end" type="date" />
     </inputs>
     <script>
-    <![CDATA[
-        function always99(a) {
-            return 99;
-        }
+    <![CDATA[def always99(a):
+    return 99
     ]]>
     </script>
 
@@ -19,7 +17,7 @@
         <!--
             Define data sources to be used. Data sources
         -->
-        <pig name="pig3" jobid="j-1Z1KVDL4TNXPX"/>
+        <pig name="pig3" jobid="j-1Z1KVDL4TNXPX" amazon_access_token="AKIAJ3WMYTNKB77YZ5KQ" amazon_token_secret="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"/>
 
     </datasources>
 
