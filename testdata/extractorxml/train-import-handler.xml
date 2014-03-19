@@ -31,7 +31,10 @@
             vendor="postgres" />
 
 
-        <pig name="pig" jobid="jobid" />
+        <pig name="pig"
+             jobid="jobid"
+             amazon_access_token="something"
+             amazon_token_secret="something" />
 
     </datasources>
 
@@ -48,7 +51,7 @@
             <!-- "Convert" fields to datasources -->
             <field name="employer_info" transform="json" column="employer_info"/>
             <field name="contractor_info" transform="json" column="contractor_info"/>
-            <field name="application_id" type="integer" column="application"/>
+            <field name="application_id" type="integer" column="application" required="true" />
 
             <!-- Checking javascript function -->
             <field name="test_js" type="integer" column="application" script="always99(#{value})" />

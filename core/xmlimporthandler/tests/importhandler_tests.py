@@ -6,7 +6,7 @@ from datetime import datetime
 from core.xmlimporthandler.importhandler import ExtractionPlan, \
     ImportHandlerException, ImportHandler
 from core.xmlimporthandler.scripts import ScriptManager
-from core.xmlimporthandler.entities import Field
+from core.xmlimporthandler.entities import Field, FieldException
 from core.xmlimporthandler.inputs import Input
 from constants import ROW, PARAMS
 
@@ -34,6 +34,21 @@ class TestField(unittest.TestCase):
             field = Field({
                 'name': 'field_name',
                 'type': 'int'})
+
+    def test_field_required(self):
+        field_required = Field({
+            'name': 'field_name',
+            'type': 'string',
+            'required': 'true'
+        })
+        field = Field({
+            'name': 'field_name',
+            'type': 'string'
+        })
+        with self.assertRaises(FieldException):
+            field_required.process_value(None, None)
+        value = field.process_value(None, None)
+        self.assertEqual(value, None)
 
 
 class TestInput(unittest.TestCase):
