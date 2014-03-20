@@ -8,10 +8,8 @@
         <param name="end" type="date" />
     </inputs>
     <script>
-    <![CDATA[
-        function always99(a) {
-            return 99;
-        }
+    <![CDATA[def always99(a):
+        return 99
     ]]>
     </script>
 
@@ -22,18 +20,21 @@
         <db name="odw" 
             host="localhost"
             dbname="odw"
-            username="postgres"
+            user="postgres"
             password="postgres"
             vendor="postgres" />
         <db name="datasource" 
             host="localhost"
             dbname="odw"
-            username="postgres"
+            user="postgres"
             password="postgres"
             vendor="postgres" />
 
 
-        <pig name="pig" connection="host:9876" />
+        <pig name="pig"
+             jobid="jobid"
+             amazon_access_token="something"
+             amazon_token_secret="something" />
 
     </datasources>
 
@@ -50,7 +51,7 @@
             <!-- "Convert" fields to datasources -->
             <field name="employer_info" transform="json" column="employer_info"/>
             <field name="contractor_info" transform="json" column="contractor_info"/>
-            <field name="application_id" type="integer" column="application"/>
+            <field name="application_id" type="integer" column="application" required="true" />
 
             <!-- Checking javascript function -->
             <field name="test_js" type="integer" column="application" script="always99(#{value})" />

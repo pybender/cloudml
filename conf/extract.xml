@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+
 
 <plan xmlns:buildings="http://www.example.org/NewXMLSchema">
 
@@ -8,8 +8,10 @@
         <param name="end" type="date" />
     </inputs>
     <script>
-    <![CDATA[def always99(a):
-    return 99
+    <![CDATA[
+        function always99(a) {
+            return 99;
+        }
     ]]>
     </script>
 
@@ -17,31 +19,38 @@
         <!--
             Define data sources to be used. Data sources
         -->
-        <pig name="pig3" jobid="j-1Z1KVDL4TNXPX" amazon_access_token="AKIAJ3WMYTNKB77YZ5KQ" amazon_token_secret="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"/>
+        <db name="odw" 
+            host="localhost"
+            dbname="odw"
+            user="postgres"
+            password="postgres"
+            vendor="postgres" />
+        <db name="datasource" 
+            host="localhost"
+            dbname="odw"
+            user="postgres"
+            password="postgres"
+            vendor="postgres" />
+
+
+        <pig name="pig" connection="host:9876" />
 
     </datasources>
 
     <import>
-        <entity name="application" datasource="pig3">
-            <query>
-                <![CDATA[
-register 's3n://odesk-match-prod/cloudml/udf/elephant-bird-core-4.4.jar';
-register 's3n://odesk-match-prod/cloudml/udf/elephant-bird-pig-4.4.jar';
-register 's3n://odesk-match-prod/cloudml/udf/elephant-bird-hadoop-compat-4.4.jar';
-register 's3n://odesk-match-prod/cloudml/udf/json-simple-1.1.1.jar';
-
-A = LOAD 's3n://odesk-match-prod/ja_quick_info/2012/12/applied-01.gz' USING com.twitter.elephantbird.pig.load.JsonLoader('-nestedLoad');
-B = FOREACH A GENERATE $0#'job_application_id' AS application,$0#'opening_id' AS opening, $0#'employer' AS employer, $0#'contractor' AS contractor;
-C = FOREACH B GENERATE application, opening;
-STORE C INTO '$output' USING JsonStorage();
+        <entity name="application" datasource="odw">
+            <query target="results">
+                <![CDATA[CREATE TABLE results AS
+  SELECT qi.*, 'class' || (trunc(random() * 2) + 1)::char hire_outcome 
+  FROM public.ja_quick_info qi where qi.file_provenance_date >= '#{start}'
+  AND qi.file_provenance_date < '#{end}' 
+  LIMIT(100);
   ]]>
             </query>
             <!-- "Convert" fields to datasources -->
             <field name="employer_info" transform="json" column="employer_info"/>
             <field name="contractor_info" transform="json" column="contractor_info"/>
             <field name="application_id" type="integer" column="application"/>
-            <field name="opening_id" type="integer" column="opening"/>
-
 
             <entity name="employer_info" datasource="employer_info">
                 <field name="employer.op_timezone" jsonpath="$.op_timezone" />

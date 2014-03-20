@@ -10,6 +10,10 @@ from exceptions import ProcessException, ImportHandlerException
 from utils import get_key, ParametrizedTemplate, process_primitive
 
 
+class FieldException(Exception):
+    pass
+
+
 class Field(object):
     """
     Represents entity field.
@@ -57,6 +61,9 @@ class Field(object):
         # used only if transform="csv". Defines the header names for each item
         # in the CSV field.
         self.headers = config.get('headers')  # TODO:
+        # Whether this field is required to have a value or not.
+        # If not defined, default is false
+        self.required = config.get('required') == 'true'
 
         self.validate_attributes()
 
@@ -124,6 +131,10 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
         if convert_type:
             strategy = self.PROCESS_STRATEGIES.get(self.type)
             value = strategy(value)
+
+        # TODO: should it be here or before transformation?
+        if self.required and not value:
+            raise FieldException('Field {} is required'.format(self.name))
 
         return value
 

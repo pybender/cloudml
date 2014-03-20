@@ -1,4 +1,3 @@
-import PyV8
 
 from utils import ParametrizedTemplate
 
@@ -8,12 +7,11 @@ class ScriptManager(object):
     Manages and executes javascript using V8.
     """
     def __init__(self):
-        self.context = PyV8.JSContext()
-        self.context.enter()
         self.data = ''
+        self.context = {}
 
-    def add_js(self, js):
-        self._exec(js)
+    def add_python(self, script):
+        exec(script, globals(), self.context)
 
     def execute_function(self, script, value, params={}):
         def update_strings(val):
@@ -26,4 +24,4 @@ class ScriptManager(object):
         return self._exec(text)
 
     def _exec(self, text):
-        return self.context.eval(text)
+        return eval(text,  globals(), self.context)
