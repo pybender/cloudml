@@ -127,11 +127,10 @@ class CsvXMLPlanTest(unittest.TestCase):
                                     'csv-train-import-handler.xml'))
 
     def test_csv_datasource(self):
-        with HTTMock(http_mock):
-            self._extractor = ImportHandler(self._plan, PARAMS)
-            row = self._extractor.next()
-            self.assertEqual(row['class'], 'hire')
-            self.assertEqual(row['money'], 10)
+        self._extractor = ImportHandler(self._plan, PARAMS)
+        row = self._extractor.next()
+        self.assertEqual(row['class'], 'hire')
+        self.assertEqual(row['money'], 10)
 
 
 class ExtractionXMLPlanTest(unittest.TestCase):
@@ -208,7 +207,8 @@ class ImportHandlerTest(unittest.TestCase):
         self.assertEqual(row['words'], ['Words', 'words', 'words'])
 
         # Checking javascript func
-        self.assertEqual(row['test_js'], 99)
+        self.assertEqual(row['test_script'], 99)
+        self.assertEqual(row['test_script_tag'], 99)
 
         # Checking dataFormat
         self.assertEqual(row['date'], datetime(2014, 6, 1, 13, 33))

@@ -54,7 +54,14 @@
             <field name="application_id" type="integer" column="application" required="true" />
 
             <!-- Checking javascript function -->
-            <field name="test_js" type="integer" column="application" script="always99(#{value})" />
+            <field name="test_script" type="integer" column="application" script="always99(#{value})" />
+            <field name="test_script_tag" type="integer" column="application">
+                <script>
+                    <![CDATA[
+                        always99(#{value})
+                    ]]>
+                </script>
+            </field>
 
             <!-- Checking types processing -->
             <field name="check_float" type="float" column="float_field" />

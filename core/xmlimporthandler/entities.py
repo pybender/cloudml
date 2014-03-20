@@ -55,7 +55,10 @@ class Field(object):
         # call the Javascript defined in this element and assign the result
         # to this field. May use any of the built-in functions or any one
         # elements.
-        self.script = config.get('script')
+        if hasattr(config, 'script'):  # script is a child element
+            self.script = config.script.text.strip()
+        else:  # script is attribute
+            self.script = config.get('script')
         # transforms this field to a datasource.
         self.transform = config.get('transform')
         # used only if transform="csv". Defines the header names for each item
