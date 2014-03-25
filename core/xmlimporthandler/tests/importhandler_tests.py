@@ -29,6 +29,22 @@ class ScriptManagerTest(unittest.TestCase):
         self.assertEqual(manager._exec('intToBoolean(1)'), True)
 
 
+class CompositeTypeTest(unittest.TestCase):
+    def setUp(self):
+        self._plan = ExtractionPlan(os.path.join(BASEDIR,
+                                    'extractorxml',
+                                    'composite-type-import-handler.xml'))
+
+    def readability_test(self):
+        self._extractor = ImportHandler(self._plan, {
+            'start': '2012-12-03',
+            'end': '2012-12-04',
+        })
+        row = self._extractor.next()
+        print row
+        self.assertTrue(False)
+
+
 class TestField(unittest.TestCase):
     def test_field_declaration_validation(self):
         with self.assertRaises(ImportHandlerException):

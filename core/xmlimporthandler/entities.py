@@ -94,11 +94,14 @@ class Field(object):
 is invalid: use %s only for string fields' % (self.name, attr_name))
             _check_for_string('dateFormat')
 
-    def process_value(self, value, script_manager, datasource_type=None):
+    def process_value(self, value, script_manager, row=None, row_data=None,
+                      datasource_type=None):
         """
         Processes value according to a field configuration.
         """
         convert_type = True
+        row = row or {}
+        row_data = row_data or {}
 
         if self.jsonpath:
             value = jsonpath(value, self.jsonpath)
@@ -114,7 +117,10 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
                 return None
 
         if self.script:
-            value = script_manager.execute_function(self.script, value)
+            data = {}
+            data.update(row)
+            data.update(row_data)
+            value = script_manager.execute_function(self.script, value, data)
 
         if self.split:
             value = re.split(self.split, value)
@@ -226,7 +232,7 @@ class EntityProcessor(object):
         row = self.iterator.next()
         row_data = {}
         for field in self.entity.fields.values():
-            row_data.update(self.process_field(field, row))
+            row_data.update(self.process_field(field, row, row_data))
 
         # Nested entities using a global datasource
         for nested_entity in self.entity.nested_entities_global_ds:
@@ -238,11 +244,16 @@ class EntityProcessor(object):
             row_data.update(nested_processor.process_next())
         return row_data
 
-    def process_field(self, field, row):
+    def process_field(self, field, row, row_data=None):
+        row_data = row_data or {}
         item_value = row.get(field.column, None)
         result = {}
-        kwargs = dict(datasource_type=self.datasource.type,
-                      script_manager=self.import_handler.plan.script_manager)
+        kwargs = {
+            'row': row,
+            'row_data': row_data,
+            'datasource_type': self.datasource.type,
+            'script_manager': self.import_handler.plan.script_manager
+        }
         if field.is_datasource_field:
             nested_entity = self._get_entity_for_datasource_field(field)
             if nested_entity is None:

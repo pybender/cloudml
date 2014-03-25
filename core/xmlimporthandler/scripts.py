@@ -1,10 +1,13 @@
-
 from utils import ParametrizedTemplate
+
+# Context:
+from processors import composite_string, composite_python,\
+    composite_readability, process_key_value
 
 
 class ScriptManager(object):
     """
-    Manages and executes javascript using V8.
+    Manages and executes python scripts.
     """
     def __init__(self):
         self.data = ''
@@ -13,15 +16,20 @@ class ScriptManager(object):
     def add_python(self, script):
         exec(script, globals(), self.context)
 
-    def execute_function(self, script, value, params={}):
+    def execute_function(self, script, value, row_data=None):
         def update_strings(val):
             if isinstance(val, basestring):
                 return "'%s'" % val
             return val
 
-        params['value'] = update_strings(value)
+        row_data = row_data or {}
+        params = {'value': update_strings(value)}
+        params.update(row_data)
         text = ParametrizedTemplate(script).safe_substitute(params)
-        return self._exec(text)
+        return self._exec(text, row_data)
 
-    def _exec(self, text):
-        return eval(text,  globals(), self.context)
+    def _exec(self, text, row_data=None):
+        row_data = row_data or {}
+        context = globals().copy()
+        context.update(locals())
+        return eval(text, context, self.context)
