@@ -1,5 +1,6 @@
 import os
 import unittest
+import json
 from datetime import datetime
 
 from mock import patch
@@ -27,22 +28,6 @@ class ScriptManagerTest(unittest.TestCase):
             return a == 1
         """)
         self.assertEqual(manager._exec('intToBoolean(1)'), True)
-
-
-class CompositeTypeTest(unittest.TestCase):
-    def setUp(self):
-        self._plan = ExtractionPlan(os.path.join(BASEDIR,
-                                    'extractorxml',
-                                    'composite-type-import-handler.xml'))
-
-    def readability_test(self):
-        self._extractor = ImportHandler(self._plan, {
-            'start': '2012-12-03',
-            'end': '2012-12-04',
-        })
-        row = self._extractor.next()
-        print row
-        self.assertTrue(False)
 
 
 class TestField(unittest.TestCase):
@@ -254,3 +239,30 @@ class ImportHandlerTest(unittest.TestCase):
         with self.assertRaisesRegexp(
                 ImportHandlerException, "Missing input parameters"):
             self._extractor.process_input_params(None)
+
+
+def db_row_iter_mock(*args, **kwargs):
+    path = os.path.join(BASEDIR, 'extractorxml', 'out.json')
+    with open(path, 'r') as fp:
+        data = json.loads(fp.read())
+    for r in [data]:
+        yield r
+
+
+class CompositeTypeTest(unittest.TestCase):
+    def setUp(self):
+        self._plan = ExtractionPlan(os.path.join(BASEDIR,
+                                    'extractorxml',
+                                    'composite-type-import-handler.xml'))
+
+    @patch('core.xmlimporthandler.datasources.DbDataSource._get_iter',
+           return_value=db_row_iter_mock())
+    def composite_test(self, mock_db):
+        self._extractor = ImportHandler(self._plan, {
+            'start': '2012-12-03',
+            'end': '2012-12-04',
+        })
+        row = self._extractor.next()
+        self.assertEqual(row['country_pair'], 'Australia,Philippines')
+        self.assertEqual(
+            row['tsexams']['English Spelling Test (U.S. Version)'], 5)

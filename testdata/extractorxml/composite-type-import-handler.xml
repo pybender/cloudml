@@ -5,19 +5,19 @@
   </inputs>
   <script><![CDATA[]]></script>
   <datasources>
-    <db dbname="odw" host="localhost" name="odw" password="postgres" user="postgres" vendor="postgres"/>
+    <db dbname="something" host="localhost" name="odw" password="password" user="fake" vendor="postgres"/>
   </datasources>
   <import>
     <entity datasource="odw" name="retrieve">
       <query><![CDATA[SELECT qi.*, 'class' || (trunc(random() * 2) + 1)::char hire_outcome FROM public.ja_quick_info qi where qi.file_provenance_date >= '#{start}' AND qi.file_provenance_date < '#{end}' LIMIT(100);]]></query>
-      <field name="country_pair">
-        <script><![CDATA[composite_readability("%(employer.country)s,", #{value}, "flesch_reading_ease", row_data)]]></script>
-      </field>
       <field column="contractor_info" name="contractor_info" transform="json"/>
       <field column="employer_info" name="employer_info" transform="json"/>
       <field column="hire_outcome" name="hire_outcome" type="string"/>
       <field column="opening" name="opening_id" type="string"/>
       <field column="application" name="application_id" type="string"/>
+      <field name="country_pair">
+        <script><![CDATA[composite_string("%(employer.country)s,%(contractor.dev_country)s", #{value}, row_data)]]></script>
+      </field>
       <entity datasource="contractor_info" name="contractor_info">
         <field join="," jsonpath="$.skills.*.skl_name" name="contractor.skills"/>
         <field jsonpath="$.tsexams" name="tsexams">

@@ -1,6 +1,7 @@
 """
 Classes to process XML Import Handler import section.
 """
+from collections import OrderedDict
 import json
 from datetime import datetime
 import re
@@ -121,11 +122,12 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
             data.update(row)
             data.update(row_data)
             value = script_manager.execute_function(self.script, value, data)
+            convert_type = False
 
-        if self.split:
+        if self.split and value:
             value = re.split(self.split, value)
 
-        if self.join:
+        if self.join and value:
             value = self.join.join(value)
 
         # TODO: could we use python formats for date?
@@ -153,9 +155,9 @@ class Entity(object):
     Represents import handler's import entity.
     """
     def __init__(self, config):
-        self.fields = {}
+        self.fields = OrderedDict()
         # entities, that used as json or csv field as datasource.
-        self.nested_entities_field_ds = {}
+        self.nested_entities_field_ds = OrderedDict()
         # nested entities with another datasource.
         self.nested_entities_global_ds = []
 
