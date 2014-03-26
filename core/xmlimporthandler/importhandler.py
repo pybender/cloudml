@@ -214,14 +214,15 @@ class ImportHandler(object):
     def next(self):
         if self.count % 1000 == 0:
             logging.info('Processed %s rows so far' % (self.count, ))
-
-        try:
-            result = self.entity_processor.process_next()
-            self.count += 1
-            return result
-        except ProcessException, e:
-            logging.debug('Ignored line #%d: %s' % (self.count, str(e)))
-            self.ignored += 1
+        result = None
+        while result is None:
+            try:
+                result = self.entity_processor.process_next()
+                self.count += 1
+                return result
+            except ProcessException, e:
+                logging.debug('Ignored line #%d: %s' % (self.count, str(e)))
+                self.ignored += 1
 
     def process_input_params(self, params):
         """
