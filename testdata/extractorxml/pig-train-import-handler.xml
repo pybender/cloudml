@@ -23,6 +23,12 @@
 
     <import>
         <entity name="application" datasource="pig3">
+<!--             <sqoop>
+                <query>
+                    <![CDATA[
+                    ]]>
+                </query>
+            </sqoop> -->
             <query>
                 <![CDATA[
 register 's3n://odesk-match-prod/cloudml/udf/elephant-bird-core-4.4.jar';

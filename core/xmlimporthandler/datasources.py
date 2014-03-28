@@ -6,7 +6,7 @@ import json
 import boto
 from boto.s3.key import Key
 import boto.emr
-from boto.emr.step import PigStep, InstallPigStep
+from boto.emr.step import PigStep, InstallPigStep, JarStep
 
 from exceptions import ImportHandlerException
 from core.importhandler.db import postgres_iter
@@ -82,6 +82,7 @@ class PigDataSource(BaseDataSource):
         self.amazon_access_token = self.config.get('amazon_access_token')
         self.amazon_token_secret = self.config.get('amazon_token_secret')
         self.pig_version = self.config.get('pig_version', self.PIG_VERSIONS)
+        logging.info('Use pig version %s' % self.pig_version)
         self.bucket_name = self.config.get('bucket_name', self.BUCKET_NAME)
 
         self.s3_conn = boto.connect_s3(self.amazon_access_token,
@@ -104,6 +105,15 @@ class PigDataSource(BaseDataSource):
         k = Key(b)
         k.key = 'cloudml/pig/' + self.name + '_script.pig'
         k.set_contents_from_string(query)
+        return 's3://%s/%s' % (self.bucket_name, k.key)
+
+    def store_sqoop_script_to_s3(self, script=None):
+        # substitute your bucket name here
+        b = self.s3_conn.get_bucket(self.bucket_name)
+        k = Key(b)
+        k.key = 'cloudml/pig/' + self.name + '_script.sh'
+        #k.set_contents_from_filename("./core/xmlimporthandler/install_sqoop.sh")
+        k.set_contents_from_string(script)
         return 's3://%s/%s' % (self.bucket_name, k.key)
 
     def get_result(self):
@@ -144,6 +154,20 @@ class PigDataSource(BaseDataSource):
         if self.jobid is None:
             install_pig_step = InstallPigStep(pig_versions=self.pig_version)
             steps.append(install_pig_step)
+            # install_sqoop_step = JarStep(name='Install sqoop',
+            # jar='s3n://elasticmapreduce/libs/script-runner/script-runner.jar',
+            # step_args=['s3n://install_sqoop.sh',],
+            # action_on_failure='CONTINUE')
+            #steps.append(install_sqoop_step)
+#         query = '''#!/bin/bash
+# cd 
+# ./sqoop-1.4.4.bin__hadoop-1.0.0/bin/sqoop import --verbose --connect "jdbc:postgresql://172.27.13.141:12000/odw1 --username bestmatch --password bestmatch --table dataset -m 1 --direct
+# '''
+#         sqoop_script = self.store_sqoop_script_to_s3(query)
+#         sqoop_step = JarStep(name='Run sqoop import',
+#             jar='s3n://elasticmapreduce/libs/script-runner/script-runner.jar',
+#             step_args=[sqoop_script,],
+#             action_on_failure='CONTINUE')
         pig_step = PigStep(self.name,
                      pig_file=pig_file,
                      pig_versions=self.pig_version,
@@ -156,7 +180,7 @@ class PigDataSource(BaseDataSource):
             step_number = len(status.steps) + 1
             logging.info('Use existing emr jobflow: %s' % self.jobid)
             step_list = self.emr_conn.add_jobflow_steps(self.jobid, steps)
-            step_id = step_list.stepids[0].value
+            #step_id = step_list.stepids[0].value
         else:
             logging.info('Run emr jobflow')
             step_number = 2

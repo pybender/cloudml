@@ -109,7 +109,7 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
         if self.split:
             value = re.split(self.split, value)
 
-        if self.join:
+        if value is not None and self.join:
             value = self.join.join(value)
 
         # TODO: could we use python formats for date?
