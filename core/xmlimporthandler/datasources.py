@@ -47,9 +47,10 @@ class DbDataSource(BaseDataSource):
     """
 
     def _get_iter(self, query, query_target=None):
-        query = [query]
+        query = query.strip(' ');
+        queries = query.split(';')
         if query_target:
-            query.append("SELECT * FROM %s;" % query_target)
+            queries.append("SELECT * FROM %s;" % query_target)
         db_iter = self.DB_ITERS.get(self.config[0].attrib['vendor'])
 
         if db_iter is None:
@@ -66,7 +67,7 @@ class DbDataSource(BaseDataSource):
         conn_params.pop('vendor')
         conn_string = ' '.join(['%s=%s' % (k, v)
                                 for k, v in conn_params.iteritems()])
-        return db_iter(query, conn_string)
+        return db_iter(queries, conn_string)
 
 
 class HttpDataSource(BaseDataSource):
