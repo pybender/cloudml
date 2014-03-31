@@ -47,7 +47,7 @@ class DbDataSource(BaseDataSource):
     """
 
     def _get_iter(self, query, query_target=None):
-        query = query.strip(' ');
+        query = query.strip(' \t\n\r')
         queries = query.split(';')
         if query_target:
             queries.append("SELECT * FROM %s;" % query_target)
