@@ -48,12 +48,10 @@ class DbDataSource(BaseDataSource):
 
     def _get_iter(self, query, query_target=None):
         query = query.strip(' \t\n\r')
-        queries = query.split(';')
+        queries = query.split(';')[:-1]
         logging.info(queries)
-        logging.info(query_target)
         if query_target:
             queries.append("SELECT * FROM %s;" % query_target)
-        logging.info(queries)
         db_iter = self.DB_ITERS.get(self.config[0].attrib['vendor'])
 
         if db_iter is None:
