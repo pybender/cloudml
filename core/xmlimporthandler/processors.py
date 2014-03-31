@@ -34,6 +34,7 @@ def composite_python(expression_value, value, row_data):
         return eval(res)
     except Exception:
         logging.exception('Expression template %s, expression %s' % (expression_value, res))
+        raise
 
 
 def composite_readability(expression_value, value, r_type, row_data):

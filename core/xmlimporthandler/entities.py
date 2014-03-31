@@ -106,6 +106,8 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
 
         if self.jsonpath:
             value = jsonpath(value, self.jsonpath)
+            if value is False:
+                value = None
             if not self.join and isinstance(value, (list, tuple)) \
                     and len(value) == 1:
                 value = value[0]
