@@ -118,7 +118,8 @@ class ClassificationModelMetrics(Metrics):
     def confusion_matrix(self):
         if not hasattr(self, '_confusion_matrix'):
             self._confusion_matrix = \
-                sk_metrics.confusion_matrix([str(l) for l in self._labels],
+            #[str(l) for l in self._labels]
+                sk_metrics.confusion_matrix(self._labels,
                                             self._preds)
         return self._confusion_matrix
 
@@ -133,8 +134,8 @@ class ClassificationModelMetrics(Metrics):
     @property
     def accuracy(self):
         if not hasattr(self, '_accuracy'):
-            labels = [str(l) for l in self._labels]
-            self._accuracy = self._classifier.score(self._true_data, labels)
+            #labels = [str(l) for l in self._labels]
+            self._accuracy = self._classifier.score(self._true_data, self._labels)
         return self._accuracy
 
     def _get_metrics_names(self):

@@ -29,7 +29,10 @@ def composite_string(expression_value, value, row_data):
 
 def composite_python(expression_value, value, row_data):
     res = composite_string(expression_value, value, row_data)
-    return eval(res)
+    try:
+        return eval(res)
+    except Exception:
+        logging.exception('Expression template %s, expression %s' % (expression_value, res))
 
 
 def composite_readability(expression_value, value, r_type, row_data):
