@@ -12,6 +12,13 @@ from uuid import uuid4
 from time import time
 
 
+def run_queries(queries, conn_string):
+    conn = psycopg2.connect(conn_string)
+    for query in queries:
+        cursor = conn.cursor().execute(query)
+    conn.commit()
+
+
 def postgres_iter(queries, conn_string):
     """
     Iterator for iterating on a Postgres query using a named cursor.

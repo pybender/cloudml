@@ -12,7 +12,7 @@ import boto.emr
 from boto.emr.step import PigStep, InstallPigStep, JarStep
 
 from exceptions import ImportHandlerException
-from core.importhandler.db import postgres_iter
+from core.importhandler.db import postgres_iter, run_queries
 
 logging.getLogger('boto').setLevel(logging.INFO)
 
@@ -21,8 +21,8 @@ class BaseDataSource(object):
     """
     Base class for any type of the datasource.
     """
-    DB_ITERS = {
-        'postgres': postgres_iter
+    DB = {
+        'postgres': [postgres_iter, run_queries]
     }
 
     def __init__(self, config):
@@ -51,7 +51,7 @@ class DbDataSource(BaseDataSource):
         queries = query.split(';')[:-1]
         if query_target:
             queries.append("SELECT * FROM %s;" % query_target)
-        db_iter = self.DB_ITERS.get(self.config[0].attrib['vendor'])
+        db_iter = self.DB.get(self.config[0].attrib['vendor'])[0]
 
         if db_iter is None:
             raise ImportHandlerException(
@@ -68,6 +68,22 @@ class DbDataSource(BaseDataSource):
         conn_string = ' '.join(['%s=%s' % (k, v)
                                 for k, v in conn_params.iteritems()])
         return db_iter(queries, conn_string)
+
+    def run_queries(self, queries):
+        queries = queries.strip(' \t\n\r')
+        queries = queries.split(';')[:-1]
+        queries = [q + ';' for q in queries]
+        run_query = self.DB.get(self.config[0].attrib['vendor'])[1]
+        if run_query is None:
+            raise ImportHandlerException(
+                'Database type %s not supported' % self.config['db']['vendor'])
+        from copy import deepcopy
+        conn_params = deepcopy(self.config[0].attrib)
+        conn_params.pop('name')
+        conn_params.pop('vendor')
+        conn_string = ' '.join(['%s=%s' % (k, v)
+                                for k, v in conn_params.iteritems()])
+        run_query(queries, conn_string)
 
 
 class HttpDataSource(BaseDataSource):
@@ -137,9 +153,14 @@ class PigDataSource(BaseDataSource):
     AMAZON_TOKEN_SECRET = 'fill me'
     BUCKET_NAME = 'odesk-match-prod'
     PIG_VERSIONS = '0.11.1'
+    SQOOP_SCRIPT_TEMPLATE = '''#!/bin/bash
+cd /home/hadoop/
+./sqoop-1.4.4.bin__hadoop-1.0.0/bin/sqoop import --verbose --connect "%(connect)s" --username %(user)s --password %(password)s --table %(table)s -m %(mappers)s
+'''
 
     def __init__(self, config):
         super(PigDataSource, self).__init__(config)
+        self.steps = []
         self.amazon_access_token = self.config.get('amazon_access_token')
         self.amazon_token_secret = self.config.get('amazon_token_secret')
         self.pig_version = self.config.get('pig_version', self.PIG_VERSIONS)
@@ -149,7 +170,7 @@ class PigDataSource(BaseDataSource):
         self.s3_conn = boto.connect_s3(self.amazon_access_token,
                                        self.amazon_token_secret)
         self.emr_conn = boto.emr.connect_to_region(
-            'us-west-2',
+            'us-west-1',
             aws_access_key_id=self.amazon_access_token,
             aws_secret_access_key=self.amazon_token_secret)
         self.jobid = config.get('jobid', None)
@@ -159,6 +180,8 @@ class PigDataSource(BaseDataSource):
 
         self.log_path = '%s/%s' % (self.S3_LOG_URI, self.name)
         self.log_uri = 's3://%s%s' % (self.bucket_name, self.log_path)
+
+        self.prepare_cluster()
 
     def store_query_to_s3(self, query, query_target=None):
         # substitute your bucket name here
@@ -180,8 +203,13 @@ class PigDataSource(BaseDataSource):
     def get_result(self):
         b = self.s3_conn.get_bucket(self.bucket_name)
         k = Key(b)
+        #TODO: Need getting data from all nodes
         k.key = "%s/part-m-00000" % self.result_path
-        return k.get_contents_as_string()
+        try:
+            return k.get_contents_as_string()
+        except:
+            k.key = "%s/part-r-00000" % self.result_path
+            return k.get_contents_as_string()
 
     def delete_output(self, name):
         b = self.s3_conn.get_bucket(self.bucket_name)
@@ -207,60 +235,92 @@ class PigDataSource(BaseDataSource):
             logging.info(self.get_log(log_path, self.jobid, step_number, 'stderr'))
         except:
             logging.info('Logs are anavailable now (updated every 5 mins)')
+            logging.info('''For getting stderr log please use command:
+    s3cmd get %s/%s/steps/%d/stderr stderr''' % (log_path, self.jobid, step_number))
+            logging.info('''For getting stdout log please use command:
+    s3cmd get %s/%s/steps/%d/stdout stdout''' % (log_path, self.jobid, step_number))
 
+    def prepare_cluster(self):
+        if self.jobid is None:
+            install_pig_step = InstallPigStep(pig_versions=self.pig_version)
+            self.steps.append(install_pig_step)
+            install_sqoop_step = JarStep(name='Install sqoop',
+            jar='s3n://elasticmapreduce/libs/script-runner/script-runner.jar',
+            step_args=['s3n://%s/cloudml/pig/install_sqoop.sh' % self.bucket_name,])
+            self.steps.append(install_sqoop_step)
+
+    def run_sqoop_imports(self, sqoop_imports=[]):
+        for sqoop_import in sqoop_imports:
+            db_param = sqoop_import.datasource.config[0].attrib
+            connect = "jdbc:postgresql://%s:%s/%s" % (db_param['host'],
+                                                      db_param.get('port', '5432'),
+                                                      db_param['dbname'])
+            sqoop_script = self.SQOOP_SCRIPT_TEMPLATE % {'table' :sqoop_import.table,
+                                                        'connect': connect,
+                                                        'password': db_param['password'],
+                                                        'user': db_param['user'],
+                                                        'mappers': sqoop_import.mappers}
+            if sqoop_import.where:
+                sqoop_script =+ "--where %s" % sqoop_import.where
+            if sqoop_import.direct:
+                sqoop_script =+ "--direct"
+            logging.info('Sqoop command: %s' % sqoop_script)
+            sqoop_script_uri = self.store_sqoop_script_to_s3(sqoop_script)
+            sqoop_step = JarStep(name='Run sqoop import',
+                jar='s3n://elasticmapreduce/libs/script-runner/script-runner.jar',
+                step_args=[sqoop_script_uri,],
+                action_on_failure='CONTINUE')
+            self.steps.append(sqoop_step)
 
     def _get_iter(self, query, query_target=None):
         pig_file = self.store_query_to_s3(query)
-        steps = []
-        if self.jobid is None:
-            install_pig_step = InstallPigStep(pig_versions=self.pig_version)
-            steps.append(install_pig_step)
-            # install_sqoop_step = JarStep(name='Install sqoop',
-            # jar='s3n://elasticmapreduce/libs/script-runner/script-runner.jar',
-            # step_args=['s3n://install_sqoop.sh',],
-            # action_on_failure='CONTINUE')
-            #steps.append(install_sqoop_step)
-#         query = '''#!/bin/bash
-# cd 
-# ./sqoop-1.4.4.bin__hadoop-1.0.0/bin/sqoop import --verbose --connect "jdbc:postgresql://172.27.13.141:12000/odw1 --username bestmatch --password bestmatch --table dataset -m 1 --direct
-# '''
-#         sqoop_script = self.store_sqoop_script_to_s3(query)
-#         sqoop_step = JarStep(name='Run sqoop import',
-#             jar='s3n://elasticmapreduce/libs/script-runner/script-runner.jar',
-#             step_args=[sqoop_script,],
-#             action_on_failure='CONTINUE')
+        
         pig_step = PigStep(self.name,
                      pig_file=pig_file,
                      pig_versions=self.pig_version,
                      pig_args=['-p output=%s' % self.result_uri])
         pig_step.action_on_failure = 'CONTINUE'
-        steps.append(pig_step)
+        self.steps.append(pig_step)
         self.delete_output(self.name)
         if self.jobid is not None:
             status = self.emr_conn.describe_jobflow(self.jobid)
-            step_number = len(status.steps) + 1
+            step_number = len(status.steps) + 2
             logging.info('Use existing emr jobflow: %s' % self.jobid)
-            step_list = self.emr_conn.add_jobflow_steps(self.jobid, steps)
+            step_list = self.emr_conn.add_jobflow_steps(self.jobid, self.steps)
             #step_id = step_list.stepids[0].value
         else:
             logging.info('Run emr jobflow')
-            step_number = 2
+            step_number = 3
             self.jobid = self.emr_conn.run_jobflow(name='Cloudml jobflow',
-                              log_uri=log_uri,
+                              log_uri=self.log_uri,
                               ami_version='2.2',
+                              ec2_keyname='nmelnik',
                               keep_alive=True,
+                              #api_params={'Instances.Ec2SubnetId':'subnet-3f5bc256'},
                               action_on_failure='CONTINUE',#'CANCEL_AND_WAIT',
-                              steps=steps)
+                              steps=self.steps)
             logging.info('JobFlowid: %s' % self.jobid)
         previous_state = None
         logging.info('Step number: %d' % step_number)
-
+        
         while True:
             time.sleep(10)
             status = self.emr_conn.describe_jobflow(self.jobid)
-            laststatechangereason = status.laststatechangereason
+
+            
+            laststatechangereason = None
+            if hasattr(status, 'laststatechangereason'):
+                laststatechangereason = status.laststatechangereason
             if previous_state != status.state:
                 logging.info("State of jobflow: %s" % status.state)
+                if status.state == 'RUNNING':
+                    if hasattr(status, 'masterpublicdnsname'):
+                        masterpublicdnsname = status.masterpublicdnsname
+                        logging.info("Master node dns name: %s" % masterpublicdnsname)
+                        logging.info('''For access to hadoop web ui please create ssh tunnel:
+ssh -L 9100:%(dns)s:9100 hadoop@%(dns)s -i ~/{yourkey}.pem
+After creating ssh tunnel web ui will be available on localhost:9100'''  % {'dns': masterpublicdnsname})
+
             previous_state = status.state
             if status.state in ('FAILED', '') or \
                 (status.state in ('WAITING',) and \

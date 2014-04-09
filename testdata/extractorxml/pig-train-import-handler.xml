@@ -15,20 +15,27 @@
 
     <datasources>
         <!--
-            Define data sources to be used. Data sources
+            Define data sources to be used. Data sources jobid="j-1A1906EQ4CSDX" j-T0ZDIX0LGN8P j-23ZC0FF6VTQS2
         -->
-        <pig name="pig3" jobid="j-1Z1KVDL4TNXPX" amazon_access_token="AKIAJ3WMYTNKB77YZ5KQ" amazon_token_secret="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"/>
+        <db name="sqoop_db_datasource" 
+            host="localhost"
+            dbname="odw"
+            user="postgres"
+            password="postgres"
+            vendor="postgres" />
+        <pig name="pig" jobid="j-3RUN8W208F7S3" amazon_access_token="AKIAJ3WMYTNKB77YZ5KQ" amazon_token_secret="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"/>
 
     </datasources>
 
     <import>
-        <entity name="application" datasource="pig3">
-<!--             <sqoop>
-                <query>
-                    <![CDATA[
-                    ]]>
-                </query>
-            </sqoop> -->
+        <entity name="application" datasource="pig">
+        <sqoop target="dataset" table="cloudmltestresults" datasource="sqoop_db_datasource">
+        <![CDATA[DROP TABLE IF EXISTS cloudmltestresults;CREATE TABLE cloudmltestresults AS SELECT qi.*, 'class' || (trunc(random() * 2) + 1)::char hire_outcome 
+FROM public.ja_quick_info qi where qi.file_provenance_date >= '2012-12-03'
+AND qi.file_provenance_date < '2012-12-04' 
+LIMIT(100);
+        ]]>
+        </sqoop>
             <query>
                 <![CDATA[
 register 's3n://odesk-match-prod/cloudml/udf/elephant-bird-core-4.4.jar';

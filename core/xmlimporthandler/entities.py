@@ -3,6 +3,7 @@ Classes to process XML Import Handler import section.
 """
 from collections import OrderedDict
 import json
+import logging
 from datetime import datetime
 import re
 from jsonpath import jsonpath
@@ -152,6 +153,27 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
         return value
 
 
+class Sqoop(object):
+
+    def __init__(self, config):
+        self.datasource_name = config.get('datasource')
+        self.target = config.get('target')
+        self.where = config.get('where')
+        self.table = config.get('table')
+        self.direct = config.get('direct')
+        self.mappers = config.get('mappers', 1)
+        self.query = config.text
+
+    def build_query(self, params):
+        """
+        Returns query defined in the entity with applied parameters.
+        """
+        if not self.query:
+            return None
+        query = ParametrizedTemplate(self.query).safe_substitute(params)
+        return query
+
+
 class Entity(object):
     """
     Represents import handler's import entity.
@@ -162,6 +184,7 @@ class Entity(object):
         self.nested_entities_field_ds = OrderedDict()
         # nested entities with another datasource.
         self.nested_entities_global_ds = []
+        self.sqoop_imports = []
 
         self.datasource_name = config.get('datasource')
         self.name = config.get('name')
@@ -175,6 +198,7 @@ class Entity(object):
 
         self.load_fields(config)
         self.load_nested_entities(config)
+        self.load_sqoop_imports(config)
 
     def build_query(self, params):
         """
@@ -192,6 +216,10 @@ class Entity(object):
         for field_config in config.xpath("field"):
             field = Field(field_config)
             self.fields[field.name] = field
+
+    def load_sqoop_imports(self, config):
+        for sqoop_config in config.xpath("sqoop"):
+            self.sqoop_imports.append(Sqoop(sqoop_config))
 
     def load_nested_entities(self, config):
         """
@@ -226,6 +254,21 @@ class EntityProcessor(object):
         query = entity.build_query(params)
         self.datasource = import_handler.plan.datasources.get(
             entity.datasource_name)
+
+        # Process sqoop imports
+        logging.info('Process sqoop imports')
+        for sqoop_import in self.entity.sqoop_imports:
+
+            sqoop_import.datasource = import_handler.plan.datasources.get(
+                sqoop_import.datasource_name)
+            if sqoop_import.query:
+                sqoop_query = sqoop_import.build_query(params)
+                logging.info('Run query %s' % sqoop_query)
+                sqoop_iter = sqoop_import.datasource.run_queries(sqoop_query)
+
+        if self.datasource.config.tag == 'pig':
+            self.datasource.run_sqoop_imports(self.entity.sqoop_imports)
+
         self.iterator = self.datasource._get_iter(
             query, self.entity.query_target)
 

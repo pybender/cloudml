@@ -8,7 +8,7 @@ sqoop_jar_gz=$sqoop_jar.tar.gz
 postgres_jar='postgresql-9.1-901.jdbc4.jar'
 postgres_dir_gz=$postgres_dir.tar.gz
  
-cd
+cd /home/hadoop/
  
 hadoop fs -copyToLocal $bucket_location$sqoop_jar_gz .
 tar -xzf $sqoop_jar_gz
