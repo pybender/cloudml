@@ -208,6 +208,9 @@
                             <xs:attribute type="xs:string" name="amazon_token_secret" use="required" />
                             <xs:attribute type="xs:string" name="pig_version" use="optional" />
                             <xs:attribute type="xs:string" name="bucket_name" use="optional" />
+                            <xs:attribute type="xs:string" name="master_instance_type" use="optional" />
+                            <xs:attribute type="xs:string" name="slave_instance_type" use="optional" />
+                            <xs:attribute type="xs:string" name="num_instances" use="optional" />
                         </xs:complexType>
                     </xs:element>
 
