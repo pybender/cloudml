@@ -149,7 +149,10 @@ class Trainer():
         # if(len(vectorized_data) == 1):
         #     true_data = numpy.array(vectorized_data[0])
         # else:
-        true_data = hstack(vectorized_data)
+        try:
+               true_data = hstack(vectorized_data)
+        except ValueError:
+                true_data = numpy.hstack(vectorized_data)
         logging.info("Memory usage: %f" % 
                      memory_usage(-1, interval=0, timeout=None)[0])
         vectorized_data = None

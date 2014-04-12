@@ -105,7 +105,14 @@ and "value" for target feature %s' % (feature['name']))
                 if expression_type == 'string':
                     result[feature['name']] = value
                 elif expression_type == 'python':
-                    result[feature['name']] = eval(value)
+                    try:
+                        result[feature['name']] = eval(value)
+                    except Exception, e:
+                        logging.exception('Error when evaluate feature %s, value: %s, expression_type: %s' % 
+                            (feature['name'], value, expression_type))
+                        raise ProcessException('%s (expression: %s)' %
+                                       (e, value))
+
                 elif expression_type == 'readability':
                     if 'readability_type' not in feature['expression']:
                         raise ProcessException('''Must define an expression
