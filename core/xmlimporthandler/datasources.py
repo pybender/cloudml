@@ -187,7 +187,8 @@ cd /home/hadoop/
         self.prepare_cluster()
 
     def store_query_to_s3(self, query, query_target=None):
-        # substitute your bucket name here
+        if query_target:
+            query +="\nSTORE %s INTO '$output' USING JsonStorage();" % query_target
         b = self.s3_conn.get_bucket(self.bucket_name)
         k = Key(b)
         k.key = 'cloudml/pig/' + self.name + '_script.pig'
