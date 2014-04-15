@@ -153,7 +153,7 @@ class PigDataSource(BaseDataSource):
     AMAZON_TOKEN_SECRET = 'fill me'
     BUCKET_NAME = 'odesk-match-prod'
     PIG_VERSIONS = '0.11.1'
-    SQOOP_COMMANT = '''./sqoop-1.4.4.bin__hadoop-1.0.0/bin/sqoop import --verbose --connect "%(connect)s" --username %(user)s --password %(password)s --table %(table)s -m %(mappers)s'''
+    SQOOP_COMMANT = '''sqoop import --verbose --connect "%(connect)s" --username %(user)s --password %(password)s --table %(table)s -m %(mappers)s'''
 
     def __init__(self, config):
         super(PigDataSource, self).__init__(config)
