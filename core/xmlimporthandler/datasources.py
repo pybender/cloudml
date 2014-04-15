@@ -300,7 +300,7 @@ class PigDataSource(BaseDataSource):
         self.delete_output(self.name)
         if self.jobid is not None:
             status = self.emr_conn.describe_jobflow(self.jobid)
-            step_number = len(status.steps) + 2
+            step_number = len(status.steps) + 1
             logging.info('Use existing emr jobflow: %s' % self.jobid)
             step_list = self.emr_conn.add_jobflow_steps(self.jobid, self.steps)
             #step_id = step_list.stepids[0].value
