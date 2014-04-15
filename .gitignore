@@ -31,3 +31,5 @@ target
 *.sublime-project
 *.sublime-workspace
 
+readme_nli.txt
+.pydevproject
