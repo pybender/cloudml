@@ -298,27 +298,27 @@ class PigDataSource(BaseDataSource):
         pig_step.action_on_failure = 'CONTINUE'
         self.steps.append(pig_step)
         self.delete_output(self.name)
-        # if self.jobid is not None:
-        #     status = self.emr_conn.describe_jobflow(self.jobid)
-        #     step_number = len(status.steps) + 2
-        #     logging.info('Use existing emr jobflow: %s' % self.jobid)
-        #     step_list = self.emr_conn.add_jobflow_steps(self.jobid, self.steps)
-        #     #step_id = step_list.stepids[0].value
-        # else:
-        #     logging.info('Run emr jobflow')
-        #     step_number = 3
-        #     self.jobid = self.emr_conn.run_jobflow(name='Cloudml jobflow',
-        #                       log_uri=self.log_uri,
-        #                       ami_version='2.2',
-        #                       ec2_keyname='nmelnik',
-        #                       keep_alive=True,
-        #                       num_instances=self.num_instances,
-        #                       master_instance_type=self.master_instance_type,
-        #                       slave_instance_type=self.slave_instance_type,
-        #                       #api_params={'Instances.Ec2SubnetId':'subnet-3f5bc256'},
-        #                       action_on_failure='CONTINUE',#'CANCEL_AND_WAIT',
-        #                       steps=self.steps)
-        #     logging.info('JobFlowid: %s' % self.jobid)
+        if self.jobid is not None:
+            status = self.emr_conn.describe_jobflow(self.jobid)
+            step_number = len(status.steps) + 2
+            logging.info('Use existing emr jobflow: %s' % self.jobid)
+            step_list = self.emr_conn.add_jobflow_steps(self.jobid, self.steps)
+            #step_id = step_list.stepids[0].value
+        else:
+            logging.info('Run emr jobflow')
+            step_number = 3
+            self.jobid = self.emr_conn.run_jobflow(name='Cloudml jobflow',
+                              log_uri=self.log_uri,
+                              ami_version='2.2',
+                              ec2_keyname='nmelnik',
+                              keep_alive=True,
+                              num_instances=self.num_instances,
+                              master_instance_type=self.master_instance_type,
+                              slave_instance_type=self.slave_instance_type,
+                              #api_params={'Instances.Ec2SubnetId':'subnet-3f5bc256'},
+                              action_on_failure='CONTINUE',#'CANCEL_AND_WAIT',
+                              steps=self.steps)
+            logging.info('JobFlowid: %s' % self.jobid)
         previous_state = None
         logging.info('Step number: %d' % step_number)
         
