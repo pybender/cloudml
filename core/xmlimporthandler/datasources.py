@@ -14,7 +14,7 @@ from boto.emr.step import PigStep, InstallPigStep, JarStep
 from exceptions import ImportHandlerException
 from core.importhandler.db import postgres_iter, run_queries
 
-#logging.getLogger('boto').setLevel(logging.INFO)
+logging.getLogger('boto').setLevel(logging.INFO)
 
 
 class BaseDataSource(object):
@@ -153,10 +153,7 @@ class PigDataSource(BaseDataSource):
     AMAZON_TOKEN_SECRET = 'fill me'
     BUCKET_NAME = 'odesk-match-prod'
     PIG_VERSIONS = '0.11.1'
-    SQOOP_SCRIPT_TEMPLATE = '''#!/bin/bash
-cd /home/hadoop/
-./sqoop-1.4.4.bin__hadoop-1.0.0/bin/sqoop import --verbose --connect "%(connect)s" --username %(user)s --password %(password)s --table %(table)s -m %(mappers)s
-'''
+    SQOOP_COMMANT = '''./sqoop-1.4.4.bin__hadoop-1.0.0/bin/sqoop import --verbose --connect "%(connect)s" --username %(user)s --password %(password)s --table %(table)s -m %(mappers)s'''
 
     def __init__(self, config):
         super(PigDataSource, self).__init__(config)
@@ -179,8 +176,9 @@ cd /home/hadoop/
         self.jobid = config.get('jobid', None)
         ts = int(time.time())
         self.result_path = "/cloudml/output/%s/%d/" % (self.name, ts)
-        self.result_uri = "s3://%s%s" % (self.bucket_name, self.result_path)
-
+        self.result_uri = "s3n://%s%s" % (self.bucket_name, self.result_path)
+        self.sqoop_result_uri = "s3n://%s%ssqoop/" % (self.bucket_name, self.result_path)
+        self.sqoop_results_uries = {}
         self.log_path = '%s/%s' % (self.S3_LOG_URI, self.name)
         self.log_uri = 's3://%s%s' % (self.bucket_name, self.log_path)
 
@@ -259,54 +257,68 @@ cd /home/hadoop/
             connect = "jdbc:postgresql://%s:%s/%s" % (db_param['host'],
                                                       db_param.get('port', '5432'),
                                                       db_param['dbname'])
-            sqoop_script = self.SQOOP_SCRIPT_TEMPLATE % {'table' :sqoop_import.table,
+            sqoop_script = self.SQOOP_COMMANT % {'table' :sqoop_import.table,
                                                         'connect': connect,
                                                         'password': db_param['password'],
                                                         'user': db_param['user'],
                                                         'mappers': sqoop_import.mappers}
             if sqoop_import.where:
-                sqoop_script =+ "--where %s" % sqoop_import.where
+                sqoop_script += "--where %s" % sqoop_import.where
             if sqoop_import.direct:
-                sqoop_script =+ "--direct"
+                sqoop_script += "--direct"
+            sqoop_result_uri = "%s%s/" % (self.sqoop_result_uri, sqoop_import.target)
+            self.sqoop_results_uries[sqoop_import.target] = sqoop_result_uri
+            sqoop_script += "--target-dir %s" % sqoop_result_uri
+            
             logging.info('Sqoop command: %s' % sqoop_script)
-            sqoop_script_uri = self.store_sqoop_script_to_s3(sqoop_script)
-            sqoop_step = JarStep(name='Run sqoop import',
-                jar='s3n://elasticmapreduce/libs/script-runner/script-runner.jar',
-                step_args=[sqoop_script_uri,],
-                action_on_failure='CONTINUE')
-            self.steps.append(sqoop_step)
+            import subprocess
+
+            p = subprocess.Popen(sqoop_script, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            for line in p.stdout.readlines():
+                logging.info(line)
+            retval = p.wait()
+            if retval != 0:
+                raise ImportHandlerException('Sqoop import  failed')
+            #sqoop_script_uri = self.store_sqoop_script_to_s3(sqoop_script)
+            # sqoop_step = JarStep(name='Run sqoop import',
+            #     jar='s3n://elasticmapreduce/libs/script-runner/script-runner.jar',
+            #     step_args=[sqoop_script_uri,],
+            #     action_on_failure='CONTINUE')
+            # self.steps.append(sqoop_step)
 
     def _get_iter(self, query, query_target=None):
         pig_file = self.store_query_to_s3(query)
-        
+        pig_args=['-p output=%s' % self.result_uri]
+        for k,v in self.sqoop_results_uries.iteritems():
+            pig_args.append("-p %s=%s" % (k, v))
         pig_step = PigStep(self.name,
                      pig_file=pig_file,
                      pig_versions=self.pig_version,
-                     pig_args=['-p output=%s' % self.result_uri])
+                     pig_args=pig_args)
         pig_step.action_on_failure = 'CONTINUE'
         self.steps.append(pig_step)
         self.delete_output(self.name)
-        if self.jobid is not None:
-            status = self.emr_conn.describe_jobflow(self.jobid)
-            step_number = len(status.steps) + 2
-            logging.info('Use existing emr jobflow: %s' % self.jobid)
-            step_list = self.emr_conn.add_jobflow_steps(self.jobid, self.steps)
-            #step_id = step_list.stepids[0].value
-        else:
-            logging.info('Run emr jobflow')
-            step_number = 3
-            self.jobid = self.emr_conn.run_jobflow(name='Cloudml jobflow',
-                              log_uri=self.log_uri,
-                              ami_version='2.2',
-                              ec2_keyname='nmelnik',
-                              keep_alive=True,
-                              num_instances=self.num_instances,
-                              master_instance_type=self.master_instance_type,
-                              slave_instance_type=self.slave_instance_type,
-                              #api_params={'Instances.Ec2SubnetId':'subnet-3f5bc256'},
-                              action_on_failure='CONTINUE',#'CANCEL_AND_WAIT',
-                              steps=self.steps)
-            logging.info('JobFlowid: %s' % self.jobid)
+        # if self.jobid is not None:
+        #     status = self.emr_conn.describe_jobflow(self.jobid)
+        #     step_number = len(status.steps) + 2
+        #     logging.info('Use existing emr jobflow: %s' % self.jobid)
+        #     step_list = self.emr_conn.add_jobflow_steps(self.jobid, self.steps)
+        #     #step_id = step_list.stepids[0].value
+        # else:
+        #     logging.info('Run emr jobflow')
+        #     step_number = 3
+        #     self.jobid = self.emr_conn.run_jobflow(name='Cloudml jobflow',
+        #                       log_uri=self.log_uri,
+        #                       ami_version='2.2',
+        #                       ec2_keyname='nmelnik',
+        #                       keep_alive=True,
+        #                       num_instances=self.num_instances,
+        #                       master_instance_type=self.master_instance_type,
+        #                       slave_instance_type=self.slave_instance_type,
+        #                       #api_params={'Instances.Ec2SubnetId':'subnet-3f5bc256'},
+        #                       action_on_failure='CONTINUE',#'CANCEL_AND_WAIT',
+        #                       steps=self.steps)
+        #     logging.info('JobFlowid: %s' % self.jobid)
         previous_state = None
         logging.info('Step number: %d' % step_number)
         
