@@ -263,12 +263,12 @@ class PigDataSource(BaseDataSource):
                                                         'user': db_param['user'],
                                                         'mappers': sqoop_import.mappers}
             if sqoop_import.where:
-                sqoop_script += "--where %s" % sqoop_import.where
+                sqoop_script += " --where %s" % sqoop_import.where
             if sqoop_import.direct:
-                sqoop_script += "--direct"
+                sqoop_script += " --direct"
             sqoop_result_uri = "%s%s/" % (self.sqoop_result_uri, sqoop_import.target)
             self.sqoop_results_uries[sqoop_import.target] = sqoop_result_uri
-            sqoop_script += "--target-dir %s" % sqoop_result_uri
+            sqoop_script += " --target-dir %s" % sqoop_result_uri
             
             logging.info('Sqoop command: %s' % sqoop_script)
             import subprocess
