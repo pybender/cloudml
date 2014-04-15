@@ -287,7 +287,7 @@ class PigDataSource(BaseDataSource):
             # self.steps.append(sqoop_step)
 
     def _get_iter(self, query, query_target=None):
-        pig_file = self.store_query_to_s3(query)
+        pig_file = self.store_query_to_s3(query, query_target)
         pig_args=['-p output=%s' % self.result_uri]
         for k,v in self.sqoop_results_uries.iteritems():
             pig_args.append("-p %s=%s" % (k, v))
