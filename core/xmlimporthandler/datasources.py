@@ -177,7 +177,7 @@ class PigDataSource(BaseDataSource):
         ts = int(time.time())
         self.result_path = "/cloudml/output/%s/%d/" % (self.name, ts)
         self.result_uri = "s3n://%s%s" % (self.bucket_name, self.result_path)
-        self.sqoop_result_uri = "s3n://%s%ssqoop/" % (self.bucket_name, self.result_path)
+        self.sqoop_result_uri = "s3n://%s/cloudml/output/%s/%d_sqoop/" % (self.bucket_name, self.name, ts)
         self.sqoop_results_uries = {}
         self.log_path = '%s/%s' % (self.S3_LOG_URI, self.name)
         self.log_uri = 's3://%s%s' % (self.bucket_name, self.log_path)
