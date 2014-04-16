@@ -15,9 +15,9 @@
 
     <datasources>
         <!--
-            Define data sources to be used. Data sources jobid="j-1A1906EQ4CSDX" j-T0ZDIX0LGN8P j-23ZC0FF6VTQS2
+            Define data sources to be used. Data sources 
             amazon_access_token="AKIAJ3WMYTNKB77YZ5KQ" amazon_token_secret="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"
-            jobid="j-3RUN8W208F7S3" jobid="j-ILY0H2M872RQ" jobid="j-2XDLHXAPRIWEP"  j-15YTSYHJ1PJSO
+              j-15YTSYHJ1PJSO
         -->
         <db name="sqoop_db_datasource" 
             host="localhost"
