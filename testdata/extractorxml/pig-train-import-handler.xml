@@ -17,7 +17,7 @@
         <!--
             Define data sources to be used. Data sources jobid="j-1A1906EQ4CSDX" j-T0ZDIX0LGN8P j-23ZC0FF6VTQS2
             amazon_access_token="AKIAJ3WMYTNKB77YZ5KQ" amazon_token_secret="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"
-            jobid="j-3RUN8W208F7S3" jobid="j-ILY0H2M872RQ"
+            jobid="j-3RUN8W208F7S3" jobid="j-ILY0H2M872RQ" jobid="j-2XDLHXAPRIWEP"  j-15YTSYHJ1PJSO
         -->
         <db name="sqoop_db_datasource" 
             host="localhost"
@@ -25,7 +25,7 @@
             user="postgres"
             password="postgres"
             vendor="postgres" />
-        <pig name="pig" jobid="j-ILY0H2M872RQ" amazon_access_token="AKIAJUMIEMJTS4RHPR2A" amazon_token_secret="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" master_instance_type="m1.small" slave_instance_type="m1.small" num_instances="1" />
+        <pig name="pig" jobid="j-15YTSYHJ1PJSO" amazon_access_token="AKIAJUMIEMJTS4RHPR2A" amazon_token_secret="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" master_instance_type="c3.4xlarge" slave_instance_type="c3.4xlarge" num_instances="2" pig_version="0.11.1.1" hadoop_params="-m,mapreduce.map.java.opts=-Xmx864m,-m,mapreduce.reduce.java.opts=-Xmx1536m,-m,mapreduce.map.memory.mb=1024,-m,mapreduce.reduce.memory.mb=2048,-y,yarn.nodemanager.resource.memory-mb=18226"/>
 
     </datasources>
 
@@ -38,7 +38,7 @@ AND qi.file_provenance_date < '2012-12-04'
 LIMIT(100);
         ]]>
         </sqoop>
-            <query>
+            <query target="C">
                 <![CDATA[
 register 's3n://odesk-match-prod/cloudml/udf/elephant-bird-core-4.4.jar';
 register 's3n://odesk-match-prod/cloudml/udf/elephant-bird-pig-4.4.jar';
@@ -48,7 +48,6 @@ register 's3n://odesk-match-prod/cloudml/udf/json-simple-1.1.1.jar';
 A = LOAD 's3n://odesk-match-prod/ja_quick_info/2012/12/applied-01.gz' USING com.twitter.elephantbird.pig.load.JsonLoader('-nestedLoad');
 B = FOREACH A GENERATE $0#'job_application_id' AS application,$0#'opening_id' AS opening, $0#'employer' AS employer, $0#'contractor' AS contractor;
 C = FOREACH B GENERATE application, opening;
-STORE C INTO '$output' USING JsonStorage();
   ]]>
             </query>
             <!-- "Convert" fields to datasources -->

@@ -10,6 +10,7 @@ import requests
 from requests import ConnectionError
 import boto.emr
 from boto.emr.step import PigStep, InstallPigStep, JarStep
+from boto.emr import BootstrapAction
 
 from exceptions import ImportHandlerException
 from core.importhandler.db import postgres_iter, run_queries
@@ -163,6 +164,7 @@ class PigDataSource(BaseDataSource):
         self.master_instance_type = self.config.get('master_instance_type', 'm1.small')
         self.slave_instance_type = self.config.get('slave_instance_type', 'm1.small')
         self.num_instances = self.config.get('num_instances', 1)
+        self.hadoop_params = self.config.get('hadoop_params', None)
         self.pig_version = self.config.get('pig_version', self.PIG_VERSIONS)
         logging.info('Use pig version %s' % self.pig_version)
         self.bucket_name = self.config.get('bucket_name', self.BUCKET_NAME)
@@ -206,12 +208,22 @@ class PigDataSource(BaseDataSource):
         b = self.s3_conn.get_bucket(self.bucket_name)
         k = Key(b)
         #TODO: Need getting data from all nodes
-        k.key = "%s/part-m-00000" % self.result_path
-        try:
-            return k.get_contents_as_string()
-        except:
-            k.key = "%s/part-r-00000" % self.result_path
-            return k.get_contents_as_string()
+        k.key = "%spart-m-00000" % self.result_path
+        type_result = 'm'
+        if not k.exists():
+            type_result = 'r'
+        i = 0
+        result = ''
+        while True:
+            k = Key(b)
+            k.key = "%spart-%s-%05d" % (self.result_path, type_result, i)
+            if not k.exists():
+                break
+            logging.info('Getting from s3 file %s' % k.key)
+            result += k.get_contents_as_string()
+            i += 1
+        return result
+
 
     def delete_output(self, name):
         b = self.s3_conn.get_bucket(self.bucket_name)
@@ -273,12 +285,13 @@ class PigDataSource(BaseDataSource):
             logging.info('Sqoop command: %s' % sqoop_script)
             import subprocess
 
-            p = subprocess.Popen(sqoop_script, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            for line in p.stdout.readlines():
-                logging.info(line)
-            retval = p.wait()
-            if retval != 0:
-                raise ImportHandlerException('Sqoop import  failed')
+            # p = subprocess.Popen(sqoop_script, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            # for line in p.stdout.readlines():
+            #     logging.info(line)
+            # retval = p.wait()
+            # if retval != 0:
+            #     raise ImportHandlerException('Sqoop import  failed')
+
             #sqoop_script_uri = self.store_sqoop_script_to_s3(sqoop_script)
             # sqoop_step = JarStep(name='Run sqoop import',
             #     jar='s3n://elasticmapreduce/libs/script-runner/script-runner.jar',
@@ -288,9 +301,18 @@ class PigDataSource(BaseDataSource):
 
     def _get_iter(self, query, query_target=None):
         pig_file = self.store_query_to_s3(query, query_target)
-        pig_args=['-p output=%s' % self.result_uri]
+        pig_args=['-p', 'output=%s' % self.result_uri]
+        bootstrap_actions = []
+        install_ganglia = BootstrapAction('Install ganglia', 's3://elasticmapreduce/bootstrap-actions/install-ganglia', [])
+        bootstrap_actions.append(install_ganglia)
+        if self.hadoop_params is not None:
+            params = self.hadoop_params.split(',')
+            config_bootstrapper = BootstrapAction('Configure hadoop', 's3://elasticmapreduce/bootstrap-actions/configure-hadoop', params)
+            bootstrap_actions.append(config_bootstrapper)
+
         for k,v in self.sqoop_results_uries.iteritems():
-            pig_args.append("-p %s=%s" % (k, v))
+            pig_args.append("-p")
+            pig_args.append("%s=%s" % (k, v))
         pig_step = PigStep(self.name,
                      pig_file=pig_file,
                      pig_versions=self.pig_version,
@@ -310,6 +332,8 @@ class PigDataSource(BaseDataSource):
             self.jobid = self.emr_conn.run_jobflow(name='Cloudml jobflow',
                               log_uri=self.log_uri,
                               ami_version='2.2',
+                              visible_to_all_users=True,
+                              bootstrap_actions=bootstrap_actions,
                               ec2_keyname='nmelnik',
                               keep_alive=True,
                               num_instances=self.num_instances,
@@ -337,8 +361,9 @@ class PigDataSource(BaseDataSource):
                         masterpublicdnsname = status.masterpublicdnsname
                         logging.info("Master node dns name: %s" % masterpublicdnsname)
                         logging.info('''For access to hadoop web ui please create ssh tunnel:
-ssh -L 9100:%(dns)s:9100 hadoop@%(dns)s -i ~/{yourkey}.pem
-After creating ssh tunnel web ui will be available on localhost:9100'''  % {'dns': masterpublicdnsname})
+ssh -D localhost:12345 hadoop@%(dns)s -i ~/{yourkey}.pem
+After creating ssh tunnel web ui will be available on localhost:9026 using
+socks proxy localhost:12345'''  % {'dns': masterpublicdnsname})
 
             previous_state = status.state
             if status.state in ('FAILED', '') or \

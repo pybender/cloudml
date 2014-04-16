@@ -211,6 +211,8 @@
                             <xs:attribute type="xs:string" name="master_instance_type" use="optional" />
                             <xs:attribute type="xs:string" name="slave_instance_type" use="optional" />
                             <xs:attribute type="xs:string" name="num_instances" use="optional" />
+                            <xs:attribute type="xs:string" name="hadoop_params" use="optional" />
+                            
                         </xs:complexType>
                     </xs:element>
 
