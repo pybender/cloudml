@@ -25,6 +25,7 @@ class Field(object):
         'float': process_primitive(float),
         # TODO: how do we need convert '1'?
         'boolean': process_primitive(bool),
+        'json': lambda x: x,
         'integer': process_primitive(int)
     }
 

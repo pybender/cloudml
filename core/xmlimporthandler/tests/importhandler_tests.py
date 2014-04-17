@@ -196,6 +196,8 @@ class ImportHandlerTest(unittest.TestCase):
         self.assertEqual(row['check_int'], int(ROW["int_field"]))
         self.assertEqual(row['check_boolean'], True)
         self.assertEqual(row['check_integer_with_float'], None)
+        self.assertEqual(row['check_json'], ROW["json_field"])
+        self.assertEqual(row['check_json_jsonpath'], "Professional and experienced person")
 
         # Checking subentries as json datasources
         self.assertEqual(row['employer.country'], 'Philippines')

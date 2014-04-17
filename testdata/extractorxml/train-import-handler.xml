@@ -69,6 +69,8 @@
             <field name="check_int" type="integer" column="int_field" />
             <field name="check_integer_with_float" type="integer" column="float_field" />
             <field name="check_boolean" type="boolean" column="float_field" />
+            <field name="check_json" type="json" column="json_field" />
+            <field name="check_json_jsonpath" type="json" jsonpath="$..val_0" column="json_jsonpath_field" />
 
             <!-- Checking jsonpath and join -->
             <field name="autors" column="store" jsonpath="$..author" join=" and " />
