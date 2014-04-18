@@ -70,6 +70,7 @@ class Field(object):
         # Whether this field is required to have a value or not.
         # If not defined, default is false
         self.required = config.get('required') == 'true'
+        self.multipart = config.get('multipart') == 'true'
 
         self.validate_attributes()
 
@@ -110,9 +111,9 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
             value = jsonpath(value, self.jsonpath)
             if value is False:
                 value = None
-            # if not self.join and isinstance(value, (list, tuple)) \
-            #         and len(value) == 1:
-            #     value = value[0]
+            if not self.join and isinstance(value, (list, tuple)) \
+                    and len(value) == 1 and not self.multipart:
+                value = value[0]
 
         if self.regex:
             match = re.search(self.regex, value)
