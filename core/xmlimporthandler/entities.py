@@ -9,7 +9,7 @@ import re
 from jsonpath import jsonpath
 
 from exceptions import ProcessException, ImportHandlerException
-from utils import get_key, ParametrizedTemplate, process_primitive
+from utils import get_key, ParametrizedTemplate, process_primitive, process_bool
 
 
 class FieldException(Exception):
@@ -24,7 +24,7 @@ class Field(object):
         'string': process_primitive(str),
         'float': process_primitive(float),
         # TODO: how do we need convert '1'?
-        'boolean': process_primitive(bool),
+        'boolean': process_primitive(process_bool),
         'json': lambda x: x,
         'integer': process_primitive(int)
     }
@@ -144,7 +144,7 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
             params = {'value': value}  # TODO: which params also we could use?
             value = ParametrizedTemplate(self.template).safe_substitute(params)
 
-        if convert_type:
+        if convert_type and value is not None:
             strategy = self.PROCESS_STRATEGIES.get(self.type)
             value = strategy(value)
 

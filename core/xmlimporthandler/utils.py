@@ -1,4 +1,5 @@
 from string import Template
+from distutils.util import strtobool
 
 
 class ParametrizedTemplate(Template):
@@ -44,3 +45,6 @@ def process_primitive(strategy, raise_exc=False):
         return convert_single_or_list(value, strategy, raise_exc) \
             if value is not None else None
     return process
+
+def process_bool(value):
+    return strtobool(str(value))
