@@ -20,7 +20,7 @@ ROW = {
     },
     "float_field": "5.3",
     "int_field": "7",
-    "boolean": "1",
+    "boolean": 1,
     "json_field": {"Communication":"5.0","Skills":"5.0","Deadlines":"5.0","Availability":"5.0","Quality":"5.0","Cooperation":"5.0"},
     "json_jsonpath_field":[{"val_0":"Professional and experienced person"}],
     "list_field": ["hello", "hi"],

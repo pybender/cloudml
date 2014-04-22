@@ -191,6 +191,7 @@ class ImportHandlerTest(unittest.TestCase):
 
         # Checking types
         print row
+        wdw
         self.assertEqual(row['check_float'], float(ROW["float_field"]))
         self.assertEqual(row['check_string'], ROW["float_field"])
         self.assertEqual(row['check_int'], int(ROW["int_field"]))

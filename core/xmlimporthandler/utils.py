@@ -47,4 +47,5 @@ def process_primitive(strategy, raise_exc=False):
     return process
 
 def process_bool(value):
-    return strtobool(str(value))
+    val =  bool(strtobool(str(value)))
+    return val
