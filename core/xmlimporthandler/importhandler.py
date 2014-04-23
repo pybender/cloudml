@@ -16,6 +16,7 @@ from entities import Entity, EntityProcessor
 from utils import iterchildren
 from exceptions import ImportHandlerException, ProcessException
 from scripts import ScriptManager
+from predict import Predict
 
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
@@ -58,7 +59,9 @@ class ExtractionPlan(object):
         # Loading import section
         self.entity = Entity(self.data['import'].entity)
 
-        # TODO: predict section
+        # Predict section
+        self.predict = Predict(self.data.predict) if \
+            hasattr(self.data, 'predict') else None
 
     # Loading sections methods
 

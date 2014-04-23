@@ -11,6 +11,7 @@ from core.xmlimporthandler.importhandler import ExtractionPlan, \
 from core.xmlimporthandler.scripts import ScriptManager
 from core.xmlimporthandler.entities import Field, FieldException
 from core.xmlimporthandler.inputs import Input
+from core.xmlimporthandler.predict import Predict
 from constants import ROW, PARAMS
 
 BASEDIR = os.path.abspath(
@@ -190,8 +191,6 @@ class ImportHandlerTest(unittest.TestCase):
         self.assertTrue(mock_db.called)
 
         # Checking types
-        print row
-        wdw
         self.assertEqual(row['check_float'], float(ROW["float_field"]))
         self.assertEqual(row['check_string'], ROW["float_field"])
         self.assertEqual(row['check_int'], int(ROW["int_field"]))
@@ -242,6 +241,16 @@ class ImportHandlerTest(unittest.TestCase):
         with self.assertRaisesRegexp(
                 ImportHandlerException, "Missing input parameters"):
             self._extractor.process_input_params(None)
+
+
+class PredictTest(unittest.TestCase):
+    def setUp(self):
+        self._plan = ExtractionPlan(os.path.join(BASEDIR,
+                                    'extractorxml',
+                                    'generic-import-handler.xml'))
+
+    def test_predict(self):
+        self.assertTrue(isinstance(self._plan.predict, Predict))
 
 
 def db_row_iter_mock(*args, **kwargs):
