@@ -139,12 +139,13 @@ class ExtractionPlan(object):
 
 class ImportHandler(object):
 
-    def __init__(self, plan, params={}):
+    def __init__(self, plan, params={}, callback=None):
         super(ImportHandler, self).__init__()
         self.count = 0
         self.ignored = 0
         self.params = {}
         self.plan = plan
+        self.callback = callback
 
         self.process_input_params(params)
         self.entity_processor = EntityProcessor(
