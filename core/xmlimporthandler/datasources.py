@@ -186,6 +186,9 @@ class PigDataSource(BaseDataSource):
 
         self.prepare_cluster()
 
+    def set_ih(self, ih):
+        self.ih = ih
+
     def store_query_to_s3(self, query, query_target=None):
         if query_target:
             query +="\nSTORE %s INTO '$output' USING JsonStorage();" % query_target
@@ -344,8 +347,9 @@ class PigDataSource(BaseDataSource):
                               steps=self.steps)
             logging.info('JobFlowid: %s' % self.jobid)
         previous_state = None
+
         logging.info('Step number: %d' % step_number)
-        
+
         while True:
             time.sleep(10)
             status = self.emr_conn.describe_jobflow(self.jobid)
@@ -359,6 +363,8 @@ class PigDataSource(BaseDataSource):
                 if status.state == 'RUNNING':
                     if hasattr(status, 'masterpublicdnsname'):
                         masterpublicdnsname = status.masterpublicdnsname
+                        if self.ih.callback is not None:
+                            self.ih.callback(self.jobid, masterpublicdnsname)
                         logging.info("Master node dns name: %s" % masterpublicdnsname)
                         logging.info('''For access to hadoop web ui please create ssh tunnel:
 ssh -D localhost:12345 hadoop@%(dns)s -i ~/{yourkey}.pem

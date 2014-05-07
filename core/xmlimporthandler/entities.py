@@ -270,6 +270,7 @@ class EntityProcessor(object):
 
         if self.datasource.config.tag == 'pig':
             self.datasource.run_sqoop_imports(self.entity.sqoop_imports)
+            self.datasource.set_ih(import_handler)
 
         self.iterator = self.datasource._get_iter(
             query, self.entity.query_target)
