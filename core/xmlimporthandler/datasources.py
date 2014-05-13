@@ -9,6 +9,7 @@ from boto.s3.key import Key
 import requests
 from requests import ConnectionError
 import boto.emr
+from boto.exception import EmrResponseError
 from boto.emr.step import PigStep, InstallPigStep, JarStep
 from boto.emr import BootstrapAction
 
@@ -352,9 +353,13 @@ class PigDataSource(BaseDataSource):
 
         while True:
             time.sleep(10)
-            status = self.emr_conn.describe_jobflow(self.jobid)
+            try:
+                status = self.emr_conn.describe_jobflow(self.jobid)
+            except EmrResponseError:
+                logging.info("Getting throttled. Sleeping for 10 secs.")
+                time.sleep(10)
+                continue
 
-            
             laststatechangereason = None
             if hasattr(status, 'laststatechangereason'):
                 laststatechangereason = status.laststatechangereason
