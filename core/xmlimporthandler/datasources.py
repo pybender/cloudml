@@ -16,7 +16,7 @@ from boto.emr import BootstrapAction
 from exceptions import ImportHandlerException
 from core.importhandler.db import postgres_iter, run_queries
 
-#logging.getLogger('boto').setLevel(logging.INFO)
+logging.getLogger('boto').setLevel(logging.INFO)
 
 
 class BaseDataSource(object):
