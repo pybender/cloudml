@@ -16,7 +16,7 @@ from boto.emr import BootstrapAction
 from exceptions import ImportHandlerException
 from core.importhandler.db import postgres_iter, run_queries
 
-logging.getLogger('boto').setLevel(logging.INFO)
+#logging.getLogger('boto').setLevel(logging.INFO)
 
 
 class BaseDataSource(object):
@@ -165,6 +165,8 @@ class PigDataSource(BaseDataSource):
         self.master_instance_type = self.config.get('master_instance_type', 'm1.small')
         self.slave_instance_type = self.config.get('slave_instance_type', 'm1.small')
         self.num_instances = self.config.get('num_instances', 1)
+        self.keep_alive = self.config.get('keep_alive', False)
+        self.ec2_keyname = self.config.get('ec2_keyname', 'nmelnik')
         self.hadoop_params = self.config.get('hadoop_params', None)
         self.pig_version = self.config.get('pig_version', self.PIG_VERSIONS)
         logging.info('Use pig version %s' % self.pig_version)
@@ -185,7 +187,7 @@ class PigDataSource(BaseDataSource):
         self.log_path = '%s/%s' % (self.S3_LOG_URI, self.name)
         self.log_uri = 's3://%s%s' % (self.bucket_name, self.log_path)
 
-        self.prepare_cluster()
+        #self.prepare_cluster()
 
     def set_ih(self, ih):
         self.ih = ih
@@ -338,8 +340,8 @@ class PigDataSource(BaseDataSource):
                               ami_version='2.2',
                               visible_to_all_users=True,
                               bootstrap_actions=bootstrap_actions,
-                              ec2_keyname='nmelnik',
-                              keep_alive=True,
+                              ec2_keyname=self.ec2_keyname,
+                              keep_alive=self.keep_alive,
                               num_instances=self.num_instances,
                               master_instance_type=self.master_instance_type,
                               slave_instance_type=self.slave_instance_type,
