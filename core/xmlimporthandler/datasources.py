@@ -16,7 +16,7 @@ from boto.emr import BootstrapAction
 from exceptions import ImportHandlerException
 from core.importhandler.db import postgres_iter, run_queries
 
-logging.getLogger('boto').setLevel(logging.INFO)
+#logging.getLogger('boto').setLevel(logging.INFO)
 
 
 class BaseDataSource(object):
@@ -166,7 +166,7 @@ class PigDataSource(BaseDataSource):
         self.slave_instance_type = self.config.get('slave_instance_type', 'm1.small')
         self.num_instances = self.config.get('num_instances', 1)
         self.keep_alive = self.config.get('keep_alive', False)
-        self.ec2_keyname = self.config.get('ec2_keyname', 'nmelnik')
+        self.ec2_keyname = self.config.get('ec2_keyname', 'cloudml-control')
         self.hadoop_params = self.config.get('hadoop_params', None)
         self.pig_version = self.config.get('pig_version', self.PIG_VERSIONS)
         logging.info('Use pig version %s' % self.pig_version)
@@ -334,10 +334,10 @@ class PigDataSource(BaseDataSource):
             #step_id = step_list.stepids[0].value
         else:
             logging.info('Run emr jobflow')
-            step_number = 3
+            step_number = 1
             self.jobid = self.emr_conn.run_jobflow(name='Cloudml jobflow',
                               log_uri=self.log_uri,
-                              ami_version='2.2',
+                              ami_version='3.0.4',
                               visible_to_all_users=True,
                               bootstrap_actions=bootstrap_actions,
                               ec2_keyname=self.ec2_keyname,
@@ -345,7 +345,7 @@ class PigDataSource(BaseDataSource):
                               num_instances=self.num_instances,
                               master_instance_type=self.master_instance_type,
                               slave_instance_type=self.slave_instance_type,
-                              #api_params={'Instances.Ec2SubnetId':'subnet-3f5bc256'},
+                              ##api_params={'Instances.Ec2SubnetId':'subnet-3f5bc256'},
                               action_on_failure='CONTINUE',#'CANCEL_AND_WAIT',
                               steps=self.steps)
             logging.info('JobFlowid: %s' % self.jobid)
