@@ -160,8 +160,8 @@ class PigDataSource(BaseDataSource):
     def __init__(self, config):
         super(PigDataSource, self).__init__(config)
         self.steps = []
-        self.amazon_access_token = self.config.get('amazon_access_token', AMAZON_ACCESS_TOKEN)
-        self.amazon_token_secret = self.config.get('amazon_token_secret', AMAZON_TOKEN_SECRET)
+        self.amazon_access_token = self.config.get('amazon_access_token', self.AMAZON_ACCESS_TOKEN)
+        self.amazon_token_secret = self.config.get('amazon_token_secret', self.AMAZON_TOKEN_SECRET)
         self.master_instance_type = self.config.get('master_instance_type', 'm1.small')
         self.slave_instance_type = self.config.get('slave_instance_type', 'm1.small')
         self.num_instances = self.config.get('num_instances', 1)
