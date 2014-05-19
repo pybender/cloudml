@@ -151,8 +151,8 @@ class CsvDataSource(BaseDataSource):
 
 class PigDataSource(BaseDataSource):
     S3_LOG_URI = '/cloudml/logs'
-    AMAZON_ACCESS_TOKEN = 'fill me'
-    AMAZON_TOKEN_SECRET = 'fill me'
+    AMAZON_ACCESS_TOKEN = 'AKIAJYNNIPFWF2ABW42Q'
+    AMAZON_TOKEN_SECRET = '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'
     BUCKET_NAME = 'odesk-match-prod'
     PIG_VERSIONS = '0.11.1'
     SQOOP_COMMANT = '''sqoop import --verbose --connect "%(connect)s" --username %(user)s --password %(password)s --table %(table)s -m %(mappers)s'''
@@ -160,8 +160,8 @@ class PigDataSource(BaseDataSource):
     def __init__(self, config):
         super(PigDataSource, self).__init__(config)
         self.steps = []
-        self.amazon_access_token = self.config.get('amazon_access_token')
-        self.amazon_token_secret = self.config.get('amazon_token_secret')
+        self.amazon_access_token = self.config.get('amazon_access_token', AMAZON_ACCESS_TOKEN)
+        self.amazon_token_secret = self.config.get('amazon_token_secret', AMAZON_TOKEN_SECRET)
         self.master_instance_type = self.config.get('master_instance_type', 'm1.small')
         self.slave_instance_type = self.config.get('slave_instance_type', 'm1.small')
         self.num_instances = self.config.get('num_instances', 1)
@@ -256,9 +256,9 @@ class PigDataSource(BaseDataSource):
         except:
             logging.info('Logs are anavailable now (updated every 5 mins)')
             logging.info('''For getting stderr log please use command:
-    s3cmd get %s/%s/steps/%d/stderr stderr''' % (log_path, self.jobid, step_number))
+    s3cmd get s3://%s/%s/%s/steps/%d/stderr stderr''' % (self.bucket_name, log_path, self.jobid, step_number))
             logging.info('''For getting stdout log please use command:
-    s3cmd get %s/%s/steps/%d/stdout stdout''' % (log_path, self.jobid, step_number))
+    s3cmd get s3://%s/%s/%s/steps/%d/stdout stdout''' % (self.bucket_name, log_path, self.jobid, step_number))
 
     def prepare_cluster(self):
         if self.jobid is None:
@@ -374,7 +374,7 @@ class PigDataSource(BaseDataSource):
                             self.ih.callback(self.jobid, masterpublicdnsname)
                         logging.info("Master node dns name: %s" % masterpublicdnsname)
                         logging.info('''For access to hadoop web ui please create ssh tunnel:
-ssh -D localhost:12345 hadoop@%(dns)s -i ~/{yourkey}.pem
+ssh -D localhost:12345 hadoop@%(dns)s -i ~/.ssh/cloudml-control.pem
 After creating ssh tunnel web ui will be available on localhost:9026 using
 socks proxy localhost:12345'''  % {'dns': masterpublicdnsname})
 
