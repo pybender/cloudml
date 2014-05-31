@@ -8,23 +8,40 @@ import sklearn.metrics as sk_metrics
 class Metrics(object):
     METRICS_TO_CALC = ()
 
-    def __init__(self, labels, vectorized_data, classifier):
-        self._labels = labels
-        self._vectorized_data = vectorized_data
-        self._classifier = classifier
+    def __init__(self):
+        self._labels = []
+        self._vectorized_data = []
+        self._classifier = []
+        self._preds = None
+        self._probs = None
+
+    def evaluate_model(self, labels, vectorized_data, classifier):
+        self._labels += labels
+        self._vectorized_data.append(vectorized_data)
+        self._classifier.append(classifier)
+
 
         # Evaluating model...
-        if(len(self._vectorized_data) == 1):
-            self._true_data = numpy.array(self._vectorized_data[0])
+        if(len(vectorized_data) == 1):
+            true_data = numpy.array(vectorized_data[0])
         else:
             try:
-                self._true_data = hstack(self._vectorized_data)
+                true_data = hstack(vectorized_data)
             except ValueError:
-                self._true_data = numpy.hstack(self._vectorized_data)
+                true_data = numpy.hstack(vectorized_data)
 
-        self._vectorized_data = None
-        self._probs = classifier.predict_proba(self._true_data)
-        self._preds = classifier.predict(self._true_data)
+        probs = classifier.predict_proba(true_data)
+        preds = classifier.predict(true_data)
+        self._true_data = true_data
+        if self._preds is None:
+            self._preds = preds
+        else:
+            self._preds = numpy.append(self._preds, preds)
+
+        if self._probs is None:
+            self._probs = probs
+        else:
+            self._probs = numpy.vstack((self._probs, probs))
 
 
     @property
@@ -123,6 +140,7 @@ class ClassificationModelMetrics(Metrics):
                 labels = [y_pred_type(y) for y in self._labels]
             else:
                 labels = self._labels
+            print labels,self._preds
             self._confusion_matrix = \
                 sk_metrics.confusion_matrix(labels,
                                             self._preds)
@@ -146,7 +164,7 @@ class ClassificationModelMetrics(Metrics):
                 labels = [y_pred_type(y) for y in self._labels]
             else:
                 labels = self._labels
-            self._accuracy = self._classifier.score(self._true_data, labels)
+            self._accuracy = sk_metrics.accuracy_score(labels, self._preds)
         return self._accuracy
 
     def _get_metrics_names(self):

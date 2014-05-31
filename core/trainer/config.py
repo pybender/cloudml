@@ -54,6 +54,7 @@ class FeatureModel(object):
         self._named_feature_types = {}
         self.features = OrderedDict()
         self.required_feature_names = []
+        self.group_by = []
 
         self._process_classifier(data)
 
@@ -67,6 +68,16 @@ class FeatureModel(object):
 
         if self.target_variable is None:
             raise SchemaException('No target variable defined!!!')
+
+        group_by = data.get('group_by', None)
+        if group_by:
+            self._process_group_by(group_by)
+
+    def _process_group_by(self, group_by):
+        for i in group_by:
+            if i not in self.features:
+                raise SchemaException('Can not group by %s' % i)
+            self.group_by.append(i)
 
     def _process_classifier(self, config):
         """

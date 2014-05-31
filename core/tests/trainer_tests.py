@@ -7,7 +7,7 @@ import os
 import logging
 
 from core.trainer.config import FeatureModel
-from core.trainer.trainer import Trainer
+from core.trainer.trainer import Trainer, DEFAULT_SEGMENT
 from jsonpath import jsonpath
 from core.trainer.store import store_trainer, load_trainer
 from core.trainer.streamutils import streamingiterload
@@ -15,6 +15,54 @@ from core.trainer.streamutils import streamingiterload
 BASEDIR = 'testdata'
 TARGET = 'target'
 FORMATS = ['csv', 'json']
+
+
+class TrainerSegmentTestCase(unittest.TestCase):
+
+    def setUp(self):
+        logging.basicConfig(format='[%(asctime)s] %(levelname)s - %(message)s',
+                            level=logging.DEBUG)
+        self._config = FeatureModel(os.path.join(BASEDIR, 'trainer',
+                                    'features_segment.json'))
+        self._trainer = None
+
+    def test_train_and_test(self):
+        #for fmt in FORMATS:
+        self._train()
+        self.assertEquals(self._trainer._classifier[''].coef_.shape, (1, 15))
+        self.assertEquals(self._trainer._classifier['USA'].coef_.shape, (1, 14))
+        self.assertEquals(self._trainer._classifier['Canada'].coef_.shape, (1, 13))
+        title_feature = self._trainer.features['Canada']['contractor.dev_title']
+        title_vectorizer = title_feature['transformer']
+        self.assertEquals(title_vectorizer.get_feature_names(), ['engineer',
+                                                                 'python'])
+
+        metr =  self._trainer.test(self._get_iterator())
+
+
+    def test_predict(self):
+
+        self._train()
+        results = self._trainer.predict(self._get_iterator())
+        self.assertEqual(results['classes'].tolist(),['0', '1'])
+
+
+    def _train(self, fmt='json'):
+        with open(os.path.join(BASEDIR, 'trainer',
+                               'trainer.data.segment.{}'.format(fmt))) as fp:
+            self._data = list(streamingiterload(
+                fp.readlines(), source_format=fmt))
+
+        self._trainer = Trainer(self._config)
+        self._trainer.train(self._data)
+
+    def _get_iterator(self, fmt='json'):
+        with open(os.path.join(BASEDIR, 'trainer',
+                               'trainer.data.segment.{}'.format(fmt))) as fp:
+            self._data = list(streamingiterload(
+                fp.readlines(), source_format=fmt))
+
+        return self._data
 
 
 class TrainerTestCase(unittest.TestCase):
@@ -29,8 +77,8 @@ class TrainerTestCase(unittest.TestCase):
     def test_train(self):
         for fmt in FORMATS:
             self._load_data(fmt)
-            self.assertEquals(self._trainer._classifier.coef_.shape, (1, 19))
-            title_feature = self._config.features['contractor.dev_title']
+            self.assertEquals(self._trainer._classifier[DEFAULT_SEGMENT].coef_.shape, (1, 19))
+            title_feature = self._trainer.features[DEFAULT_SEGMENT]['contractor.dev_title']
             title_vectorizer = title_feature['transformer']
             self.assertEquals(title_vectorizer.get_feature_names(), ['engineer',
                                                                      'python'])
@@ -50,8 +98,8 @@ class TrainerTestCase(unittest.TestCase):
         }
         self._config._process_classifier(config)
         self._load_data('json')
-        self.assertEquals(self._trainer._classifier.coef_.shape, (1, 19))
-        title_feature = self._config.features['contractor.dev_title']
+        self.assertEquals(self._trainer._classifier[DEFAULT_SEGMENT].coef_.shape, (1, 19))
+        title_feature = self._trainer.features[DEFAULT_SEGMENT]['contractor.dev_title']
         title_vectorizer = title_feature['transformer']
         self.assertEquals(title_vectorizer.get_feature_names(), ['engineer',
                                                                  'python'])
