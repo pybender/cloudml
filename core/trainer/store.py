@@ -11,6 +11,7 @@ class TrainerStorage(object):
     def __init__(self, trainer):
         self._classifier = trainer._classifier
         self._feature_model = trainer._feature_model
+        self._features = trainer.features
         print __version__
         self.version = __version__
 
@@ -33,6 +34,8 @@ class TrainerStorage(object):
             raise InvalidTrainerFile("Could not unpickle trainer - %s" % exc)
         trainer = Trainer(storage._feature_model)
         trainer.set_classifier(storage._classifier)
+        trainer.set_features(storage._features)
+
         return trainer
 
     def dump(self, fp):
