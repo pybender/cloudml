@@ -33,8 +33,14 @@ class TrainerStorage(object):
         except (pickle.UnpicklingError, AttributeError), exc:
             raise InvalidTrainerFile("Could not unpickle trainer - %s" % exc)
         trainer = Trainer(storage._feature_model)
-        trainer.set_classifier(storage._classifier)
-        trainer.set_features(storage._features)
+        if hasattr(storage, "_features"):
+            trainer.set_classifier(storage._classifier)
+            trainer.set_features(storage._features)
+        else:
+            trainer._feature_model.group_by = []
+            trainer.set_classifier({ "default":storage._classifier})
+            trainer.set_features({ "default":storage._feature_model.features})
+
 
         return trainer
 
