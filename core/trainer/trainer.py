@@ -449,6 +449,12 @@ class Trainer():
                 else:
                     raise e
 
+        logging.info('Group by: %s' % ",".join(self._feature_model.group_by))
+        logging.info('Segments:')
+        for segment in self._vect_data.keys():
+            logging.info("%s - %d records" % (segment, len(self._vect_data[segment][feature_name])))
+
+
     def _get_segment_name(self, row_data):
         return "_".join(
             [str(row_data[feature_name]) for feature_name in
