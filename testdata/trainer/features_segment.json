@@ -4,7 +4,7 @@
     "type":"logistic regression",
     "params": {"penalty": "l2"}
   },
-  "group_by": ["contractor.dev_country"],
+  "group-by": ["contractor.dev_country"],
   "features":[
     {
       "name":"hire_outcome",

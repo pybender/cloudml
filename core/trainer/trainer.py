@@ -416,6 +416,7 @@ class Trainer():
         self._ignored = 0
         self._raw_data = []
         self._vect_data = {}
+        self._segments = {}
         for row in iterator:
             self._count += 1
             try:
@@ -426,7 +427,8 @@ class Trainer():
                     segment = self._get_segment_name(data)
                     if segment not in self._vect_data:
                         self._vect_data[segment] = defaultdict(list)
-
+                        self._segments[segment] = 0
+                    self._segments[segment] += 1
                     for feature_name in self._feature_model.features:
                         if feature_name in self._feature_model.group_by:
                             continue
@@ -449,10 +451,11 @@ class Trainer():
                 else:
                     raise e
 
-        logging.info('Group by: %s' % ",".join(self._feature_model.group_by))
-        logging.info('Segments:')
-        for segment in self._vect_data.keys():
-            logging.info("%s - %d records" % (segment, len(self._vect_data[segment][feature_name])))
+        if self.with_segmentation:
+            logging.info('Group by: %s' % ",".join(self._feature_model.group_by))
+            logging.info('Segments:')
+            for segment, records in self._segments.iteritems():
+                logging.info("'%s' - %d records" % (segment, records))
 
 
     def _get_segment_name(self, row_data):
@@ -460,17 +463,18 @@ class Trainer():
             [str(row_data[feature_name]) for feature_name in
              self._feature_model.group_by])
 
-    def _get_labels(self, segment):
-        # TODO: check that data was already prepaired
+    def _get_labels(self):
         feature_name = self._feature_model.target_variable
         if self.with_segmentation:
-            labels = []
-            for segment in self._vect_data.keys():
-                for values in self._vect_data[segment][feature_name]:
-                    labels.append(values)
-            return set(labels)
+            classes_ = []
+            for segment, classifier in self._classifier.iteritems():
+                # FIXME: Possible problems when value of the group_by field
+                # equals `DEFAULT_SEGMENT`
+                if segment != DEFAULT_SEGMENT and hasattr(classifier, '_enc'):
+                    classes_ += map(str, classifier.classes_.tolist())
+            return set(classes_)
         else:
-            return self._vect_data[DEFAULT_SEGMENT][feature_name]
+            return map(str, self._classifier[DEFAULT_SEGMENT].classes_.tolist())
 
     def _apply_feature_types(self, row_data):
         """

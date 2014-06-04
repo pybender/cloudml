@@ -69,7 +69,7 @@ class FeatureModel(object):
         if self.target_variable is None:
             raise SchemaException('No target variable defined!!!')
 
-        group_by = data.get('group_by', None)
+        group_by = data.get('group-by', None)
         if group_by:
             self._process_group_by(group_by)
 
