@@ -12,6 +12,7 @@ class TrainerStorage(object):
         self._classifier = trainer._classifier
         self._feature_model = trainer._feature_model
         self._features = trainer.features
+        self._segments = trainer._segments
         print __version__
         self.version = __version__
 
@@ -36,6 +37,8 @@ class TrainerStorage(object):
         if hasattr(storage, "_features"):
             trainer.set_classifier(storage._classifier)
             trainer.set_features(storage._features)
+            if hasattr(storage, "_segments"):
+                trainer._segments = storage._segments
         else:
             trainer._feature_model.group_by = []
             trainer.set_classifier({ "default":storage._classifier})

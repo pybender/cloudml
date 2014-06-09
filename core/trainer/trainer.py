@@ -71,6 +71,7 @@ class Trainer():
         self._count = 0
         self._ignored = 0
         self.train_time = {}
+        self._segments = {}
 
     @property
     def with_segmentation(self):
@@ -124,7 +125,14 @@ class Trainer():
                      memory_usage(-1, interval=0, timeout=None)[0])
 
         if iterator:
-            self._prepare_data(iterator)
+            self._segments = self._prepare_data(iterator)
+
+        if self.with_segmentation:
+            logging.info('Group by: %s' % ",".join(self._feature_model.group_by))
+            logging.info('Segments:')
+            for segment, records in self._segments.iteritems():
+                logging.info("'%s' - %d records" % (segment, records))
+
         if percent:
             self._count = self._count - int(self._count * percent / 100)
             for segment in self._vect_data:
@@ -416,7 +424,7 @@ class Trainer():
         self._ignored = 0
         self._raw_data = []
         self._vect_data = {}
-        self._segments = {}
+        segments = {}
         for row in iterator:
             self._count += 1
             try:
@@ -427,8 +435,8 @@ class Trainer():
                     segment = self._get_segment_name(data)
                     if segment not in self._vect_data:
                         self._vect_data[segment] = defaultdict(list)
-                        self._segments[segment] = 0
-                    self._segments[segment] += 1
+                        segments[segment] = 0
+                    segments[segment] += 1
                     for feature_name in self._feature_model.features:
                         if feature_name in self._feature_model.group_by:
                             continue
@@ -450,12 +458,7 @@ class Trainer():
                     self._ignored += 1
                 else:
                     raise e
-
-        if self.with_segmentation:
-            logging.info('Group by: %s' % ",".join(self._feature_model.group_by))
-            logging.info('Segments:')
-            for segment, records in self._segments.iteritems():
-                logging.info("'%s' - %d records" % (segment, records))
+        return segments
 
 
     def _get_segment_name(self, row_data):
@@ -468,13 +471,19 @@ class Trainer():
         if self.with_segmentation:
             classes_ = []
             for segment, classifier in self._classifier.iteritems():
-                # FIXME: Possible problems when value of the group_by field
+                # Note: Possible problems when value of the group_by field
                 # equals `DEFAULT_SEGMENT`
-                if segment != DEFAULT_SEGMENT and hasattr(classifier, '_enc'):
+                # if segment != DEFAULT_SEGMENT:
+                if hasattr(classifier, '_enc'):
                     classes_ += map(str, classifier.classes_.tolist())
             return set(classes_)
         else:
             return map(str, self._classifier[DEFAULT_SEGMENT].classes_.tolist())
+
+    def _get_segments_info(self):
+        #import pdb; pdb.set_trace()
+
+        return self._segments
 
     def _apply_feature_types(self, row_data):
         """
