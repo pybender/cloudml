@@ -237,5 +237,12 @@ TRANSFORMERS = {
         'parameters_types': {'min_df': float_or_int, 'max_df': float_or_int},
         'default': '',
         'defaults': {}
+    },
+    'Ntile': {
+        'mthd': get_ntile_transformer,
+        'parameters': ['n'],
+        'parameters_types': {'n': int},
+        'default': '',
+        'defaults': {}
     }
 }
