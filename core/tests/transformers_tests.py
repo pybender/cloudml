@@ -9,13 +9,29 @@ Created on Jan 24, 2013
 
 import unittest
 
-from core.trainer.transformers import get_transformer, ScalerDecorator
+from core.trainer.transformers import get_transformer, ScalerDecorator, Ntile
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.preprocessing import Scaler
 
 
 class TransformersTest(unittest.TestCase):
+
+    def test_ntile(self):
+        data = {
+            'type': 'Ntile',
+            'params': {'number_tile': 4}
+        }
+        transformer = get_transformer(data)
+        self.assertIsInstance(transformer, Ntile)
+        self.assertEqual(transformer.number_tile, 4)
+        X = [1,2,3,7,78,8,35235,353,3555,3535,3657,6868,865]
+        X1 = [1,2,3,7,78,8,35235,353,3555,3535,3657,6868,865, 4, 66, 342323]
+        transformer.fit(X)
+        Y = transformer.transform(X)
+        self.assertEqual(Y, [1, 1, 1, 1, 2, 2, 4, 2, 3, 3, 4, 4, 3])
+        Y = transformer.transform(X1)
+        self.assertEqual(Y, [1, 1, 1, 1, 2, 2, 4, 2, 3, 3, 4, 4, 3, 1, 2, 4])
 
     def test_get_transformer_count(self):
         data = {

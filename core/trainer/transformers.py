@@ -1,7 +1,8 @@
+__author__ = 'nmelnik'
+
+from copy import deepcopy
 import numpy
 from scipy.sparse import csc_matrix
-
-__author__ = 'ifoukarakis'
 
 from utils import copy_expected, float_or_int, parse_parameters
 from sklearn.feature_extraction import DictVectorizer
@@ -9,6 +10,53 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.feature_extraction.text import LdaVectorizer, LsiVectorizer
 from sklearn.preprocessing import StandardScaler
 
+
+class Ntile(object):
+    def __init__(self, number_tile):
+        self.number_tile = number_tile
+
+    def fit(self, X):
+        """
+        Keyword arguments
+        X -- list
+
+        """
+        tile_size = len(X) / self.number_tile
+        extra_first_tile = len(X) % self.number_tile
+        X = deepcopy(X)
+        X.sort()
+        self.ranges = []
+        n = extra_first_tile - 1
+        for i in range(self.number_tile):
+            n = n + tile_size
+            self.ranges.append(X[n])
+
+    def fit_transform(self, X, **fit_params):
+        """
+
+        Keyword arguments
+        X -- list
+
+        """
+        self.fit(X)
+        return  self.transform(X)
+
+    def transform(self, X):
+        """
+        Keyword arguments
+        X -- list
+
+        """
+        for i, v in enumerate(X):
+            previous = 0
+            for n in range(self.number_tile):
+                if v > previous and v <= self.ranges[n]:
+                    X[i] = n + 1
+                    break
+                previous = self.ranges[n]
+            if X[i] != n + 1:
+                X[i] = n + 1
+        return X
 
 class ScalerDecorator(object):
     """
@@ -136,6 +184,11 @@ def get_tfidf_vectorizer(params):
 
     return TfidfVectorizer(**params)
 
+def get_ntile_transformer(params):
+    """
+    Creates a Ntile transfprmer.
+    """
+    return Ntile(**params)
 
 def get_dict_vectorizer(params):
     """
@@ -240,8 +293,8 @@ TRANSFORMERS = {
     },
     'Ntile': {
         'mthd': get_ntile_transformer,
-        'parameters': ['n'],
-        'parameters_types': {'n': int},
+        'parameters': ['number_tile'],
+        'parameters_types': {'number_tile': int},
         'default': '',
         'defaults': {}
     }
