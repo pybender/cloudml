@@ -154,7 +154,7 @@ class PigDataSource(BaseDataSource):
     AMAZON_ACCESS_TOKEN = 'AKIAJYNNIPFWF2ABW42Q'
     AMAZON_TOKEN_SECRET = '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'
     BUCKET_NAME = 'odesk-match-prod'
-    PIG_VERSIONS = '0.11.1'
+    DEFAILT_AMI_VERSION = '3.0.4'
     SQOOP_COMMANT = '''sqoop import --verbose --connect "%(connect)s" --username %(user)s --password %(password)s --table %(table)s -m %(mappers)s'''
 
     def __init__(self, config):
@@ -168,8 +168,8 @@ class PigDataSource(BaseDataSource):
         self.keep_alive = self.config.get('keep_alive', False)
         self.ec2_keyname = self.config.get('ec2_keyname', 'cloudml-control')
         self.hadoop_params = self.config.get('hadoop_params', None)
-        self.pig_version = self.config.get('pig_version', self.PIG_VERSIONS)
-        logging.info('Use pig version %s' % self.pig_version)
+        self.ami_version = self.config.get('ami_version', self.DEFAILT_AMI_VERSION)
+        logging.info('Using ami version %s' % self.ami_version)
         self.bucket_name = self.config.get('bucket_name', self.BUCKET_NAME)
 
         self.s3_conn = boto.connect_s3(self.amazon_access_token,
@@ -321,7 +321,7 @@ class PigDataSource(BaseDataSource):
             pig_args.append("%s=%s" % (k, v))
         pig_step = PigStep(self.name,
                      pig_file=pig_file,
-                     pig_versions=self.pig_version,
+                     #pig_versions=self.pig_version,
                      pig_args=pig_args)
         pig_step.action_on_failure = 'CONTINUE'
         self.steps.append(pig_step)
@@ -337,7 +337,7 @@ class PigDataSource(BaseDataSource):
             step_number = 1
             self.jobid = self.emr_conn.run_jobflow(name='Cloudml jobflow',
                               log_uri=self.log_uri,
-                              ami_version='3.0.4',
+                              ami_version=self.ami_version,
                               visible_to_all_users=True,
                               bootstrap_actions=bootstrap_actions,
                               ec2_keyname=self.ec2_keyname,
