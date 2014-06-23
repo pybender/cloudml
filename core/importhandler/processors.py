@@ -29,12 +29,45 @@ class ProcessException(Exception):
         self._column = column
         self.Errors = Errors
 
+
+
+def extract_skill_weights(data, opening_skills):
+    weight_per_tier = {
+        '1': 1,
+        '2': 0.5,
+        '3': -0.5,
+        '4': -1
+    }
+    if data is None:
+        return {}
+    if opening_skills is None or len(opening_skills) == 0:
+        return {}
+    sum_weights = {}
+    for assignment in data:
+        feedback = assignment.get('feedback_given', {}).get('private_feedback_hire_again')
+        skills = assignment.get('as_skills')
+        if skills is not None and len(skills) > 0 and 'as_total_charge' in assignment:
+            total_charge = float(assignment.get('as_total_charge', 0))
+            if total_charge < 0: total_charge = 0
+            for s in skills.split(','):
+                if s not in sum_weights:
+                    sum_weights[s] = 0.0
+                weight = weight_per_tier.get(feedback, 1)
+                if feedback is not None:
+                    print('Found feedback != none')
+                sum_weights[s] += weight * math.log(1 + total_charge)
+
+    result = {}
+    for skill in opening_skills.split(','):
+        if skill in sum_weights:
+            result[skill] = sum_weights[skill]
+
+    return result
+
 ###
 ### Functions to use for implementing each strategy
 ###
 ###############################################################################
-
-
 def process_primitive(constructor):
     def process(value, query_item, row_data, script_manager=None):
         """
