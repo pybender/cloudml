@@ -249,7 +249,7 @@ class Trainer():
         logging.info('Evaluating model...')
         
         self.metrics.evaluate_model(labels, vectorized_data,
-                                  self._classifier[segment])
+                                  self._classifier[segment], segment)
         logging.info("Memory usage: %f" % 
                      memory_usage(-1, interval=0, timeout=None)[0])
 
@@ -422,36 +422,31 @@ class Trainer():
         """
         self._count = 0
         self._ignored = 0
-        self._raw_data = []
+        self._raw_data = defaultdict(list)
         self._vect_data = {}
         segments = {}
         for row in iterator:
             self._count += 1
             try:
                 data = self._apply_feature_types(row)
-                if save_raw:
-                    self._raw_data.append(row)
+                
                 if self.with_segmentation:
                     segment = self._get_segment_name(data)
-                    if segment not in self._vect_data:
-                        self._vect_data[segment] = defaultdict(list)
-                        segments[segment] = 0
-                    segments[segment] += 1
-                    for feature_name in self._feature_model.features:
-                        if feature_name in self._feature_model.group_by:
-                            continue
-                        self._vect_data[segment][feature_name].append(data[feature_name])
                 else:
+                    segment = DEFAULT_SEGMENT
 
-                    if DEFAULT_SEGMENT not in self._vect_data:
-                        self._vect_data[DEFAULT_SEGMENT] = defaultdict(list)
-                        segments[DEFAULT_SEGMENT] = 0
+                if segment not in self._vect_data:
+                    self._vect_data[segment] = defaultdict(list)
+                    segments[segment] = 0
+                segments[segment] += 1
 
-                    segments[DEFAULT_SEGMENT] += 1 
+                for feature_name in self._feature_model.features:
+                    # if feature_name in self._feature_model.group_by:
+                    #     continue
+                    self._vect_data[segment][feature_name].append(data[feature_name])
 
-                    for feature_name in self._feature_model.features:
-                        self._vect_data[DEFAULT_SEGMENT][feature_name].append(
-                            data[feature_name])
+                if save_raw:
+                    self._raw_data[segment].append(row)
 
                 if callback is not None:
                     callback(row)

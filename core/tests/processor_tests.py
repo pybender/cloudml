@@ -6,6 +6,8 @@ import os
 from core.importhandler.processors import extract_parameters, \
     process_primitive, ProcessException, process_composite, process_json
 
+from core.xmlimporthandler.scripts import ScriptManager
+
 BASEDIR = 'testdata'
 
 
@@ -252,8 +254,28 @@ class ProcessorCase(unittest.TestCase):
                 }
             ]
         }
+
         result = process_composite('should ignore', item, row_data)
         self.assertDictEqual(result, {'test.feature1': '\xe2\x80\x99 value 4'})
+        script_manager = ScriptManager()
+        script_manager.add_python("""def intToBoolean(a):
+            return a == 1
+        """)
+        row_data = {'param1': u'\u2019 value', 'param2': 'test', 'param3': ['1','2','3']}
+        item = {
+            'process_as': 'expression',
+            'target_features': [
+                {
+                    'name': 'test.feature1',
+                    'expression': {
+                        "type": "newpython",
+                        "value": "'#{param1} ' + str(len('#{param2}')) + ', '.join(#{param3})+ str(intToBoolean(1))"
+                    }
+                }
+            ]
+        }
+        result = process_composite('should ignore', item, row_data, script_manager)
+        self.assertDictEqual(result, {'test.feature1': '\xe2\x80\x99 value 41, 2, 3True'})
 
 if __name__ == '__main__':
     unittest.main()

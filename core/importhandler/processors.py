@@ -36,7 +36,7 @@ class ProcessException(Exception):
 
 
 def process_primitive(constructor):
-    def process(value, query_item, row_data):
+    def process(value, query_item, row_data, script_manager=None):
         """
         Function to invoke when processing a feature that simply returns the
         value of a column.
@@ -61,7 +61,7 @@ def process_primitive(constructor):
     return process
 
 
-def process_composite(value, query_item, row_data):
+def process_composite(value, query_item, row_data, script_manager=None):
     """
     Function to invoke when processing a feature value that is created from
     other features.
@@ -103,6 +103,15 @@ and "value" for target feature %s' % (feature['name']))
                 value = value.decode('utf8', 'ignore')
                 if expression_type == 'string':
                     result[feature['name']] = value
+                elif expression_type == 'newpython':
+                    if script_manager:
+                        try:
+                            result[feature['name']] = script_manager.execute_function(expression_value, None, row_data)
+                        except Exception, e:
+                            logging.exception('Error when evaluate feature %s, value: %s, expression_type: %s' % 
+                                (feature['name'], value, expression_type))
+                            raise ProcessException('%s (expression: %s)' %
+                                           (e, value))
                 elif expression_type == 'python':
                     try:
                         result[feature['name']] = eval(value)
@@ -130,7 +139,7 @@ not defined for target feature %s''' % (r_type, feature['name']))
     return result
 
 
-def process_json(value, query_item, row_data):
+def process_json(value, query_item, row_data, script_manager=None):
     """
     Function to invoke when processing a feature value that is a JSON message.
 
