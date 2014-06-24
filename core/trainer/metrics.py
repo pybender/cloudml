@@ -54,8 +54,7 @@ class Metrics(object):
     def classes_set(self):
         # TODO: Lose ordering
         if not hasattr(self, '_classes_set'):
-            #self._classes_set = set(self._labels)
-            self._classes_set = self._classifier[0].classes_
+            self._classes_set = set(self._labels)
         return self._classes_set
 
     @property
@@ -149,7 +148,6 @@ class ClassificationModelMetrics(Metrics):
                 labels = [y_pred_type(y) for y in self._labels]
             else:
                 labels = self._labels
-            print labels,self._preds
             self._confusion_matrix = \
                 sk_metrics.confusion_matrix(labels,
                                             self._preds)
