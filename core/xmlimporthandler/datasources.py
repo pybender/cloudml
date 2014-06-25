@@ -213,23 +213,26 @@ class PigDataSource(BaseDataSource):
     def get_result(self):
         b = self.s3_conn.get_bucket(self.bucket_name)
         k = Key(b)
+        import cStringIO
         #TODO: Need getting data from all nodes
         k.key = "%spart-m-00000" % self.result_path
         type_result = 'm'
         if not k.exists():
             type_result = 'r'
         i = 0
-        result = ''
         while True:
+            sbuffer = cStringIO.StringIO()
             k = Key(b)
             k.key = "%spart-%s-%05d" % (self.result_path, type_result, i)
             if not k.exists():
                 break
             logging.info('Getting from s3 file %s' % k.key)
-            result += k.get_contents_as_string()
+            k.get_contents_to_file(sbuffer)
             i += 1
-        return result
-
+            sbuffer.seek(0)
+            for line in sbuffer:
+                yield json.loads(line)
+            sbuffer.close()
 
     def delete_output(self, name):
         b = self.s3_conn.get_bucket(self.bucket_name)
@@ -386,8 +389,9 @@ socks proxy localhost:12345'''  % {'dns': masterpublicdnsname})
                 raise ImportHandlerException('Emr jobflow %s failed' % self.jobid)
             if status.state in ('COMPLETED', 'WAITING'):
                 break
-        result = self.get_result()
-        return itertools.imap(lambda s: json.loads(s), result.splitlines())
+        # for test
+        #self.result_path =  '/cloudml/output/pig-script/1403671176/'
+        return self.get_result()
 
 
 class DataSource(object):
