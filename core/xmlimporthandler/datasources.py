@@ -389,7 +389,7 @@ socks proxy localhost:12345'''  % {'dns': masterpublicdnsname})
                 raise ImportHandlerException('Emr jobflow %s failed' % self.jobid)
             if status.state in ('COMPLETED', 'WAITING'):
                 break
-        logging.info("Pig results stored to: s3://%s%s" % (self.bucket_name, result_path))
+        logging.info("Pig results stored to: s3://%s%s" % (self.bucket_name, self.result_path))
         # for test
         #self.result_path =  '/cloudml/output/pig-script/1403671176/'
         return self.get_result()
