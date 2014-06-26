@@ -510,8 +510,7 @@ class Trainer():
                             item[k] = ft.transform(v)
                         result[feature_name] = item
                     elif input_format == 'list':
-                        map(ft.transform, item)
-                        result[feature_name] = item
+                        result[feature_name] =  map(ft.transform, item)
                 except Exception as e:
                     logging.warn('Error processing feature %s: %s'
                                  % (feature_name, e))
