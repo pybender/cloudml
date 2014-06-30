@@ -12,7 +12,6 @@ import math
 import datetime
 
 
-
 from jsonpath import jsonpath
 from sklearn.feature_extraction.readability import Readability
 
@@ -30,14 +29,47 @@ class ProcessException(Exception):
         self._column = column
         self.Errors = Errors
 
+
+
+def extract_skill_weights(data, opening_skills):
+    weight_per_tier = {
+        '1': 1,
+        '2': 0.5,
+        '3': -0.5,
+        '4': -1
+    }
+    if data is None:
+        return {}
+    if opening_skills is None or len(opening_skills) == 0:
+        return {}
+    sum_weights = {}
+    for assignment in data:
+        feedback = assignment.get('feedback_given', {}).get('private_feedback_hire_again')
+        skills = assignment.get('as_skills')
+        if skills is not None and len(skills) > 0 and 'as_total_charge' in assignment:
+            total_charge = float(assignment.get('as_total_charge', 0))
+            if total_charge < 0: total_charge = 0
+            for s in skills.split(','):
+                if s not in sum_weights:
+                    sum_weights[s] = 0.0
+                weight = weight_per_tier.get(feedback, 1)
+                if feedback is not None:
+                    print('Found feedback != none')
+                sum_weights[s] += weight * math.log(1 + total_charge)
+
+    result = {}
+    for skill in opening_skills.split(','):
+        if skill in sum_weights:
+            result[skill] = sum_weights[skill]
+
+    return result
+
 ###
 ### Functions to use for implementing each strategy
 ###
 ###############################################################################
-
-
 def process_primitive(constructor):
-    def process(value, query_item, row_data):
+    def process(value, query_item, row_data, script_manager=None):
         """
         Function to invoke when processing a feature that simply returns the
         value of a column.
@@ -62,7 +94,7 @@ def process_primitive(constructor):
     return process
 
 
-def process_composite(value, query_item, row_data):
+def process_composite(value, query_item, row_data, script_manager=None):
     """
     Function to invoke when processing a feature value that is created from
     other features.
@@ -104,6 +136,15 @@ and "value" for target feature %s' % (feature['name']))
                 value = value.decode('utf8', 'ignore')
                 if expression_type == 'string':
                     result[feature['name']] = value
+                elif expression_type == 'newpython':
+                    if script_manager:
+                        try:
+                            result[feature['name']] = script_manager.execute_function(expression_value, None, row_data)
+                        except Exception, e:
+                            logging.exception('Error when evaluate feature %s, value: %s, expression_type: %s' % 
+                                (feature['name'], value, expression_type))
+                            raise ProcessException('%s (expression: %s)' %
+                                           (e, value))
                 elif expression_type == 'python':
                     try:
                         result[feature['name']] = eval(value)
@@ -131,7 +172,7 @@ not defined for target feature %s''' % (r_type, feature['name']))
     return result
 
 
-def process_json(value, query_item, row_data):
+def process_json(value, query_item, row_data, script_manager=None):
     """
     Function to invoke when processing a feature value that is a JSON message.
 

@@ -1,3 +1,11 @@
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
+import json
+import re
+import math
+import datetime
 import logging
 from jsonpath import jsonpath
 from sklearn.feature_extraction.readability import Readability

@@ -1,4 +1,5 @@
 import logging
+from collections import OrderedDict
 
 import numpy
 from scipy.sparse import hstack
@@ -14,12 +15,16 @@ class Metrics(object):
         self._classifier = []
         self._preds = None
         self._probs = None
+        self._true_data = OrderedDict()
 
-    def evaluate_model(self, labels, vectorized_data, classifier):
+    def evaluate_model(self, labels, vectorized_data, classifier, segment='default'):
         self._labels += labels
-        self._vectorized_data.append(vectorized_data)
+        # if not self._vectorized_data:
+        #     self._vectorized_data = vectorized_data
+        # else:
+        #     for a, b in zip(self._vectorized_data, vectorized_data):
+        #         a =  numpy.append(a, b)
         self._classifier.append(classifier)
-
 
         # Evaluating model...
         if(len(vectorized_data) == 1):
@@ -30,9 +35,10 @@ class Metrics(object):
             except ValueError:
                 true_data = numpy.hstack(vectorized_data)
 
+        self._true_data[segment] = true_data
         probs = classifier.predict_proba(true_data)
         preds = classifier.predict(true_data)
-        self._true_data = true_data
+        
         if self._preds is None:
             self._preds = preds
         else:
@@ -46,6 +52,7 @@ class Metrics(object):
 
     @property
     def classes_set(self):
+        # TODO: Lose ordering
         if not hasattr(self, '_classes_set'):
             self._classes_set = set(self._labels)
         return self._classes_set
@@ -65,6 +72,7 @@ class Metrics(object):
         # TODO: Think about moving logic to serializer
         # and make Metrics class serializable
         res = {}
+        #self._true_data = hstack(self._vectorized_data)
         metrics = self._get_metrics_names()
         for metric_name in metrics.keys():
             value = getattr(self, metric_name)
@@ -140,7 +148,6 @@ class ClassificationModelMetrics(Metrics):
                 labels = [y_pred_type(y) for y in self._labels]
             else:
                 labels = self._labels
-            print labels,self._preds
             self._confusion_matrix = \
                 sk_metrics.confusion_matrix(labels,
                                             self._preds)

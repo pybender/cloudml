@@ -249,7 +249,7 @@ class Trainer():
         logging.info('Evaluating model...')
         
         self.metrics.evaluate_model(labels, vectorized_data,
-                                  self._classifier[segment])
+                                  self._classifier[segment], segment)
         logging.info("Memory usage: %f" % 
                      memory_usage(-1, interval=0, timeout=None)[0])
 
@@ -422,32 +422,31 @@ class Trainer():
         """
         self._count = 0
         self._ignored = 0
-        self._raw_data = []
+        self._raw_data = defaultdict(list)
         self._vect_data = {}
         segments = {}
         for row in iterator:
             self._count += 1
             try:
                 data = self._apply_feature_types(row)
-                if save_raw:
-                    self._raw_data.append(row)
+                
                 if self.with_segmentation:
                     segment = self._get_segment_name(data)
-                    if segment not in self._vect_data:
-                        self._vect_data[segment] = defaultdict(list)
-                        segments[segment] = 0
-                    segments[segment] += 1
-                    for feature_name in self._feature_model.features:
-                        if feature_name in self._feature_model.group_by:
-                            continue
-                        self._vect_data[segment][feature_name].append(data[feature_name])
                 else:
-                    if DEFAULT_SEGMENT not in self._vect_data:
-                        self._vect_data[DEFAULT_SEGMENT] = defaultdict(list)
+                    segment = DEFAULT_SEGMENT
 
-                    for feature_name in self._feature_model.features:
-                        self._vect_data[DEFAULT_SEGMENT][feature_name].append(
-                            data[feature_name])
+                if segment not in self._vect_data:
+                    self._vect_data[segment] = defaultdict(list)
+                    segments[segment] = 0
+                segments[segment] += 1
+
+                for feature_name in self._feature_model.features:
+                    # if feature_name in self._feature_model.group_by:
+                    #     continue
+                    self._vect_data[segment][feature_name].append(data[feature_name])
+
+                if save_raw:
+                    self._raw_data[segment].append(row)
 
                 if callback is not None:
                     callback(row)
@@ -511,8 +510,7 @@ class Trainer():
                             item[k] = ft.transform(v)
                         result[feature_name] = item
                     elif input_format == 'list':
-                        map(ft.transform, item)
-                        result[feature_name] = item
+                        result[feature_name] =  map(ft.transform, item)
                 except Exception as e:
                     logging.warn('Error processing feature %s: %s'
                                  % (feature_name, e))
@@ -544,15 +542,19 @@ class Trainer():
 
         return result
 
-    def get_weights_from_vectorizer(self, feature_name, vectorizer, offset):
+    def get_weights_from_vectorizer(self, segment, feature_name, vectorizer, offset):
         positive = []
         negative = []
          # Vectorizer
-        feature_names = vectorizer.get_feature_names()
+        try:
+            feature_names = vectorizer.get_feature_names()
+        except ValueError:
+            return [], positive, negative
+
         logging.info('Number of subfeatures %d' % len(feature_names))
         for j in range(0, len(feature_names)):
             name = '%s->%s' % (feature_name.replace(".", "->"), feature_names[j])
-            weight = self._classifier[DEFAULT_SEGMENT].coef_[0][offset + j]
+            weight = self._classifier[segment].coef_[0][offset + j]
             weights = {
                 'name': name,
                 'weight': weight
@@ -569,7 +571,7 @@ class Trainer():
         index = 0
 
         for feature_name, feature in self.features[segment].items():
-            if feature_name != self._feature_model.target_variable:
+            if feature_name != self._feature_model.target_variable and feature_name not in self._feature_model.group_by:
                 transformer = feature['transformer']
                 preprocessor = feature['type'].preprocessor
                 logging.info('Process feature %s' % feature_name )
@@ -577,7 +579,7 @@ class Trainer():
                     logging.info('Number of topics %d' % transformer.num_features )
                     for j in range(0, transformer.num_features-1):
                         name = '%s->Topic #%d' % (feature_name.replace(".", "->"), j)
-                        weight = self._classifier[DEFAULT_SEGMENT].coef_[0][index + j]
+                        weight = self._classifier[segment].coef_[0][index + j]
                         weights = {
                             'name': name,
                             'weight': weight
@@ -590,7 +592,8 @@ class Trainer():
                     index += transformer.num_topics
                 elif transformer is not None and hasattr(transformer,
                                                        'get_feature_names'):
-                    feature_names, p, n = self.get_weights_from_vectorizer(feature_name,
+                    feature_names, p, n = self.get_weights_from_vectorizer(segment,
+                                                                           feature_name,
                                                                            transformer,
                                                                            index)
                     index += len(feature_names)
@@ -599,7 +602,8 @@ class Trainer():
 
                 elif preprocessor is not None and hasattr(preprocessor,
                                                           'get_feature_names'):
-                    feature_names, p, n = self.get_weights_from_vectorizer(feature_name,
+                    feature_names, p, n = self.get_weights_from_vectorizer(segment, 
+                                                                           feature_name,
                                                                            preprocessor,
                                                                            index)
                     index += len(feature_names)
@@ -607,7 +611,7 @@ class Trainer():
                     negative = negative + n
                 else:
                     # Scaler or array
-                    weight = self._classifier[DEFAULT_SEGMENT].coef_[0][index]
+                    weight = self._classifier[segment].coef_[0][index]
                     weights = {
                         'name': feature_name.replace(".", "->"),
                         'weight': weight

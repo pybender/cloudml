@@ -5,7 +5,7 @@
   </inputs>
   <datasources>
     <db dbname="odw1" host="gpd01.odesk.com" name="odw" password="bestmatch" port="12000" user="bestmatch" vendor="postgres"/>
-    <pig jobid="j-15YTSYHJ1PJSO" amazon_access_token="AKIAJUMIEMJTS4RHPR2A" amazon_token_secret="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" name="pig-script" pig_version="0.11.1.1"/>
+    <pig amazon_access_token="AKIAJUMIEMJTS4RHPR2A" amazon_token_secret="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" name="pig-script" master_instance_type="c3.4xlarge" slave_instance_type="c3.4xlarge"/>
   </datasources>
   <import>
     <entity datasource="pig-script" name="application">
