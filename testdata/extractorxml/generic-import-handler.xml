@@ -1,0 +1,171 @@
+<plan type="online">
+
+    <!--Inputs required for this import handler to run -->
+    <inputs>
+
+
+        <param name="application" type="integer" regex="\d+" />
+        <param name="date" type="date" />
+        <param name="only_fjp" type="boolean" />
+    </inputs>
+
+    <!-- Links to external scripts may be used so that they are included to javascript context -->
+    <script ref="" />
+
+    <datasources>
+        <!--
+            Define data sources to be used. Data sources
+        -->
+        <http name="ods"
+              method="GET"
+              url="http://d-postgres.odesk.com:10000/ods/" />
+
+        <http name="odr"
+              method="GET"
+              url="http://d-postgres.odesk.com:9000/odr/" />
+
+        <http name="jar"
+              method="GET"
+              url="http://d-postgres.odesk.com:11000/jar/" />
+
+    </datasources>
+
+    <import>
+        <entity name="application" datasource="ods" query="job_application/pa/#{application}.json">
+            <field name="opening" jsonpath="$.result.#{application}.opening_ref" />
+            <field name="contractor" jsonpath="$.result.#{application}.developer_ref" />
+            <field name="employer" jsonpath="$.result.#{application}.team_ref" />
+
+            <field name="matches_pref_english" script="gt(#{contractor.dev_eng_skill}, #{pref_english})" />
+            
+            <entity name="opening" datasource="odr" query="opening/f/#{application.opening}.json">
+                <!-- Standard fields extracting according to json path -->
+                <field name="opening.title" jsonpath="$.op_title" />
+                <field name="opening.description" jsonpath="$.op_job" />
+                <field name="opening.skills" jsonpath="$.op_required_skills" />
+                <field name="opening.type_full" jsonpath="$.op_job_type" />
+                <field name="opening.category" jsonpath="$.op_job_category_1" />
+                <field name="opening.subcategory" jsonpath="$.op_job_category_2" />
+                <field name="opening.budget" jsonpath="$.op_amount" />
+                <field name="opening.buyer.total_jobs" jsonpath="$.buyer.op_tot_jobs_posted" />
+                <field name="pref_available_hours" jsonpath="$.op_pref_hours_per_week" />
+                <field name="pref_english" jsonpath="$.op_pref_english_skill" />
+                <field name="pref_feedback" jsonpath="$.op_pref_fb_score" />
+                <field name="pref_group" jsonpath="$.op_pref_group_recno" />
+                <field name="pref_has_portfolio_int" jsonpath="$.op_pref_has_portfolio" />
+                <field name="pref_rate_min" jsonpath="$.op_pref_hourly_rate_min" />
+                <field name="pref_rate_max" jsonpath="$.op_pref_hourly_rate_max" />
+                <field name="pref_region" jsonpath="$.op_pref_location" />
+                <field name="pref_test" jsonpath="$.op_pref_test" />
+                <field name="pref_odesk_hours" jsonpath="$.op_pref_odesk_hours" />
+                <field name="pref_candidate_type" jsonpath="$.op_candidate_type_pref" />
+
+                <!-- Fields generated using Javascript methods -->
+                <field name="opening.segment" script="getSegment('#{opening.category}')" />
+                <field name="pref_has_portfolio" script="intToBoolean(#{pref_has_portfolio_int})" />
+
+                <field name="opening.type" script="getJobType('#{opening.type_full}')" />
+                <field name="opening.is_fjp" script="eq(opening.buyer.total_jobs, 0)" />
+            </entity>
+
+            <entity name="contractor"
+                    datasource="odr"
+                    query="opening/f/#{application.opening}.json">
+                <field name="contractor.dev_is_looking" jsonpath="$.dev_is_looking" />
+                <field name="contractor.dev_is_looking_week" jsonpath="$.dev_is_looking_week" />
+                <field name="contractor.dev_active_interviews" jsonpath="$.dev_active_interviews" />
+                <field name="contractor.dev_availability" jsonpath="$.dev_availability" />
+                <field name="contractor.dev_cur_assignments" jsonpath="$.dev_cur_assignments" />
+                <field name="contractor.dev_last_worked" jsonpath="$.dev_last_worked" />
+                <field name="contractor.dev_recent_fp_jobs" jsonpath="$.dev_recent_fp_jobs" />
+                <field name="contractor.dev_total_fp_jobs" jsonpath="$.dev_total_fp_jobs" />
+                <field name="contractor.dev_recent_hourly_jobs" jsonpath="$.dev_recent_hourly_jobs" />
+                <field name="contractor.dev_total_hourly_jobs" jsonpath="$.dev_total_hourly_jobs" />
+                <field name="contractor.dev_recent_hours" jsonpath="$.dev_recent_hours" />
+                <field name="contractor.dev_total_hours_rounded" jsonpath="$.dev_total_hours_rounded" />
+                <field name="contractor.dev_billed_assignments" jsonpath="$.dev_billed_assignments" />
+                <field name="contractor.dev_total_revenue" jsonpath="$.dev_total_revenue" />
+                <field name="contractor.dev_tot_feedback" jsonpath="$.dev_tot_feedback" />
+                <field name="contractor.dev_tot_feedback_recent" jsonpath="$.dev_tot_feedback_recent" />
+                <field name="contractor.recent_feedback_comments" jsonpath="$.assignments[:10].feedback.comment" />
+                <field name="contractor.negative_feedbacks" jsonpath="$.assignments[?(@.feedback.score &lt; '4.00')].feedback.score" />
+                <field name="contractor.dev_adj_score" jsonpath="$.dev_adj_score" />
+                <field name="contractor.dev_adj_score_recent" jsonpath="$.dev_adj_score_recent" />
+                <field name="contractor.dev_rank_percentile" jsonpath="$.dev_rank_percentile" />
+                <field name="contractor.dev_recent_rank_percentile" jsonpath="$.dev_recent_rank_percentile" />
+                <field name="contractor.dev_max_karma" jsonpath="$.dev_max_karma" />
+                <field name="contractor.dev_test_passed_count" jsonpath="$.dev_test_passed_count" />
+                <field name="contractor.dev_skill_test_passed_count" jsonpath="$.dev_skill_test_passed_count" />
+                <field name="contractor.dev_profile_title" jsonpath="$.dev_profile_title" />
+                <field name="contractor.dev_blurb" jsonpath="$.dev_blurb" />
+                <field name="contractor.dev_bill_rate" jsonpath="$.dev_bill_rate" />
+                <field name="contractor.dev_expose_full_name" jsonpath="$.dev_expose_full_name" />
+                <field name="contractor.dev_year_exp" jsonpath="$.dev_year_exp" />
+                <field name="contractor.dev_portfolio_items_count" jsonpath="$.dev_portfolio_items_count" />
+                <field name="contractor.dev_eng_skill" jsonpath="$.dev_eng_skill" />
+                <field name="contractor.dev_timezone" jsonpath="$.dev_timezone" />
+                <field name="contractor.dev_country" jsonpath="$.dev_country" />
+                <field name="contractor.dev_region" jsonpath="$.dev_region" />
+                <field name="ja.is_ic_int" jsonpath="$.dev_is_affiliated" />
+
+                <field name="ja.is_ic" src="eq(#{ja.is_ic_int}, 1)" />
+            </entity>
+
+            <entity name="employer" datasource="odr" query="opening/f/#{application.opening}.json">
+
+                <field name="employer.op_timezone" jsonpath="$.op_timezone" />
+                <field name="employer.op_country_tz" jsonpath="$.op_country_tz" />
+                <field name="employer.op_tot_jobs_filled" jsonpath="$.op_tot_jobs_filled" />
+                <field name="employer.country" jsonpath="$.op_country" />
+            </entity>
+
+            <!-- Sub-entity using results from JAR application service to add fields -->
+            <entity name="jar_application" datasource="jar" query="get_s/#{employer}/#{application}.json">
+                <field name="ja.bid_rate" jsonpath="$.result.hr_pay_rate" />
+                <field name="ja.bid_amount" jsonpath="$.result.fp_pay_amount" />
+                <field name="opening.pref_count" jsonpath="$.result.job_pref_matches.prefs_match" />
+            </entity>
+
+        </entity>
+    </import>
+
+
+    <!--
+      Define which models to use and how to formulate response.
+      Required only for web import handlers.
+      -->
+    <predict>
+          <!-- Model to use -->
+          <model name="rank" value="BestMatch.v31">
+              <positive_label value="true"/>
+
+          </model>
+
+          <!-- Or model may result from a Javascript function -->
+          <model name="rank" script="getModel(#{opening.jobcategory})">
+              <positive_label script="getPositiveLabel(#{opening.jobcategory})" />
+              <weight label="true" script="getTrueWeight(#{opening.jobcategory}" />
+              <weight label="false" script="getTrueWeight(#{opening.jobcategory}" />
+          </model>
+
+
+          <!-- Multiple models may be required for calculating result -->
+          <model name="autohide" value="BestMatch.v31">
+              <positive_label value="false" />
+              <weight label="true" value="1.23543"/>
+              <weight label="false" value="1.0"/>
+          </model>
+
+          <!-- Result can refer model's result -->
+          <result>
+              <label model="rank" />
+              <probability model="rank" label="true" />
+          </result>
+
+          <!-- or result may be calculated using Javascript functions -->
+          <result>
+              <label script="getLabel()"/>
+              <probability script="getProbability()"/>
+          </result>
+    </predict>
+</plan>

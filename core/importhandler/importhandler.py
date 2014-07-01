@@ -25,6 +25,8 @@ from db import postgres_iter
 from processors import extract_parameters
 from processors import PROCESS_STRATEGIES, ProcessException
 
+from core.xmlimporthandler.scripts import ScriptManager
+
 
 class ImportHandlerException(Exception):
     def __init__(self, message, Errors=None):
@@ -60,10 +62,21 @@ class ExtractionPlan(object):
             raise ImportHandlerException('No queries defined in config')
         self.queries = data['queries']
 
+        self.script_manager = ScriptManager()
+        self.load_scripts(data)
+
         for query in self.queries:
             self._validate_items(query)
 
         self._find_required_input()
+
+    def load_scripts(self, config):
+        """
+        Loads and executes javascript from import handler configuration.
+        """
+        script = config.get('script', None)
+        if script:
+            self.script_manager.add_python(script)
 
     def _find_required_input(self):
         """
@@ -102,6 +115,7 @@ class BaseImportHandler(object):
 
         # Currently we support a single query. This might change in the future.
         self._query = self._plan.queries[0]
+        self.script_manager = self._plan.script_manager
         self.count = 0
         self.ignored = 0
 
@@ -122,7 +136,7 @@ class BaseImportHandler(object):
             # Get value from query for this item
             source = item.get('source', None)
             item_value = row.get(source, None)
-            result = strategy(item_value, item, row_data)
+            result = strategy(item_value, item, row_data, self.script_manager)
             row_data.update(result)
         return row_data
 

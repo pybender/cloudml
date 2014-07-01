@@ -1,0 +1,55 @@
+{
+  "schema-name":"test",
+  "classifier":{
+    "type":"logistic regression",
+    "params": {"penalty": "l2"}
+  },
+  "group-by": ["contractor.dev_country"],
+  "features":[
+    {
+      "name":"hire_outcome",
+      "type":"int",
+      "is-target-variable":true
+    },
+    {
+      "name":"contractor.dev_adj_score_recent",
+      "type":"float",
+      "is-required":true
+    },
+    {
+      "name":"contractor.dev_is_looking",
+      "type":"boolean",
+      "is-required":false
+    },
+    {
+      "name":"contractor.dev_country",
+      "type":"categorical",
+      "is-required":false
+    },
+    {
+      "name":"contractor.dev_title",
+      "type": "text",
+      "input-format": "list",
+      "transformer":{
+        "type":"Tfidf",
+        "params": {
+          "ngram_range_min":1,
+          "ngram_range_max":1,
+          "min_df":2}
+      }
+    },
+    {
+      "name":"contractor.dev_test",
+      "type": "float",
+      "input-format": "dict"
+    },
+    {"name": "contractor.skills",
+     "type": "categorical",
+     "params": {"split_pattern": "\\s*,\\s*"}
+    },
+    {"name":"contractor.dev_scores",
+    "type":"float",
+    "input-format": "dict"
+    }
+  ]
+}

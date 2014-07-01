@@ -22,6 +22,18 @@ class ConfigTest(unittest.TestCase):
     def setUp(self):
         self.config = FeatureModel(os.path.join(BASEDIR, 'features.json'))
 
+
+    def test_process_group_by(self):
+        group_by = ['wwww']
+        with self.assertRaises(SchemaException):
+            self.config._process_group_by(group_by)
+
+        group_by = ['country_pair']
+        self.config._process_group_by(group_by)
+
+        self.assertEqual(self.config.group_by, group_by)
+        
+
     def test_load_features(self):
         self.assertEqual(1, len(self.config._named_feature_types))
         self.assertIn('employer.op_timezone',

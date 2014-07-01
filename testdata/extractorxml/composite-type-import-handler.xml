@@ -1,0 +1,64 @@
+<plan>
+  <inputs>
+    <param name="start" type="string"/>
+    <param name="end" type="string"/>
+  </inputs>
+  <script><![CDATA[]]></script>
+  <datasources>
+    <db dbname="something" host="localhost" name="odw" password="password" user="fake" vendor="postgres"/>
+  </datasources>
+  <import>
+    <entity datasource="odw" name="retrieve">
+      <query><![CDATA[SELECT qi.*, 'class' || (trunc(random() * 2) + 1)::char hire_outcome FROM public.ja_quick_info qi where qi.file_provenance_date >= '#{start}' AND qi.file_provenance_date < '#{end}' LIMIT(100);]]></query>
+      <field column="contractor_info" name="contractor_info" transform="json"/>
+      <field column="employer_info" name="employer_info" transform="json"/>
+      <field column="hire_outcome" name="hire_outcome" type="string"/>
+      <field column="opening" name="opening_id" type="string"/>
+      <field column="application" name="application_id" type="string"/>
+      <field name="country_pair">
+        <script><![CDATA[composite_string("%(employer.country)s,%(contractor.dev_country)s", #{value}, row_data)]]></script>
+      </field>
+      <entity datasource="contractor_info" name="contractor_info">
+        <field join="," jsonpath="$.skills.*.skl_name" name="contractor.skills"/>
+        <field jsonpath="$.tsexams" name="tsexams">
+          <script><![CDATA[process_key_value("$.*.ts_name", "$.*.ts_score", #{value})]]></script>
+        </field>
+        <field jsonpath="$.dev_adj_score_recent" name="contractor.dev_adj_score_recent"/>
+        <field jsonpath="$.dev_is_looking" name="contractor.dev_is_looking"/>
+        <field jsonpath="$.dev_recent_rank_percentile" name="contractor.dev_recent_rank_percentile"/>
+        <field jsonpath="$.dev_recent_fp_jobs" name="contractor.dev_recent_fp_jobs"/>
+        <field jsonpath="$.dev_recent_hours" name="contractor.dev_recent_hours"/>
+        <field jsonpath="$.dev_skill_test_passed_count" name="contractor.dev_skill_test_passed_count"/>
+        <field jsonpath="$.dev_total_hourly_jobs" name="contractor.dev_total_hourly_jobs"/>
+        <field jsonpath="$.dev_tot_feedback_recent" name="contractor.dev_tot_feedback_recent"/>
+        <field jsonpath="$.dev_rank_percentile" name="contractor.dev_rank_percentile"/>
+        <field jsonpath="$.dev_billed_assignments" name="contractor.dev_billed_assignments"/>
+        <field jsonpath="$.dev_is_looking_week" name="contractor.dev_is_looking_week"/>
+        <field jsonpath="$.dev_availability" name="contractor.dev_availability"/>
+        <field jsonpath="$.dev_total_revenue" name="contractor.dev_total_revenue"/>
+        <field jsonpath="$.dev_bill_rate" name="contractor.dev_bill_rate"/>
+        <field jsonpath="$.dev_test_passed_count" name="contractor.dev_test_passed_count"/>
+        <field jsonpath="$.dev_expose_full_name" name="contractor.dev_expose_full_name"/>
+        <field jsonpath="$.dev_total_hours_rounded" name="contractor.dev_total_hours_rounded"/>
+        <field jsonpath="$.dev_year_exp" name="contractor.dev_year_exp"/>
+        <field jsonpath="$.dev_portfolio_items_count" name="contractor.dev_portfolio_items_count"/>
+        <field jsonpath="$.dev_eng_skill" name="contractor.dev_eng_skill"/>
+        <field jsonpath="$.dev_tot_feedback" name="contractor.dev_tot_feedback"/>
+        <field jsonpath="$.dev_timezone" name="contractor.dev_timezone"/>
+        <field jsonpath="$.dev_last_worked" name="contractor.dev_last_worked"/>
+        <field jsonpath="$.dev_profile_title" name="contractor.dev_profile_title"/>
+        <field jsonpath="$.dev_active_interviews" name="contractor.dev_active_interviews"/>
+        <field jsonpath="$.dev_cur_assignments" name="contractor.dev_cur_assignments"/>
+        <field jsonpath="$.dev_pay_rate" name="contractor.dev_pay_rate"/>
+        <field jsonpath="$.dev_blurb" name="contractor.dev_blurb"/>
+        <field jsonpath="$.dev_country" name="contractor.dev_country"/>
+      </entity>
+      <entity datasource="employer_info" name="employer_info">
+        <field jsonpath="$.op_timezone" name="employer.op_timezone"/>
+        <field jsonpath="$.op_country_tz" name="employer.op_country_tz"/>
+        <field jsonpath="$.op_tot_jobs_filled" name="employer.op_tot_jobs_filled"/>
+        <field jsonpath="$.op_country" name="employer.country"/>
+      </entity>
+    </entity>
+  </import>
+</plan>

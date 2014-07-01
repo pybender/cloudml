@@ -1,4 +1,5 @@
 import logging
+from collections import OrderedDict
 
 import numpy
 from scipy.sparse import hstack
@@ -8,27 +9,50 @@ import sklearn.metrics as sk_metrics
 class Metrics(object):
     METRICS_TO_CALC = ()
 
-    def __init__(self, labels, vectorized_data, classifier):
-        self._labels = labels
-        self._vectorized_data = vectorized_data
-        self._classifier = classifier
+    def __init__(self):
+        self._labels = []
+        self._vectorized_data = []
+        self._classifier = []
+        self._preds = None
+        self._probs = None
+        self._true_data = OrderedDict()
+
+    def evaluate_model(self, labels, vectorized_data, classifier, segment='default'):
+        self._labels += labels
+        # if not self._vectorized_data:
+        #     self._vectorized_data = vectorized_data
+        # else:
+        #     for a, b in zip(self._vectorized_data, vectorized_data):
+        #         a =  numpy.append(a, b)
+        self._classifier.append(classifier)
 
         # Evaluating model...
-        if(len(self._vectorized_data) == 1):
-            self._true_data = numpy.array(self._vectorized_data[0])
+        if(len(vectorized_data) == 1):
+            true_data = numpy.array(vectorized_data[0])
         else:
             try:
-                self._true_data = hstack(self._vectorized_data)
+                true_data = hstack(vectorized_data)
             except ValueError:
-                self._true_data = numpy.hstack(self._vectorized_data)
+                true_data = numpy.hstack(vectorized_data)
 
-        self._vectorized_data = None
-        self._probs = classifier.predict_proba(self._true_data)
-        self._preds = classifier.predict(self._true_data)
+        self._true_data[segment] = true_data
+        probs = classifier.predict_proba(true_data)
+        preds = classifier.predict(true_data)
+        
+        if self._preds is None:
+            self._preds = preds
+        else:
+            self._preds = numpy.append(self._preds, preds)
+
+        if self._probs is None:
+            self._probs = probs
+        else:
+            self._probs = numpy.vstack((self._probs, probs))
 
 
     @property
     def classes_set(self):
+        # TODO: Lose ordering
         if not hasattr(self, '_classes_set'):
             self._classes_set = set(self._labels)
         return self._classes_set
@@ -48,6 +72,7 @@ class Metrics(object):
         # TODO: Think about moving logic to serializer
         # and make Metrics class serializable
         res = {}
+        #self._true_data = hstack(self._vectorized_data)
         metrics = self._get_metrics_names()
         for metric_name in metrics.keys():
             value = getattr(self, metric_name)
@@ -117,8 +142,14 @@ class ClassificationModelMetrics(Metrics):
     @property
     def confusion_matrix(self):
         if not hasattr(self, '_confusion_matrix'):
+            y_true_type = type(self._labels[0])
+            y_pred_type = type(self._preds[0])
+            if y_true_type != y_pred_type:
+                labels = [y_pred_type(y) for y in self._labels]
+            else:
+                labels = self._labels
             self._confusion_matrix = \
-                sk_metrics.confusion_matrix([str(l) for l in self._labels],
+                sk_metrics.confusion_matrix(labels,
                                             self._preds)
         return self._confusion_matrix
 
@@ -133,8 +164,14 @@ class ClassificationModelMetrics(Metrics):
     @property
     def accuracy(self):
         if not hasattr(self, '_accuracy'):
-            labels = [str(l) for l in self._labels]
-            self._accuracy = self._classifier.score(self._true_data, labels)
+            #labels = [str(l) for l in self._labels]
+            y_true_type = type(self._labels[0])
+            y_pred_type = type(self._preds[0])
+            if y_true_type != y_pred_type:
+                labels = [y_pred_type(y) for y in self._labels]
+            else:
+                labels = self._labels
+            self._accuracy = sk_metrics.accuracy_score(labels, self._preds)
         return self._accuracy
 
     def _get_metrics_names(self):

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<plan xmlns:buildings="http://www.example.org/NewXMLSchema">
+
+    <!--Inputs required for this import handler to run -->
+    <inputs>
+        <param name="start" type="date" />
+        <param name="end" type="date" />
+    </inputs>
+    <script>
+    <![CDATA[def always99(a):
+        return 99
+    ]]>
+    </script>
+
+    <datasources>
+        <!--
+            Define data sources to be used. Data sources
+        -->
+        <db name="odw" 
+            host="localhost"
+            dbname="odw"
+            user="postgres"
+            password="postgres"
+            vendor="postgres" />
+        <db name="datasource" 
+            host="localhost"
+            dbname="odw"
+            user="postgres"
+            password="postgres"
+            vendor="postgres" />
+
+
+        <pig name="pig"
+             jobid="jobid"
+             amazon_access_token="something"
+             amazon_token_secret="something" />
+
+    </datasources>
+
+    <import>
+        <entity name="application" datasource="odw">
+            <query target="results">
+                <![CDATA[CREATE TABLE results AS
+  SELECT qi.*, 'class' || (trunc(random() * 2) + 1)::char hire_outcome 
+  FROM public.ja_quick_info qi where qi.file_provenance_date >= '#{start}'
+  AND qi.file_provenance_date < '#{end}' 
+  LIMIT(100);
+  ]]>
+            </query>
+            <!-- "Convert" fields to datasources -->
+            <field name="employer_info" transform="json" column="employer_info"/>
+            <field name="contractor_info" transform="json" column="contractor_info"/>
+            <field name="application_id" type="integer" column="application" required="true" />
+
+            <!-- Checking javascript function -->
+            <field name="test_script" type="integer" column="application" script="always99(#{value})" />
+            <field name="test_script_tag" type="integer" column="application">
+                <script>
+                    <![CDATA[
+                        always99(#{value})
+                    ]]>
+                </script>
+            </field>
+
+            <!-- Checking types processing -->
+            <field name="check_float" type="float" column="float_field" />
+            <field name="check_string" type="string" column="float_field" />
+            <field name="check_int" type="integer" column="int_field" />
+            <field name="check_integer_with_float" type="integer" column="float_field" />
+            <field name="check_boolean" type="boolean" column="boolean" />
+            <field name="check_json" type="json" column="json_field" />
+            <field name="check_json_jsonpath" type="json" jsonpath="$..val_0" column="json_jsonpath_field" />
+
+            <!-- Checking jsonpath and join -->
+            <field name="autors" column="store" jsonpath="$..author" join=" and " />
+
+            <!-- Checking regex and split -->
+            <field name="say_hello" column="say_hello" regex="(h\w+)"/>
+            <field name="words" column="words" split="\W+"/>
+
+            <field name="date" column="date" dateFormat="%b %d %Y %I:%M%p"/>
+
+            <!-- Checking template -->
+            <field name="template" column="say_hello" template="Greatings: #{value}." split="\W+" join=" and " />
+
+            <entity name="employer_info" datasource="employer_info">
+                <field name="employer.op_timezone" jsonpath="$.op_timezone" />
+                <field name="employer.op_country_tz" jsonpath="$.op_country_tz" />
+                <field name="employer.op_tot_jobs_filled" jsonpath="$.op_tot_jobs_filled" />
+                <field name="employer.country" jsonpath="$.op_country" />
+            </entity>
+
+            <entity name="contractor_info" datasource="contractor_info">
+              <field name="contractor.dev_is_looking" jsonpath="$.dev_is_looking" />
+              <field name="contractor.dev_is_looking_week" jsonpath="$.dev_is_looking_week" />
+              <field name="contractor.dev_active_interviews" jsonpath="$.dev_active_interviews" />
+              <field name="contractor.dev_availability" type="integer" jsonpath="$.dev_availability" />
+            </entity>
+            <entity name="application_id" datasource="datasource" query="SELECT title FROM applications where id==#{application_id};">
+                <field name="application_title" column="title" />
+            </entity>
+        </entity>
+    </import>
+</plan>
