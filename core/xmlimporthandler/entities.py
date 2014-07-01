@@ -6,6 +6,7 @@ import json
 import logging
 from datetime import datetime
 import re
+import math
 from jsonpath import jsonpath
 
 from exceptions import ProcessException, ImportHandlerException
