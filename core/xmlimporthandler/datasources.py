@@ -37,7 +37,7 @@ class BaseDataSource(object):
 
     def get_params(self):
         res = {}
-        for key, val in self.config[0].attrib.iteritems():
+        for key, val in self.config.attrib.iteritems():
             if key not in ['name', ]:
                 res[key] = val
         return res
@@ -53,18 +53,18 @@ class DbDataSource(BaseDataSource):
         queries = query.split(';')[:-1]
         if query_target:
             queries.append("SELECT * FROM %s;" % query_target)
-        db_iter = self.DB.get(self.config[0].attrib['vendor'])[0]
+        db_iter = self.DB.get(self.config.attrib['vendor'])[0]
 
         if db_iter is None:
             raise ImportHandlerException(
                 'Database type %s not supported' % self.config['db']['vendor'])
 
-        if 'host' not in self.config[0].attrib:
+        if 'host' not in self.config.attrib:
             raise ImportHandlerException(
                 'No database connection details defined')
 
         from copy import deepcopy
-        conn_params = deepcopy(self.config[0].attrib)
+        conn_params = deepcopy(self.config.attrib)
         conn_params.pop('name')
         conn_params.pop('vendor')
         conn_string = ' '.join(['%s=%s' % (k, v)
@@ -75,12 +75,12 @@ class DbDataSource(BaseDataSource):
         queries = queries.strip(' \t\n\r')
         queries = queries.split(';')[:-1]
         queries = [q + ';' for q in queries]
-        run_query = self.DB.get(self.config[0].attrib['vendor'])[1]
+        run_query = self.DB.get(self.config.attrib['vendor'])[1]
         if run_query is None:
             raise ImportHandlerException(
                 'Database type %s not supported' % self.config['db']['vendor'])
         from copy import deepcopy
-        conn_params = deepcopy(self.config[0].attrib)
+        conn_params = deepcopy(self.config.attrib)
         conn_params.pop('name')
         conn_params.pop('vendor')
         conn_string = ' '.join(['%s=%s' % (k, v)
@@ -90,7 +90,7 @@ class DbDataSource(BaseDataSource):
 
 class HttpDataSource(BaseDataSource):
     def _get_iter(self, query=None, query_target=None):
-        attrs = self.config[0].attrib
+        attrs = self.config.attrib
 
         if 'url' not in attrs:
             raise ImportHandlerException('No url given')
@@ -102,22 +102,30 @@ class HttpDataSource(BaseDataSource):
         method = attrs.get('method', 'GET')
 
         # TODO: params?
+        print "Url", url
         try:
             resp = requests.request(
                 method, url, stream=True)
         except ConnectionError as exc:
             raise ImportHandlerException('Cannot reach url: {}'.format(
                 str(exc)))
-
+        print resp.json()
+        try:
+            result = resp.json()
+        except Exception as exc:
+            raise ImportHandlerException('Cannot parse json: {}'.format(
+                str(exc)))
+        if isinstance(result, dict):
+            return iter([resp.json()])
         return iter(resp.json())
 
 
 class CsvDataSource(BaseDataSource):
     def _get_iter(self, query=None, query_target=None):
-        attrs = self.config[0].attrib
+        attrs = self.config.attrib
 
         headers = []
-        for t in self.config[0].xpath('header'):
+        for t in self.config.xpath('header'):
             headers.append((t.attrib['name'], int(t.attrib['index'])))
 
         if 'src' not in attrs:

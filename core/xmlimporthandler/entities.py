@@ -100,7 +100,7 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
             _check_for_string('dateFormat')
 
     def process_value(self, value, script_manager, row=None, row_data=None,
-                      datasource_type=None):
+                      datasource_type=None, params=None):
         """
         Processes value according to a field configuration.
         """
@@ -109,6 +109,7 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
         row_data = row_data or {}
 
         if self.jsonpath:
+            self.jsonpath = ParametrizedTemplate(self.jsonpath).safe_substitute(params)
             value = jsonpath(value, self.jsonpath)
             if value is False:
                 value = None
@@ -257,9 +258,7 @@ class EntityProcessor(object):
         query = entity.build_query(params)
         self.datasource = import_handler.plan.datasources.get(
             entity.datasource_name)
-
         # Process sqoop imports
-        logging.info('Process sqoop imports')
         for sqoop_import in self.entity.sqoop_imports:
 
             sqoop_import.datasource = import_handler.plan.datasources.get(
@@ -281,7 +280,7 @@ class EntityProcessor(object):
         Returns entity's processed next row data.
         """
         row = self.iterator.next()
-        row_data = {}
+        row_data = self.params
         for field in self.entity.fields.values():
             row_data.update(self.process_field(field, row, row_data))
 
@@ -297,13 +296,17 @@ class EntityProcessor(object):
 
     def process_field(self, field, row, row_data=None):
         row_data = row_data or {}
-        item_value = row.get(field.column, None)
+        if field.column:
+            item_value = row.get(field.column, None)
+        else:
+            item_value = row
         result = {}
         kwargs = {
             'row': row,
             'row_data': row_data,
             'datasource_type': self.datasource.type,
-            'script_manager': self.import_handler.plan.script_manager
+            'script_manager': self.import_handler.plan.script_manager,
+            'params': self.params
         }
         if field.is_datasource_field:
             nested_entity = self._get_entity_for_datasource_field(field)

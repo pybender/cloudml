@@ -32,4 +32,22 @@ class ScriptManager(object):
         row_data = row_data or {}
         context = globals().copy()
         context.update(locals())
+        class ob(object):
+            pass
+        for k, v in row_data.iteritems():
+            splited = k.split('.')
+            if len(splited) == 1:
+                context[k] = v
+            elif len(splited) == 2:
+                if not context.has_key(splited[0]):
+                    context[splited[0]] = ob()
+                setattr(context[splited[0]], splited[1], v)
+            elif len(splited) == 3:
+                if not context.has_key(splited[0]):
+                    context[splited[0]] = ob()
+                if not hasattr(context[splited[0]], splited[1]):
+                    setattr(context[splited[0]], splited[1], ob())
+                t = getattr(context[splited[0]], splited[1])
+                setattr(t, splited[2], v)
+        print text
         return eval(text, context, self.context)

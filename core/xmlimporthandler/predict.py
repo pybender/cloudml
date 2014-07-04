@@ -14,7 +14,7 @@ class PredictModel(object):
             raise ImportHandlerException('Either value or script'
                                          ' attribute need to be defined')
 
-        self.positive_label = PositiveLabel(config.xpath('positive_label[1]'))
+        #self.positive_label = PositiveLabel(config.xpath('positive_label[1]'))
 
         self.weights = []
         for weight in config.xpath('weight'):
