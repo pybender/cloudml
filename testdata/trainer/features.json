@@ -28,7 +28,6 @@
     {
       "name":"contractor.dev_title",
       "type": "text",
-      "input-format": "list",
       "transformer":{
         "type":"Tfidf",
         "params": {
