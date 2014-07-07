@@ -114,7 +114,8 @@ class ClassificationModelMetrics(Metrics):
                       'avarage_precision': 'Avarage Precision',
                       'precision_recall_curve': 'Precision-recall curve'}
     MORE_DIMENSIONAL_METRICS = {'confusion_matrix': 'Confusion Matrix',
-                                'accuracy': 'Accuracy'}
+                                'accuracy': 'Accuracy',
+                                'roc_curve': 'ROC curve'}
 
     @property
     def roc_curve(self):
