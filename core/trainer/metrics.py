@@ -114,15 +114,27 @@ class ClassificationModelMetrics(Metrics):
                       'avarage_precision': 'Avarage Precision',
                       'precision_recall_curve': 'Precision-recall curve'}
     MORE_DIMENSIONAL_METRICS = {'confusion_matrix': 'Confusion Matrix',
-                                'accuracy': 'Accuracy'}
+                                'accuracy': 'Accuracy',
+                                'roc_curve': 'ROC curve'}
 
     @property
     def roc_curve(self):
-        """ Calc roc curve only for binary classification """
-        assert self.classes_count == 2
+        """ Calc roc curve """
+        #assert 
         if not hasattr(self, '_fpr') or not hasattr(self, '_tpr'):
-            self._fpr, self._tpr, thresholds = \
+            self._fpr = []
+            self._tpr = []
+            if self.classes_count == 2:
+                fpr, tpr, thresholds = \
                 sk_metrics.roc_curve(self._labels, self._probs[:, 1])
+                self._fpr.append(fpr)
+                self._tpr.append(tpr)
+            else:
+                for i in xrange(len(self.classes_set)):
+                    fpr, tpr, thresholds = \
+                    sk_metrics.roc_curve(self._labels, self._probs[:, i], pos_label=i+1)
+                    self._fpr.append(fpr)
+                    self._tpr.append(tpr)
         return self._fpr, self._tpr
 
     @property

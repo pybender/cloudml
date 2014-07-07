@@ -49,5 +49,4 @@ class ScriptManager(object):
                     setattr(context[splited[0]], splited[1], ob())
                 t = getattr(context[splited[0]], splited[1])
                 setattr(t, splited[2], v)
-        print text
         return eval(text, context, self.context)
