@@ -176,8 +176,58 @@ class TrainerTestCase(unittest.TestCase):
             self.assertIsInstance(precision, ndarray)
             self.assertIsInstance(recall, ndarray)
             fpr, tpr = metrics.roc_curve
-            self.assertIsInstance(fpr, ndarray)
-            self.assertIsInstance(tpr, ndarray)
+            self.assertIsInstance(fpr[0], ndarray)
+            self.assertIsInstance(tpr[0], ndarray)
+            self.assertEquals(metrics.avarage_precision, 0.0)
+            self.assertEquals(metrics.roc_auc, 1.0)
+            # make sure we have tested all published metrics
+            for key in ClassificationModelMetrics.BINARY_METRICS.keys():
+                self.assertTrue(hasattr(metrics, key),
+                                'metric %s was not found or not tested' % (key))
+
+            # make sure we can serialize the metric dictionary
+            try:
+                metrics_dict = metrics.get_metrics_dict()
+                json.dumps(metrics_dict)
+            except Exception, exc:
+                self.fail(exc)
+
+
+    def test_test_ndim_outcome(self):
+        from numpy import ndarray
+        from core.trainer.metrics import ClassificationModelMetrics
+
+        with open(os.path.join(BASEDIR, 'trainer', 'trainer.data.ndim_outcome.json')) as fp:
+            self._data = list(streamingiterload(fp.readlines(), source_format='json'))
+
+        self._trainer = Trainer(self._config)
+        self._trainer.train(self._data)
+
+        metrics = self._trainer.test(self._data)
+        self.assertIsInstance(metrics, ClassificationModelMetrics)
+        self.assertEquals(metrics.accuracy, 1.0)
+        self.assertIsInstance(metrics.confusion_matrix, ndarray)
+        #precision, recall = metrics.precision_recall_curve
+        #self.assertIsInstance(precision, ndarray)
+        #self.assertIsInstance(recall, ndarray)
+        fpr, tpr = metrics.roc_curve
+        for arr in fpr + tpr:
+            self.assertIsInstance(arr, ndarray)
+        self.assertEqual(metrics.classes_count, len(fpr))
+        self.assertEqual(metrics.classes_count, len(tpr))
+        #self.assertEquals(metrics.avarage_precision, 0.0)
+        #self.assertEquals(metrics.roc_auc, 1.0)
+
+        for key in ClassificationModelMetrics.MORE_DIMENSIONAL_METRICS.keys():
+            self.assertTrue(hasattr(metrics, key),
+                           'metric %s was not found or not tested' % (key))
+
+        # make sure we can serialize the metric dictionary
+        try:
+            metrics_dict = metrics.get_metrics_dict()
+            json.dumps(metrics_dict)
+        except Exception, exc:
+            self.fail(exc)
 
     def _load_data(self, fmt):
         """

@@ -52,9 +52,10 @@ class Metrics(object):
 
     @property
     def classes_set(self):
-        # TODO: Lose ordering
+        # nader201407709: we can't lose ordering, as we depend
+        # on it in roc_curve calculation for multiclass classification
         if not hasattr(self, '_classes_set'):
-            self._classes_set = set(self._labels)
+            self._classes_set = list(set(self._labels))
         return self._classes_set
 
     @property
@@ -69,22 +70,21 @@ class Metrics(object):
 
         Note: Now it used in the REST API.
         """
+        def recursive_convert(v):
+            value = v
+            if isinstance(v, list) or isinstance(v, tuple):
+                value = [recursive_convert(item) for item in v]
+            elif isinstance(v, numpy.ndarray):
+                value = [recursive_convert(item) for item in v.tolist()]
+            return value
+
         # TODO: Think about moving logic to serializer
         # and make Metrics class serializable
         res = {}
         #self._true_data = hstack(self._vectorized_data)
         metrics = self._get_metrics_names()
         for metric_name in metrics.keys():
-            value = getattr(self, metric_name)
-            if isinstance(value, list) or isinstance(value, tuple):
-                value = [val.tolist()
-                         if isinstance(val, numpy.ndarray) else val
-                         for val in value]
-
-            if isinstance(value, numpy.ndarray):
-                value = value.tolist()
-
-            res[metric_name] = value
+            res[metric_name] = recursive_convert(getattr(self, metric_name))
         return res
 
     def to_serializable_dict(self):
@@ -119,22 +119,23 @@ class ClassificationModelMetrics(Metrics):
 
     @property
     def roc_curve(self):
-        """ Calc roc curve """
-        #assert 
+        """ Calc roc curve only for binary classification """
         if not hasattr(self, '_fpr') or not hasattr(self, '_tpr'):
             self._fpr = []
             self._tpr = []
             if self.classes_count == 2:
                 fpr, tpr, thresholds = \
-                sk_metrics.roc_curve(self._labels, self._probs[:, 1])
+                    sk_metrics.roc_curve(self._labels, self._probs[:, 1])
                 self._fpr.append(fpr)
                 self._tpr.append(tpr)
             else:
-                for i in xrange(len(self.classes_set)):
+                for i in range(len(self.classes_set)):
                     fpr, tpr, thresholds = \
-                    sk_metrics.roc_curve(self._labels, self._probs[:, i], pos_label=i+1)
+                        sk_metrics.roc_curve(self._labels, self._probs[:, i],
+                                             pos_label=self.classes_set[i])
                     self._fpr.append(fpr)
                     self._tpr.append(tpr)
+
         return self._fpr, self._tpr
 
     @property
@@ -148,7 +149,11 @@ class ClassificationModelMetrics(Metrics):
     def roc_auc(self):
         """ Calc Area under the ROC curve only for binary classification """
         if not hasattr(self, '_roc_auc'):
-            self._roc_auc = sk_metrics.auc(*self.roc_curve)
+            if self.classes_count == 2:
+                fpr, tpr = self.roc_curve
+                self._roc_auc = sk_metrics.auc(fpr[0], tpr[0])
+            else:
+                self._roc_auc = None
         return self._roc_auc
 
     @property
