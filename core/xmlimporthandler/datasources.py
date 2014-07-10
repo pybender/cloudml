@@ -102,14 +102,13 @@ class HttpDataSource(BaseDataSource):
         method = attrs.get('method', 'GET')
 
         # TODO: params?
-        print "Url", url
+        logging.info('Getting data from: %s' % url)
         try:
             resp = requests.request(
                 method, url, stream=True)
         except ConnectionError as exc:
             raise ImportHandlerException('Cannot reach url: {}'.format(
                 str(exc)))
-        print resp.json()
         try:
             result = resp.json()
         except Exception as exc:
