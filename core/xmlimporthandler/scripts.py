@@ -16,7 +16,7 @@ class ScriptManager(object):
     def add_python(self, script):
         exec(script, globals(), self.context)
 
-    def execute_function(self, script, value, row_data=None):
+    def execute_function(self, script, value, row_data=None, local_vars={}):
         def update_strings(val):
             if isinstance(val, basestring):
                 return "'%s'" % val
@@ -25,8 +25,9 @@ class ScriptManager(object):
         row_data = row_data or {}
         params = {'value': update_strings(value)}
         params.update(row_data)
+        params.update(local_vars)
         text = ParametrizedTemplate(script).safe_substitute(params)
-        return self._exec(text, row_data)
+        return self._exec(text, local_vars)
 
     def _exec(self, text, row_data=None):
         row_data = row_data or {}

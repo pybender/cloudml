@@ -130,7 +130,7 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
             data = {}
             data.update(row)
             data.update(row_data)
-            value = script_manager.execute_function(self.script, value, data)
+            value = script_manager.execute_function(self.script, value, data, row_data)
             convert_type = False
 
         if self.split and value:
