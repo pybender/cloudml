@@ -52,10 +52,13 @@ class Metrics(object):
 
     @property
     def classes_set(self):
+        """
+        :return: sorted list of labels, non repeating
+        """
         # nader201407709: we can't lose ordering, as we depend
         # on it in roc_curve calculation for multiclass classification
         if not hasattr(self, '_classes_set'):
-            self._classes_set = list(set(self._labels))
+            self._classes_set = sorted(list(set(self._labels)))
         return self._classes_set
 
     @property
@@ -76,6 +79,9 @@ class Metrics(object):
                 value = [recursive_convert(item) for item in v]
             elif isinstance(v, numpy.ndarray):
                 value = [recursive_convert(item) for item in v.tolist()]
+            elif isinstance(v, dict):
+                value = dict([(x, recursive_convert(y)) for x, y in v.iteritems()])
+
             return value
 
         # TODO: Think about moving logic to serializer
@@ -115,28 +121,27 @@ class ClassificationModelMetrics(Metrics):
                       'precision_recall_curve': 'Precision-recall curve'}
     MORE_DIMENSIONAL_METRICS = {'confusion_matrix': 'Confusion Matrix',
                                 'accuracy': 'Accuracy',
-                                'roc_curve': 'ROC curve'}
+                                'roc_curve': 'ROC curve',
+                                'roc_auc': 'Area under ROC curve',
+                                }
 
     @property
     def roc_curve(self):
-        """ Calc roc curve only for binary classification """
-        if not hasattr(self, '_fpr') or not hasattr(self, '_tpr'):
-            self._fpr = []
-            self._tpr = []
-            if self.classes_count == 2:
+        """
+        :return: {label1: [fpr tpr], label2: [fpr tpr], etc}
+        """
+        if not hasattr(self, '_roc_curve'):
+            self._roc_curve = {}
+            calculation_range = [1] if self.classes_count == 2 else range(len(self.classes_set))
+            for i in calculation_range:
+                pos_label = self.classes_set[i]
+                # on-vs-all labeling
+                labels = [1 if label == pos_label else 0 for label in self._labels]
                 fpr, tpr, thresholds = \
-                    sk_metrics.roc_curve(self._labels, self._probs[:, 1])
-                self._fpr.append(fpr)
-                self._tpr.append(tpr)
-            else:
-                for i in range(len(self.classes_set)):
-                    fpr, tpr, thresholds = \
-                        sk_metrics.roc_curve(self._labels, self._probs[:, i],
-                                             pos_label=self.classes_set[i])
-                    self._fpr.append(fpr)
-                    self._tpr.append(tpr)
+                    sk_metrics.roc_curve(labels, self._probs[:, i])
+                self._roc_curve[pos_label] = [fpr, tpr]
 
-        return self._fpr, self._tpr
+        return self._roc_curve
 
     @property
     def avarage_precision(self):
@@ -147,13 +152,18 @@ class ClassificationModelMetrics(Metrics):
 
     @property
     def roc_auc(self):
-        """ Calc Area under the ROC curve only for binary classification """
+        """
+        Calc Area under the ROC curve
+        :return: {label1: auc, label2: auc, etc}
+        """
         if not hasattr(self, '_roc_auc'):
-            if self.classes_count == 2:
-                fpr, tpr = self.roc_curve
-                self._roc_auc = sk_metrics.auc(fpr[0], tpr[0])
-            else:
-                self._roc_auc = None
+            self._roc_auc = {}
+            calculation_range = [1] if self.classes_count == 2 else range(len(self.classes_set))
+            for i in calculation_range:
+                pos_label = self.classes_set[i]
+                fpr = self.roc_curve[pos_label][0]
+                tpr = self.roc_curve[pos_label][1]
+                self._roc_auc[pos_label] = sk_metrics.auc(fpr, tpr)
         return self._roc_auc
 
     @property

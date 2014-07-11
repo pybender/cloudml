@@ -175,11 +175,18 @@ class TrainerTestCase(unittest.TestCase):
             precision, recall = metrics.precision_recall_curve
             self.assertIsInstance(precision, ndarray)
             self.assertIsInstance(recall, ndarray)
-            fpr, tpr = metrics.roc_curve
-            self.assertIsInstance(fpr[0], ndarray)
-            self.assertIsInstance(tpr[0], ndarray)
+
+            roc_curve = metrics.roc_curve
+            pos_label = metrics.classes_set[1]
+            self.assertTrue(roc_curve.has_key(pos_label))
+            self.assertEqual(2, len(roc_curve[pos_label]))
+            self.assertIsInstance(roc_curve[pos_label][0], ndarray)
+            self.assertIsInstance(roc_curve[pos_label][1], ndarray)
+
+            self.assertTrue(metrics.roc_auc.has_key(pos_label))
+            self.assertEquals(metrics.roc_auc[pos_label], 1.0)
+
             self.assertEquals(metrics.avarage_precision, 0.0)
-            self.assertEquals(metrics.roc_auc, 1.0)
             # make sure we have tested all published metrics
             for key in ClassificationModelMetrics.BINARY_METRICS.keys():
                 self.assertTrue(hasattr(metrics, key),
@@ -197,6 +204,9 @@ class TrainerTestCase(unittest.TestCase):
         from numpy import ndarray
         from core.trainer.metrics import ClassificationModelMetrics
 
+        self._config = FeatureModel(os.path.join(BASEDIR, 'trainer',
+                                                 'features.ndim_outcome.json'))
+
         with open(os.path.join(BASEDIR, 'trainer', 'trainer.data.ndim_outcome.json')) as fp:
             self._data = list(streamingiterload(fp.readlines(), source_format='json'))
 
@@ -210,12 +220,16 @@ class TrainerTestCase(unittest.TestCase):
         #precision, recall = metrics.precision_recall_curve
         #self.assertIsInstance(precision, ndarray)
         #self.assertIsInstance(recall, ndarray)
-        fpr, tpr = metrics.roc_curve
-        for arr in fpr + tpr:
-            self.assertIsInstance(arr, ndarray)
-        self.assertEqual(metrics.classes_count, len(fpr))
-        self.assertEqual(metrics.classes_count, len(tpr))
-        #self.assertEquals(metrics.avarage_precision, 0.0)
+        roc_curve = metrics.roc_curve
+        for pos_label in metrics.classes_set:
+            self.assertTrue(roc_curve.has_key(pos_label))
+            self.assertEqual(2, len(roc_curve[pos_label]))
+            self.assertIsInstance(roc_curve[pos_label][0], ndarray)
+            self.assertIsInstance(roc_curve[pos_label][1], ndarray)
+
+            self.assertTrue(metrics.roc_auc.has_key(pos_label))
+            self.assertEquals(metrics.roc_auc[pos_label], 1.0)
+
         #self.assertEquals(metrics.roc_auc, 1.0)
 
         for key in ClassificationModelMetrics.MORE_DIMENSIONAL_METRICS.keys():
