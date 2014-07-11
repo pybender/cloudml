@@ -116,6 +116,8 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
             if not self.join and isinstance(value, (list, tuple)) \
                     and len(value) == 1 and not self.multipart:
                 value = value[0]
+            if isinstance(value, (list, tuple)):
+                value = filter(None, value)
 
         if self.regex:
             match = re.search(self.regex, value)
