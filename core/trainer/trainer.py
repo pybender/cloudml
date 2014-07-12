@@ -230,6 +230,7 @@ class Trainer():
     def _evaluate_segment(self, segment):
         vectorized_data = []
         labels = None
+        classes = None
 
         # Get X and y
         logging.info('Extracting features...')
@@ -244,11 +245,13 @@ class Trainer():
                         vectorized_data.append(item)
             else:
                 labels = self._vect_data[segment][feature_name]
-        logging.info("Memory usage: %f" % 
+                classes = [feature['type'].transform(c) for c in
+                           self._classifier[segment].classes_.tolist()]
+        logging.info("Memory usage: %f" %
                      memory_usage(-1, interval=0, timeout=None)[0])
         logging.info('Evaluating model...')
         
-        self.metrics.evaluate_model(labels, vectorized_data,
+        self.metrics.evaluate_model(labels, classes, vectorized_data,
                                   self._classifier[segment], segment)
         logging.info("Memory usage: %f" % 
                      memory_usage(-1, interval=0, timeout=None)[0])

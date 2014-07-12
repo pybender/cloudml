@@ -12,19 +12,27 @@ class Metrics(object):
     def __init__(self):
         self._labels = []
         self._vectorized_data = []
-        self._classifier = []
+        self._classifier = {}
         self._preds = None
         self._probs = None
         self._true_data = OrderedDict()
+        self._classes_set = None
 
-    def evaluate_model(self, labels, vectorized_data, classifier, segment='default'):
+    def evaluate_model(self, labels, classes, vectorized_data, classifier,
+                       segment='default'):
         self._labels += labels
+        if self._classes_set and not classes == self._classes_set:
+            raise ValueError('Classes was set before to %s, '
+                             'now it is being set with %s, '
+                             'which should be equal' % (self._classes_set, classes))
+        self._classes_set = classes
+
         # if not self._vectorized_data:
         #     self._vectorized_data = vectorized_data
         # else:
         #     for a, b in zip(self._vectorized_data, vectorized_data):
         #         a =  numpy.append(a, b)
-        self._classifier.append(classifier)
+        self._classifier[segment] = classifier
 
         # Evaluating model...
         if(len(vectorized_data) == 1):
@@ -53,19 +61,13 @@ class Metrics(object):
     @property
     def classes_set(self):
         """
-        :return: sorted list of labels, non repeating
+        :return: classes as recognized by underline classifer
         """
-        # nader201407709: we can't lose ordering, as we depend
-        # on it in roc_curve calculation for multiclass classification
-        if not hasattr(self, '_classes_set'):
-            self._classes_set = sorted(list(set(self._labels)))
         return self._classes_set
 
     @property
     def classes_count(self):
-        if not hasattr(self, '_classes_count'):
-            self._classes_count = len(self.classes_set)
-        return self._classes_count
+        return len(self._classes_set)
 
     def get_metrics_dict(self):
         """
@@ -220,6 +222,8 @@ class RegressionModelMetrics(Metrics):
             sum = 0
             for i, y in enumerate(self._labels):
                 x = self._true_data.getrow(i)
+                # TODO nader20140712, introduction of segments will cause
+                # the following line to break
                 yp = self._classifier.predict(x)[0]
                 sum += (y - yp) ** 2
             self._rsme = numpy.sqrt(sum / len(self._labels))
