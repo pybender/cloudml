@@ -6,9 +6,17 @@
   },
   "features":[
     {
-      "name":"hire_outcome",
-      "type":"text",
-      "is-target-variable":true
+      "is-target-variable": true,
+      "type": "map",
+      "params": {
+          "mappings": {
+              "class2": 2,
+              "class3": 3,
+              "class1": 1
+          }
+      },
+      "is-required": true,
+      "name": "hire_outcome"
     },
     {
       "name":"contractor.dev_adj_score_recent",

@@ -232,6 +232,23 @@ class Trainer():
         labels = None
         classes = None
 
+        # TODO: we need something better than that. We should also consider
+        # other features types that can cause similar prooblems
+        # The classifier treats every class as string, while the labels of
+        # are getting converted by features transforms. So a mapping
+        # {"Class1": 1, "Class2": 2} gets labels of say [1, 2, 2, 1, 1]
+        # while the classes in the classifier is ['1', '2']
+        def covert_class(feature, value):
+            from core.trainer.feature_types.ordinal import OrdinalFeatureTypeInstance
+            if isinstance(feature['type'], OrdinalFeatureTypeInstance):
+                try:
+                    value = int(value)
+                except ValueError:
+                    pass
+                return value
+            else:
+                return feature['type'].transform(value)
+
         # Get X and y
         logging.info('Extracting features...')
         for feature_name, feature in self.features[segment].iteritems():
@@ -245,7 +262,7 @@ class Trainer():
                         vectorized_data.append(item)
             else:
                 labels = self._vect_data[segment][feature_name]
-                classes = [feature['type'].transform(c) for c in
+                classes = [covert_class(feature, c) for c in
                            self._classifier[segment].classes_.tolist()]
         logging.info("Memory usage: %f" %
                      memory_usage(-1, interval=0, timeout=None)[0])
