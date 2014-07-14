@@ -226,28 +226,10 @@ class Trainer():
 
         return self.metrics
 
-
     def _evaluate_segment(self, segment):
         vectorized_data = []
         labels = None
         classes = None
-
-        # TODO: we need something better than that. We should also consider
-        # other features types that can cause similar prooblems
-        # The classifier treats every class as string, while the labels of
-        # are getting converted by features transforms. So a mapping
-        # {"Class1": 1, "Class2": 2} gets labels of say [1, 2, 2, 1, 1]
-        # while the classes in the classifier is ['1', '2']
-        def covert_class(feature, value):
-            from core.trainer.feature_types.ordinal import OrdinalFeatureTypeInstance
-            if isinstance(feature['type'], OrdinalFeatureTypeInstance):
-                try:
-                    value = int(value)
-                except ValueError:
-                    pass
-                return value
-            else:
-                return feature['type'].transform(value)
 
         # Get X and y
         logging.info('Extracting features...')
@@ -262,7 +244,7 @@ class Trainer():
                         vectorized_data.append(item)
             else:
                 labels = self._vect_data[segment][feature_name]
-                classes = [covert_class(feature, c) for c in
+                classes = [_adjust_classifier_class(feature, c) for c in
                            self._classifier[segment].classes_.tolist()]
         logging.info("Memory usage: %f" %
                      memory_usage(-1, interval=0, timeout=None)[0])
@@ -562,7 +544,7 @@ class Trainer():
 
         return result
 
-    def get_weights_from_vectorizer(self, segment, feature_name, vectorizer, offset):
+    def _get_weights_from_vectorizer(self, segment, class_index, feature_name, vectorizer, offset):
         positive = []
         negative = []
          # Vectorizer
@@ -574,7 +556,7 @@ class Trainer():
         logging.info('Number of subfeatures %d' % len(feature_names))
         for j in range(0, len(feature_names)):
             name = '%s->%s' % (feature_name.replace(".", "->"), feature_names[j])
-            weight = self._classifier[segment].coef_[0][offset + j]
+            weight = self._classifier[segment].coef_[class_index][offset + j]
             weights = {
                 'name': name,
                 'weight': weight
@@ -586,6 +568,27 @@ class Trainer():
         return feature_names, positive, negative
 
     def get_weights(self, segment=DEFAULT_SEGMENT):
+        """
+        :param segment:
+        :return: {<class_label>:{'positive':[...], 'negative':[...]},
+                <class_label2>: etc}
+        """
+        weights_by_class = {}
+        enumeration = None
+        # Binary classifier vs Multiclass case (one-vs-all)
+        classifier = self._classifier[segment]
+        feature_model = self._feature_model
+        target_feature = feature_model.features[feature_model.target_variable]
+        if len(classifier.classes_) == 2:
+            enumeration = [(0, classifier.classes_[1])]
+        else:
+            enumeration = enumerate(classifier.classes_)
+        for index, class_value in enumeration:
+            class_value = _adjust_classifier_class(target_feature, class_value)
+            weights_by_class[class_value] = self._get_weights(index, segment)
+        return weights_by_class
+
+    def _get_weights(self, class_index, segment=DEFAULT_SEGMENT):
         positive = []
         negative = []
         index = 0
@@ -599,7 +602,7 @@ class Trainer():
                     logging.info('Number of topics %d' % transformer.num_features )
                     for j in range(0, transformer.num_features-1):
                         name = '%s->Topic #%d' % (feature_name.replace(".", "->"), j)
-                        weight = self._classifier[segment].coef_[0][index + j]
+                        weight = self._classifier[segment].coef_[class_index][index + j]
                         weights = {
                             'name': name,
                             'weight': weight
@@ -612,26 +615,26 @@ class Trainer():
                     index += transformer.num_topics
                 elif transformer is not None and hasattr(transformer,
                                                        'get_feature_names'):
-                    feature_names, p, n = self.get_weights_from_vectorizer(segment,
-                                                                           feature_name,
-                                                                           transformer,
-                                                                           index)
+                    feature_names, p, n = \
+                        self._get_weights_from_vectorizer(segment, class_index,
+                                                          feature_name, transformer,
+                                                          index)
                     index += len(feature_names)
                     positive = positive + p
                     negative = negative + n
 
                 elif preprocessor is not None and hasattr(preprocessor,
                                                           'get_feature_names'):
-                    feature_names, p, n = self.get_weights_from_vectorizer(segment, 
-                                                                           feature_name,
-                                                                           preprocessor,
-                                                                           index)
+                    feature_names, p, n = \
+                        self._get_weights_from_vectorizer(segment, class_index,
+                                                          feature_name, preprocessor,
+                                                          index)
                     index += len(feature_names)
                     positive = positive + p
                     negative = negative + n
                 else:
                     # Scaler or array
-                    weight = self._classifier[segment].coef_[0][index]
+                    weight = self._classifier[segment].coef_[class_index][index]
                     weights = {
                         'name': feature_name.replace(".", "->"),
                         'weight': weight
@@ -664,3 +667,27 @@ def list_to_dict(user_params):
         return dict((key, value) for (key, value) in param_list)
 
     return dict()
+
+
+# TODO: we need something better than that. We should also consider
+# other features types that can cause similar problems
+def _adjust_classifier_class(feature_dict, value):
+    """
+    The classifier treats every class as string, while the data labels are
+    getting converted by features transforms. So a mapping
+    {"Class1": 1, "Class2": 2} gets labels of say [1, 2, 2, 1, 1]
+    while the classes in the classifier is ['1', '2']
+
+    :param feature_dict: the feature responsible for the transform
+    :param value: value of the feature at the data point as stored by the classifier
+    :return: The feature value at the data point with correct data type
+    """
+    from core.trainer.feature_types.ordinal import OrdinalFeatureTypeInstance
+    if isinstance(feature_dict['type'], OrdinalFeatureTypeInstance):
+        try:
+            value = int(value)
+        except ValueError:
+            pass
+        return value
+    else:
+        return feature_dict['type'].transform(value)

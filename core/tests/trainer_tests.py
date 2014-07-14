@@ -5,6 +5,8 @@ import json
 import unittest
 import os
 import logging
+from StringIO import StringIO
+
 
 from core.trainer.config import FeatureModel
 from core.trainer.trainer import Trainer, DEFAULT_SEGMENT
@@ -121,7 +123,8 @@ class TrainerTestCase(unittest.TestCase):
             negative_expected = ['contractor->dev_country->usa']
 
             with open(path) as fp:
-                weights = json.load(fp)
+                weights_dict = json.load(fp)
+                weights = weights_dict['1']
                 self.assertIn('positive', weights)
                 self.assertIn('negative', weights)
 
@@ -164,6 +167,9 @@ class TrainerTestCase(unittest.TestCase):
             self.assertEqual(old_model.features.keys(), new_model.features.keys())
 
     def test_test(self):
+        """
+        Tests a binary classifier for csv and binary formats
+        """
         from numpy import ndarray
         from core.trainer.metrics import ClassificationModelMetrics
         for fmt in FORMATS:
@@ -199,8 +205,22 @@ class TrainerTestCase(unittest.TestCase):
             except Exception, exc:
                 self.fail(exc)
 
+            #
+            # Testing Weights, for a binary classifer
+            #
+            weights = self._trainer.get_weights()
+            self.assertEqual(1, len(weights.keys()))
+            for clazz, clazz_weights in weights.iteritems():
+                self.assertTrue(clazz_weights.has_key('positive'))
+                self.assertTrue(clazz_weights.has_key('negative'))
+                self.assertIsInstance(clazz_weights['positive'], list)
+                self.assertIsInstance(clazz_weights['negative'], list)
+
 
     def test_test_ndim_outcome(self):
+        """
+        Tests a multiclass classifier
+        """
         from numpy import ndarray
         from core.trainer.metrics import ClassificationModelMetrics
 
@@ -213,6 +233,9 @@ class TrainerTestCase(unittest.TestCase):
         self._trainer = Trainer(self._config)
         self._trainer.train(self._data)
 
+        #
+        # Testing metrics
+        #
         metrics = self._trainer.test(self._data)
         self.assertIsInstance(metrics, ClassificationModelMetrics)
         self.assertEquals(metrics.accuracy, 1.0)
@@ -230,8 +253,6 @@ class TrainerTestCase(unittest.TestCase):
             self.assertTrue(metrics.roc_auc.has_key(pos_label))
             self.assertEquals(metrics.roc_auc[pos_label], 1.0)
 
-        #self.assertEquals(metrics.roc_auc, 1.0)
-
         for key in ClassificationModelMetrics.MORE_DIMENSIONAL_METRICS.keys():
             self.assertTrue(hasattr(metrics, key),
                            'metric %s was not found or not tested' % (key))
@@ -242,6 +263,18 @@ class TrainerTestCase(unittest.TestCase):
             json.dumps(metrics_dict)
         except Exception, exc:
             self.fail(exc)
+
+        #
+        # Testing Weights
+        #
+        weights = self._trainer.get_weights()
+        self.assertEqual(metrics.classes_count, len(weights.keys()))
+        for clazz, clazz_weights in weights.iteritems():
+            self.assertTrue(clazz in metrics.classes_set)
+            self.assertTrue(clazz_weights.has_key('positive'))
+            self.assertTrue(clazz_weights.has_key('negative'))
+            self.assertIsInstance(clazz_weights['positive'], list)
+            self.assertIsInstance(clazz_weights['negative'], list)
 
     def _load_data(self, fmt):
         """
