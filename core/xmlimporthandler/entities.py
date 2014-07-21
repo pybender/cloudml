@@ -130,7 +130,7 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
             data = {}
             data.update(row)
             data.update(row_data)
-            value = script_manager.execute_function(self.script, value, data)
+            value = script_manager.execute_function(self.script, value, data, row_data)
             convert_type = False
 
         if self.split and value:
@@ -282,7 +282,8 @@ class EntityProcessor(object):
         Returns entity's processed next row data.
         """
         row = self.iterator.next()
-        row_data = self.params
+        row_data = {}
+        row_data.update(self.params)
         for field in self.entity.fields.values():
             row_data.update(self.process_field(field, row, row_data))
 
@@ -294,6 +295,8 @@ class EntityProcessor(object):
                 extra_params=row_data)
             # NOTE: Nested entity datasource should return only one row. Right?
             row_data.update(nested_processor.process_next())
+        for p in self.params:
+            row_data.pop(p)
         return row_data
 
     def process_field(self, field, row, row_data=None):
