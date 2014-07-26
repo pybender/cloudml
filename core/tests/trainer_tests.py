@@ -66,6 +66,17 @@ class TrainerSegmentTestCase(unittest.TestCase):
 
         return self._data
 
+    def test_transform(self):
+        self._train()
+        transform = self._trainer.transform(self._data)
+        self.assertEqual(3, len(transform))
+        self.assertEqual(transform['']['Y'], [1, 0])
+        self.assertEqual(transform['USA']['Y'], [0, 1])
+        self.assertEqual(transform['Canada']['Y'], [1, 0])
+        self.assertTrue(transform[''].has_key('X'))
+        self.assertTrue(transform['USA'].has_key('X'))
+        self.assertTrue(transform['Canada'].has_key('X'))
+
 
 class TrainerTestCase(unittest.TestCase):
 
@@ -275,6 +286,14 @@ class TrainerTestCase(unittest.TestCase):
             self.assertTrue(clazz_weights.has_key('negative'))
             self.assertIsInstance(clazz_weights['positive'], list)
             self.assertIsInstance(clazz_weights['negative'], list)
+
+    def test_transform(self):
+        for fmt in ['json']: #FORMATS:
+            self._load_data(fmt)
+            transform = self._trainer.transform(self._data)
+            self.assertEqual(1, len(transform))
+            self.assertEqual(transform[DEFAULT_SEGMENT]['Y'], [1, 0, 0, 1, 0, 1])
+            self.assertTrue(transform[DEFAULT_SEGMENT].has_key('X'))
 
     def _load_data(self, fmt):
         """
