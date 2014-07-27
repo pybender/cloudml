@@ -341,7 +341,11 @@ class Trainer():
             can be properly transformed with no exception handling.
         :return: feature data with transformation applied
         """
-        logging.info('Preparing feature %s for train' % (feature['name'], ))
+        if for_training:
+            logging.info('Preparing feature %s for train' % (feature['name'], ))
+        else:
+            logging.info('Preparing feature %s' % (feature['name'], ))
+
         input_format = feature.get('input-format', None)
         if input_format == 'list':
             data = map(lambda x: " ".join(x) if isinstance(x, list) else x, data)

@@ -74,8 +74,11 @@ class TrainerSegmentTestCase(unittest.TestCase):
         self.assertEqual(transform['USA']['Y'], [0, 1])
         self.assertEqual(transform['Canada']['Y'], [1, 0])
         self.assertTrue(transform[''].has_key('X'))
+        self.assertTrue(transform['']['X'].shape[0], 3)
         self.assertTrue(transform['USA'].has_key('X'))
+        self.assertTrue(transform['USA']['X'].shape[0], 2)
         self.assertTrue(transform['Canada'].has_key('X'))
+        self.assertTrue(transform['Canada']['X'].shape[0], 1)
 
 
 class TrainerTestCase(unittest.TestCase):
@@ -294,6 +297,7 @@ class TrainerTestCase(unittest.TestCase):
             self.assertEqual(1, len(transform))
             self.assertEqual(transform[DEFAULT_SEGMENT]['Y'], [1, 0, 0, 1, 0, 1])
             self.assertTrue(transform[DEFAULT_SEGMENT].has_key('X'))
+            self.assertTrue(transform[DEFAULT_SEGMENT]['X'].shape[0], 6)
 
     def _load_data(self, fmt):
         """
