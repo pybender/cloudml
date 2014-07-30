@@ -134,7 +134,7 @@ and "value" for target feature %s' % (feature['name']))
                 try:
                     value = expression_value % row_data
                     value = value.decode('utf8', 'ignore')
-                except:
+                except Exception, e:
                     logging.exception('Error when evaluate feature %s, expression_value: %s, expression_type: %s' % 
                             (feature['name'], expression_value, expression_type))
                     raise ProcessException('%s (feature: %s, expression: %s)' %
