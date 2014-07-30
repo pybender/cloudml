@@ -33,3 +33,6 @@ target
 
 readme_nli.txt
 .pydevproject
+
+cloudml.egg-info*
+*coverage
