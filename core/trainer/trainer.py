@@ -152,7 +152,7 @@ class Trainer():
 
         self.features[segment] = deepcopy(self._feature_model.features)
         labels = self._get_target_variable_labels(segment)
-        vectorized_data = self._get_vectorized_data(segment, True)
+        vectorized_data = self._get_vectorized_data(segment, self._train_prepare_feature)
         logging.info("Memory usage (vectorized data generated): %f" %
                      memory_usage(-1, interval=0, timeout=None)[0])
         logging.info('Training model...')
@@ -216,14 +216,15 @@ class Trainer():
         logging.info('Extracting features...')
         labels = self._get_target_variable_labels(segment)
         classes = self._get_classifier_adjusted_classes(segment)
-        vectorized_data = self._get_vectorized_data(segment, False)
+        vectorized_data = self._get_vectorized_data(
+            segment, self._test_prepare_feature)
         logging.info("Memory usage (vectorized data generated): %f" %
                      memory_usage(-1, interval=0, timeout=None)[0])
         logging.info('Evaluating model...')
-        
+
         self.metrics.evaluate_model(labels, classes, vectorized_data,
                                   self._classifier[segment], segment)
-        logging.info("Memory usage: %f" % 
+        logging.info("Memory usage: %f" %
                      memory_usage(-1, interval=0, timeout=None)[0])
 
     def predict(self, iterator, callback=None, ignore_error=True):
@@ -255,7 +256,8 @@ class Trainer():
                 # Get X and y
                 logging.info('Extracting features...')
                 true_labels[segment] = self._get_target_variable_labels(segment)
-                vectorized_data = self._get_vectorized_data(segment, False)
+                vectorized_data = self._get_vectorized_data(
+                    segment, self._test_prepare_feature)
                 logging.info("Memory usage (vectorized data generated): %f" %
                              memory_usage(-1, interval=0, timeout=None)[0])
                 logging.info('Evaluating model...')
@@ -288,7 +290,8 @@ class Trainer():
             logging.info('Processing Segment: %s', segment)
             segments[segment] = {
                 'Y': self._get_target_variable_labels(segment),
-                'X': scipy.sparse.hstack(self._get_vectorized_data(segment, False))
+                'X': scipy.sparse.hstack(self._get_vectorized_data(
+                    segment, self._test_prepare_feature))
             }
         return segments
 
@@ -328,50 +331,63 @@ class Trainer():
                 trans_sub_features.append(self._to_column(v))
         return trans_sub_features
 
-    def _prepare_feature(self, feature, data, for_training):
+    def _train_prepare_feature(self, feature, data):
         """
         Uses the appropriate vectorizer or scaler on a specific feature and its
-        training data.
+        training data. Used for unfitted feature in untrained model.
 
         :param feature: the name of the feature to prepare. Used to retrieve the
             appropriate vectorizer.
         :param data: a list of the data for extracted for the given feature.
-        :param for_training: bool, when True failed transformations will be
-            handled and returns None, otherwise assumes all feature data
-            can be properly transformed with no exception handling.
         :return: feature data with transformation applied
         """
-        if for_training:
-            logging.info('Preparing feature %s for train' % (feature['name'], ))
-        else:
-            logging.info('Preparing feature %s' % (feature['name'], ))
+        logging.info('Preparing feature %s for train' % (feature['name'], ))
+        input_format = feature.get('input-format', None)
+        if input_format == 'list':
+            data = map(lambda x: " ".join(x) if isinstance(x, list) else x, data)
+        if feature['type'].preprocessor:
+            return feature['type'].preprocessor.fit_transform(data)
 
+        if feature['transformer'] is not None:
+            try:
+                transformed_data = feature['transformer'].fit_transform(data)
+                feature['transformer'].num_features = transformed_data.shape[1]
+            except ValueError as e:
+                logging.warn('Feature %s will be ignored due to '
+                             'transformation error: %s.' %
+                             (feature['name'], str(e)))
+                transformed_data = None
+                feature['tranformer'] = SuppressTransformer()
+            return transformed_data
+        elif feature.get('scaler', None) is not None:
+            return feature['scaler'].fit_transform(self._to_column(data).toarray())
+        else:
+            return self._to_column(data)
+
+    def _test_prepare_feature(self, feature, data):
+        """
+        Uses the appropriate vectorizer or scaler on a specific feature and its
+        training data. Used for fitted feature in a trained model.
+
+        :param feature: the name of the feature to prepare. Used to retrieve the
+            appropriate vectorizer.
+        :param data: a list of the data for extracted for the given feature.
+        :return: feature data with transformation applied
+        """
+        logging.debug('Preparing feature %s for test' % (feature['name'], ))
         input_format = feature.get('input-format', None)
         if input_format == 'list':
             data = map(lambda x: " ".join(x) if isinstance(x, list) else x, data)
 
         if feature['type'].preprocessor:
-            return feature['type'].preprocessor.fit_transform(data)
-
+            return feature['type'].preprocessor.transform(data)
         if feature['transformer'] is not None:
-            if for_training is True:
-                try:
-                    transformed_data = feature['transformer'].fit_transform(data)
-                    feature['transformer'].num_features = transformed_data.shape[1]
-                except ValueError as e:
-                    logging.warn('Feature %s will be ignored due to '
-                                 'transformation error: %s.' %
-                                  (feature['name'], str(e)))
-                    transformed_data = None
-                    feature['tranformer'] = SuppressTransformer()
-                return transformed_data
+            if isinstance(feature['transformer'], SuppressTransformer):
+                return None
             else:
-                if isinstance(feature['transformer'], SuppressTransformer):
-                    return None
-                else:
-                    return feature['transformer'].transform(data)
+                return feature['transformer'].transform(data)
         elif feature.get('scaler', None) is not None:
-            return feature['scaler'].fit_transform(self._to_column(data).toarray())
+            return feature['scaler'].transform(self._to_column(data).toarray())
         else:
             return self._to_column(data)
 
@@ -379,7 +395,7 @@ class Trainer():
         return numpy.transpose(
             scipy.sparse.csc_matrix([0.0 if item is None else float(item) for item in x]))
 
-    def _prepare_data(self, iterator, callback=None, 
+    def _prepare_data(self, iterator, callback=None,
                       ignore_error=True, save_raw=False):
         """
         Iterates over input data and stores them by column, ignoring lines
@@ -399,7 +415,7 @@ class Trainer():
             self._count += 1
             try:
                 data = self._apply_feature_types(row)
-                
+
                 if self.with_segmentation:
                     segment = self._get_segment_name(data)
                 else:
@@ -656,11 +672,11 @@ class Trainer():
         """
         return self.features[segment][self._feature_model.target_variable]
 
-    def _get_vectorized_data(self, segment, for_training):
+    def _get_vectorized_data(self, segment, fn_prepare_feature):
         """
         applies transforms to features values in `_vect_data`
         :param segment:
-        :param for_training: bool, affects how feature transform is handled
+        :param fn_prepare_feature: function responsible for preparing feature
         :return: sparse matrix of tranformed data
         """
         if self._vect_data is None or self._vect_data == {}:
@@ -670,10 +686,9 @@ class Trainer():
         for feature_name, feature in self.features[segment].iteritems():
             if feature_name not in self._feature_model.group_by and \
                     not feature_name == self._feature_model.target_variable:
-                item = self._prepare_feature(
-                    feature,
-                    self._vect_data[segment][feature_name],
-                    for_training)
+                item = fn_prepare_feature(feature,
+                                          self._vect_data[segment][
+                                              feature_name])
                 if item is not None:
                     # Convert item to csc_matrix, since hstack fails with arrays
                     vectorized_data.append(scipy.sparse.csc_matrix(item))
