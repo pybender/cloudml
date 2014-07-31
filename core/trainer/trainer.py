@@ -4,12 +4,12 @@ _author__ = 'ifoukarakis, papadimitriou'
 import json
 import logging
 import numpy
+import scipy.sparse
 
 from copy import deepcopy
 from collections import defaultdict
 from time import gmtime, strftime
 from operator import itemgetter
-from scipy.sparse import hstack, csc_matrix
 from memory_profiler import memory_usage
 
 from feature_types import FEATURE_TYPE_DEFAULTS
@@ -162,7 +162,7 @@ class Trainer():
         # if(len(vectorized_data) == 1):
         #     true_data = numpy.array(vectorized_data[0])
         # else:
-        true_data = hstack(vectorized_data)
+        true_data = scipy.sparse.hstack(vectorized_data)
         logging.info("Memory usage (true data generated): %f" %
                      memory_usage(-1, interval=0, timeout=None)[0])
         vectorized_data = None
@@ -262,7 +262,7 @@ class Trainer():
                 if len(vectorized_data) == 1:
                     predict_data = numpy.array(vectorized_data[0])
                 else:
-                    predict_data = hstack(vectorized_data)
+                    predict_data = scipy.sparse.hstack(vectorized_data)
                 probs[segment] = self._classifier[segment].predict_proba(predict_data)
                 labels[segment] = self._classifier[segment].classes_[probs[segment].argmax(axis=1)]
             probs = numpy.vstack(probs.values())
@@ -288,7 +288,7 @@ class Trainer():
             logging.info('Processing Segment: %s', segment)
             segments[segment] = {
                 'Y': self._get_target_variable_labels(segment),
-                'X': hstack(self._get_vectorized_data(segment, False))
+                'X': scipy.sparse.hstack(self._get_vectorized_data(segment, False))
             }
         return segments
 
@@ -377,7 +377,7 @@ class Trainer():
 
     def _to_column(self, x):
         return numpy.transpose(
-            csc_matrix([0.0 if item is None else float(item) for item in x]))
+            scipy.sparse.csc_matrix([0.0 if item is None else float(item) for item in x]))
 
     def _prepare_data(self, iterator, callback=None, 
                       ignore_error=True, save_raw=False):
@@ -676,7 +676,7 @@ class Trainer():
                     for_training)
                 if item is not None:
                     # Convert item to csc_matrix, since hstack fails with arrays
-                    vectorized_data.append(csc_matrix(item))
+                    vectorized_data.append(scipy.sparse.csc_matrix(item))
         return vectorized_data
 
 
