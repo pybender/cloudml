@@ -148,7 +148,7 @@ class Trainer():
 
     def _train_segment(self, segment):
         # Get X and y
-        logging.info('Extracting features...')
+        logging.info('Extracting features for segment %s ...', segment)
 
         self.features[segment] = deepcopy(self._feature_model.features)
         labels = self._get_target_variable_labels(segment)
@@ -213,7 +213,7 @@ class Trainer():
 
     def _evaluate_segment(self, segment):
         # Get X and y
-        logging.info('Extracting features...')
+        logging.info('Extracting features for segment %s ...', segment)
         labels = self._get_target_variable_labels(segment)
         classes = self._get_classifier_adjusted_classes(segment)
         vectorized_data = self._get_vectorized_data(
@@ -452,16 +452,21 @@ class Trainer():
              self._feature_model.group_by])
 
     def _get_labels(self):
-        feature_name = self._feature_model.target_variable
         if self.with_segmentation:
-            classes_ = []
+            classes_ = {}
             for segment, classifier in self._classifier.iteritems():
                 # Note: Possible problems when value of the group_by field
                 # equals `DEFAULT_SEGMENT`
                 # if segment != DEFAULT_SEGMENT:
                 if hasattr(classifier, '_enc'):
-                    classes_ += map(str, classifier.classes_.tolist())
-            return set(classes_)
+                    classes_[segment] = map(str, classifier.classes_.tolist())
+
+            assert all(map(
+                lambda x: x == classes_.values()[0], classes_.values())), \
+                'The assumption is that all segments should have the same ' \
+                'classifier.classes_'
+
+            return classes_.values()[0]
         else:
             return map(str, self._classifier[DEFAULT_SEGMENT].classes_.tolist())
 
@@ -705,7 +710,7 @@ def list_to_dict(user_params):
 
 # TODO: we need something better than that. We should also consider
 # other features types that can cause similar problems
-def _adjust_classifier_class(feature, value):
+def _adjust_classifier_class(feature, str_value):
     """
     The classifier treats every class as string, while the data labels are
     getting converted by features transforms. So a mapping
@@ -717,11 +722,20 @@ def _adjust_classifier_class(feature, value):
     :return: The feature value at the data point with correct data type
     """
     from core.trainer.feature_types.ordinal import OrdinalFeatureTypeInstance
+    from core.trainer.feature_types.primitive_types import \
+        PrimitiveFeatureTypeInstance
+
+    assert isinstance(str_value, str) or isinstance(str_value, unicode), \
+        'str_value should be string it is of type %s' % (type(str_value))
+
     if isinstance(feature['type'], OrdinalFeatureTypeInstance):
         try:
-            value = int(value)
+            value = int(str_value)
         except ValueError:
             pass
         return value
+    elif isinstance(feature['type'], PrimitiveFeatureTypeInstance) and \
+            feature['type'].python_type is bool:
+        return str_value.lower() in ['true', '1']
     else:
-        return feature['type'].transform(value)
+        return feature['type'].transform(str_value)
