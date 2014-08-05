@@ -1,3 +1,7 @@
+from mock import MagicMock, patch
+from core.trainer.feature_types import PrimitiveFeatureTypeInstance
+from sklearn.preprocessing import MinMaxScaler
+
 __author__ = 'ifouk'
 
 
@@ -9,7 +13,8 @@ from StringIO import StringIO
 
 
 from core.trainer.config import FeatureModel
-from core.trainer.trainer import Trainer, DEFAULT_SEGMENT
+from core.trainer.trainer import Trainer, DEFAULT_SEGMENT, \
+    _adjust_classifier_class
 from jsonpath import jsonpath
 from core.trainer.store import store_trainer, load_trainer
 from core.trainer.streamutils import streamingiterload
@@ -38,6 +43,7 @@ class TrainerSegmentTestCase(unittest.TestCase):
         title_vectorizer = title_feature['transformer']
         self.assertEquals(title_vectorizer.get_feature_names(), ['engineer',
                                                                  'python'])
+        self.assertEqual(['0', '1'], self._trainer._get_labels())
 
         metr =  self._trainer.test(self._get_iterator())
 
@@ -80,6 +86,31 @@ class TrainerSegmentTestCase(unittest.TestCase):
         self.assertTrue(transform['Canada'].has_key('X'))
         self.assertTrue(transform['Canada']['X'].shape[0], 1)
 
+    def test_get_labels(self):
+        segment1_mock = MagicMock()
+        segment2_mock = MagicMock()
+        classifier = {
+            'Segment1': segment1_mock,
+            'Segment2': segment2_mock
+        }
+        segment1_mock._enc = 'something'
+        segment1_mock.classes_.tolist.return_value = ['False', 'True']
+        segment2_mock._enc = 'something'
+        segment2_mock.classes_.tolist.return_value = ['False', 'True']
+
+        trainer = Trainer(self._config)
+        trainer.set_classifier(classifier)
+        trainer.with_segmentation = True
+        self.assertEqual(['False', 'True'], trainer._get_labels())
+
+        # Test assumption of segments having identical classes set violated
+        segment1_mock.classes_.tolist.return_value = ['True', 'False']
+        segment2_mock.classes_.tolist.return_value = ['False', 'True']
+        trainer = Trainer(self._config)
+        trainer.set_classifier(classifier)
+        trainer.with_segmentation = True
+        self.assertRaises(AssertionError, trainer._get_labels)
+
 
 class TrainerTestCase(unittest.TestCase):
 
@@ -98,6 +129,7 @@ class TrainerTestCase(unittest.TestCase):
             title_vectorizer = title_feature['transformer']
             self.assertEquals(title_vectorizer.get_feature_names(), ['engineer',
                                                                      'python'])
+            self.assertEqual(['0', '1'], self._trainer._get_labels())
 
     def test_train_class_weight(self):
         config = {
@@ -310,6 +342,45 @@ class TrainerTestCase(unittest.TestCase):
 
         self._trainer = Trainer(self._config)
         self._trainer.train(self._data)
+
+
+class HelpersTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.feature_model = FeatureModel('./testdata/features.json')
+
+    def test_adjust_classifier_class_boolean(self):
+        f = self.feature_model.features['contractor.dev_is_looking']
+
+        self.assertTrue(_adjust_classifier_class(f, 'True'))
+        self.assertTrue(_adjust_classifier_class(f, 'true'))
+        self.assertTrue(_adjust_classifier_class(f, '1'))
+
+        self.assertFalse(_adjust_classifier_class(f, 'False'))
+        self.assertFalse(_adjust_classifier_class(f, 'false'))
+        self.assertFalse(_adjust_classifier_class(f, '0'))
+        self.assertFalse(_adjust_classifier_class(f, '-1'))
+
+    def test_adjust_classifier_class_int(self):
+        f = self.feature_model.features['employer.op_tot_jobs_filled']
+
+        self.assertEqual(1, _adjust_classifier_class(f, '1'))
+        self.assertEqual(0, _adjust_classifier_class(f, '0'))
+        self.assertEqual(-1, _adjust_classifier_class(f, '-1'))
+
+    def test_adjust_classifier_class_float(self):
+        f = self.feature_model.features['contractor.dev_adj_score_recent']
+
+        self.assertEqual(1.1, _adjust_classifier_class(f, '1.1'))
+        self.assertEqual(0.01, _adjust_classifier_class(f, '0.01'))
+        self.assertEqual(-1.001, _adjust_classifier_class(f, '-1.001'))
+
+    def test_adjust_classifier_class_ordinal(self):
+        f = self.feature_model.features['hire_outcome']
+
+        self.assertEqual(1, _adjust_classifier_class(f, '1'))
+        self.assertEqual(0, _adjust_classifier_class(f, '0'))
+
 
 if __name__ == '__main__':
     unittest.main()
