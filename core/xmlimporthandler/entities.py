@@ -258,6 +258,7 @@ class EntityProcessor(object):
 
         # Building the iterator for the entity
         query = entity.build_query(params)
+            
         self.datasource = import_handler.plan.datasources.get(
             entity.datasource_name)
         # Process sqoop imports
@@ -270,9 +271,12 @@ class EntityProcessor(object):
                 logging.info('Run query %s' % sqoop_query)
                 sqoop_iter = sqoop_import.datasource.run_queries(sqoop_query)
 
-        if self.datasource.config.tag == 'pig':
+        if self.datasource.type == 'pig':
             self.datasource.run_sqoop_imports(self.entity.sqoop_imports)
             self.datasource.set_ih(import_handler)
+
+        if self.datasource.type == 'input':
+            query = import_handler.params[query]
 
         self.iterator = self.datasource._get_iter(
             query, self.entity.query_target)

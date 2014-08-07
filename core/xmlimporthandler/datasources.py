@@ -402,12 +402,31 @@ socks proxy localhost:12345'''  % {'dns': masterpublicdnsname})
         return self.get_result()
 
 
+class InputDataSource(BaseDataSource):
+
+    def __init__(self):
+        self.config = {}
+        self.name = 'input'
+        self.type = 'input'
+
+    def _get_iter(self, query=None, query_target=None):
+        try:
+            result = json.loads(query)
+        except Exception as exc:
+            raise ImportHandlerException('Cannot parse json: {}'.format(
+                str(exc)))
+        if isinstance(result, dict):
+            return iter([result])
+        return iter(result)
+
+
 class DataSource(object):
     DATASOURCE_DICT = {
         'db': DbDataSource,
         'pig': PigDataSource,
         'http': HttpDataSource,
-        'csv': CsvDataSource
+        'csv': CsvDataSource,
+        'input': InputDataSource
     }
 
     @classmethod
