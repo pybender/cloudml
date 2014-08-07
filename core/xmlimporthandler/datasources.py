@@ -409,6 +409,9 @@ class InputDataSource(BaseDataSource):
         self.name = 'input'
         self.type = 'input'
 
+    def get_params(self):
+        return {}
+
     def _get_iter(self, query=None, query_target=None):
         try:
             result = json.loads(query)
