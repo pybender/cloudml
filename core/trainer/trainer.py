@@ -195,6 +195,7 @@ class Trainer():
         self.metrics = self.metrics_class()
 
         self._prepare_data(iterator, callback, save_raw=save_raw)
+        self._check_data_for_test()
         count = self._count
         if percent:
             self._count = int(self._count * percent / 100)
@@ -394,6 +395,33 @@ class Trainer():
     def _to_column(self, x):
         return numpy.transpose(
             scipy.sparse.csc_matrix([0.0 if item is None else float(item) for item in x]))
+
+    def _check_data_for_test(self):
+        """
+        Checks input data (examples) in a trained model for testing. The checks
+        are for potential incomplete data/examples that might prevent successful
+        testing.
+        :return: True if things are OK, false otherwise
+        """
+        problems = []
+        print 'self._segments %s' % self._segments
+        for segment in self._segments:
+            labels = self._get_classifier_adjusted_classes(segment)
+            target_feature = self._get_target_feature(segment)['name']
+            examples_per_label = dict((c, 0) for c in labels)
+            examples_per_label[None] = 0
+            for value in self._vect_data[segment][target_feature]:
+                examples_per_label[value] += 1
+            for label, _ in filter(
+                    lambda (label, c): not label is None and c == 0,
+                    examples_per_label.iteritems()):
+                msg = 'In Segment: %s, Class: %s, has no examples. ' \
+                      'Test evaluation will fail' % \
+                      (segment, label)
+                problems.append(msg)
+                logging.warn(msg)
+        if len(problems) > 0:
+            raise Exception('\n'.join(problems))
 
     def _prepare_data(self, iterator, callback=None,
                       ignore_error=True, save_raw=False):

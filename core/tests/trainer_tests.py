@@ -331,6 +331,33 @@ class TrainerTestCase(unittest.TestCase):
             self.assertTrue(transform[DEFAULT_SEGMENT].has_key('X'))
             self.assertTrue(transform[DEFAULT_SEGMENT]['X'].shape[0], 6)
 
+    def test_no_examples_for_label(self):
+        """
+        Tests the case there is no example for a given label
+        """
+
+        config = FeatureModel(os.path.join(BASEDIR, 'trainer',
+                                                 'features.ndim_outcome.json'))
+
+
+        with open(os.path.join(BASEDIR, 'trainer', 'trainer.data.ndim_outcome.json')) as fp:
+            lines = fp.readlines()
+
+        train_lines = []
+        test_lines = []
+        for line in lines:
+            train_lines.append(line)
+            if line.find('class3') < 0:
+                test_lines.append(line)
+
+        train_data = list(streamingiterload(train_lines, source_format='json'))
+        test_data = list(streamingiterload(test_lines, source_format='json'))
+
+        self._trainer = Trainer(config)
+        self._trainer.train(train_data)
+
+        self.assertRaises(Exception, self._trainer.test, test_data)
+
     def _load_data(self, fmt):
         """
         Load test data.
