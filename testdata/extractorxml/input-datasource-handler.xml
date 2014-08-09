@@ -1,0 +1,14 @@
+<plan>
+  <inputs>
+    <param name="contractor_info" type="string"/>
+  </inputs>
+  <script><![CDATA[]]></script>
+  <datasources>
+    <db dbname="something" host="localhost" name="odw" password="password" user="fake" vendor="postgres"/>
+  </datasources>
+  <import>
+    <entity datasource="input" query="contractor_info" name="contractor_info">
+      <field join="," jsonpath="$.skills.*.skl_name" name="contractor.skills"/>
+    </entity>
+  </import>
+</plan>

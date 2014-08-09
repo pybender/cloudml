@@ -82,8 +82,9 @@ class ExtractionPlan(object):
         """
         for ds_config in iterchildren(config.datasources):
             ds = DataSource.factory(ds_config)
-            print ds.name, ds_config.attrib
             self.datasources[ds.name] = ds
+        ds = DataSource.DATASOURCE_DICT['input']()
+        self.datasources[ds.name] = ds
 
     def load_scripts(self, config):
         """

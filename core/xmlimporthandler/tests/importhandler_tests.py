@@ -278,3 +278,18 @@ class CompositeTypeTest(unittest.TestCase):
         self.assertEqual(row['country_pair'], 'Australia,Philippines')
         self.assertEqual(
             row['tsexams']['English Spelling Test (U.S. Version)'], 5)
+
+
+class InputDatasourceTest(unittest.TestCase):
+
+    def setUp(self):
+        self._plan = ExtractionPlan(os.path.join(BASEDIR,
+                                    'extractorxml',
+                                    'input-datasource-handler.xml'))
+
+    def test_json(self):
+        self._extractor = ImportHandler(self._plan, {
+            'contractor_info': '{ "skills":[{"skl_status":"0","ts_tests_count":"0","skl_name":"microsoft-excel","skl_external_link":"http:\/\/en.wikipedia.org\/wiki\/Microsoft_Excel","skl_has_tests":"1","skl_pretty_name":"Microsoft Excel","skill_uid":"475721704063008779","skl_rank":"1","skl_description":"Microsoft Excel is a proprietary commercial spreadsheet application written and distributed by Microsoft for Microsoft Windows and Mac OS X. It features calculation, graphing tools, pivot tables, and a macro programming language called Visual Basic for Applications."},{"skl_status":"0","ts_tests_count":"0","skl_name":"microsoft-word","skl_external_link":"http:\/\/en.wikipedia.org\/wiki\/Microsoft_Word","skl_has_tests":"1","skl_pretty_name":"Microsoft Word","skill_uid":"475721704071397377","skl_rank":"2","skl_description":"Microsoft Office Word is a word processor designed by Microsoft."}]}',
+        })
+        row = self._extractor.next()
+        self.assertEqual(row['contractor.skills'], 'microsoft-excel,microsoft-word')
