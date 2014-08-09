@@ -401,7 +401,7 @@ class Trainer():
         Checks input data (examples) in a trained model for testing. The checks
         are for potential incomplete data/examples that might prevent successful
         testing.
-        :return: True if things are OK, false otherwise
+        Raises exception if checks fail.
         """
         problems = []
         print 'self._segments %s' % self._segments
