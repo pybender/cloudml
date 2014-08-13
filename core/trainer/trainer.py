@@ -191,11 +191,10 @@ class Trainer():
                     names and value the values of the features per column.
 
         """
-        metrics = []
         self.metrics = self.metrics_class()
 
         self._prepare_data(iterator, callback, save_raw=save_raw)
-        self._check_data_for_test()
+        self._test_empty_labels = self._check_data_for_test()
         count = self._count
         if percent:
             self._count = int(self._count * percent / 100)
@@ -224,7 +223,8 @@ class Trainer():
         logging.info('Evaluating model...')
 
         self.metrics.evaluate_model(labels, classes, vectorized_data,
-                                  self._classifier[segment], segment)
+                                  self._classifier[segment],
+                                  self._test_empty_labels[segment], segment)
         logging.info("Memory usage: %f" %
                      memory_usage(-1, interval=0, timeout=None)[0])
 
@@ -409,26 +409,27 @@ class Trainer():
         are for potential incomplete data/examples that might prevent successful
         testing.
         Raises exception if checks fail.
+        :return: dictionary keyed on segments, every key is a list labels with
+        no corresponding examples for that label in the keyed segment
         """
-        problems = []
+        empty_labels = {}
         print 'self._segments %s' % self._segments
         for segment in self._segments:
+            empty_labels[segment] = []
             labels = self._get_classifier_adjusted_classes(segment)
             target_feature = self._get_target_feature(segment)['name']
-            examples_per_label = dict((c, 0) for c in labels)
-            examples_per_label[None] = 0
-            for value in self._vect_data[segment][target_feature]:
-                examples_per_label[value] += 1
-            for label, _ in filter(
-                    lambda (label, c): not label is None and c == 0,
-                    examples_per_label.iteritems()):
+            examples_per_label = dict((c, 0) for c in labels if c is not None)
+            for label in self._vect_data[segment][target_feature]:
+                if label is not None:
+                    examples_per_label[label] += 1
+            for label, _ in filter(lambda (label, c): c == 0,
+                                   examples_per_label.iteritems()):
                 msg = 'In Segment: %s, Class: %s, has no examples. ' \
                       'Test evaluation will fail' % \
                       (segment, label)
-                problems.append(msg)
                 logging.warn(msg)
-        if len(problems) > 0:
-            raise Exception('\n'.join(problems))
+                empty_labels[segment].append(label)
+        return empty_labels
 
     def _prepare_data(self, iterator, callback=None,
                       ignore_error=True, save_raw=False):

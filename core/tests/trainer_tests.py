@@ -1,4 +1,5 @@
 from mock import MagicMock, patch
+import numpy
 from core.trainer.feature_types import PrimitiveFeatureTypeInstance
 from sklearn.preprocessing import MinMaxScaler
 
@@ -335,20 +336,17 @@ class TrainerTestCase(unittest.TestCase):
         """
         Tests the case there is no example for a given label
         """
+        from numpy import ndarray
+        from core.trainer.metrics import ClassificationModelMetrics
 
         config = FeatureModel(os.path.join(BASEDIR, 'trainer',
                                                  'features.ndim_outcome.json'))
 
-
         with open(os.path.join(BASEDIR, 'trainer', 'trainer.data.ndim_outcome.json')) as fp:
-            lines = fp.readlines()
+            dataset = json.loads(fp.read())
 
-        train_lines = []
-        test_lines = []
-        for line in lines:
-            train_lines.append(line)
-            if line.find('class3') < 0:
-                test_lines.append(line)
+        train_lines = json.dumps(dataset)
+        test_lines = json.dumps(filter(lambda x: x['hire_outcome'] != 'class3', dataset))
 
         train_data = list(streamingiterload(train_lines, source_format='json'))
         test_data = list(streamingiterload(test_lines, source_format='json'))
@@ -356,7 +354,29 @@ class TrainerTestCase(unittest.TestCase):
         self._trainer = Trainer(config)
         self._trainer.train(train_data)
 
-        self.assertRaises(Exception, self._trainer.test, test_data)
+        self._trainer = Trainer(config)
+        self._trainer.train(train_data)
+        metrics = self._trainer.test(test_data)
+        self.assertEqual({DEFAULT_SEGMENT: [3]},
+                         self._trainer._test_empty_labels)
+        #
+        # Testing metrics
+        #
+        self.assertIsInstance(metrics, ClassificationModelMetrics)
+        self.assertEquals(metrics.accuracy, 1.0)
+        self.assertIsInstance(metrics.confusion_matrix, ndarray)
+        roc_curve = metrics.roc_curve
+        for pos_label in metrics.classes_set:
+            if pos_label == 3:
+                self.assertTrue(not numpy.any(roc_curve[pos_label][1]))
+            else:
+                self.assertEquals(metrics.roc_auc[pos_label], 1.0)
+
+        self.assertEqual(metrics.roc_auc, {1: 1.0, 2: 1.0, 3: 0.0})
+        self.assertEqual(metrics.confusion_matrix.tolist(), [[2, 0, 0],
+                                                             [0, 3, 0],
+                                                             [0, 0, 0]])
+
 
     def _load_data(self, fmt):
         """
