@@ -245,6 +245,10 @@ class Trainer():
         labels = {}
         probs = {}
         true_labels = {}
+        indexes = defaultdict(int)
+        ordered_probs = []
+        ordered_labels = []
+        ordered_true_labels = []
 
         self._prepare_data(iterator, callback, ignore_error)
         logging.info('Processed %d lines, ignored %s lines'
@@ -268,13 +272,16 @@ class Trainer():
                     predict_data = scipy.sparse.hstack(vectorized_data)
                 probs[segment] = self._classifier[segment].predict_proba(predict_data)
                 labels[segment] = self._classifier[segment].classes_[probs[segment].argmax(axis=1)]
-            probs = numpy.vstack(probs.values())
-            labels = numpy.concatenate(labels.values())
-            true_labels = numpy.concatenate(true_labels.values())
-
-        return {'probs': probs,
-                'true_labels': true_labels,
-                'labels': labels,
+            # Restore order
+            for segment in self._order_data: 
+                indexes[segment] += 1
+                ordered_probs.append(probs[segment][indexes[segment]-1])
+                ordered_labels.append(labels[segment][indexes[segment]-1])
+                ordered_true_labels.append(true_labels[segment][indexes[segment]-1])
+                
+        return {'probs': ordered_probs,
+                'true_labels': ordered_true_labels,
+                'labels': ordered_labels,
                 'classes': self._classifier[segment].classes_}
 
     def transform(self, iterator):
@@ -437,6 +444,7 @@ class Trainer():
         self._count = 0
         self._ignored = 0
         self._raw_data = defaultdict(list)
+        self._order_data = []
         self._vect_data = {}
         segments = {}
         for row in iterator:
@@ -453,6 +461,7 @@ class Trainer():
                     self._vect_data[segment] = defaultdict(list)
                     segments[segment] = 0
                 segments[segment] += 1
+                self._order_data.append(segment)
 
                 for feature_name in self._feature_model.features:
                     # if feature_name in self._feature_model.group_by:
