@@ -151,6 +151,11 @@ class ClassificationModelMetrics(Metrics):
                 if pos_label in self._empty_labels:
                     tpr = numpy.zeros_like(tpr)
 
+                # A very edge case where there is only one label in the test set
+                if self.classes_count - len(self._empty_labels) == 1 and \
+                        numpy.all(numpy.isnan(fpr)):
+                    fpr = numpy.zeros_like(fpr)
+
                 self._roc_curve[pos_label] = [fpr, tpr]
 
         return self._roc_curve

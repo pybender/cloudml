@@ -339,24 +339,29 @@ class TrainerTestCase(unittest.TestCase):
         from numpy import ndarray
         from core.trainer.metrics import ClassificationModelMetrics
 
-        config = FeatureModel(os.path.join(BASEDIR, 'trainer',
-                                                 'features.ndim_outcome.json'))
+        def do_train(exclude_labels):
 
-        with open(os.path.join(BASEDIR, 'trainer', 'trainer.data.ndim_outcome.json')) as fp:
-            dataset = json.loads(fp.read())
+            config = FeatureModel(os.path.join(BASEDIR, 'trainer',
+                                                     'features.ndim_outcome.json'))
 
-        train_lines = json.dumps(dataset)
-        test_lines = json.dumps(filter(lambda x: x['hire_outcome'] != 'class3', dataset))
+            with open(os.path.join(BASEDIR, 'trainer', 'trainer.data.ndim_outcome.json')) as fp:
+                dataset = json.loads(fp.read())
 
-        train_data = list(streamingiterload(train_lines, source_format='json'))
-        test_data = list(streamingiterload(test_lines, source_format='json'))
+            train_lines = json.dumps(dataset)
+            test_lines = json.dumps(filter(
+                lambda x: x['hire_outcome'] not in exclude_labels, dataset))
 
-        self._trainer = Trainer(config)
-        self._trainer.train(train_data)
+            train_data = list(streamingiterload(train_lines, source_format='json'))
+            test_data = list(streamingiterload(test_lines, source_format='json'))
 
-        self._trainer = Trainer(config)
-        self._trainer.train(train_data)
-        metrics = self._trainer.test(test_data)
+            self._trainer = Trainer(config)
+            self._trainer.train(train_data)
+
+            self._trainer = Trainer(config)
+            self._trainer.train(train_data)
+            return self._trainer.test(test_data)
+
+        metrics = do_train(['class3'])
         self.assertEqual({DEFAULT_SEGMENT: [3]},
                          self._trainer._test_empty_labels)
         #
@@ -365,10 +370,13 @@ class TrainerTestCase(unittest.TestCase):
         self.assertIsInstance(metrics, ClassificationModelMetrics)
         self.assertEquals(metrics.accuracy, 1.0)
         self.assertIsInstance(metrics.confusion_matrix, ndarray)
-        roc_curve = metrics.roc_curve
         for pos_label in metrics.classes_set:
+            self.assertFalse(numpy.all(numpy.isnan(
+                metrics.roc_curve[pos_label][0])))
+            self.assertFalse(numpy.all(numpy.isnan(
+                metrics.roc_curve[pos_label][1])))
             if pos_label == 3:
-                self.assertTrue(not numpy.any(roc_curve[pos_label][1]))
+                self.assertEquals(metrics.roc_auc[pos_label], 0.0)
             else:
                 self.assertEquals(metrics.roc_auc[pos_label], 1.0)
 
@@ -377,6 +385,30 @@ class TrainerTestCase(unittest.TestCase):
                                                              [0, 3, 0],
                                                              [0, 0, 0]])
 
+        # exclude two labels
+        metrics = do_train(['class1', 'class3'])
+        self.assertEqual({DEFAULT_SEGMENT: [1, 3]},
+                         self._trainer._test_empty_labels)
+        #
+        # Testing metrics
+        #
+        self.assertIsInstance(metrics, ClassificationModelMetrics)
+        self.assertEquals(metrics.accuracy, 1.0)
+        self.assertIsInstance(metrics.confusion_matrix, ndarray)
+        for pos_label in metrics.classes_set:
+            self.assertFalse(numpy.all(numpy.isnan(
+                metrics.roc_curve[pos_label][0])))
+            self.assertFalse(numpy.all(numpy.isnan(
+                metrics.roc_curve[pos_label][1])))
+            if pos_label in [1, 3]:
+                self.assertEquals(metrics.roc_auc[pos_label], 0.0)
+            else:
+                self.assertEquals(metrics.roc_auc[pos_label], 0.0)
+
+        self.assertEqual(metrics.roc_auc, {1: 0.0, 2: 0.0, 3: 0.0})
+        self.assertEqual(metrics.confusion_matrix.tolist(), [[0, 0, 0],
+                                                             [0, 3, 0],
+                                                             [0, 0, 0]])
 
     def _load_data(self, fmt):
         """
