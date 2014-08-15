@@ -42,8 +42,10 @@ class Metrics(object):
                 true_data = hstack(vectorized_data)
             except ValueError:
                 true_data = numpy.hstack(vectorized_data)
-
-        self._true_data[segment] = true_data.tocsr()
+        try:
+            self._true_data[segment] = true_data.tocsr()
+        except:
+            self._true_data[segment] = true_data
         probs = classifier.predict_proba(true_data)
         preds = classifier.predict(true_data)
         
