@@ -2,7 +2,7 @@ import logging
 from collections import OrderedDict
 
 import numpy
-from scipy.sparse import hstack
+from scipy.sparse import hstack, csc_matrix
 import sklearn.metrics as sk_metrics
 
 
@@ -36,7 +36,10 @@ class Metrics(object):
 
         # Evaluating model...
         if(len(vectorized_data) == 1):
-            true_data = numpy.array(vectorized_data[0])
+            if isinstance(vectorized_data[0], csc_matrix):
+                true_data = vectorized_data[0]
+            else:
+                true_data = numpy.array(vectorized_data[0])
         else:
             try:
                 true_data = hstack(vectorized_data)
