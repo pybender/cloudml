@@ -1,7 +1,7 @@
 from utils import ParametrizedTemplate
 
 # Context:
-from processors import composite_string, composite_python,\
+from processors import composite_string, composite_python, \
     composite_readability, process_key_value
 
 
@@ -14,7 +14,8 @@ class ScriptManager(object):
         self.context = {}
 
     def add_python(self, script):
-        exec(script, globals(), self.context)
+        eval(compile(script, "<str>", "exec"), self.context, self.context)
+
 
     def execute_function(self, script, value, row_data=None, local_vars={}):
         def update_strings(val):
@@ -33,8 +34,10 @@ class ScriptManager(object):
         row_data = row_data or {}
         context = globals().copy()
         context.update(locals())
+
         class ob(object):
             pass
+
         for k, v in row_data.iteritems():
             splited = k.split('.')
             if len(splited) == 1:
@@ -50,4 +53,5 @@ class ScriptManager(object):
                     setattr(context[splited[0]], splited[1], ob())
                 t = getattr(context[splited[0]], splited[1])
                 setattr(t, splited[2], v)
-        return eval(text, context, self.context)
+        context.update(self.context)
+        return eval(text, context, context)
