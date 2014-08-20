@@ -3,10 +3,33 @@
 LOGISTIC_REGRESSION = 'logistic regression'
 SVR = 'support vector regression'
 SGD_CLASSIFIER = 'stochastic gradient descent classifier'
+DECISION_TREE_CLASSIFIER = 'decision trees classifier'
+DECISION_TREE_REGRESSOR = 'decision tree regressor'
 
-CLASSIFIER_MODELS = (LOGISTIC_REGRESSION, SGD_CLASSIFIER, DECISION_TREE)
-REGRESSION_MODELS = (SVR, DECISION_TREE)
+CLASSIFIER_MODELS = (
+    LOGISTIC_REGRESSION, SGD_CLASSIFIER, DECISION_TREE_CLASSIFIER)
+REGRESSION_MODELS = (SVR, DECISION_TREE_REGRESSOR)
 
+
+DECISION_TREE_PARAMS = (
+    {'name': "criterion",
+     'type': 'string',
+     'choices': ['gini', 'entropy'],
+     'default': 'gini'},
+    {'name': "splitter",
+     'type': 'string',
+     'choices': ['best', 'random'],
+     'default': 'best'},
+    {'name': 'max_features', 'type': 'any'},
+    {'name': "max_depth", 'type': 'integer'},
+    {'name': "min_samples_split", 'type': 'integer', 'default': 2},
+    {'name': "min_samples_leaf", 'type': 'integer', 'default': 1},
+    {'name': "max_leaf_nodes", 'type': 'integer'},
+    # TODO: support RandomState instance
+    {'name': "random_state", 'type': 'integer'},
+    # {'name': "min_density", 'type': 'integer'},
+    # {'name': "compute_importances", 'type': 'boolean'}
+)
 
 CLASSIFIERS = {
     LOGISTIC_REGRESSION: {
@@ -64,5 +87,11 @@ CLASSIFIERS = {
             {'name': 'coef0', 'type': 'float'},
             {'name': 'probability', 'type': 'boolean'},
             {'name': 'shrinking', 'type': 'boolean'}),
-        'defaults': {'C': 1.0, 'epsilon': 0.1}}
+        'defaults': {'C': 1.0, 'epsilon': 0.1}},
+    DECISION_TREE_CLASSIFIER: {
+        'cls': 'sklearn.tree.DecisionTreeClassifier',
+        'parameters': DECISION_TREE_PARAMS},
+    DECISION_TREE_REGRESSOR: {
+        'cls': 'sklearn.tree.DecisionTreeRegressor',
+        'parameters': DECISION_TREE_PARAMS},
 }
