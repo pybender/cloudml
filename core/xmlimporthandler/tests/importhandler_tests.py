@@ -19,16 +19,37 @@ BASEDIR = os.path.abspath(
 
 
 class ScriptManagerTest(unittest.TestCase):
+    def setUp(self):
+        self.manager = ScriptManager()
+
     def test_script(self):
-        manager = ScriptManager()
-        self.assertEqual(manager._exec('1+2'), 3)
+        self.assertEqual(self.manager._exec('1+2'), 3)
 
     def test_manager(self):
-        manager = ScriptManager()
-        manager.add_python("""def intToBoolean(a):
+        self.manager.add_python("""def intToBoolean(a):
             return a == 1
         """)
-        self.assertEqual(manager._exec('intToBoolean(1)'), True)
+        self.assertEqual(self.manager._exec('intToBoolean(1)'), True)
+
+    def test_match_1888(self):
+        def check(script):
+            print script
+            self.manager.add_python(script)
+            self.assertEqual(self.manager._exec('stripSpecial("abc<")'), "abc")
+
+        SCRIPT1 = """
+pattern='[<>]+'
+def stripSpecial(value):
+    import re
+    return re.sub(pattern, \" \", value).strip()
+"""
+        SCRIPT2 = """
+import re
+def stripSpecial(value):
+    return re.sub(\"[<>]+\", \" \", value).strip()
+"""
+        check(SCRIPT1)
+        check(SCRIPT2)
 
 
 class TestField(unittest.TestCase):
