@@ -229,7 +229,8 @@ def process_json(value, query_item, row_data, script_manager=None):
                 # Multiple results from JSONPath
                 result_list = filter(None, path_result)
                 if feature.get('to_csv', False) is True:
-                    result[feature['name']] = ','.join(result_list)
+                    result[feature['name']] = feature.get('delimiter',
+                        feature.get('join', ',')).join(result_list)
                 else:
                     result[feature['name']] = result_list
             else:

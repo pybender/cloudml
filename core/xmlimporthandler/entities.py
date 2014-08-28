@@ -44,8 +44,7 @@ class Field(object):
         self.jsonpath = config.get('jsonpath')
         # concatenates values using the defined separator.
         # Used together with jsonpath only.
-        self.join = config.get('join')
-
+        self.join = config.get('delimiter', config.get('join'))
         # applies the given regular expression and
         # assigns the first match to the value
         self.regex = config.get('regex')
