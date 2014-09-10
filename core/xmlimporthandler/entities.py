@@ -44,7 +44,7 @@ class Field(object):
         self.jsonpath = config.get('jsonpath')
         # concatenates values using the defined separator.
         # Used together with jsonpath only.
-        self.join = config.get('delimiter', config.get('join'))
+        self.delimiter = config.get('delimiter', config.get('join'))
         # applies the given regular expression and
         # assigns the first match to the value
         self.regex = config.get('regex')
@@ -112,7 +112,7 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
             value = jsonpath(value, self.jsonpath)
             if value is False:
                 value = None
-            if not self.join and isinstance(value, (list, tuple)) \
+            if not self.delimiter and isinstance(value, (list, tuple)) \
                     and len(value) == 1 and not self.multipart:
                 value = value[0]
             if isinstance(value, (list, tuple)):
@@ -135,8 +135,8 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
         if self.split and value:
             value = re.split(self.split, value)
 
-        if value is not None and self.join:
-            value = self.join.join(value)
+        if value is not None and self.delimiter:
+            value = self.delimiter.join(value)
 
         # TODO: could we use python formats for date?
         if self.dateFormat:  # TODO: would be returned datetime, Is it OK?
