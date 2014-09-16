@@ -43,6 +43,12 @@ class InvalidTrainerFile(Exception):
     """
     pass
 
+class TransformerNotFound(Exception):
+    """
+    Exception to be raised if predefined transormer could not be found.
+    """
+    pass
+
 
 class Trainer():
     TYPE_CLASSIFICATION = 'classification'
@@ -72,6 +78,12 @@ class Trainer():
         self._ignored = 0
         self.train_time = {}
         self._segments = {}
+
+    def get_transformer(self, name):
+        raise TransformerNotFound
+
+    def set_transformer_getter(self, method):
+        self.get_transformer = method
 
     @property
     def with_segmentation(self):
@@ -367,6 +379,11 @@ class Trainer():
                 transformed_data = None
                 feature['tranformer'] = SuppressTransformer()
             return transformed_data
+        elif feature['transformer'] is None and feature['transformer-type'] is not None:
+            feature['transformer'] = self.get_transformer(feature['transformer-type'])
+            transformed_data = feature['transformer'].transform(data)
+            feature['transformer'].num_features = transformed_data.shape[1]
+            return transformed_data
         elif feature.get('scaler', None) is not None:
             return feature['scaler'].fit_transform(self._to_column(data).toarray())
         else:
@@ -564,7 +581,8 @@ class Trainer():
         if is_empty(value):
             if feature.get('default') is not None:
                 result = feature.get('default')
-            elif feature.get('transformer-type') is not None:
+            elif feature.get('transformer-type') is not None and \
+                feature.get('transformer') is not None:
                 result = TRANSFORMERS[feature['transformer-type']]['default']
             elif feature.get('type') is not None:
                 result = FEATURE_TYPE_DEFAULTS.get(feature['type'], value)
