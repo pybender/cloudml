@@ -744,6 +744,7 @@ class Trainer():
             for feature_name, feature in self.features[segment].iteritems():
                 if feature_name not in self._feature_model.group_by and \
                     not feature_name == self._feature_model.target_variable:
+
                     item = self._test_prepare_feature(feature,
                                               self._vect_data[segment][
                                                   feature_name])
@@ -755,7 +756,13 @@ class Trainer():
                                 vectorized_data[feature_name] = item.tolist()[0][0]
                         else:
                             vectorized_data[feature_name] = {}
-                            if transformer is not None and hasattr(transformer,
+                            if transformer is not None and hasattr(transformer, 'num_topics'):
+                                item = item.todense().tolist()
+                                for j in range(0, transformer.num_features-1):
+                                    subfeature = '%s->Topic #%d' % (feature_name.replace(".", "->"), j)
+                                    if item[0][j] != 0:
+                                        vectorized_data[feature_name][subfeature] = item[0][j]
+                            elif transformer is not None and hasattr(transformer,
                                                            'get_feature_names'):
                                 index = 0
                                 item = item.todense().tolist()
