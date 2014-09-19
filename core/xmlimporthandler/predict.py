@@ -14,7 +14,7 @@ class PredictModel(object):
             raise ImportHandlerException('Either value or script'
                                          ' attribute need to be defined')
 
-        self.positive_label = PositiveLabel(config.xpath('positive_label[1]'))
+        #self.positive_label = PositiveLabel(config.xpath('positive_label[1]'))
 
         self.weights = []
         for weight in config.xpath('weight'):
@@ -48,12 +48,26 @@ class Weight(object):
         self.script = config.get('script')
 
 
+class ResultLabel(object):
+    def __init__(self, config):
+        self.model = config.get('model')
+        self.script = config.get('script')
+
+
+class ResultProbability(object):
+    def __init__(self, config):
+        self.model = config.get('model')
+        self.script = config.get('script')
+        self.label = config.get('label')
+
+
 class PredictResult(object):
     """
     Defines how to formulate the response.
     """
     def __init__(self, config):
-        pass
+        self.label = ResultLabel(config.label)
+        self.probability = ResultProbability(config.probability)
 
 
 class Predict(object):
@@ -67,5 +81,4 @@ class Predict(object):
         for model in config.xpath('model'):
             self.models.append(PredictModel(model))
 
-        for result in config.xpath('result'):
-            self.results.append(PredictResult(result))
+        self.result = PredictResult(config.result)

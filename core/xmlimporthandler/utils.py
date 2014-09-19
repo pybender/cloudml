@@ -4,6 +4,7 @@ from distutils.util import strtobool
 
 class ParametrizedTemplate(Template):
     delimiter = '#'
+    idpattern = r'[a-z][_a-z0-9]*(\.[a-z][_a-z0-9]*)*'
 
 
 def iterchildren(config):

@@ -4,12 +4,12 @@ _author__ = 'ifoukarakis, papadimitriou'
 import json
 import logging
 import numpy
+import scipy.sparse
 
 from copy import deepcopy
 from collections import defaultdict
 from time import gmtime, strftime
 from operator import itemgetter
-from scipy.sparse import hstack, csc_matrix
 from memory_profiler import memory_usage
 
 from feature_types import FEATURE_TYPE_DEFAULTS
@@ -147,52 +147,37 @@ class Trainer():
             self._train_segment(segment)
 
     def _train_segment(self, segment):
-        vectorized_data = []
-        labels = None
-
         # Get X and y
-        logging.info('Extracting features...')
+        logging.info('Extracting features for segment %s ...', segment)
 
         self.features[segment] = deepcopy(self._feature_model.features)
-        for feature_name, feature in self.features[segment].iteritems():
-            if feature_name != self._feature_model.target_variable:
-                if feature_name not in self._feature_model.group_by:
-                    item = self._train_prepare_feature(
-                        feature,
-                        self._vect_data[segment][feature_name])
-                    if item is not None:
-                        # Convert item to csc_matrix, since hstack fails with arrays
-                        vectorized_data.append(csc_matrix(item))
-                logging.info("Memory usage: %f" %
-                             memory_usage(-1, interval=0, timeout=None)[0])
-            else:
-                labels = self._vect_data[segment][feature_name]
-        logging.info('Training model...')
-        logging.info("Memory usage: %f" %
+        labels = self._get_target_variable_labels(segment)
+        vectorized_data = self._get_vectorized_data(segment, self._train_prepare_feature)
+        logging.info("Memory usage (vectorized data generated): %f" %
                      memory_usage(-1, interval=0, timeout=None)[0])
+        logging.info('Training model...')
         #self._vect_data[segment] = None
         #logging.info("Memory usage: %f" %
         #             memory_usage(-1, interval=0, timeout=None)[0])
         # if(len(vectorized_data) == 1):
         #     true_data = numpy.array(vectorized_data[0])
         # else:
-        try:
-                true_data = hstack(vectorized_data)
-        except ValueError:
-                true_data = numpy.hstack(vectorized_data)
-        logging.info("Memory usage: %f" %
+        true_data = scipy.sparse.hstack(vectorized_data)
+        logging.info("Memory usage (true data generated): %f" %
                      memory_usage(-1, interval=0, timeout=None)[0])
         vectorized_data = None
-        logging.info("Memory usage: %f" %
+        logging.info("Memory usage (vectorized data cleared): %f" %
                      memory_usage(-1, interval=0, timeout=None)[0])
 
         logging.info('Number of features: %s' % (true_data.shape[1], ))
         if segment != DEFAULT_SEGMENT:
             self._classifier[segment] = deepcopy(self._classifier[DEFAULT_SEGMENT])
         self._classifier[segment].fit(true_data, [str(l) for l in labels])
-        logging.info("Memory usage: %f" %
+        logging.info("Memory usage (model fitted with true data): %f" %
                      memory_usage(-1, interval=0, timeout=None)[0])
         true_data = None
+        logging.info("Memory usage (true data cleared): %f" %
+                     memory_usage(-1, interval=0, timeout=None)[0])
         self.train_time[segment] = strftime('%Y-%m-%d %H:%M:%S %z', gmtime())
         logging.info('Training completed...')
 
@@ -206,10 +191,10 @@ class Trainer():
                     names and value the values of the features per column.
 
         """
-        metrics = []
         self.metrics = self.metrics_class()
 
         self._prepare_data(iterator, callback, save_raw=save_raw)
+        self._test_empty_labels = self._check_data_for_test()
         count = self._count
         if percent:
             self._count = int(self._count * percent / 100)
@@ -226,33 +211,22 @@ class Trainer():
 
         return self.metrics
 
-
     def _evaluate_segment(self, segment):
-        vectorized_data = []
-        labels = None
-
         # Get X and y
-        logging.info('Extracting features...')
-        for feature_name, feature in self.features[segment].iteritems():
-            if feature_name != self._feature_model.target_variable:
-                if feature_name not in self._feature_model.group_by:
-                    item = self._test_prepare_feature(
-                        feature,
-                        self._vect_data[segment][feature_name])
-                    if item is not None:
-                        # Convert item to csc_matrix, since hstack fails with arrays
-                        vectorized_data.append(item)
-            else:
-                labels = self._vect_data[segment][feature_name]
-        logging.info("Memory usage: %f" % 
+        logging.info('Extracting features for segment %s ...', segment)
+        labels = self._get_target_variable_labels(segment)
+        classes = self._get_classifier_adjusted_classes(segment)
+        vectorized_data = self._get_vectorized_data(
+            segment, self._test_prepare_feature)
+        logging.info("Memory usage (vectorized data generated): %f" %
                      memory_usage(-1, interval=0, timeout=None)[0])
         logging.info('Evaluating model...')
-        
-        self.metrics.evaluate_model(labels, vectorized_data,
-                                  self._classifier[segment], segment)
-        logging.info("Memory usage: %f" % 
-                     memory_usage(-1, interval=0, timeout=None)[0])
 
+        self.metrics.evaluate_model(labels, classes, vectorized_data,
+                                  self._classifier[segment],
+                                  self._test_empty_labels[segment], segment)
+        logging.info("Memory usage: %f" %
+                     memory_usage(-1, interval=0, timeout=None)[0])
 
     def predict(self, iterator, callback=None, ignore_error=True):
         """
@@ -271,6 +245,10 @@ class Trainer():
         labels = {}
         probs = {}
         true_labels = {}
+        indexes = defaultdict(int)
+        ordered_probs = []
+        ordered_labels = []
+        ordered_true_labels = []
 
         self._prepare_data(iterator, callback, ignore_error)
         logging.info('Processed %d lines, ignored %s lines'
@@ -282,48 +260,66 @@ class Trainer():
                 vectorized_data = []
                 # Get X and y
                 logging.info('Extracting features...')
-                for feature_name, feature in self.features[segment].iteritems():
-                    if feature_name != self._feature_model.target_variable:
-                        if feature_name not in self._feature_model.group_by:
-                            item = self._test_prepare_feature(
-                                feature,
-                                self._vect_data[segment][feature_name])
-                            vectorized_data.append(csc_matrix(item))
-                    else:
-                        true_labels[segment] = self._vect_data[segment][feature_name]
-
+                true_labels[segment] = self._get_target_variable_labels(segment)
+                vectorized_data = self._get_vectorized_data(
+                    segment, self._test_prepare_feature)
+                logging.info("Memory usage (vectorized data generated): %f" %
+                             memory_usage(-1, interval=0, timeout=None)[0])
                 logging.info('Evaluating model...')
-                if(len(vectorized_data) == 1):
+                if len(vectorized_data) == 1:
                     predict_data = numpy.array(vectorized_data[0])
                 else:
-                    predict_data = hstack(vectorized_data)
+                    predict_data = scipy.sparse.hstack(vectorized_data)
                 probs[segment] = self._classifier[segment].predict_proba(predict_data)
                 labels[segment] = self._classifier[segment].classes_[probs[segment].argmax(axis=1)]
-            probs = numpy.vstack(probs.values())
-            labels = numpy.concatenate(labels.values())
-            true_labels = numpy.concatenate(true_labels.values())
-
-        return {'probs': probs,
-                'true_labels': true_labels,
-                'labels': labels,
+            # Restore order
+            for segment in self._order_data: 
+                indexes[segment] += 1
+                ordered_probs.append(probs[segment][indexes[segment]-1])
+                ordered_labels.append(labels[segment][indexes[segment]-1])
+                ordered_true_labels.append(true_labels[segment][indexes[segment]-1])
+                
+        return {'probs': ordered_probs,
+                'true_labels': ordered_true_labels,
+                'labels': ordered_labels,
                 'classes': self._classifier[segment].classes_}
 
-    def _extract_features(self, process_fn):
-        vectorized_data = []
-        logging.info('Extracting features...')
-        for feature_name, feature in self._feature_model.features.iteritems():
-            if feature_name != self._feature_model.target_variable:
-                if feature_name not in self._feature_model.group_by:
-                    item = process_fn(
-                        feature,
-                        self._vect_data[segment][feature_name])
-                    if item is not None:
-                        # Convert item to csc_matrix, since hstack fails with arrays
-                        vectorized_data.append(csc_matrix(item))
-                logging.info("Memory usage: %f" % 
-                             memory_usage(-1, interval=0, timeout=None)[0])
-        labels = self._get_labels()
-        return vectorized_data, labels
+    def transform(self, iterator):
+        """
+        Transforms input data according to the trainer model, the model should
+        have been trained before
+        :param iterator:
+        :return: dictionary keyed on segments with vectorized data
+        """
+        self._prepare_data(iterator)
+        segments = {}
+        logging.info('Vectorization & Tansformation Starting')
+        for segment in self._vect_data:
+            logging.info('Processing Segment: %s', segment)
+            segments[segment] = {
+                'Y': self._get_target_variable_labels(segment),
+                'X': scipy.sparse.hstack(self._get_vectorized_data(
+                    segment, self._test_prepare_feature))
+            }
+        return segments
+
+    # TODO: nader20140725 due for removal
+    # def _extract_features(self, process_fn):
+    #     vectorized_data = []
+    #     logging.info('Extracting features...')
+    #     for feature_name, feature in self._feature_model.features.iteritems():
+    #         if feature_name != self._feature_model.target_variable:
+    #             if feature_name not in self._feature_model.group_by:
+    #                 item = process_fn(
+    #                     feature,
+    #                     self._vect_data[segment][feature_name])
+    #                 if item is not None:
+    #                     # Convert item to csc_matrix, since hstack fails with arrays
+    #                     vectorized_data.append(csc_matrix(item))
+    #             logging.info("Memory usage: %f" %
+    #                          memory_usage(-1, interval=0, timeout=None)[0])
+    #     labels = self._get_labels()
+    #     return vectorized_data, labels
 
     def _process_subfeatures(self, feature, data):
         from collections import defaultdict
@@ -346,13 +342,12 @@ class Trainer():
     def _train_prepare_feature(self, feature, data):
         """
         Uses the appropriate vectorizer or scaler on a specific feature and its
-        training data.
+        training data. Used for unfitted feature in untrained model.
 
-        Keyword arguments:
-        feature -- the name of the feature to prepare. Used to retrieve the
-                   appropriate vectorizer.
-        data -- a list of the data for extracted for the given feature.
-
+        :param feature: the name of the feature to prepare. Used to retrieve the
+            appropriate vectorizer.
+        :param data: a list of the data for extracted for the given feature.
+        :return: feature data with transformation applied
         """
         logging.info('Preparing feature %s for train' % (feature['name'], ))
         input_format = feature.get('input-format', None)
@@ -368,7 +363,7 @@ class Trainer():
             except ValueError as e:
                 logging.warn('Feature %s will be ignored due to '
                              'transformation error: %s.' %
-                              (feature['name'], str(e)))
+                             (feature['name'], str(e)))
                 transformed_data = None
                 feature['tranformer'] = SuppressTransformer()
             return transformed_data
@@ -380,13 +375,12 @@ class Trainer():
     def _test_prepare_feature(self, feature, data):
         """
         Uses the appropriate vectorizer or scaler on a specific feature and its
-        test data.
+        training data. Used for fitted feature in a trained model.
 
-        Keyword arguments:
-        feature -- the name of the feature to prepare. Used to retrieve the
-                   appropriate vectorizer.
-        data -- a list of the data extracted for the given feature.
-
+        :param feature: the name of the feature to prepare. Used to retrieve the
+            appropriate vectorizer.
+        :param data: a list of the data for extracted for the given feature.
+        :return: feature data with transformation applied
         """
         logging.debug('Preparing feature %s for test' % (feature['name'], ))
         input_format = feature.get('input-format', None)
@@ -407,9 +401,37 @@ class Trainer():
 
     def _to_column(self, x):
         return numpy.transpose(
-            csc_matrix([0.0 if item is None else float(item) for item in x]))
+            scipy.sparse.csc_matrix([0.0 if item is None else float(item) for item in x]))
 
-    def _prepare_data(self, iterator, callback=None, 
+    def _check_data_for_test(self):
+        """
+        Checks input data (examples) in a trained model for testing. The checks
+        are for potential incomplete data/examples that might prevent successful
+        testing.
+        Raises exception if checks fail.
+        :return: dictionary keyed on segments, every key is a list labels with
+        no corresponding examples for that label in the keyed segment
+        """
+        empty_labels = {}
+        print 'self._segments %s' % self._segments
+        for segment in self._segments:
+            empty_labels[segment] = []
+            labels = self._get_classifier_adjusted_classes(segment)
+            target_feature = self._get_target_feature(segment)['name']
+            examples_per_label = dict((c, 0) for c in labels if c is not None)
+            for label in self._vect_data[segment][target_feature]:
+                if label is not None:
+                    examples_per_label[label] += 1
+            for label, _ in filter(lambda (label, c): c == 0,
+                                   examples_per_label.iteritems()):
+                msg = 'In Segment: %s, Class: %s, has no examples. ' \
+                      'Test evaluation will fail' % \
+                      (segment, label)
+                logging.warn(msg)
+                empty_labels[segment].append(label)
+        return empty_labels
+
+    def _prepare_data(self, iterator, callback=None,
                       ignore_error=True, save_raw=False):
         """
         Iterates over input data and stores them by column, ignoring lines
@@ -423,13 +445,14 @@ class Trainer():
         self._count = 0
         self._ignored = 0
         self._raw_data = defaultdict(list)
+        self._order_data = []
         self._vect_data = {}
         segments = {}
         for row in iterator:
             self._count += 1
             try:
                 data = self._apply_feature_types(row)
-                
+
                 if self.with_segmentation:
                     segment = self._get_segment_name(data)
                 else:
@@ -439,6 +462,7 @@ class Trainer():
                     self._vect_data[segment] = defaultdict(list)
                     segments[segment] = 0
                 segments[segment] += 1
+                self._order_data.append(segment)
 
                 for feature_name in self._feature_model.features:
                     # if feature_name in self._feature_model.group_by:
@@ -466,16 +490,21 @@ class Trainer():
              self._feature_model.group_by])
 
     def _get_labels(self):
-        feature_name = self._feature_model.target_variable
         if self.with_segmentation:
-            classes_ = []
+            classes_ = {}
             for segment, classifier in self._classifier.iteritems():
                 # Note: Possible problems when value of the group_by field
                 # equals `DEFAULT_SEGMENT`
                 # if segment != DEFAULT_SEGMENT:
                 if hasattr(classifier, '_enc'):
-                    classes_ += map(str, classifier.classes_.tolist())
-            return set(classes_)
+                    classes_[segment] = map(str, classifier.classes_.tolist())
+
+            assert all(map(
+                lambda x: x == classes_.values()[0], classes_.values())), \
+                'The assumption is that all segments should have the same ' \
+                'classifier.classes_'
+
+            return classes_.values()[0]
         else:
             return map(str, self._classifier[DEFAULT_SEGMENT].classes_.tolist())
 
@@ -542,7 +571,7 @@ class Trainer():
 
         return result
 
-    def get_weights_from_vectorizer(self, segment, feature_name, vectorizer, offset):
+    def _get_weights_from_vectorizer(self, segment, class_index, feature_name, vectorizer, offset):
         positive = []
         negative = []
          # Vectorizer
@@ -554,7 +583,7 @@ class Trainer():
         logging.info('Number of subfeatures %d' % len(feature_names))
         for j in range(0, len(feature_names)):
             name = '%s->%s' % (feature_name.replace(".", "->"), feature_names[j])
-            weight = self._classifier[segment].coef_[0][offset + j]
+            weight = self._classifier[segment].coef_[class_index][offset + j]
             weights = {
                 'name': name,
                 'weight': weight
@@ -566,6 +595,27 @@ class Trainer():
         return feature_names, positive, negative
 
     def get_weights(self, segment=DEFAULT_SEGMENT):
+        """
+        :param segment:
+        :return: {<class_label>:{'positive':[...], 'negative':[...]},
+                <class_label2>: etc}
+        """
+        weights_by_class = {}
+        enumeration = None
+        # Binary classifier vs Multiclass case (one-vs-all)
+        classifier = self._classifier[segment]
+        feature_model = self._feature_model
+        target_feature = feature_model.features[feature_model.target_variable]
+        if len(classifier.classes_) == 2:
+            enumeration = [(0, classifier.classes_[1])]
+        else:
+            enumeration = enumerate(classifier.classes_)
+        for index, class_value in enumeration:
+            class_value = _adjust_classifier_class(target_feature, class_value)
+            weights_by_class[class_value] = self._get_weights(index, segment)
+        return weights_by_class
+
+    def _get_weights(self, class_index, segment=DEFAULT_SEGMENT):
         positive = []
         negative = []
         index = 0
@@ -579,7 +629,7 @@ class Trainer():
                     logging.info('Number of topics %d' % transformer.num_features )
                     for j in range(0, transformer.num_features-1):
                         name = '%s->Topic #%d' % (feature_name.replace(".", "->"), j)
-                        weight = self._classifier[segment].coef_[0][index + j]
+                        weight = self._classifier[segment].coef_[class_index][index + j]
                         weights = {
                             'name': name,
                             'weight': weight
@@ -592,26 +642,26 @@ class Trainer():
                     index += transformer.num_topics
                 elif transformer is not None and hasattr(transformer,
                                                        'get_feature_names'):
-                    feature_names, p, n = self.get_weights_from_vectorizer(segment,
-                                                                           feature_name,
-                                                                           transformer,
-                                                                           index)
+                    feature_names, p, n = \
+                        self._get_weights_from_vectorizer(segment, class_index,
+                                                          feature_name, transformer,
+                                                          index)
                     index += len(feature_names)
                     positive = positive + p
                     negative = negative + n
 
                 elif preprocessor is not None and hasattr(preprocessor,
                                                           'get_feature_names'):
-                    feature_names, p, n = self.get_weights_from_vectorizer(segment, 
-                                                                           feature_name,
-                                                                           preprocessor,
-                                                                           index)
+                    feature_names, p, n = \
+                        self._get_weights_from_vectorizer(segment, class_index,
+                                                          feature_name, preprocessor,
+                                                          index)
                     index += len(feature_names)
                     positive = positive + p
                     negative = negative + n
                 else:
                     # Scaler or array
-                    weight = self._classifier[segment].coef_[0][index]
+                    weight = self._classifier[segment].coef_[class_index][index]
                     weights = {
                         'name': feature_name.replace(".", "->"),
                         'weight': weight
@@ -634,8 +684,96 @@ class Trainer():
         fp -- the file to store the trained model.
 
         """
-
         json.dump(self.get_weights(), fp, indent=4)
+
+    def _get_target_variable_labels(self, segment):
+        """
+        using `_feature_model.target_variable` retrieves the features
+        labels/values from `_vect_data` for the given segment
+        :param segment:
+        :return: list of string values of `_feature_model.target_variable` in
+         `_vect_data`
+        """
+        if self._vect_data is None or self._vect_data == {}:
+            raise Exception('trainer._vect_data was not prepared')
+        return self._vect_data[segment][self._feature_model.target_variable]
+
+    def _get_classifier_adjusted_classes(self, segment):
+        """
+        :param segment:
+        :return: adjusted underlying classifier classes/values to match
+         the target feature/variable real type
+        """
+        target_feature = self._get_target_feature(segment)
+        return [_adjust_classifier_class(target_feature, c)
+                for c in self._classifier[segment].classes_.tolist()]
+
+    def _get_target_feature(self, segment):
+        """
+        :param segment:
+        :return: The corresponding feature object to the model's target variable
+        """
+        return self.features[segment][self._feature_model.target_variable]
+
+    def _get_vectorized_data(self, segment, fn_prepare_feature):
+        """
+        applies transforms to features values in `_vect_data`
+        :param segment:
+        :param fn_prepare_feature: function responsible for preparing feature
+        :return: sparse matrix of tranformed data
+        """
+        if self._vect_data is None or self._vect_data == {}:
+            raise Exception('trainer._vect_data was not prepared')
+
+        vectorized_data = []
+        for feature_name, feature in self.features[segment].iteritems():
+            if feature_name not in self._feature_model.group_by and \
+                    not feature_name == self._feature_model.target_variable:
+                item = fn_prepare_feature(feature,
+                                          self._vect_data[segment][
+                                              feature_name])
+                if item is not None:
+                    # Convert item to csc_matrix, since hstack fails with arrays
+                    vectorized_data.append(scipy.sparse.csc_matrix(item))
+        return vectorized_data
+
+    def get_nonzero_vectorized_data(self):
+        vectorized_data = {}
+        res = {}
+        for segment in self._vect_data:
+            for feature_name, feature in self.features[segment].iteritems():
+                if feature_name not in self._feature_model.group_by and \
+                    not feature_name == self._feature_model.target_variable:
+
+                    item = self._test_prepare_feature(feature,
+                                              self._vect_data[segment][
+                                                  feature_name])
+                    transformer = feature['transformer']
+                    if item is not None:
+                        if isinstance(item, numpy.ndarray):
+                            value = item.tolist()[0][0]
+                            if value:
+                                vectorized_data[feature_name] = item.tolist()[0][0]
+                        else:
+                            vectorized_data[feature_name] = {}
+                            if transformer is not None and hasattr(transformer, 'num_topics'):
+                                item = item.todense().tolist()
+                                for j in range(0, transformer.num_features-1):
+                                    subfeature = '%s->Topic #%d' % (feature_name.replace(".", "->"), j)
+                                    if item[0][j] != 0:
+                                        vectorized_data[feature_name][subfeature] = item[0][j]
+                            elif transformer is not None and hasattr(transformer,
+                                                           'get_feature_names'):
+                                index = 0
+                                item = item.todense().tolist()
+                                for subfeature in transformer.get_feature_names():
+                                    if item[0][index]:
+                                        vectorized_data[feature_name][subfeature] = item[0][index]
+                                    index +=1
+                            if not vectorized_data[feature_name].items():
+                                vectorized_data.pop(feature_name)
+            res[segment] = vectorized_data
+        return res
 
 
 def list_to_dict(user_params):
@@ -644,3 +782,36 @@ def list_to_dict(user_params):
         return dict((key, value) for (key, value) in param_list)
 
     return dict()
+
+
+# TODO: we need something better than that. We should also consider
+# other features types that can cause similar problems
+def _adjust_classifier_class(feature, str_value):
+    """
+    The classifier treats every class as string, while the data labels are
+    getting converted by features transforms. So a mapping
+    {"Class1": 1, "Class2": 2} gets labels of say [1, 2, 2, 1, 1]
+    while the classes in the classifier is ['1', '2']
+
+    :param feature: the feature responsible for the transform
+    :param value: value of the feature at the data point as stored by the classifier
+    :return: The feature value at the data point with correct data type
+    """
+    from core.trainer.feature_types.ordinal import OrdinalFeatureTypeInstance
+    from core.trainer.feature_types.primitive_types import \
+        PrimitiveFeatureTypeInstance
+
+    assert isinstance(str_value, str) or isinstance(str_value, unicode), \
+        'str_value should be string it is of type %s' % (type(str_value))
+
+    if isinstance(feature['type'], OrdinalFeatureTypeInstance):
+        try:
+            value = int(str_value)
+        except ValueError:
+            pass
+        return value
+    elif isinstance(feature['type'], PrimitiveFeatureTypeInstance) and \
+            feature['type'].python_type is bool:
+        return str_value.lower() in ['true', '1']
+    else:
+        return feature['type'].transform(str_value)

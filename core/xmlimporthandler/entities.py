@@ -6,6 +6,7 @@ import json
 import logging
 from datetime import datetime
 import re
+import math
 from jsonpath import jsonpath
 
 from exceptions import ProcessException, ImportHandlerException
@@ -43,8 +44,7 @@ class Field(object):
         self.jsonpath = config.get('jsonpath')
         # concatenates values using the defined separator.
         # Used together with jsonpath only.
-        self.join = config.get('join')
-
+        self.delimiter = config.get('delimiter', config.get('join'))
         # applies the given regular expression and
         # assigns the first match to the value
         self.regex = config.get('regex')
@@ -99,7 +99,7 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
             _check_for_string('dateFormat')
 
     def process_value(self, value, script_manager, row=None, row_data=None,
-                      datasource_type=None):
+                      datasource_type=None, params=None):
         """
         Processes value according to a field configuration.
         """
@@ -108,12 +108,15 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
         row_data = row_data or {}
 
         if self.jsonpath:
+            self.jsonpath = ParametrizedTemplate(self.jsonpath).safe_substitute(params)
             value = jsonpath(value, self.jsonpath)
             if value is False:
                 value = None
-            if not self.join and isinstance(value, (list, tuple)) \
+            if not self.delimiter and isinstance(value, (list, tuple)) \
                     and len(value) == 1 and not self.multipart:
                 value = value[0]
+            if isinstance(value, (list, tuple)):
+                value = filter(None, value)
 
         if self.regex:
             match = re.search(self.regex, value)
@@ -126,14 +129,14 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
             data = {}
             data.update(row)
             data.update(row_data)
-            value = script_manager.execute_function(self.script, value, data)
+            value = script_manager.execute_function(self.script, value, data, row_data)
             convert_type = False
 
         if self.split and value:
             value = re.split(self.split, value)
 
-        if value is not None and self.join:
-            value = self.join.join(value)
+        if value is not None and self.delimiter:
+            value = self.delimiter.join(value)
 
         # TODO: could we use python formats for date?
         if self.dateFormat:  # TODO: would be returned datetime, Is it OK?
@@ -254,11 +257,10 @@ class EntityProcessor(object):
 
         # Building the iterator for the entity
         query = entity.build_query(params)
+            
         self.datasource = import_handler.plan.datasources.get(
             entity.datasource_name)
-
         # Process sqoop imports
-        logging.info('Process sqoop imports')
         for sqoop_import in self.entity.sqoop_imports:
 
             sqoop_import.datasource = import_handler.plan.datasources.get(
@@ -268,9 +270,12 @@ class EntityProcessor(object):
                 logging.info('Run query %s' % sqoop_query)
                 sqoop_iter = sqoop_import.datasource.run_queries(sqoop_query)
 
-        if self.datasource.config.tag == 'pig':
+        if self.datasource.type == 'pig':
             self.datasource.run_sqoop_imports(self.entity.sqoop_imports)
             self.datasource.set_ih(import_handler)
+
+        if self.datasource.type == 'input':
+            query = import_handler.params[query]
 
         self.iterator = self.datasource._get_iter(
             query, self.entity.query_target)
@@ -281,6 +286,7 @@ class EntityProcessor(object):
         """
         row = self.iterator.next()
         row_data = {}
+        row_data.update(self.params)
         for field in self.entity.fields.values():
             row_data.update(self.process_field(field, row, row_data))
 
@@ -292,17 +298,23 @@ class EntityProcessor(object):
                 extra_params=row_data)
             # NOTE: Nested entity datasource should return only one row. Right?
             row_data.update(nested_processor.process_next())
+        for p in self.params:
+            row_data.pop(p)
         return row_data
 
     def process_field(self, field, row, row_data=None):
         row_data = row_data or {}
-        item_value = row.get(field.column, None)
+        if field.column:
+            item_value = row.get(field.column, None)
+        else:
+            item_value = row
         result = {}
         kwargs = {
             'row': row,
             'row_data': row_data,
             'datasource_type': self.datasource.type,
-            'script_manager': self.import_handler.plan.script_manager
+            'script_manager': self.import_handler.plan.script_manager,
+            'params': self.params
         }
         if field.is_datasource_field:
             nested_entity = self._get_entity_for_datasource_field(field)

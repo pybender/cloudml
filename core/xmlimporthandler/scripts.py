@@ -1,7 +1,7 @@
 from utils import ParametrizedTemplate
 
 # Context:
-from processors import composite_string, composite_python,\
+from processors import composite_string, composite_python, \
     composite_readability, process_key_value
 
 
@@ -14,9 +14,10 @@ class ScriptManager(object):
         self.context = {}
 
     def add_python(self, script):
-        exec(script, globals(), self.context)
+        eval(compile(script, "<str>", "exec"), self.context, self.context)
 
-    def execute_function(self, script, value, row_data=None):
+
+    def execute_function(self, script, value, row_data=None, local_vars={}):
         def update_strings(val):
             if isinstance(val, basestring):
                 return "'%s'" % val
@@ -25,11 +26,32 @@ class ScriptManager(object):
         row_data = row_data or {}
         params = {'value': update_strings(value)}
         params.update(row_data)
+        params.update(local_vars)
         text = ParametrizedTemplate(script).safe_substitute(params)
-        return self._exec(text, row_data)
+        return self._exec(text, local_vars)
 
     def _exec(self, text, row_data=None):
         row_data = row_data or {}
         context = globals().copy()
         context.update(locals())
-        return eval(text, context, self.context)
+
+        class ob(object):
+            pass
+
+        for k, v in row_data.iteritems():
+            splited = k.split('.')
+            if len(splited) == 1:
+                context[k] = v
+            elif len(splited) == 2:
+                if not context.has_key(splited[0]):
+                    context[splited[0]] = ob()
+                setattr(context[splited[0]], splited[1], v)
+            elif len(splited) == 3:
+                if not context.has_key(splited[0]):
+                    context[splited[0]] = ob()
+                if not hasattr(context[splited[0]], splited[1]):
+                    setattr(context[splited[0]], splited[1], ob())
+                t = getattr(context[splited[0]], splited[1])
+                setattr(t, splited[2], v)
+        context.update(self.context)
+        return eval(text, context, context)

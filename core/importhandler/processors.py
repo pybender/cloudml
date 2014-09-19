@@ -131,9 +131,14 @@ and "value" for target feature %s' % (feature['name']))
                 #for k, v in row_data.iteritems():
                     # if isinstance(v, basestring):
                     #     row_data[k] = v.encode('utf-8', errors='ignore')
-                
-                value = expression_value % row_data
-                value = value.decode('utf8', 'ignore')
+                try:
+                    value = expression_value % row_data
+                    value = value.decode('utf8', 'ignore')
+                except Exception, e:
+                    logging.exception('Error when evaluate feature %s, expression_value: %s, expression_type: %s' % 
+                            (feature['name'], expression_value, expression_type))
+                    raise ProcessException('%s (feature: %s, expression: %s)' %
+                                       (e, feature['name'], expression_value))
                 if expression_type == 'string':
                     result[feature['name']] = value
                 elif expression_type == 'newpython':
@@ -224,7 +229,8 @@ def process_json(value, query_item, row_data, script_manager=None):
                 # Multiple results from JSONPath
                 result_list = filter(None, path_result)
                 if feature.get('to_csv', False) is True:
-                    result[feature['name']] = ','.join(result_list)
+                    result[feature['name']] = feature.get('delimiter',
+                        feature.get('join', ',')).join(result_list)
                 else:
                     result[feature['name']] = result_list
             else:

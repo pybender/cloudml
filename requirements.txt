@@ -12,3 +12,5 @@ gensim
 nltk
 requests
 httmock
+lxml
+boto
