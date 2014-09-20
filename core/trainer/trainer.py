@@ -359,7 +359,8 @@ class Trainer():
         if feature['transformer'] is not None:
             try:
                 transformed_data = feature['transformer'].fit_transform(data)
-                feature['transformer'].num_features = transformed_data.shape[1]
+                if feature['transformer-type'] in ('Lda', 'Lsi'):
+                    feature['transformer'].num_features = transformed_data.shape[1]
             except ValueError as e:
                 logging.warn('Feature %s will be ignored due to '
                              'transformation error: %s.' %
