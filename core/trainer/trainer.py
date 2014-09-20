@@ -72,6 +72,7 @@ class Trainer():
         self._ignored = 0
         self.train_time = {}
         self._segments = {}
+        self._feature_weights = {}
 
     @property
     def with_segmentation(self):
@@ -175,11 +176,24 @@ class Trainer():
         self._classifier[segment].fit(true_data, [str(l) for l in labels])
         logging.info("Memory usage (model fitted with true data): %f" %
                      memory_usage(-1, interval=0, timeout=None)[0])
+        self._calculate_feature_weight(segment,
+                                       true_data)
         true_data = None
         logging.info("Memory usage (true data cleared): %f" %
                      memory_usage(-1, interval=0, timeout=None)[0])
         self.train_time[segment] = strftime('%Y-%m-%d %H:%M:%S %z', gmtime())
         logging.info('Training completed...')
+
+    def _calculate_feature_weight(self, segment, true_data):
+        self._feature_weights[segment] = []
+        for j, label in enumerate(self._classifier[segment].classes_):
+            self._feature_weights[segment].append([])
+            for i, coef in enumerate(self._classifier[segment].coef_[j]):
+                #print true_data.getcol(i).todense()
+                t = map(lambda x: numpy.abs(x), (true_data.getcol(i) * coef).todense())
+                self._feature_weights[segment][j].append(numpy.mean(t))
+            if len(self._classifier[segment].classes_) == 2:
+                break
 
     def test(self, iterator, percent=0, callback=None, save_raw=True):
         """
@@ -584,9 +598,11 @@ class Trainer():
         for j in range(0, len(feature_names)):
             name = '%s->%s' % (feature_name.replace(".", "->"), feature_names[j])
             weight = self._classifier[segment].coef_[class_index][offset + j]
+            feature_weight = self._feature_weights[segment][class_index][offset + j]
             weights = {
                 'name': name,
-                'weight': weight
+                'weight': weight,
+                'feature_weight': feature_weight
             }
             if weight > 0:
                 positive.append(weights)
@@ -630,9 +646,11 @@ class Trainer():
                     for j in range(0, transformer.num_features-1):
                         name = '%s->Topic #%d' % (feature_name.replace(".", "->"), j)
                         weight = self._classifier[segment].coef_[class_index][index + j]
+                        feature_weight = self._feature_weights[segment][class_index][index + j]
                         weights = {
                             'name': name,
-                            'weight': weight
+                            'weight': weight,
+                            'feature_weight': feature_weight
                         }
                         if weight > 0:
                             positive.append(weights)
@@ -662,9 +680,11 @@ class Trainer():
                 else:
                     # Scaler or array
                     weight = self._classifier[segment].coef_[class_index][index]
+                    feature_weight = self._feature_weights[segment][class_index][index]
                     weights = {
                         'name': feature_name.replace(".", "->"),
-                        'weight': weight
+                        'weight': weight,
+                        'feature_weight': feature_weight
                     }
                     if weight > 0:
                         positive.append(weights)

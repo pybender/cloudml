@@ -25,6 +25,7 @@ TARGET = 'target'
 FORMATS = ['csv', 'json']
 
 
+
 class TrainerSegmentTestCase(unittest.TestCase):
 
     def setUp(self):
@@ -33,6 +34,16 @@ class TrainerSegmentTestCase(unittest.TestCase):
         self._config = FeatureModel(os.path.join(BASEDIR, 'trainer',
                                     'features_segment.json'))
         self._trainer = None
+
+    def test_calculate_feature_weight(self):
+        #for fmt in FORMATS:
+        self._train()
+        self.assertEquals(self._trainer._classifier[''].coef_.shape, (1, 15))
+        self.assertEquals(self._trainer._classifier['USA'].coef_.shape, (1, 14))
+        self.assertEquals(self._trainer._classifier['Canada'].coef_.shape, (1, 13))
+        weights = {'': [[0.064919069751063666, 0.0, 0.19722302855611831, 0.79525860445052987, 0.093483460441531663, 0.16353058402912282, 0.064919069751063666, 0.064919069751063666, 0.064919069751063666, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], 'Canada': [[0.0, 0.0, 0.0010504036212994055, 0.0010504036212994055, 1.4492042523793169, 1.2755465085032549, 0.0021008072425988118, 0.0021008072425988118, 0.11301245547569275, 0.0, 0.018907265183389307, 0.018907265183389307, 0.0084032289703952472]], 'USA': [[0.12371049253298733, 0.037212322240579243, 0.17299634058481617, 0.75354952537172959, 0.38105417974353145, 0.17299634058481617, 0.17299634058481617, 0.17299634058481617, 0.037212322240579243, 0.0, 0.0, 0.0, 0.33491090016521313, 0.14884928896231697]]}
+        self.assertEquals(self._trainer._feature_weights, weights)
+        self.assertEquals(self._trainer.get_weights('USA')[1]['positive'][0], {'feature_weight': 0.17299634058481617, 'name': u'contractor->skills->microsoft-word', 'weight': 0.17299634058481617})
 
     def test_train_and_test(self):
         #for fmt in FORMATS:
