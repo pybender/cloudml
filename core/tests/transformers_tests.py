@@ -29,9 +29,9 @@ class TransformersTest(unittest.TestCase):
         X1 = [1,2,3,7,78,8,35235,353,3555,3535,3657,6868,865, 4, 66, 342323]
         transformer.fit(X)
         Y = transformer.transform(X)
-        self.assertEqual(Y, [1, 1, 1, 1, 2, 2, 4, 2, 3, 3, 4, 4, 3])
+        self.assertEqual(Y.transpose().todense().tolist()[0], [1, 1, 1, 1, 2, 2, 4, 2, 3, 3, 4, 4, 3])
         Y = transformer.transform(X1)
-        self.assertEqual(Y, [1, 1, 1, 1, 2, 2, 4, 2, 3, 3, 4, 4, 3, 1, 2, 4])
+        self.assertEqual(Y.transpose().todense().tolist()[0], [1, 1, 1, 1, 2, 2, 4, 2, 3, 3, 4, 4, 3, 1, 2, 4])
 
     def test_get_transformer_count(self):
         data = {

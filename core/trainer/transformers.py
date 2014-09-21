@@ -56,7 +56,9 @@ class Ntile(object):
                 previous = self.ranges[n]
             if X[i] != n + 1:
                 X[i] = n + 1
-        return X
+        import numpy, scipy.sparse
+        return numpy.transpose(
+            scipy.sparse.csc_matrix([0.0 if item is None else float(item) for item in X]))
 
 class ScalerDecorator(object):
     """
