@@ -198,10 +198,10 @@ class Trainer():
 
     def _calculate_feature_weight(self, segment, true_data):
         self._feature_weights[segment] = []
+        logging.info('Calculate feature weights for %s segment' % segment)
         for j, label in enumerate(self._classifier[segment].classes_):
             self._feature_weights[segment].append([])
             for i, coef in enumerate(self._classifier[segment].coef_[j]):
-                #print true_data.getcol(i).todense()
                 t = map(lambda x: numpy.abs(x), (true_data.getcol(i) * coef).todense())
                 self._feature_weights[segment][j].append(numpy.mean(t))
             if len(self._classifier[segment].classes_) == 2:
@@ -653,7 +653,6 @@ class Trainer():
         positive = []
         negative = []
         index = 0
-
         for feature_name, feature in self.features[segment].items():
             if feature_name != self._feature_model.target_variable and feature_name not in self._feature_model.group_by:
                 transformer = feature['transformer']
