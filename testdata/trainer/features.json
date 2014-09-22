@@ -13,7 +13,11 @@
     {
       "name":"contractor.dev_adj_score_recent",
       "type":"float",
-      "is-required":true
+      "is-required":true,
+      "transformer":{
+        "type": "Ntile",
+        "params": {"number_tile": 2}
+      }
     },
     {
       "name":"contractor.dev_is_looking",
