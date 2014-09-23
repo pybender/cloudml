@@ -617,7 +617,9 @@ class Trainer():
         for j in range(0, len(feature_names)):
             name = '%s->%s' % (feature_name.replace(".", "->"), feature_names[j])
             weight = self._classifier[segment].coef_[class_index][offset + j]
-            feature_weight = self._feature_weights[segment][class_index][offset + j]
+            feature_weight = 0
+            if self._feature_weights.has_key(segment):
+                feature_weight = self._feature_weights[segment][class_index][offset + j]
             weights = {
                 'name': name,
                 'weight': weight,
@@ -664,7 +666,9 @@ class Trainer():
                     for j in range(0, transformer.num_features-1):
                         name = '%s->Topic #%d' % (feature_name.replace(".", "->"), j)
                         weight = self._classifier[segment].coef_[class_index][index + j]
-                        feature_weight = self._feature_weights[segment][class_index][index + j]
+                        feature_weight = 0
+                        if self._feature_weights.has_key(segment):
+                            feature_weight = self._feature_weights[segment][class_index][index + j]
                         weights = {
                             'name': name,
                             'weight': weight,
@@ -698,7 +702,9 @@ class Trainer():
                 else:
                     # Scaler or array
                     weight = self._classifier[segment].coef_[class_index][index]
-                    feature_weight = self._feature_weights[segment][class_index][index]
+                    feature_weight = 0
+                    if self._feature_weights.has_key(segment):
+                        feature_weight = self._feature_weights[segment][class_index][index]
                     weights = {
                         'name': feature_name.replace(".", "->"),
                         'weight': weight,
