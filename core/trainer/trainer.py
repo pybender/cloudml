@@ -196,14 +196,27 @@ class Trainer():
         self.train_time[segment] = strftime('%Y-%m-%d %H:%M:%S %z', gmtime())
         logging.info('Training completed...')
 
+    # def _calculate_feature_weight(self, segment, true_data):
+    #     self._feature_weights[segment] = []
+    #     logging.info('Calculate feature weights for %s segment' % segment)
+    #     for j, label in enumerate(self._classifier[segment].classes_):
+    #         self._feature_weights[segment].append([])
+    #         for i, coef in enumerate(self._classifier[segment].coef_[j]):
+    #             t = map(lambda x: numpy.abs(x), (true_data.getcol(i) * coef).todense())
+    #             self._feature_weights[segment][j].append(numpy.mean(t))
+    #         if len(self._classifier[segment].classes_) == 2:
+    #             break
+
     def _calculate_feature_weight(self, segment, true_data):
         self._feature_weights[segment] = []
         logging.info('Calculate feature weights for %s segment' % segment)
+        true_data.data = numpy.absolute(true_data.data)
+        mean_data = true_data.mean(0).transpose()
         for j, label in enumerate(self._classifier[segment].classes_):
             self._feature_weights[segment].append([])
             for i, coef in enumerate(self._classifier[segment].coef_[j]):
-                t = map(lambda x: numpy.abs(x), (true_data.getcol(i) * coef).todense())
-                self._feature_weights[segment][j].append(numpy.mean(t))
+                t = mean_data[i].tolist()[0][0]
+                self._feature_weights[segment][j].append(t*numpy.abs(coef))
             if len(self._classifier[segment].classes_) == 2:
                 break
 
