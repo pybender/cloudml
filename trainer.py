@@ -25,7 +25,7 @@ from core.importhandler.importhandler import ImportHandlerException, \
     ExtractionPlan, ImportHandler
 from core.trainer.store import store_trainer
 from core.trainer.streamutils import streamingiterload
-from core.trainer.trainer import Trainer, list_to_dict
+from core.trainer.trainer import Trainer, list_to_dict, TransformerNotFound
 
 
 def main(argv=None):
@@ -76,6 +76,9 @@ def main(argv=None):
         parser.add_argument('--skip-test', dest='skip_tests',
                             help='Skips testing.',
                             action='store_true', default=False)
+        parser.add_argument('--transformer-path', dest='transformer_path',
+                            help='Path to pretrained transformers.',
+                            metavar='transformer_path')
         parser.add_argument(dest='path',
                             help='file containing feature model',
                             metavar='path')
@@ -90,6 +93,19 @@ def main(argv=None):
 
         model = FeatureModel(args.path)
         trainer = Trainer(model)
+        if args.transformer_path is not None:
+            def get_transformers(name):
+                from os import listdir, makedirs
+                from os.path import isfile, join, exists, splitext
+                import cPickle as pickle
+                for f in listdir(args.transformer_path):
+                    if isfile(join(args.transformer_path, f)) and splitext(f)[0] == name:
+                        with open(join(args.transformer_path, f), 'r') as fp:
+                            transformer = fp.read()
+                            return pickle.loads(transformer)
+                else:
+                    raise TransformerNotFound
+            trainer.set_transformer_getter(get_transformers)
         test_percent = int(args.test_percent or 0)
         if args.input is not None:
             # Read training data from file
