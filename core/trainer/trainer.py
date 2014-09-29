@@ -216,7 +216,7 @@ class Trainer():
             self._feature_weights[segment].append([])
             for i, coef in enumerate(self._classifier[segment].coef_[j]):
                 t = mean_data[i].tolist()[0][0]
-                self._feature_weights[segment][j].append(t*numpy.abs(coef))
+                self._feature_weights[segment][j].append(t * numpy.abs(coef))
             if len(self._classifier[segment].classes_) == 2:
                 break
 
@@ -341,6 +341,23 @@ class Trainer():
                     segment, self._test_prepare_feature))
             }
         return segments
+
+    def grid_search(self, parameters, train_iterator, test_iterator, score=None):
+        from sklearn import grid_search
+        classifier = self._classifier[DEFAULT_SEGMENT]
+        clf = grid_search.GridSearchCV(classifier, parameters, scoring=score)
+        results = {}
+        if train_iterator:
+            self._segments = self._prepare_data(train_iterator)
+        for segment in self._vect_data:
+            logging.info('Starting search params for "%s" segment' % segment)
+            self.features[segment] = deepcopy(self._feature_model.features)
+            labels = self._get_target_variable_labels(segment)
+            vectorized_data = self._get_vectorized_data(segment, self._train_prepare_feature)
+            true_data = scipy.sparse.hstack(vectorized_data)
+            clf.fit(true_data, [str(l) for l in labels])
+            results[segment] = clf
+        return results
 
     # TODO: nader20140725 due for removal
     # def _extract_features(self, process_fn):
