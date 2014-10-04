@@ -50,6 +50,9 @@ def main(argv=None):
         parser.add_argument('-w', '--weights', dest='weights',
                             help='store feature weights to given file.',
                             metavar='weight-file')
+        parser.add_argument('-s', '--store-vect', dest='store_vect',
+                            help='store vectorized data to given file.',
+                            metavar='store-vect-file')
         parser.add_argument('-i', '--input', dest='input',
                             help='read training data from input file.',
                             metavar='input-file')
@@ -165,6 +168,10 @@ def main(argv=None):
             logging.info('Storing feature weights to %s' % args.weights)
             with open(args.weights, 'w') as weights_fp:
                 trainer.store_feature_weights(weights_fp)
+
+        if args.store_vect is not None:
+            logging.info('Storing vectorized data to %s' % args.store_vect)
+            trainer.store_vect_data(args.store_vect)
 
         if args.output is not None:
             logging.info('Storing feature weights to %s' % args.weights)

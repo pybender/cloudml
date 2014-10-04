@@ -811,6 +811,9 @@ class Trainer():
                     vectorized_data.append(scipy.sparse.csc_matrix(item))
         return vectorized_data
 
+    def store_vect_data(self, file_name):
+        numpy.savez_compressed(file_name, *self.metrics._true_data.values())
+
     def get_nonzero_vectorized_data(self):
         vectorized_data = {}
         res = {}
