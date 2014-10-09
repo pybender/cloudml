@@ -171,7 +171,7 @@ def main(argv=None):
 
         if args.store_vect is not None:
             logging.info('Storing vectorized data to %s' % args.store_vect)
-            trainer.store_vect_data(args.store_vect)
+            trainer.store_vect_data(trainer.metrics._true_data.values(),args.store_vect)
 
         if args.output is not None:
             logging.info('Storing feature weights to %s' % args.weights)

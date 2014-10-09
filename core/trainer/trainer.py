@@ -267,7 +267,7 @@ class Trainer():
         logging.info("Memory usage: %f" %
                      memory_usage(-1, interval=0, timeout=None)[0])
 
-    def predict(self, iterator, callback=None, ignore_error=True):
+    def predict(self, iterator, callback=None, ignore_error=True, store_vect_data=False):
         """
         Attempts to predict the class of each of the data in the given
         iterator. Returns the predicted values, the target feature value (if
@@ -288,6 +288,7 @@ class Trainer():
         ordered_probs = []
         ordered_labels = []
         ordered_true_labels = []
+        self.predict_data = {}
 
         self._prepare_data(iterator, callback, ignore_error)
         logging.info('Processed %d lines, ignored %s lines'
@@ -309,6 +310,8 @@ class Trainer():
                     predict_data = numpy.array(vectorized_data[0])
                 else:
                     predict_data = scipy.sparse.hstack(vectorized_data)
+                if store_vect_data:
+                    self.predict_data[segment] = predict_data
                 probs[segment] = self._classifier[segment].predict_proba(predict_data)
                 labels[segment] = self._classifier[segment].classes_[probs[segment].argmax(axis=1)]
             # Restore order
@@ -811,8 +814,8 @@ class Trainer():
                     vectorized_data.append(scipy.sparse.csc_matrix(item))
         return vectorized_data
 
-    def store_vect_data(self, file_name):
-        numpy.savez_compressed(file_name, *self.metrics._true_data.values())
+    def store_vect_data(self, data, file_name):
+        numpy.savez_compressed(file_name, *data)
 
     def get_nonzero_vectorized_data(self):
         vectorized_data = {}
