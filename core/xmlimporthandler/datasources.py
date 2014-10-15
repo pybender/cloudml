@@ -162,7 +162,7 @@ class PigDataSource(BaseDataSource):
     AMAZON_TOKEN_SECRET = 'H1Az3zGas51FV/KTaOsmbdmtJNiYp74RfOgd17Bj'
     BUCKET_NAME = 'odesk-match-prod'
     DEFAILT_AMI_VERSION = '3.1.0'
-    SQOOP_COMMANT = '''sqoop import --verbose --connect "%(connect)s" --username %(user)s --password %(password)s --table %(table)s -m %(mappers)s'''
+    SQOOP_COMMANT = '''sqoop import --verbose --connect "%(connect)s" --username %(user)s --password %(password)s --table %(table)s --direct-split-size 4000000000 -m %(mappers)s'''
 
     def __init__(self, config):
         super(PigDataSource, self).__init__(config)
