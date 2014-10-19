@@ -4,6 +4,7 @@ _author__ = 'ifoukarakis, papadimitriou'
 import json
 import logging
 import numpy
+import csv
 import scipy.sparse
 
 from copy import deepcopy
@@ -54,6 +55,8 @@ class Trainer():
     TYPE_CLASSIFICATION = 'classification'
     TYPE_REGRESSION = 'regression'
 
+    TRAIN_VECT_DATA = 'train_vect_data' 
+
     def __init__(self, feature_model):
         """
         Initializes the trainer using the application's configuration. Creates
@@ -79,6 +82,8 @@ class Trainer():
         self.train_time = {}
         self._segments = {}
         self._feature_weights = {}
+
+        self.intermediate_data = defaultdict(dict)
 
     def get_transformer(self, name):
         raise TransformerNotFound
@@ -124,7 +129,7 @@ class Trainer():
             raise NotImplemented('Calculating metrics only for classification\
  and regression model implemented')
 
-    def train(self, iterator=None, percent=0):
+    def train(self, iterator=None, percent=0, store_vect_data=False):
         """
         Train the model using the given data. Appropriate SciPy vectorizers
         will be used to bring data to the appropriate format.
@@ -157,9 +162,9 @@ class Trainer():
                      memory_usage(-1, interval=0, timeout=None)[0])
         for segment in self._vect_data:
             logging.info('Starting train "%s" segment' % segment)
-            self._train_segment(segment)
+            self._train_segment(segment, store_vect_data)
 
-    def _train_segment(self, segment):
+    def _train_segment(self, segment, store_vect_data=False):
         # Get X and y
         logging.info('Extracting features for segment %s ...', segment)
 
@@ -188,8 +193,12 @@ class Trainer():
         self._classifier[segment].fit(true_data, [str(l) for l in labels])
         logging.info("Memory usage (model fitted with true data): %f" %
                      memory_usage(-1, interval=0, timeout=None)[0])
-        self._calculate_feature_weight(segment,
-                                       true_data)
+        self._calculate_feature_weight(segment, true_data)
+        if store_vect_data:
+            self.intermediate_data[self.TRAIN_VECT_DATA][segment] = {
+                'data': true_data,
+                'labels': labels}
+
         true_data = None
         logging.info("Memory usage (true data cleared): %f" %
                      memory_usage(-1, interval=0, timeout=None)[0])
@@ -816,6 +825,28 @@ class Trainer():
 
     def store_vect_data(self, data, file_name):
         numpy.savez_compressed(file_name, *data)
+
+    def vect_data2csv(self, file_name):
+        if not self.intermediate_data[self.TRAIN_VECT_DATA]:
+            raise ValueError("Execute train with store_vect_data parameter")
+
+        few_segments = len(self.intermediate_data[self.TRAIN_VECT_DATA]) > 1
+        for segment, data in self.intermediate_data[self.TRAIN_VECT_DATA].iteritems():
+            if few_segments:
+                segment_file_name = "{1}-{0}".format(segment, file_name)
+            else:
+                segment_file_name = file_name
+
+            logging.info("Storing vectorized data of segment %s to %s",
+                         segment, segment_file_name)
+            with open(segment_file_name, 'wb') as csvfile:
+                writer = csv.writer(csvfile)
+                true_data = data['data']
+                num = true_data.shape[0]
+                matrix = true_data.tocsr()
+                for i in xrange(num):
+                    writer.writerow([data['labels'][i]]
+                                    + matrix.getrow(i).todense().tolist()[0])
 
     def get_nonzero_vectorized_data(self):
         vectorized_data = {}

@@ -51,8 +51,12 @@ def main(argv=None):
                             help='store feature weights to given file.',
                             metavar='weight-file')
         parser.add_argument('-s', '--store-vect', dest='store_vect',
-                            help='store vectorized data to given file.',
+                            help='store test vectorized data to given file.',
                             metavar='store-vect-file')
+        parser.add_argument('-v', '--store-train-vect',
+                            dest='store_train_vect',
+                            help='store train vectorized data to given file.',
+                            metavar='store-train-vect-file')
         parser.add_argument('-i', '--input', dest='input',
                             help='read training data from input file.',
                             metavar='input-file')
@@ -114,9 +118,16 @@ def main(argv=None):
             # Read training data from file
             file_format = os.path.splitext(args.input)[1][1:]
             with open(args.input, 'r') as train_fp:
-                trainer.train(streamingiterload(train_fp,
-                                                source_format=file_format),
-                              test_percent)
+                trainer.train(
+                    streamingiterload(train_fp, source_format=file_format),
+                    test_percent,
+                    store_vect_data=args.store_train_vect is not None)
+
+                if args.store_train_vect is not None:
+                    logging.info(
+                        'Storing train vectorized data to %s' % args.store_train_vect)
+                    trainer.vect_data2csv(args.store_train_vect)
+
                 if args.test_percent and args.skip_tests is False \
                    and args.test is None:
                     with open(args.input, 'r') as test_fp:
