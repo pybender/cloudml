@@ -270,9 +270,13 @@ class Trainer():
                      memory_usage(-1, interval=0, timeout=None)[0])
         logging.info('Evaluating model...')
 
+        
+
         self.metrics.evaluate_model(labels, classes, vectorized_data,
                                   self._classifier[segment],
                                   self._test_empty_labels[segment], segment)
+        
+        self._calculate_feature_weight(segment, self.metrics._true_data[segment])
         logging.info("Memory usage: %f" %
                      memory_usage(-1, interval=0, timeout=None)[0])
 
