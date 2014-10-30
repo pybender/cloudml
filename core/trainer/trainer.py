@@ -497,9 +497,10 @@ class Trainer():
             labels = self._get_classifier_adjusted_classes(segment)
             target_feature = self._get_target_feature(segment)['name']
             examples_per_label = dict((c, 0) for c in labels if c is not None)
-            for label in self._vect_data[segment][target_feature]:
-                if label is not None:
-                    examples_per_label[label] += 1
+            if self._vect_data.has_key(segment):
+                for label in self._vect_data[segment][target_feature]:
+                    if label is not None:
+                        examples_per_label[label] += 1
             for label, _ in filter(lambda (label, c): c == 0,
                                    examples_per_label.iteritems()):
                 msg = 'In Segment: %s, Class: %s, has no examples. ' \
@@ -654,6 +655,7 @@ class Trainer():
         positive = []
         negative = []
          # Vectorizer
+        feature_names_full = []
         try:
             feature_names = vectorizer.get_feature_names()
         except ValueError:
@@ -671,11 +673,12 @@ class Trainer():
                 'weight': weight,
                 'feature_weight': feature_weight
             }
+            feature_names_full.append(name)
             if weight > 0:
                 positive.append(weights)
             else:
                 negative.append(weights)
-        return feature_names, positive, negative
+        return feature_names_full, positive, negative
 
     def get_weights(self, segment=DEFAULT_SEGMENT):
         """
@@ -923,7 +926,7 @@ def _adjust_classifier_class(feature, str_value):
         try:
             value = int(str_value)
         except ValueError:
-            pass
+            value = 0
         return value
     elif isinstance(feature['type'], PrimitiveFeatureTypeInstance) and \
             feature['type'].python_type is bool:
