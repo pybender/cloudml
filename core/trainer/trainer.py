@@ -876,7 +876,7 @@ class Trainer():
                             vectorized_data[feature_name] = {}
                             if transformer is not None and hasattr(transformer, 'num_topics'):
                                 item = item.todense().tolist()
-                                for j in range(0, transformer.num_features-1):
+                                for j in range(0, transformer.num_features):
                                     subfeature = '%s->Topic #%d' % (feature_name.replace(".", "->"), j)
                                     if item[0][j] != 0:
                                         vectorized_data[feature_name][subfeature] = item[0][j]
