@@ -316,8 +316,6 @@ class Trainer():
                 true_labels[segment] = self._get_target_variable_labels(segment)
                 vectorized_data = self._get_vectorized_data(
                     segment, self._test_prepare_feature)
-                logging.info("Memory usage (vectorized data generated): %f" %
-                             memory_usage(-1, interval=0, timeout=None)[0])
                 logging.info('Evaluating model...')
                 if len(vectorized_data) == 1:
                     predict_data = numpy.array(vectorized_data[0])
