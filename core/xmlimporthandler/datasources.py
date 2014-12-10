@@ -162,7 +162,7 @@ class PigDataSource(BaseDataSource):
     AMAZON_TOKEN_SECRET = 'H1Az3zGas51FV/KTaOsmbdmtJNiYp74RfOgd17Bj'
     BUCKET_NAME = 'odesk-match-prod'
     DEFAILT_AMI_VERSION = '3.1.0'
-    SQOOP_COMMANT = '''sqoop import --verbose --connect "%(connect)s" --username %(user)s --password %(password)s --table %(table)s --direct-split-size 4000000000 -m %(mappers)s'''
+    SQOOP_COMMANT = '''sqoop import --verbose --connect "%(connect)s" --username %(user)s --password %(password)s --table %(table)s --direct-split-size 4000000000 -m %(mappers)s %(options)s'''
 
     def __init__(self, config):
         super(PigDataSource, self).__init__(config)
@@ -286,10 +286,11 @@ class PigDataSource(BaseDataSource):
                                                       db_param.get('port', '5432'),
                                                       db_param['dbname'])
             sqoop_script = self.SQOOP_COMMANT % {'table' :sqoop_import.table,
-                                                        'connect': connect,
-                                                        'password': db_param['password'],
-                                                        'user': db_param['user'],
-                                                        'mappers': sqoop_import.mappers}
+                                                 'connect': connect,
+                                                 'password': db_param['password'],
+                                                 'user': db_param['user'],
+                                                 'mappers': sqoop_import.mappers,
+                                                 'options': sqoop_import.options}
             if sqoop_import.where:
                 sqoop_script += " --where %s" % sqoop_import.where
             if sqoop_import.direct:

@@ -167,6 +167,7 @@ class Sqoop(object):
         self.table = config.get('table')
         self.direct = config.get('direct')
         self.mappers = config.get('mappers', 1)
+        self.options = config.get('options', '')
         self.query = config.text
 
     def build_query(self, params):
