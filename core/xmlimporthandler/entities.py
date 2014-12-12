@@ -71,6 +71,8 @@ class Field(object):
         # If not defined, default is false
         self.required = config.get('required') == 'true'
         self.multipart = config.get('multipart') == 'true'
+        self.key_path = config.get('key_path', None)
+        self.value_path = config.get('value_path', None)
 
         self.validate_attributes()
 
@@ -112,11 +114,29 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
             value = jsonpath(value, self.jsonpath)
             if value is False:
                 value = None
+            if self.key_path and self.value_path and value:
+                # Treat as a dictionary
+                keys = jsonpath(value[0], self.key_path)
+                strategy = self.PROCESS_STRATEGIES.get(self.type)
+                try:
+                    values = map(strategy,
+                                 jsonpath(value[0],
+                                 self.value_path))
+                except ValueError as e:
+                    raise ProcessException(e)
+                except TypeError as e:
+                    raise ProcessException(e)
+                convert_type = False
+                if keys is not False and values is not False:
+                    value = dict(zip(keys, values))
+                else:
+                    value = None
             if not self.delimiter and isinstance(value, (list, tuple)) \
                     and len(value) == 1 and not self.multipart:
                 value = value[0]
             if isinstance(value, (list, tuple)):
                 value = filter(None, value)
+
 
         if self.regex:
             match = re.search(self.regex, value)

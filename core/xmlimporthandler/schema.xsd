@@ -45,6 +45,8 @@
         <xs:attribute type="xs:string" name="headers" use="optional" />
         <xs:attribute type="xs:boolean" name="required" use="optional" />
         <xs:attribute type="xs:boolean" name="multipart" use="optional" />
+        <xs:attribute type="xs:string" name="key_path" use="optional" />
+        <xs:attribute type="xs:string" name="value_path" use="optional" />
 
         <!-- TODO: Is it needed here ??? -->
         <xs:attribute type="xs:string" name="src" use="optional" />
