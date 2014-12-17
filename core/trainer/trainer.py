@@ -865,6 +865,7 @@ class Trainer():
                                               self._vect_data[segment][
                                                   feature_name])
                     transformer = feature['transformer']
+                    preprocessor = feature['type'].preprocessor
                     if item is not None:
                         if isinstance(item, numpy.ndarray):
                             value = item.tolist()[0][0]
@@ -883,6 +884,14 @@ class Trainer():
                                 index = 0
                                 item = item.todense().tolist()
                                 for subfeature in transformer.get_feature_names():
+                                    if item[0][index]:
+                                        vectorized_data[feature_name][subfeature] = item[0][index]
+                                    index +=1
+                            elif preprocessor is not None and hasattr(preprocessor,
+                                                          'get_feature_names'):
+                                index = 0
+                                item = item.todense().tolist()
+                                for subfeature in preprocessor.get_feature_names():
                                     if item[0][index]:
                                         vectorized_data[feature_name][subfeature] = item[0][index]
                                     index +=1

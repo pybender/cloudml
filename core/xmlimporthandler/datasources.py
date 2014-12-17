@@ -194,6 +194,13 @@ class PigDataSource(BaseDataSource):
         self.log_path = '%s/%s' % (self.S3_LOG_URI, self.name)
         self.log_uri = 's3://%s%s' % (self.bucket_name, self.log_path)
 
+        # bucket = self.s3_conn.lookup(self.bucket_name)
+        # if bucket is None:
+        #     raise ValueError("invalid bucket name")
+        # log_key = Key(bucket)
+        # log_key.key = self.log_path
+        # self.log_url = key.generate_url(expires_in=0, query_auth=False)
+
         #self.prepare_cluster()
 
     def set_ih(self, ih):
