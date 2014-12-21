@@ -254,12 +254,24 @@ class PigDataSource(BaseDataSource):
         k.key = "cloudml/output/%s" % name
         k.delete()
 
+    def generate_download_url(self, step, log_type, expires_in=3600):
+        b = self.s3_conn.get_bucket(self.bucket_name)
+        key = Key(b)
+        key.key = '/{1}/{2}/steps/%d/%s'.format(
+            self.log_path, self.jobid, step, log_type)
+        return key.generate_url(expires_in)
+
     def get_log(self, log_uri, jobid, step, log_type='stdout'):
         b = self.s3_conn.get_bucket(self.bucket_name)
         k = Key(b)
-        k.key = "%s/%s/steps/%d/%s" % (log_uri, jobid, step, log_type)
+        k.key = "/%s/%s/steps/%d/%s" % (log_uri, jobid, step, log_type)
         logging.info('Log uri: %s' % k.key)
         return k.get_contents_as_string()
+
+    @property
+    def s3_logs_folder(self):
+        return 's3://{0}{1}/{2}/steps/'.format(
+            self.bucket_name, self.log_path, self.jobid)
 
     def print_logs(self, log_path, step_number):
         logging.info('Step logs:')
@@ -270,12 +282,14 @@ class PigDataSource(BaseDataSource):
             logging.info(self.get_log(log_path, self.jobid, step_number, 'controller'))
             logging.info('Stderr:')
             logging.info(self.get_log(log_path, self.jobid, step_number, 'stderr'))
-        except:
-            logging.info('Logs are anavailable now (updated every 5 mins)')
+        except Exception, exc:
+            logging.error('Exception occures while loading logs: %s', exc)
+            logging.info('Logs are unavailable now (updated every 5 mins)')
             logging.info('''For getting stderr log please use command:
-    s3cmd get s3://%s/%s/%s/steps/%d/stderr stderr''' % (self.bucket_name, log_path, self.jobid, step_number))
+    s3cmd get s3://%s%s/%s/steps/%d/stderr stderr''' % (self.bucket_name, log_path, self.jobid, step_number))
             logging.info('''For getting stdout log please use command:
-    s3cmd get s3://%s/%s/%s/steps/%d/stdout stdout''' % (self.bucket_name, log_path, self.jobid, step_number))
+    s3cmd get s3://%s%s/%s/steps/%d/stdout stdout''' % (self.bucket_name, log_path, self.jobid, step_number))
+            #logging.info('Download url: %s', generate_download_url(step_number, 'stderr'))
 
     def prepare_cluster(self):
         if self.jobid is None:
@@ -323,16 +337,44 @@ class PigDataSource(BaseDataSource):
             #     action_on_failure='CONTINUE')
             # self.steps.append(sqoop_step)
 
-    def _get_iter(self, query, query_target=None):
-        pig_file = self.store_query_to_s3(query, query_target)
-        pig_args=['-p', 'output=%s' % self.result_uri]
+    #############################
+    # get_iter and it's helpers #
+    #############################
+
+    def _run_jobflow(self):
         bootstrap_actions = []
-        install_ganglia = BootstrapAction('Install ganglia', 's3://elasticmapreduce/bootstrap-actions/install-ganglia', [])
+        install_ganglia = BootstrapAction(
+            'Install ganglia',
+            's3://elasticmapreduce/bootstrap-actions/install-ganglia', []
+        )
         bootstrap_actions.append(install_ganglia)
         if self.hadoop_params is not None:
             params = self.hadoop_params.split(',')
-            config_bootstrapper = BootstrapAction('Configure hadoop', 's3://elasticmapreduce/bootstrap-actions/configure-hadoop', params)
+            config_bootstrapper = BootstrapAction(
+                'Configure hadoop',
+                's3://elasticmapreduce/bootstrap-actions/configure-hadoop',
+                params
+            )
             bootstrap_actions.append(config_bootstrapper)
+        logging.info('Running emr jobflow')
+        self.jobid = self.emr_conn.run_jobflow(name='Cloudml jobflow',
+                          log_uri=self.log_uri,
+                          ami_version=self.ami_version,
+                          visible_to_all_users=True,
+                          bootstrap_actions=bootstrap_actions,
+                          ec2_keyname=self.ec2_keyname,
+                          keep_alive=self.keep_alive,
+                          num_instances=self.num_instances,
+                          master_instance_type=self.master_instance_type,
+                          slave_instance_type=self.slave_instance_type,
+                          ##api_params={'Instances.Ec2SubnetId':'subnet-3f5bc256'},
+                          action_on_failure='CONTINUE',#'CANCEL_AND_WAIT',
+                          steps=self.steps)
+        logging.info('New JobFlow id is %s' % self.jobid)
+
+    def _append_pig_step(self, query, query_target=None):
+        pig_file = self.store_query_to_s3(query, query_target)
+        pig_args=['-p', 'output=%s' % self.result_uri]
 
         for k,v in self.sqoop_results_uries.iteritems():
             pig_args.append("-p")
@@ -343,34 +385,46 @@ class PigDataSource(BaseDataSource):
                      pig_args=pig_args)
         pig_step.action_on_failure = 'CONTINUE'
         self.steps.append(pig_step)
+
+    def _process_running_state(self, status, step_number):
+        if hasattr(status, 'masterpublicdnsname'):
+            masterpublicdnsname = status.masterpublicdnsname
+            if self.ih.callback is not None:
+                callback_params = {
+                    'jobflow_id': self.jobid,
+                    's3_logs_folder': self.s3_logs_folder,
+                    'master_dns': masterpublicdnsname,
+                    'step_number': step_number
+                }
+                self.ih.callback(**callback_params)
+            logging.info("Master node dns name: %s" % masterpublicdnsname)
+            logging.info('''For access to hadoop web ui please create ssh tunnel:
+ssh -D localhost:12345 hadoop@%(dns)s -i ~/.ssh/cloudml-control.pem
+After creating ssh tunnel web ui will be available on localhost:9026 using
+socks proxy localhost:12345'''  % {'dns': masterpublicdnsname})
+
+    def _fail_jobflow(self, step_number):
+        logging.error('Jobflow failed, shutting down.')
+        self.print_logs(self.log_path, step_number)
+        raise ImportHandlerException('Emr jobflow %s failed' % self.jobid)
+
+    def _get_iter(self, query, query_target=None):
+        self._append_pig_step(query, query_target)
         self.delete_output(self.name)
         if self.jobid is not None:
             status = self.emr_conn.describe_jobflow(self.jobid)
             step_number = len(status.steps) + 1
-            logging.info('Use existing emr jobflow: %s' % self.jobid)
+            logging.info('Using existing emr jobflow: %s' % self.jobid)
             step_list = self.emr_conn.add_jobflow_steps(self.jobid, self.steps)
             #step_id = step_list.stepids[0].value
         else:
-            logging.info('Run emr jobflow')
             step_number = 1
-            self.jobid = self.emr_conn.run_jobflow(name='Cloudml jobflow',
-                              log_uri=self.log_uri,
-                              ami_version=self.ami_version,
-                              visible_to_all_users=True,
-                              bootstrap_actions=bootstrap_actions,
-                              ec2_keyname=self.ec2_keyname,
-                              keep_alive=self.keep_alive,
-                              num_instances=self.num_instances,
-                              master_instance_type=self.master_instance_type,
-                              slave_instance_type=self.slave_instance_type,
-                              ##api_params={'Instances.Ec2SubnetId':'subnet-3f5bc256'},
-                              action_on_failure='CONTINUE',#'CANCEL_AND_WAIT',
-                              steps=self.steps)
-            logging.info('JobFlowid: %s' % self.jobid)
-        previous_state = None
+            self._run_jobflow()
 
         logging.info('Step number: %d' % step_number)
 
+        # Checking jobflow state...
+        previous_state = None
         while True:
             time.sleep(10)
             try:
@@ -380,30 +434,71 @@ class PigDataSource(BaseDataSource):
                 time.sleep(10)
                 continue
 
-            laststatechangereason = None
-            if hasattr(status, 'laststatechangereason'):
-                laststatechangereason = status.laststatechangereason
+            # laststatechangereason = None
+            # if hasattr(status, 'laststatechangereason'):
+            #     laststatechangereason = status.laststatechangereason
+            
             if previous_state != status.state:
-                logging.info("State of jobflow: %s" % status.state)
-                if status.state == 'RUNNING':
-                    if hasattr(status, 'masterpublicdnsname'):
-                        masterpublicdnsname = status.masterpublicdnsname
-                        if self.ih.callback is not None:
-                            self.ih.callback(self.jobid, masterpublicdnsname)
-                        logging.info("Master node dns name: %s" % masterpublicdnsname)
-                        logging.info('''For access to hadoop web ui please create ssh tunnel:
-ssh -D localhost:12345 hadoop@%(dns)s -i ~/.ssh/cloudml-control.pem
-After creating ssh tunnel web ui will be available on localhost:9026 using
-socks proxy localhost:12345'''  % {'dns': masterpublicdnsname})
+                step_state = status.steps[step_number - 1].state
+                logging.info(
+                    "State of jobflow changed: %s. Step %s state is: %s",
+                    status.state, step_number, step_state)
 
-            previous_state = status.state
-            if status.state in ('FAILED', '') or \
-                (status.state in ('WAITING',) and \
-                laststatechangereason == 'Waiting after step failed'):
-                self.print_logs(self.log_path, step_number)
-                raise ImportHandlerException('Emr jobflow %s failed' % self.jobid)
-            if status.state in ('COMPLETED', 'WAITING'):
-                break
+                if status.state == 'RUNNING':
+                    self._process_running_state(status, step_number)
+
+                if status.state == 'COMPLETED':
+                    if step_state == 'FAILED':
+                        self._fail_jobflow()
+                    elif step_state == 'COMPLETED':
+                        logging.info('Step is completed')
+                        break
+                    else:
+                        logging.info(
+                            'Unexpected job state for status %s: %s', status.state, step_state)
+                elif status.state == 'RUNNING':
+                    pass  # processing the task
+                elif status.state == 'WAITING':
+                    if step_state == 'PENDING':
+                        # we reusing cluster and have waiting status of jobflow from previous job
+                        pass
+                    elif step_state == 'FAILED':
+                        self._fail_jobflow()
+                    elif step_state == 'COMPLETED':
+                        logging.info('Step is completed')
+                        break
+                    else:
+                        logging.info(
+                            'Unexpected job state for status %s: %s', status.state, step_state)
+                elif status.state == 'FAILED':
+                    self._fail_jobflow()
+
+                previous_state = status.state
+
+
+
+            # if status.state in ('FAILED', '') or
+            #     (status.state in ('WAITING', ) and \
+            #      laststatechangereason == 'Waiting after step failed'):
+
+            # if status.state in ('FAILED', '') or \
+            #     (status.state in ('WAITING',) and \
+            #     laststatechangereason == 'Waiting after step failed'):
+            #     logging.info('Step state is: %s', status.steps[step_number - 1].state)
+            #     if status.steps[step_number - 1].state == 'PENDING':
+            #         logging.info('here1')
+            #         break
+            #     else:
+            #         logging.error('Jobflow failed, shutting down.')
+            #         self.print_logs(self.log_path, step_number)
+            #         raise ImportHandlerException('Emr jobflow %s failed' % self.jobid)
+            # if status.state in ('COMPLETED', 'WAITING'):
+            #     logging.info('go here')
+            #     if status.steps[step_number - 1].state == u'FAILED':
+            #         self.print_logs(self.log_path, step_number)
+            #         raise ImportHandlerException('Emr jobflow %s failed' % self.jobid)
+            #     else:
+            #         break
         logging.info("Pig results stored to: s3://%s%s" % (self.bucket_name, self.result_path))
         # for test
         #self.result_path =  '/cloudml/output/pig-script/1403671176/'
