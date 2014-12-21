@@ -449,7 +449,7 @@ socks proxy localhost:12345'''  % {'dns': masterpublicdnsname})
 
                 if status.state == 'COMPLETED':
                     if step_state == 'FAILED':
-                        self._fail_jobflow()
+                        self._fail_jobflow(step_number)
                     elif step_state == 'COMPLETED':
                         logging.info('Step is completed')
                         break
@@ -463,7 +463,7 @@ socks proxy localhost:12345'''  % {'dns': masterpublicdnsname})
                         # we reusing cluster and have waiting status of jobflow from previous job
                         pass
                     elif step_state == 'FAILED':
-                        self._fail_jobflow()
+                        self._fail_jobflow(step_number)
                     elif step_state == 'COMPLETED':
                         logging.info('Step is completed')
                         break
@@ -471,7 +471,7 @@ socks proxy localhost:12345'''  % {'dns': masterpublicdnsname})
                         logging.info(
                             'Unexpected job state for status %s: %s', status.state, step_state)
                 elif status.state == 'FAILED':
-                    self._fail_jobflow()
+                    self._fail_jobflow(step_number)
 
                 previous_state = status.state
 
