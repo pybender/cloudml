@@ -47,7 +47,12 @@ class Weight(object):
     def __init__(self, config):
         self.label = config.get('label')
         self.script = config.get('script')
-        self.value = config.get('value')
+        try:
+            self.value = float(config.get('value'))
+        except Exception, exc:
+            raise ImportHandlerException(
+                'Invalid predict model weight: {0}.'
+                'Should be a float value.'.format(config.get('value')))
 
 
 class ResultLabel(object):
