@@ -48,7 +48,7 @@ class Weight(object):
         self.label = config.get('label')
         self.script = config.get('script')
         try:
-            self.value = float(config.get('value'))
+            self.value = float(config.get('value', 1))
         except Exception, exc:
             raise ImportHandlerException(
                 'Invalid predict model weight: {0}.'
