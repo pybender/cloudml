@@ -17,6 +17,7 @@ __author__ = 'ifouk'
 import os
 import sys
 import logging
+import colorer
 
 from core.trainer.config import FeatureModel, SchemaException
 from core.trainer import __version__

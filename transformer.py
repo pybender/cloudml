@@ -14,6 +14,7 @@ import os
 import sys
 import logging
 import cPickle as pickle
+import colorer
 
 from core.importhandler.importhandler import ImportHandlerException, \
     ExtractionPlan, ImportHandler
