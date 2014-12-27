@@ -36,12 +36,13 @@ def convert_single_or_list(value, process_fn, raise_exc=False):
         else:
             return process_fn(value)
     except ValueError:
+        raise
         if raise_exc:
             raise
         return None
 
 
-def process_primitive(strategy, raise_exc=False):
+def process_primitive(strategy, raise_exc=True):
     def process(value, **kwargs):
         return convert_single_or_list(value, strategy, raise_exc) \
             if value is not None else None

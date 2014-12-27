@@ -11,6 +11,7 @@ from jsonpath import jsonpath
 
 from exceptions import ProcessException, ImportHandlerException
 from utils import get_key, ParametrizedTemplate, process_primitive, process_bool
+from datasources import DATASOURCES_REQUIRE_QUERY
 
 
 class FieldException(Exception):
@@ -122,9 +123,10 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
                     values = map(strategy,
                                  jsonpath(value[0],
                                  self.value_path))
-                except ValueError as e:
-                    raise ProcessException(e)
-                except TypeError as e:
+                except (ValueError, TypeError) as e:
+                    logging.warning(
+                        "Can't convert value '{0}' to {1} while "
+                        "processing field {2}".format(value[:100], self.type, self.name))
                     raise ProcessException(e)
                 convert_type = False
                 if keys is not False and values is not False:
@@ -169,7 +171,12 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
 
         if convert_type and value is not None:
             strategy = self.PROCESS_STRATEGIES.get(self.type)
-            value = strategy(value)
+            try:
+                value = strategy(value)
+            except ValueError, exc:
+                logging.warning("Can't convert value '{0}' to {1} while "
+                    "processing field {2}".format(value[:100], self.type, self.name))
+                value = None
 
         # TODO: should it be here or before transformation?
         if self.required and not value:
@@ -281,6 +288,11 @@ class EntityProcessor(object):
             
         self.datasource = import_handler.plan.datasources.get(
             entity.datasource_name)
+
+        if self.datasource is None:
+            raise ImportHandlerException("Datasource or transformed field {0} not found, "
+                "but it used in the entity {1}".format(entity.datasource_name, entity.name))
+
         # Process sqoop imports
         for sqoop_import in self.entity.sqoop_imports:
 
@@ -298,6 +310,14 @@ class EntityProcessor(object):
         if self.datasource.type == 'input':
             query = import_handler.params[query]
 
+        if self.datasource.type in DATASOURCES_REQUIRE_QUERY and \
+                (query is None or not query.strip(' \t\n\r')):
+            raise ImportHandlerException(
+                "Query not specified in the entity {0}, but {1}"
+                " datasource {2} require it".format(
+                    self.entity.name,
+                    self.datasource.type,
+                    self.datasource.name))
         self.iterator = self.datasource._get_iter(
             query, self.entity.query_target)
 
@@ -326,6 +346,9 @@ class EntityProcessor(object):
     def process_field(self, field, row, row_data=None):
         row_data = row_data or {}
         if field.column:
+            if not field.column in row:
+                logging.warning('{0} not found in the result row: {1}'.format(
+                    field.column, str(row)[:100]))
             item_value = row.get(field.column, None)
         else:
             item_value = row
@@ -349,7 +372,8 @@ class EntityProcessor(object):
                     result[sub_field.name] = sub_field.process_value(
                         data, **kwargs)
             elif field.transform == 'csv':
-                raise Exception('Not implemented yet')  # TODO:
+                raise ImportHandlerException(
+                    'Fields with transform=csv are not implemented yet')  # TODO:
         else:
             result[field.name] = field.process_value(item_value, **kwargs)
         return result

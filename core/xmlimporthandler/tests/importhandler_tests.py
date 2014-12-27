@@ -88,7 +88,7 @@ class TestInput(unittest.TestCase):
         self.assertEqual(inp.process_value('Monday 11. March 2002'),
                          datetime(2002, 3, 11, 0, 0))
         with self.assertRaisesRegexp(
-                ImportHandlerException, "Value of the input parameter created \
+                ImportHandlerException, "Value of the input parameter created is \
 invalid date in format %A %d. %B %Y: 11/03/02"):
             inp.process_value('11/03/02')
         with self.assertRaisesRegexp(

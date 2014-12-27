@@ -13,10 +13,13 @@ from boto.exception import EmrResponseError
 from boto.emr.step import PigStep, InstallPigStep, JarStep
 from boto.emr import BootstrapAction
 
-from exceptions import ImportHandlerException
+from exceptions import ImportHandlerException, ProcessException
 from core.importhandler.db import postgres_iter, run_queries
 
 logging.getLogger('boto').setLevel(logging.INFO)
+
+
+DATASOURCES_REQUIRE_QUERY = ['db', 'pig']
 
 
 class BaseDataSource(object):
@@ -418,7 +421,14 @@ socks proxy localhost:12345'''  % {'dns': masterpublicdnsname})
         raise ImportHandlerException('Emr jobflow %s failed' % self.jobid)
 
     def _get_iter(self, query, query_target=None):
-        self._append_pig_step(query, query_target)
+        logging.info('Processing pig datasource...')
+        try:
+            self._append_pig_step(query, query_target)
+        except Exception, exc:
+            msg = "Can't initialize pig datasource: {0}".format(exc)
+            logging.error(msg)
+            raise ProcessException(msg)
+
         self.delete_output(self.name)
         if self.jobid is not None:
             status = self.emr_conn.describe_jobflow(self.jobid)

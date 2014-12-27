@@ -38,10 +38,16 @@ class ExtractionPlan(object):
             with open(config, 'r') as fp:
                 config = fp.read()
 
+        if not config:
+            raise ImportHandlerException('import handler file is empty')
+
         try:
             self.data = objectify.fromstring(config)
         except etree.XMLSyntaxError as e:
-            raise ImportHandlerException(message='%s %s ' % (config, e))
+            raise ImportHandlerException(
+                "Can't parse import handler file XML: {0}. "
+                "Got exception: {1}".format(config, e)
+            )
 
         if not self.is_valid():
             raise ImportHandlerException(
@@ -70,6 +76,10 @@ class ExtractionPlan(object):
         Loads dictionary of the input parameters
         from import handler configuration.
         """
+        if not hasattr(config, "inputs"):
+            logging.debug("No input parameters declared")
+            return
+
         inputs_conf = config.inputs
         if inputs_conf is not None:
             for param_conf in inputs_conf.xpath("param"):
@@ -131,6 +141,7 @@ class ExtractionPlan(object):
         return dict(conf)
 
     def _validate_schema(self):
+        logging.debug('Validating schema...')
         self._errors = []
         with open(os.path.join(BASEDIR, 'schema.xsd'), 'r') as schema_fp:
             xmlschema_doc = etree.parse(schema_fp)
