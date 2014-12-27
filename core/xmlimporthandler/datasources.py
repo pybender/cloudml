@@ -234,6 +234,7 @@ class PigDataSource(BaseDataSource):
         if not k.exists():
             type_result = 'r'
         i = 0
+        callback_sent = False
         while True:
             sbuffer = cStringIO.StringIO()
             k = Key(b)
@@ -245,7 +246,15 @@ class PigDataSource(BaseDataSource):
             i += 1
             sbuffer.seek(0)
             for line in sbuffer:
-                yield json.loads(line)
+                pig_row = json.loads(line)
+                if not callback_sent and self.ih.callback is not None:
+                    callback_params = {
+                        'jobflow_id': self.jobid,
+                        'pig_row': pig_row
+                    }
+                    self.ih.callback(**callback_params)
+                    callback_sent = True
+                yield pig_row
             sbuffer.close()
 
     def delete_output(self, name):
@@ -475,30 +484,6 @@ socks proxy localhost:12345'''  % {'dns': masterpublicdnsname})
 
                 previous_state = status.state
 
-
-
-            # if status.state in ('FAILED', '') or
-            #     (status.state in ('WAITING', ) and \
-            #      laststatechangereason == 'Waiting after step failed'):
-
-            # if status.state in ('FAILED', '') or \
-            #     (status.state in ('WAITING',) and \
-            #     laststatechangereason == 'Waiting after step failed'):
-            #     logging.info('Step state is: %s', status.steps[step_number - 1].state)
-            #     if status.steps[step_number - 1].state == 'PENDING':
-            #         logging.info('here1')
-            #         break
-            #     else:
-            #         logging.error('Jobflow failed, shutting down.')
-            #         self.print_logs(self.log_path, step_number)
-            #         raise ImportHandlerException('Emr jobflow %s failed' % self.jobid)
-            # if status.state in ('COMPLETED', 'WAITING'):
-            #     logging.info('go here')
-            #     if status.steps[step_number - 1].state == u'FAILED':
-            #         self.print_logs(self.log_path, step_number)
-            #         raise ImportHandlerException('Emr jobflow %s failed' % self.jobid)
-            #     else:
-            #         break
         logging.info("Pig results stored to: s3://%s%s" % (self.bucket_name, self.result_path))
         # for test
         #self.result_path =  '/cloudml/output/pig-script/1403671176/'
