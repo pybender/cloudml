@@ -151,7 +151,8 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
             data = {}
             data.update(row)
             data.update(row_data)
-            value = script_manager.execute_function(self.script, value, data, row_data)
+            value = script_manager.execute_function(
+                self.script, value, data, row_data)
             convert_type = False
 
         if self.split and value:
@@ -301,7 +302,8 @@ class EntityProcessor(object):
             if sqoop_import.query:
                 sqoop_query = sqoop_import.build_query(params)
                 logging.info('Run query %s' % sqoop_query)
-                sqoop_iter = sqoop_import.datasource.run_queries(sqoop_query)
+                # We running db datasource query to create a table
+                sqoop_import.datasource.run_queries(sqoop_query)
 
         if self.datasource.type == 'pig':
             self.datasource.run_sqoop_imports(self.entity.sqoop_imports)

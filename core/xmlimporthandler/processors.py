@@ -41,7 +41,8 @@ def composite_python(expression_value, value, row_data):
     try:
         return eval(res)
     except Exception:
-        logging.exception('Expression template %s, expression %s' % (expression_value, res))
+        logging.exception(
+            'Expression template %s, expression %s' % (expression_value, res))
         raise
 
 

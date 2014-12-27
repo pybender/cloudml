@@ -51,7 +51,8 @@ class ExtractionPlan(object):
 
         if not self.is_valid():
             raise ImportHandlerException(
-                'XML file format is invalid: %s' % self.errors)
+                "There is an error in the import handler's XML, "
+                "line {0}. {1}".format(self.error.line, self.error.message))
 
         self.inputs = {}
         self.load_inputs(self.data)
@@ -92,7 +93,11 @@ class ExtractionPlan(object):
         """
         for ds_config in iterchildren(config.datasources):
             ds = DataSource.factory(ds_config)
+            if ds.name in self.datasources:
+                raise ImportHandlerException(
+                    'There are few datasources with name {0}'.format(ds.name))
             self.datasources[ds.name] = ds
+
         ds = DataSource.DATASOURCE_DICT['input']()
         self.datasources[ds.name] = ds
 
@@ -107,13 +112,13 @@ class ExtractionPlan(object):
     # Schema Validation specific methods
 
     @property
-    def errors(self):
-        if not hasattr(self, '_errors'):
+    def error(self):
+        if not hasattr(self, '_error'):
             self._validate_schema()
-        return self._errors
+        return self._error
 
     def is_valid(self):
-        return not self.errors
+        return not self.error
 
     @classmethod
     def get_schema(cls):
@@ -126,8 +131,8 @@ class ExtractionPlan(object):
         conf = defaultdict(list)
         namespaces = {'xs': 'http://www.w3.org/2001/XMLSchema'}
         datasources = schema.xpath(
-            '//xs:element[@name = "datasources"]/xs:complexType/xs:sequence/xs:element',
-            namespaces=namespaces
+            '//xs:element[@name = "datasources"]/'
+            'xs:complexType/xs:sequence/xs:element', namespaces=namespaces
         )
         for d in datasources:
             params = conf[d.attrib['name']]
@@ -142,7 +147,7 @@ class ExtractionPlan(object):
 
     def _validate_schema(self):
         logging.debug('Validating schema...')
-        self._errors = []
+        self._error = None
         with open(os.path.join(BASEDIR, 'schema.xsd'), 'r') as schema_fp:
             xmlschema_doc = etree.parse(schema_fp)
             xmlschema = etree.XMLSchema(xmlschema_doc)
@@ -150,7 +155,7 @@ class ExtractionPlan(object):
             if not is_valid:
                 log = xmlschema.error_log
                 error = log.last_error
-                self._errors.append(error)
+                self._error = error
 
 
 class ImportHandler(object):

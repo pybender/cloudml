@@ -184,8 +184,8 @@ class ExtractionXMLPlanTest(unittest.TestCase):
             ExtractionPlan(self.incorrect_importhandler_file)
         the_exception = cm.exception
         self.assertEqual(
-            str(the_exception)[:26],
-            'XML file format is invalid'
+            str(the_exception)[:17],
+            'There is an error'
         )
 
     def test_get_ds_config(self):
