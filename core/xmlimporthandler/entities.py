@@ -303,7 +303,7 @@ class EntityProcessor(object):
                 sqoop_query = sqoop_import.build_query(params)
                 logging.info('Run query %s' % sqoop_query)
                 # We running db datasource query to create a table
-                sqoop_import.datasource.run_queries(sqoop_query)
+                sqoop_iter = sqoop_import.datasource.run_queries(sqoop_query)
 
         if self.datasource.type == 'pig':
             self.datasource.run_sqoop_imports(self.entity.sqoop_imports)
