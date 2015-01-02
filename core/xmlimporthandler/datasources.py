@@ -55,9 +55,9 @@ class DbDataSource(BaseDataSource):
         return self._run(query, query_target)
 
     def run_queries(self, query):
-        return self._run(query, query_target=None)
+        return self._run(query, query_target=None, run=True)
 
-    def _run(self, query, query_target=None):
+    def _run(self, query, query_target=None, run=False):
         if query is None:
             raise ImportHandlerException(
                 "Query is required in the DB datasource")
@@ -67,8 +67,8 @@ class DbDataSource(BaseDataSource):
         queries = [q + ';' for q in queries]
         if query_target:
             queries.append("SELECT * FROM %s;" % query_target)
-
-        db_iter = self.DB.get(self.config.attrib['vendor'])[0]
+        method = 1 if run else 0
+        db_iter = self.DB.get(self.config.attrib['vendor'])[method]
 
         if db_iter is None:
             raise ImportHandlerException(
