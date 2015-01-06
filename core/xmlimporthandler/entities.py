@@ -348,9 +348,9 @@ class EntityProcessor(object):
     def process_field(self, field, row, row_data=None):
         row_data = row_data or {}
         if field.column:
-            if not field.column in row:
-                logging.warning('{0} not found in the result row: {1}'.format(
-                    field.column, str(row)[:100]))
+            #if not field.column in row:
+            #    logging.warning('{0} not found in the result row: {1}'.format(
+            #        field.column, str(row)[:100]))
             item_value = row.get(field.column, None)
         else:
             item_value = row
