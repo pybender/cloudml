@@ -226,6 +226,8 @@ class Entity(object):
         if hasattr(config, 'query'):  # query is child element
             self.query_target = config.query.get('target')
             self.query = config.query.text
+            self.autoload_sqoop_dataset = config.query.get('autoload_sqoop_dataset')
+            self.sqoop_dataset_name = config.query.get('sqoop_dataset_name')
         else:  # query is attribute
             self.query = config.get('query')
             self.query_target = None
@@ -300,10 +302,35 @@ class EntityProcessor(object):
             sqoop_import.datasource = import_handler.plan.datasources.get(
                 sqoop_import.datasource_name)
             if sqoop_import.query:
+                from utils import SCHEMA_INFO_FIELDS, PIG_TEMPLATE, construct_pig_sample
                 sqoop_query = sqoop_import.build_query(params)
                 logging.info('Run query %s' % sqoop_query)
                 # We running db datasource query to create a table
+                #   
                 sqoop_iter = sqoop_import.datasource.run_queries(sqoop_query)
+                # TODO: autoload
+                if self.entity.autoload_sqoop_dataset:
+                    sql = """select * from {0} limit 1;
+select {1} from INFORMATION_SCHEMA.COLUMNS where table_name = '{0}';
+                    """.format(sqoop_import.table,
+                    ','.join(SCHEMA_INFO_FIELDS))
+
+                    try:
+                        iterator = sqoop_import.datasource._get_iter(sql)
+                        fields_data = [{key: opt[i] for i, key in enumerate(
+                                        SCHEMA_INFO_FIELDS)}
+                                       for opt in iterator]
+                    except Exception, exc:
+                        return ValueError(
+                            "Can't execute the query: {0}. Error: {1}".format(sql, exc))
+
+                    fields_str = construct_pig_sample(fields_data)
+                    load_dataset_script = PIG_TEMPLATE.format(
+                        self.entity.sqoop_dataset_name,
+                        sqoop_import.target,
+                        fields_str)
+                    query = "{0}\n{1}".format(load_dataset_script, query)
+
 
         if self.datasource.type == 'pig':
             self.datasource.run_sqoop_imports(self.entity.sqoop_imports)

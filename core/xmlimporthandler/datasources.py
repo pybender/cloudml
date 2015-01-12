@@ -206,6 +206,7 @@ class PigDataSource(BaseDataSource):
             query += "\nSTORE %s INTO '$output' USING JsonStorage();" % query_target
         b = self.s3_conn.get_bucket(self.bucket_name)
         k = Key(b)
+        logging.info("Store pig script to s3: %s" % query)
         k.key = 'cloudml/pig/' + self.name + '_script.pig'
         k.set_contents_from_string(query)
         return 's3://%s/%s' % (self.bucket_name, k.key)
@@ -218,6 +219,7 @@ class PigDataSource(BaseDataSource):
         #k.set_contents_from_filename(
         #    "./core/xmlimporthandler/install_sqoop.sh")
         k.set_contents_from_string(script)
+        logging.info("Store pig script to s3: %" % script)
         return 's3://%s/%s' % (self.bucket_name, k.key)
 
     def get_result(self):
@@ -335,15 +337,15 @@ class PigDataSource(BaseDataSource):
             logging.info('Sqoop command: %s' % sqoop_script)
             import subprocess
 
-            p = subprocess.Popen(
-                sqoop_script, shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT)
-            for line in p.stdout.readlines():
-                logging.info(line)
-            retval = p.wait()
-            if retval != 0:
-                raise ImportHandlerException('Sqoop import  failed')
+            # p = subprocess.Popen(
+            #     sqoop_script, shell=True,
+            #     stdout=subprocess.PIPE,
+            #     stderr=subprocess.STDOUT)
+            # for line in p.stdout.readlines():
+            #     logging.info(line)
+            # retval = p.wait()
+            # if retval != 0:
+            #     raise ImportHandlerException('Sqoop import  failed')
 
             #sqoop_script_uri = self.store_sqoop_script_to_s3(sqoop_script)
             # sqoop_step = JarStep(name='Run sqoop import',
