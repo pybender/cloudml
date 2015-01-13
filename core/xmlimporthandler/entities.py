@@ -31,10 +31,11 @@ class Field(object):
         'integer': process_primitive(int)
     }
 
-    def __init__(self, config):
+    def __init__(self, config, entity):
         #self.config = config
         self.name = config.get('name')  # unique
         self.type = config.get('type', 'string')
+        self.entity = entity
 
         # if entity is using a DB or CSV datasource,
         # it will use data from this column
@@ -124,9 +125,11 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
                                  jsonpath(value[0],
                                  self.value_path))
                 except (ValueError, TypeError) as e:
-                    logging.warning(
-                        "Can't convert value '{0}' to {1} while "
-                        "processing field {2}".format(value[:100], self.type, self.name))
+                    if self.entity.log_msg_counter < 100:
+                        self.entity.log_msg_counter += 1
+                        logging.warning(
+                            "Can't convert value '{0}' to {1} while "
+                            "processing field {2}".format(value[:100], self.type, self.name))
                     raise ProcessException(e)
                 convert_type = False
                 if keys is not False and values is not False:
@@ -138,7 +141,6 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
                 value = value[0]
             if isinstance(value, (list, tuple)):
                 value = filter(None, value)
-
 
         if self.regex:
             match = re.search(self.regex, value)
@@ -175,8 +177,10 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
             try:
                 value = strategy(value)
             except ValueError, exc:
-                logging.warning("Can't convert value '{0}' to {1} while "
-                    "processing field {2}".format(value[:100], self.type, self.name))
+                if self.entity.log_msg_counter < 100:
+                    self.entity.log_msg_counter += 1
+                    logging.warning("Can't convert value '{0}' to {1} while "
+                        "processing field {2}".format(value[:100], self.type, self.name))
                 value = None
 
         # TODO: should it be here or before transformation?
@@ -219,14 +223,17 @@ class Entity(object):
         # nested entities with another datasource.
         self.nested_entities_global_ds = []
         self.sqoop_imports = []
+        self.log_msg_counter = 0
 
         self.datasource_name = config.get('datasource')
         self.name = config.get('name')
+        self.autoload_fields = config.get('autoload_fields')
+        self.fields_loaded = False
 
         if hasattr(config, 'query'):  # query is child element
             self.query_target = config.query.get('target')
             self.query = config.query.text
-            self.autoload_sqoop_dataset = config.query.get('autoload_sqoop_dataset')
+            self.autoload_sqoop_dataset = (config.query.get('autoload_sqoop_dataset', None) == 'true')
             self.sqoop_dataset_name = config.query.get('sqoop_dataset_name')
         else:  # query is attribute
             self.query = config.get('query')
@@ -250,7 +257,7 @@ class Entity(object):
         Loads entity fields dictionary.
         """
         for field_config in config.xpath("field"):
-            field = Field(field_config)
+            field = Field(field_config, self)
             self.fields[field.name] = field
 
     def load_sqoop_imports(self, config):
@@ -308,7 +315,6 @@ class EntityProcessor(object):
                 # We running db datasource query to create a table
                 #   
                 sqoop_iter = sqoop_import.datasource.run_queries(sqoop_query)
-                # TODO: autoload
                 if self.entity.autoload_sqoop_dataset:
                     sql = """select * from {0} limit 1;
 select {1} from INFORMATION_SCHEMA.COLUMNS where table_name = '{0}';
@@ -330,7 +336,6 @@ select {1} from INFORMATION_SCHEMA.COLUMNS where table_name = '{0}';
                         sqoop_import.target,
                         fields_str)
                     query = "{0}\n{1}".format(load_dataset_script, query)
-
 
         if self.datasource.type == 'pig':
             self.datasource.run_sqoop_imports(self.entity.sqoop_imports)
@@ -357,6 +362,23 @@ select {1} from INFORMATION_SCHEMA.COLUMNS where table_name = '{0}';
         row = self.iterator.next()
         row_data = {}
         row_data.update(self.params)
+
+        if self.entity.autoload_fields and not self.entity.fields_loaded:
+            # We need to autoload fields on the first row processing
+            logging.info('Auto load fields')
+            from utils import isint, isfloat
+            for key, val in row.iteritems():
+                if isint(val):
+                    data_type = 'integer'
+                elif isfloat(val):
+                    data_type = 'float'
+                else:
+                    data_type = 'string'
+                if not self.entity.fields.has_key(key):
+                    self.entity.fields[key] = Field(
+                        {'name': key, 'type': data_type, 'column': key}, self.entity)
+            self.entity.fields_loaded = True
+
         for field in self.entity.fields.values():
             row_data.update(self.process_field(field, row, row_data))
 

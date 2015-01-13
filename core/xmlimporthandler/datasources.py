@@ -232,7 +232,7 @@ class PigDataSource(BaseDataSource):
         if not k.exists():
             type_result = 'r'
         i = 0
-        callback_sent = False
+        first_result = False
         while True:
             sbuffer = cStringIO.StringIO()
             k = Key(b)
@@ -245,13 +245,14 @@ class PigDataSource(BaseDataSource):
             sbuffer.seek(0)
             for line in sbuffer:
                 pig_row = json.loads(line)
-                if not callback_sent and self.ih.callback is not None:
-                    callback_params = {
-                        'jobflow_id': self.jobid,
-                        'pig_row': pig_row
-                    }
-                    self.ih.callback(**callback_params)
-                    callback_sent = True
+                if not first_result:
+                    if self.ih.callback is not None:
+                        callback_params = {
+                            'jobflow_id': self.jobid,
+                            'pig_row': pig_row
+                        }
+                        self.ih.callback(**callback_params)
+                    first_result = True
                 yield pig_row
             sbuffer.close()
 
