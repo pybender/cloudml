@@ -317,7 +317,7 @@ class EntityProcessor(object):
                 sqoop_iter = sqoop_import.datasource.run_queries(sqoop_query)
                 if self.entity.autoload_sqoop_dataset:
                     sql = """select * from {0} limit 1;
-select {1} from INFORMATION_SCHEMA.COLUMNS where table_name = '{0}';
+select {1} from INFORMATION_SCHEMA.COLUMNS where table_name = '{0}' order by ordinal_position;
                     """.format(sqoop_import.table,
                     ','.join(SCHEMA_INFO_FIELDS))
 

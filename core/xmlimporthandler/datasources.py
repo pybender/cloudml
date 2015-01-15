@@ -338,15 +338,15 @@ class PigDataSource(BaseDataSource):
             logging.info('Sqoop command: %s' % sqoop_script)
             import subprocess
 
-            # p = subprocess.Popen(
-            #     sqoop_script, shell=True,
-            #     stdout=subprocess.PIPE,
-            #     stderr=subprocess.STDOUT)
-            # for line in p.stdout.readlines():
-            #     logging.info(line)
-            # retval = p.wait()
-            # if retval != 0:
-            #     raise ImportHandlerException('Sqoop import  failed')
+            p = subprocess.Popen(
+                sqoop_script, shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT)
+            for line in p.stdout.readlines():
+                logging.info(line)
+            retval = p.wait()
+            if retval != 0:
+                raise ImportHandlerException('Sqoop import  failed')
 
             #sqoop_script_uri = self.store_sqoop_script_to_s3(sqoop_script)
             # sqoop_step = JarStep(name='Run sqoop import',
