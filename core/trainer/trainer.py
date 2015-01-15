@@ -4,6 +4,7 @@ _author__ = 'ifoukarakis, papadimitriou'
 import json
 import logging
 import numpy
+import csv
 import scipy.sparse
 
 from copy import deepcopy
@@ -43,10 +44,18 @@ class InvalidTrainerFile(Exception):
     """
     pass
 
+class TransformerNotFound(Exception):
+    """
+    Exception to be raised if predefined transormer could not be found.
+    """
+    pass
+
 
 class Trainer():
     TYPE_CLASSIFICATION = 'classification'
     TYPE_REGRESSION = 'regression'
+
+    TRAIN_VECT_DATA = 'train_vect_data' 
 
     def __init__(self, feature_model):
         """
@@ -72,6 +81,15 @@ class Trainer():
         self._ignored = 0
         self.train_time = {}
         self._segments = {}
+        self._feature_weights = {}
+
+        self.intermediate_data = defaultdict(dict)
+
+    def get_transformer(self, name):
+        raise TransformerNotFound
+
+    def set_transformer_getter(self, method):
+        self.get_transformer = method
 
     @property
     def with_segmentation(self):
@@ -111,7 +129,7 @@ class Trainer():
             raise NotImplemented('Calculating metrics only for classification\
  and regression model implemented')
 
-    def train(self, iterator=None, percent=0):
+    def train(self, iterator=None, percent=0, store_vect_data=False):
         """
         Train the model using the given data. Appropriate SciPy vectorizers
         will be used to bring data to the appropriate format.
@@ -144,9 +162,9 @@ class Trainer():
                      memory_usage(-1, interval=0, timeout=None)[0])
         for segment in self._vect_data:
             logging.info('Starting train "%s" segment' % segment)
-            self._train_segment(segment)
+            self._train_segment(segment, store_vect_data)
 
-    def _train_segment(self, segment):
+    def _train_segment(self, segment, store_vect_data=False):
         # Get X and y
         logging.info('Extracting features for segment %s ...', segment)
 
@@ -175,11 +193,41 @@ class Trainer():
         self._classifier[segment].fit(true_data, [str(l) for l in labels])
         logging.info("Memory usage (model fitted with true data): %f" %
                      memory_usage(-1, interval=0, timeout=None)[0])
+        self._calculate_feature_weight(segment, true_data)
+        if store_vect_data:
+            self.intermediate_data[self.TRAIN_VECT_DATA][segment] = {
+                'data': true_data,
+                'labels': labels}
+
         true_data = None
         logging.info("Memory usage (true data cleared): %f" %
                      memory_usage(-1, interval=0, timeout=None)[0])
         self.train_time[segment] = strftime('%Y-%m-%d %H:%M:%S %z', gmtime())
         logging.info('Training completed...')
+
+    # def _calculate_feature_weight(self, segment, true_data):
+    #     self._feature_weights[segment] = []
+    #     logging.info('Calculate feature weights for %s segment' % segment)
+    #     for j, label in enumerate(self._classifier[segment].classes_):
+    #         self._feature_weights[segment].append([])
+    #         for i, coef in enumerate(self._classifier[segment].coef_[j]):
+    #             t = map(lambda x: numpy.abs(x), (true_data.getcol(i) * coef).todense())
+    #             self._feature_weights[segment][j].append(numpy.mean(t))
+    #         if len(self._classifier[segment].classes_) == 2:
+    #             break
+
+    def _calculate_feature_weight(self, segment, true_data):
+        self._feature_weights[segment] = []
+        logging.info('Calculate feature weights for %s segment' % segment)
+        true_data.data = numpy.absolute(true_data.data)
+        mean_data = true_data.mean(0).transpose()
+        for j, label in enumerate(self._classifier[segment].classes_):
+            self._feature_weights[segment].append([])
+            for i, coef in enumerate(self._classifier[segment].coef_[j]):
+                t = mean_data[i].tolist()[0][0]
+                self._feature_weights[segment][j].append(t * numpy.abs(coef))
+            if len(self._classifier[segment].classes_) == 2:
+                break
 
     def test(self, iterator, percent=0, callback=None, save_raw=True):
         """
@@ -191,10 +239,10 @@ class Trainer():
                     names and value the values of the features per column.
 
         """
-        metrics = []
         self.metrics = self.metrics_class()
 
         self._prepare_data(iterator, callback, save_raw=save_raw)
+        self._test_empty_labels = self._check_data_for_test()
         count = self._count
         if percent:
             self._count = int(self._count * percent / 100)
@@ -222,12 +270,17 @@ class Trainer():
                      memory_usage(-1, interval=0, timeout=None)[0])
         logging.info('Evaluating model...')
 
+        
+
         self.metrics.evaluate_model(labels, classes, vectorized_data,
-                                  self._classifier[segment], segment)
+                                  self._classifier[segment],
+                                  self._test_empty_labels[segment], segment)
+        
+        self._calculate_feature_weight(segment, self.metrics._true_data[segment])
         logging.info("Memory usage: %f" %
                      memory_usage(-1, interval=0, timeout=None)[0])
 
-    def predict(self, iterator, callback=None, ignore_error=True):
+    def predict(self, iterator, callback=None, ignore_error=True, store_vect_data=False):
         """
         Attempts to predict the class of each of the data in the given
         iterator. Returns the predicted values, the target feature value (if
@@ -248,6 +301,7 @@ class Trainer():
         ordered_probs = []
         ordered_labels = []
         ordered_true_labels = []
+        self.predict_data = {}
 
         self._prepare_data(iterator, callback, ignore_error)
         logging.info('Processed %d lines, ignored %s lines'
@@ -262,13 +316,13 @@ class Trainer():
                 true_labels[segment] = self._get_target_variable_labels(segment)
                 vectorized_data = self._get_vectorized_data(
                     segment, self._test_prepare_feature)
-                logging.info("Memory usage (vectorized data generated): %f" %
-                             memory_usage(-1, interval=0, timeout=None)[0])
                 logging.info('Evaluating model...')
                 if len(vectorized_data) == 1:
                     predict_data = numpy.array(vectorized_data[0])
                 else:
                     predict_data = scipy.sparse.hstack(vectorized_data)
+                if store_vect_data:
+                    self.predict_data[segment] = predict_data
                 probs[segment] = self._classifier[segment].predict_proba(predict_data)
                 labels[segment] = self._classifier[segment].classes_[probs[segment].argmax(axis=1)]
             # Restore order
@@ -301,6 +355,23 @@ class Trainer():
                     segment, self._test_prepare_feature))
             }
         return segments
+
+    def grid_search(self, parameters, train_iterator, test_iterator, score=None):
+        from sklearn import grid_search
+        classifier = self._classifier[DEFAULT_SEGMENT]
+        clf = grid_search.GridSearchCV(classifier, parameters, scoring=score)
+        results = {}
+        if train_iterator:
+            self._segments = self._prepare_data(train_iterator)
+        for segment in self._vect_data:
+            logging.info('Starting search params for "%s" segment' % segment)
+            self.features[segment] = deepcopy(self._feature_model.features)
+            labels = self._get_target_variable_labels(segment)
+            vectorized_data = self._get_vectorized_data(segment, self._train_prepare_feature)
+            true_data = scipy.sparse.hstack(vectorized_data)
+            clf.fit(true_data, [str(l) for l in labels])
+            results[segment] = clf
+        return results
 
     # TODO: nader20140725 due for removal
     # def _extract_features(self, process_fn):
@@ -358,13 +429,19 @@ class Trainer():
         if feature['transformer'] is not None:
             try:
                 transformed_data = feature['transformer'].fit_transform(data)
-                feature['transformer'].num_features = transformed_data.shape[1]
+                if feature['transformer-type'] in ('Lda', 'Lsi'):
+                    feature['transformer'].num_features = transformed_data.shape[1]
             except ValueError as e:
                 logging.warn('Feature %s will be ignored due to '
                              'transformation error: %s.' %
                              (feature['name'], str(e)))
                 transformed_data = None
                 feature['tranformer'] = SuppressTransformer()
+            return transformed_data
+        elif feature['transformer'] is None and feature['transformer-type'] is not None:
+            feature['transformer'] = self.get_transformer(feature['transformer-type'])
+            transformed_data = feature['transformer'].transform(data)
+            feature['transformer'].num_features = transformed_data.shape[1]
             return transformed_data
         elif feature.get('scaler', None) is not None:
             return feature['scaler'].fit_transform(self._to_column(data).toarray())
@@ -401,6 +478,35 @@ class Trainer():
     def _to_column(self, x):
         return numpy.transpose(
             scipy.sparse.csc_matrix([0.0 if item is None else float(item) for item in x]))
+
+    def _check_data_for_test(self):
+        """
+        Checks input data (examples) in a trained model for testing. The checks
+        are for potential incomplete data/examples that might prevent successful
+        testing.
+        Raises exception if checks fail.
+        :return: dictionary keyed on segments, every key is a list labels with
+        no corresponding examples for that label in the keyed segment
+        """
+        empty_labels = {}
+        print 'self._segments %s' % self._segments
+        for segment in self._segments:
+            empty_labels[segment] = []
+            labels = self._get_classifier_adjusted_classes(segment)
+            target_feature = self._get_target_feature(segment)['name']
+            examples_per_label = dict((c, 0) for c in labels if c is not None)
+            if self._vect_data.has_key(segment):
+                for label in self._vect_data[segment][target_feature]:
+                    if label is not None:
+                        examples_per_label[label] += 1
+            for label, _ in filter(lambda (label, c): c == 0,
+                                   examples_per_label.iteritems()):
+                msg = 'In Segment: %s, Class: %s, has no examples. ' \
+                      'Test evaluation will fail' % \
+                      (segment, label)
+                logging.warn(msg)
+                empty_labels[segment].append(label)
+        return empty_labels
 
     def _prepare_data(self, iterator, callback=None,
                       ignore_error=True, save_raw=False):
@@ -535,7 +641,8 @@ class Trainer():
         if is_empty(value):
             if feature.get('default') is not None:
                 result = feature.get('default')
-            elif feature.get('transformer-type') is not None:
+            elif feature.get('transformer-type') is not None and \
+                feature.get('transformer') is not None:
                 result = TRANSFORMERS[feature['transformer-type']]['default']
             elif feature.get('type') is not None:
                 result = FEATURE_TYPE_DEFAULTS.get(feature['type'], value)
@@ -546,6 +653,7 @@ class Trainer():
         positive = []
         negative = []
          # Vectorizer
+        feature_names_full = []
         try:
             feature_names = vectorizer.get_feature_names()
         except ValueError:
@@ -555,15 +663,20 @@ class Trainer():
         for j in range(0, len(feature_names)):
             name = '%s->%s' % (feature_name.replace(".", "->"), feature_names[j])
             weight = self._classifier[segment].coef_[class_index][offset + j]
+            feature_weight = 0
+            if self._feature_weights.has_key(segment):
+                feature_weight = self._feature_weights[segment][class_index][offset + j]
             weights = {
                 'name': name,
-                'weight': weight
+                'weight': weight,
+                'feature_weight': feature_weight
             }
+            feature_names_full.append(name)
             if weight > 0:
                 positive.append(weights)
             else:
                 negative.append(weights)
-        return feature_names, positive, negative
+        return feature_names_full, positive, negative
 
     def get_weights(self, segment=DEFAULT_SEGMENT):
         """
@@ -590,7 +703,6 @@ class Trainer():
         positive = []
         negative = []
         index = 0
-
         for feature_name, feature in self.features[segment].items():
             if feature_name != self._feature_model.target_variable and feature_name not in self._feature_model.group_by:
                 transformer = feature['transformer']
@@ -601,9 +713,13 @@ class Trainer():
                     for j in range(0, transformer.num_features-1):
                         name = '%s->Topic #%d' % (feature_name.replace(".", "->"), j)
                         weight = self._classifier[segment].coef_[class_index][index + j]
+                        feature_weight = 0
+                        if self._feature_weights.has_key(segment):
+                            feature_weight = self._feature_weights[segment][class_index][index + j]
                         weights = {
                             'name': name,
-                            'weight': weight
+                            'weight': weight,
+                            'feature_weight': feature_weight
                         }
                         if weight > 0:
                             positive.append(weights)
@@ -633,9 +749,13 @@ class Trainer():
                 else:
                     # Scaler or array
                     weight = self._classifier[segment].coef_[class_index][index]
+                    feature_weight = 0
+                    if self._feature_weights.has_key(segment):
+                        feature_weight = self._feature_weights[segment][class_index][index]
                     weights = {
                         'name': feature_name.replace(".", "->"),
-                        'weight': weight
+                        'weight': weight,
+                        'feature_weight': feature_weight
                     }
                     if weight > 0:
                         positive.append(weights)
@@ -708,6 +828,78 @@ class Trainer():
                     vectorized_data.append(scipy.sparse.csc_matrix(item))
         return vectorized_data
 
+    def store_vect_data(self, data, file_name):
+        numpy.savez_compressed(file_name, *data)
+
+    def vect_data2csv(self, file_name):
+        if not self.intermediate_data[self.TRAIN_VECT_DATA]:
+            raise ValueError("Execute train with store_vect_data parameter")
+
+        few_segments = len(self.intermediate_data[self.TRAIN_VECT_DATA]) > 1
+        for segment, data in self.intermediate_data[self.TRAIN_VECT_DATA].iteritems():
+            if few_segments:
+                segment_file_name = "{1}-{0}".format(segment, file_name)
+            else:
+                segment_file_name = file_name
+
+            logging.info("Storing vectorized data of segment %s to %s",
+                         segment, segment_file_name)
+            with open(segment_file_name, 'wb') as csvfile:
+                writer = csv.writer(csvfile)
+                true_data = data['data']
+                num = true_data.shape[0]
+                matrix = true_data.tocsr()
+                for i in xrange(num):
+                    writer.writerow([data['labels'][i]]
+                                    + matrix.getrow(i).todense().tolist()[0])
+
+    def get_nonzero_vectorized_data(self):
+        vectorized_data = {}
+        res = {}
+        for segment in self._vect_data:
+            for feature_name, feature in self.features[segment].iteritems():
+                if feature_name not in self._feature_model.group_by and \
+                    not feature_name == self._feature_model.target_variable:
+
+                    item = self._test_prepare_feature(feature,
+                                              self._vect_data[segment][
+                                                  feature_name])
+                    transformer = feature['transformer']
+                    preprocessor = feature['type'].preprocessor
+                    if item is not None:
+                        if isinstance(item, numpy.ndarray):
+                            value = item.tolist()[0][0]
+                            if value:
+                                vectorized_data[feature_name] = item.tolist()[0][0]
+                        else:
+                            vectorized_data[feature_name] = {}
+                            if transformer is not None and hasattr(transformer, 'num_topics'):
+                                item = item.todense().tolist()
+                                for j in range(0, transformer.num_features):
+                                    subfeature = '%s->Topic #%d' % (feature_name.replace(".", "->"), j)
+                                    if item[0][j] != 0:
+                                        vectorized_data[feature_name][subfeature] = item[0][j]
+                            elif transformer is not None and hasattr(transformer,
+                                                           'get_feature_names'):
+                                index = 0
+                                item = item.todense().tolist()
+                                for subfeature in transformer.get_feature_names():
+                                    if item[0][index]:
+                                        vectorized_data[feature_name][subfeature] = item[0][index]
+                                    index +=1
+                            elif preprocessor is not None and hasattr(preprocessor,
+                                                          'get_feature_names'):
+                                index = 0
+                                item = item.todense().tolist()
+                                for subfeature in preprocessor.get_feature_names():
+                                    if item[0][index]:
+                                        vectorized_data[feature_name][subfeature] = item[0][index]
+                                    index +=1
+                            if not vectorized_data[feature_name].items():
+                                vectorized_data.pop(feature_name)
+            res[segment] = vectorized_data
+        return res
+
 
 def list_to_dict(user_params):
     if user_params is not None:
@@ -741,7 +933,7 @@ def _adjust_classifier_class(feature, str_value):
         try:
             value = int(str_value)
         except ValueError:
-            pass
+            value = 0
         return value
     elif isinstance(feature['type'], PrimitiveFeatureTypeInstance) and \
             feature['type'].python_type is bool:

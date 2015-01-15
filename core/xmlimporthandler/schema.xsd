@@ -31,6 +31,7 @@
         <xs:attribute type="xs:string" name="split" use="optional" />
         <xs:attribute type="xs:string" name="dateFormat" use="optional" />
         <xs:attribute type="xs:string" name="join" use="optional" />
+        <xs:attribute type="xs:string" name="delimiter" use="optional" />
         <xs:attribute type="xs:string" name="template" use="optional" />
         <xs:attribute type="xs:string" name="script" use="optional" />
         <xs:attribute name="transform" use="optional">
@@ -44,6 +45,8 @@
         <xs:attribute type="xs:string" name="headers" use="optional" />
         <xs:attribute type="xs:boolean" name="required" use="optional" />
         <xs:attribute type="xs:boolean" name="multipart" use="optional" />
+        <xs:attribute type="xs:string" name="key_path" use="optional" />
+        <xs:attribute type="xs:string" name="value_path" use="optional" />
 
         <!-- TODO: Is it needed here ??? -->
         <xs:attribute type="xs:string" name="src" use="optional" />
@@ -60,8 +63,7 @@
             <xs:element name="sqoop" minOccurs="0" maxOccurs="3">
                 <xs:complexType>
                     <xs:simpleContent>
-                        <xs:extension
-                            base="xs:string">
+                        <xs:extension base="xs:string">
                             <xs:attribute
                                 type="xs:string" name="target" use="required" />
                             <xs:attribute type="xs:string" name="datasource" use="required" />
@@ -69,6 +71,7 @@
                             <xs:attribute type="xs:string" name="where" use="optional" />
                             <xs:attribute type="xs:string" name="direct" use="optional" />
                             <xs:attribute type="xs:string" name="mappers" use="optional" />
+                            <xs:attribute type="xs:string" name="options" use="optional" />
                         </xs:extension>
                     </xs:simpleContent>
                 </xs:complexType>
@@ -76,16 +79,17 @@
             <xs:element name="query" minOccurs="0" maxOccurs="1">
                 <xs:complexType>
                     <xs:simpleContent>
-                        <xs:extension
-                            base="xs:string">
-                            <xs:attribute
-                                type="xs:string" name="target" use="optional" />
+                        <xs:extension base="xs:string">
+                            <xs:attribute type="xs:string" name="target" use="optional" />
+                            <xs:attribute type="xs:boolean" name="autoload_sqoop_dataset" use="optional" />
+                            <xs:attribute type="xs:string" name="sqoop_dataset_name" use="optional" />
                         </xs:extension>
                     </xs:simpleContent>
                 </xs:complexType>
             </xs:element>
 
-            <xs:element name="field" type="fieldType" minOccurs="1" maxOccurs="unbounded" />
+            
+            <xs:element name="field" type="fieldType" minOccurs="0" maxOccurs="unbounded" />
 
             <xs:element name="entity" type="entityType" minOccurs="0" maxOccurs="unbounded" />
             <xs:element name="field" type="fieldType" minOccurs="0" maxOccurs="unbounded" />
@@ -94,6 +98,7 @@
         <xs:attribute type="xs:string" name="name" use="required" />
         <xs:attribute type="xs:string" name="datasource" use="required" />
         <xs:attribute type="xs:string" name="query" use="optional" />
+        <xs:attribute type="xs:boolean" name="autoload_fields" use="optional" />
 
     </xs:complexType>
 
@@ -135,7 +140,7 @@
         <xs:element name="script" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation>
                 <xs:documentation>
-                    Used to define Javascript functions that can be used to transform data
+                    Used to define python functions that can be used to transform data
                 </xs:documentation>
             </xs:annotation>
             <xs:complexType>

@@ -17,6 +17,7 @@ __author__ = 'ifouk'
 import os
 import sys
 import logging
+import colorer
 
 from core.trainer.config import FeatureModel, SchemaException
 from core.trainer import __version__
@@ -25,7 +26,7 @@ from core.importhandler.importhandler import ImportHandlerException, \
     ExtractionPlan, ImportHandler
 from core.trainer.store import store_trainer
 from core.trainer.streamutils import streamingiterload
-from core.trainer.trainer import Trainer, list_to_dict
+from core.trainer.trainer import Trainer, list_to_dict, TransformerNotFound
 
 
 def main(argv=None):
@@ -50,6 +51,13 @@ def main(argv=None):
         parser.add_argument('-w', '--weights', dest='weights',
                             help='store feature weights to given file.',
                             metavar='weight-file')
+        parser.add_argument('-s', '--store-vect', dest='store_vect',
+                            help='store test vectorized data to given file.',
+                            metavar='store-vect-file')
+        parser.add_argument('-v', '--store-train-vect',
+                            dest='store_train_vect',
+                            help='store train vectorized data to given file.',
+                            metavar='store-train-vect-file')
         parser.add_argument('-i', '--input', dest='input',
                             help='read training data from input file.',
                             metavar='input-file')
@@ -76,6 +84,9 @@ def main(argv=None):
         parser.add_argument('--skip-test', dest='skip_tests',
                             help='Skips testing.',
                             action='store_true', default=False)
+        parser.add_argument('--transformer-path', dest='transformer_path',
+                            help='Path to pretrained transformers.',
+                            metavar='transformer_path')
         parser.add_argument(dest='path',
                             help='file containing feature model',
                             metavar='path')
@@ -90,14 +101,34 @@ def main(argv=None):
 
         model = FeatureModel(args.path)
         trainer = Trainer(model)
+        if args.transformer_path is not None:
+            def get_transformers(name):
+                from os import listdir, makedirs
+                from os.path import isfile, join, exists, splitext
+                import cPickle as pickle
+                for f in listdir(args.transformer_path):
+                    if isfile(join(args.transformer_path, f)) and splitext(f)[0] == name:
+                        with open(join(args.transformer_path, f), 'r') as fp:
+                            transformer = fp.read()
+                            return pickle.loads(transformer)
+                else:
+                    raise TransformerNotFound
+            trainer.set_transformer_getter(get_transformers)
         test_percent = int(args.test_percent or 0)
         if args.input is not None:
             # Read training data from file
             file_format = os.path.splitext(args.input)[1][1:]
             with open(args.input, 'r') as train_fp:
-                trainer.train(streamingiterload(train_fp,
-                                                source_format=file_format),
-                              test_percent)
+                trainer.train(
+                    streamingiterload(train_fp, source_format=file_format),
+                    test_percent,
+                    store_vect_data=args.store_train_vect is not None)
+
+                if args.store_train_vect is not None:
+                    logging.info(
+                        'Storing train vectorized data to %s' % args.store_train_vect)
+                    trainer.vect_data2csv(args.store_train_vect)
+
                 if args.test_percent and args.skip_tests is False \
                    and args.test is None:
                     with open(args.input, 'r') as test_fp:
@@ -149,6 +180,10 @@ def main(argv=None):
             logging.info('Storing feature weights to %s' % args.weights)
             with open(args.weights, 'w') as weights_fp:
                 trainer.store_feature_weights(weights_fp)
+
+        if args.store_vect is not None:
+            logging.info('Storing vectorized data to %s' % args.store_vect)
+            trainer.store_vect_data(trainer.metrics._true_data.values(),args.store_vect)
 
         if args.output is not None:
             logging.info('Storing feature weights to %s' % args.weights)

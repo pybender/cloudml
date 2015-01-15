@@ -1,4 +1,5 @@
 from mock import MagicMock, patch
+import numpy
 from core.trainer.feature_types import PrimitiveFeatureTypeInstance
 from sklearn.preprocessing import MinMaxScaler
 
@@ -24,6 +25,7 @@ TARGET = 'target'
 FORMATS = ['csv', 'json']
 
 
+
 class TrainerSegmentTestCase(unittest.TestCase):
 
     def setUp(self):
@@ -32,6 +34,19 @@ class TrainerSegmentTestCase(unittest.TestCase):
         self._config = FeatureModel(os.path.join(BASEDIR, 'trainer',
                                     'features_segment.json'))
         self._trainer = None
+
+    def test_calculate_feature_weight(self):
+        #for fmt in FORMATS:
+        self._train()
+        self.assertEquals(self._trainer._classifier[''].coef_.shape, (1, 15))
+        self.assertEquals(self._trainer._classifier['USA'].coef_.shape, (1, 14))
+        self.assertEquals(self._trainer._classifier['Canada'].coef_.shape, (1, 13))
+        weights = {'': [[0.064919069751063666, 0.0, 0.19722302855611831, 0.79525860445052987, 0.093483460441531663, 0.16353058402912282, 0.064919069751063666, 0.064919069751063666, 0.064919069751063666, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], 'Canada': [[0.0, 0.0, 0.0010504036212994055, 0.0010504036212994055, 1.4492042523793169, 1.2755465085032549, 0.0021008072425988118, 0.0021008072425988118, 0.11301245547569275, 0.0, 0.018907265183389307, 0.018907265183389307, 0.0084032289703952472]], 'USA': [[0.12371049253298733, 0.037212322240579243, 0.17299634058481617, 0.75354952537172959, 0.38105417974353145, 0.17299634058481617, 0.17299634058481617, 0.17299634058481617, 0.037212322240579243, 0.0, 0.0, 0.0, 0.33491090016521313, 0.14884928896231697]]}
+        for segment in weights:
+            self._trainer._feature_weights[segment][0] = map(lambda x: round(x, 15), self._trainer._feature_weights[segment][0])
+            weights[segment][0] = map(lambda x: round(x, 15), weights[segment][0])
+            self.assertListEqual(self._trainer._feature_weights[segment][0], weights[segment][0])
+        self.assertEquals(self._trainer.get_weights('USA')[1]['positive'][0], {'feature_weight': 0.172996340584816, 'name': u'contractor->skills->microsoft-word', 'weight': 0.17299634058481617})
 
     def test_train_and_test(self):
         #for fmt in FORMATS:
@@ -161,16 +176,16 @@ class TrainerTestCase(unittest.TestCase):
 
             self.assertTrue(os.path.exists(path), 'Weights were not stored!!!')
 
-            positive_expected = ['contractor->dev_adj_score_recent',
-                                 'contractor->dev_is_looking',
-                                 ]
+            positive_expected = ['contractor->dev_is_looking']
 
             # This is unintentional. Truly!
-            negative_expected = ['contractor->dev_country->usa']
+            negative_expected = ['contractor->dev_adj_score_recent',
+                                 'contractor->dev_country->usa']
 
             with open(path) as fp:
                 weights_dict = json.load(fp)
                 weights = weights_dict['1']
+                print weights
                 self.assertIn('positive', weights)
                 self.assertIn('negative', weights)
 
@@ -330,6 +345,84 @@ class TrainerTestCase(unittest.TestCase):
             self.assertEqual(transform[DEFAULT_SEGMENT]['Y'], [1, 0, 0, 1, 0, 1])
             self.assertTrue(transform[DEFAULT_SEGMENT].has_key('X'))
             self.assertTrue(transform[DEFAULT_SEGMENT]['X'].shape[0], 6)
+
+    def test_no_examples_for_label(self):
+        """
+        Tests the case there is no example for a given label
+        """
+        from numpy import ndarray
+        from core.trainer.metrics import ClassificationModelMetrics
+
+        def do_train(exclude_labels):
+
+            config = FeatureModel(os.path.join(BASEDIR, 'trainer',
+                                                     'features.ndim_outcome.json'))
+
+            with open(os.path.join(BASEDIR, 'trainer', 'trainer.data.ndim_outcome.json')) as fp:
+                dataset = json.loads(fp.read())
+
+            train_lines = json.dumps(dataset)
+            test_lines = json.dumps(filter(
+                lambda x: x['hire_outcome'] not in exclude_labels, dataset))
+
+            train_data = list(streamingiterload(train_lines, source_format='json'))
+            test_data = list(streamingiterload(test_lines, source_format='json'))
+
+            self._trainer = Trainer(config)
+            self._trainer.train(train_data)
+
+            self._trainer = Trainer(config)
+            self._trainer.train(train_data)
+            return self._trainer.test(test_data)
+
+        metrics = do_train(['class3'])
+        self.assertEqual({DEFAULT_SEGMENT: [3]},
+                         self._trainer._test_empty_labels)
+        #
+        # Testing metrics
+        #
+        self.assertIsInstance(metrics, ClassificationModelMetrics)
+        self.assertEquals(metrics.accuracy, 1.0)
+        self.assertIsInstance(metrics.confusion_matrix, ndarray)
+        for pos_label in metrics.classes_set:
+            self.assertFalse(numpy.all(numpy.isnan(
+                metrics.roc_curve[pos_label][0])))
+            self.assertFalse(numpy.all(numpy.isnan(
+                metrics.roc_curve[pos_label][1])))
+            if pos_label == 3:
+                self.assertEquals(metrics.roc_auc[pos_label], 0.0)
+            else:
+                self.assertEquals(metrics.roc_auc[pos_label], 1.0)
+
+        self.assertEqual(metrics.roc_auc, {1: 1.0, 2: 1.0, 3: 0.0})
+        self.assertEqual(metrics.confusion_matrix.tolist(), [[2, 0, 0],
+                                                             [0, 3, 0],
+                                                             [0, 0, 0]])
+
+        # exclude two labels
+        metrics = do_train(['class1', 'class3'])
+        self.assertEqual({DEFAULT_SEGMENT: [1, 3]},
+                         self._trainer._test_empty_labels)
+        #
+        # Testing metrics
+        #
+        self.assertIsInstance(metrics, ClassificationModelMetrics)
+        self.assertEquals(metrics.accuracy, 1.0)
+        self.assertIsInstance(metrics.confusion_matrix, ndarray)
+        for pos_label in metrics.classes_set:
+            self.assertFalse(numpy.all(numpy.isnan(
+                metrics.roc_curve[pos_label][0])))
+            self.assertFalse(numpy.all(numpy.isnan(
+                metrics.roc_curve[pos_label][1])))
+            if pos_label in [1, 3]:
+                self.assertEquals(metrics.roc_auc[pos_label], 0.0)
+            else:
+                self.assertEquals(metrics.roc_auc[pos_label], 0.0)
+
+        self.assertEqual(metrics.roc_auc, {1: 0.0, 2: 0.0, 3: 0.0})
+        self.assertEqual(metrics.confusion_matrix.tolist(), [[0, 0, 0],
+                                                             [0, 3, 0],
+                                                             [0, 0, 0]])
 
     def _load_data(self, fmt):
         """

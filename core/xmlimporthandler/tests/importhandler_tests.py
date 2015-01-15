@@ -19,16 +19,37 @@ BASEDIR = os.path.abspath(
 
 
 class ScriptManagerTest(unittest.TestCase):
+    def setUp(self):
+        self.manager = ScriptManager()
+
     def test_script(self):
-        manager = ScriptManager()
-        self.assertEqual(manager._exec('1+2'), 3)
+        self.assertEqual(self.manager._exec('1+2'), 3)
 
     def test_manager(self):
-        manager = ScriptManager()
-        manager.add_python("""def intToBoolean(a):
+        self.manager.add_python("""def intToBoolean(a):
             return a == 1
         """)
-        self.assertEqual(manager._exec('intToBoolean(1)'), True)
+        self.assertEqual(self.manager._exec('intToBoolean(1)'), True)
+
+    def test_match_1888(self):
+        def check(script):
+            print script
+            self.manager.add_python(script)
+            self.assertEqual(self.manager._exec('stripSpecial("abc<")'), "abc")
+
+        SCRIPT1 = """
+pattern='[<>]+'
+def stripSpecial(value):
+    import re
+    return re.sub(pattern, \" \", value).strip()
+"""
+        SCRIPT2 = """
+import re
+def stripSpecial(value):
+    return re.sub(\"[<>]+\", \" \", value).strip()
+"""
+        check(SCRIPT1)
+        check(SCRIPT2)
 
 
 class TestField(unittest.TestCase):
@@ -67,7 +88,7 @@ class TestInput(unittest.TestCase):
         self.assertEqual(inp.process_value('Monday 11. March 2002'),
                          datetime(2002, 3, 11, 0, 0))
         with self.assertRaisesRegexp(
-                ImportHandlerException, "Value of the input parameter created \
+                ImportHandlerException, "Value of the input parameter created is \
 invalid date in format %A %d. %B %Y: 11/03/02"):
             inp.process_value('11/03/02')
         with self.assertRaisesRegexp(
@@ -163,8 +184,8 @@ class ExtractionXMLPlanTest(unittest.TestCase):
             ExtractionPlan(self.incorrect_importhandler_file)
         the_exception = cm.exception
         self.assertEqual(
-            str(the_exception)[:26],
-            'XML file format is invalid'
+            str(the_exception)[:17],
+            'There is an error'
         )
 
     def test_get_ds_config(self):

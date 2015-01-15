@@ -11,6 +11,7 @@ from jsonpath import jsonpath
 
 from exceptions import ProcessException, ImportHandlerException
 from utils import get_key, ParametrizedTemplate, process_primitive, process_bool
+from datasources import DATASOURCES_REQUIRE_QUERY
 
 
 class FieldException(Exception):
@@ -30,10 +31,11 @@ class Field(object):
         'integer': process_primitive(int)
     }
 
-    def __init__(self, config):
+    def __init__(self, config, entity):
         #self.config = config
         self.name = config.get('name')  # unique
         self.type = config.get('type', 'string')
+        self.entity = entity
 
         # if entity is using a DB or CSV datasource,
         # it will use data from this column
@@ -44,8 +46,7 @@ class Field(object):
         self.jsonpath = config.get('jsonpath')
         # concatenates values using the defined separator.
         # Used together with jsonpath only.
-        self.join = config.get('join')
-
+        self.delimiter = config.get('delimiter', config.get('join'))
         # applies the given regular expression and
         # assigns the first match to the value
         self.regex = config.get('regex')
@@ -72,6 +73,8 @@ class Field(object):
         # If not defined, default is false
         self.required = config.get('required') == 'true'
         self.multipart = config.get('multipart') == 'true'
+        self.key_path = config.get('key_path', None)
+        self.value_path = config.get('value_path', None)
 
         self.validate_attributes()
 
@@ -113,7 +116,27 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
             value = jsonpath(value, self.jsonpath)
             if value is False:
                 value = None
-            if not self.join and isinstance(value, (list, tuple)) \
+            if self.key_path and self.value_path and value:
+                # Treat as a dictionary
+                keys = jsonpath(value[0], self.key_path)
+                strategy = self.PROCESS_STRATEGIES.get(self.type)
+                try:
+                    values = map(strategy,
+                                 jsonpath(value[0],
+                                 self.value_path))
+                except (ValueError, TypeError) as e:
+                    if self.entity.log_msg_counter < 100:
+                        self.entity.log_msg_counter += 1
+                        logging.warning(
+                            "Can't convert value '{0}' to {1} while "
+                            "processing field {2}".format(value[:100], self.type, self.name))
+                    raise ProcessException(e)
+                convert_type = False
+                if keys is not False and values is not False:
+                    value = dict(zip(keys, values))
+                else:
+                    value = None
+            if not self.delimiter and isinstance(value, (list, tuple)) \
                     and len(value) == 1 and not self.multipart:
                 value = value[0]
             if isinstance(value, (list, tuple)):
@@ -130,14 +153,15 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
             data = {}
             data.update(row)
             data.update(row_data)
-            value = script_manager.execute_function(self.script, value, data, row_data)
+            value = script_manager.execute_function(
+                self.script, value, data, row_data)
             convert_type = False
 
         if self.split and value:
             value = re.split(self.split, value)
 
-        if value is not None and self.join:
-            value = self.join.join(value)
+        if value is not None and self.delimiter:
+            value = self.delimiter.join(value)
 
         # TODO: could we use python formats for date?
         if self.dateFormat:  # TODO: would be returned datetime, Is it OK?
@@ -150,7 +174,14 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
 
         if convert_type and value is not None:
             strategy = self.PROCESS_STRATEGIES.get(self.type)
-            value = strategy(value)
+            try:
+                value = strategy(value)
+            except ValueError, exc:
+                if self.entity.log_msg_counter < 100:
+                    self.entity.log_msg_counter += 1
+                    logging.warning("Can't convert value '{0}' to {1} while "
+                        "processing field {2}".format(value[:100], self.type, self.name))
+                value = None
 
         # TODO: should it be here or before transformation?
         if self.required and not value:
@@ -168,6 +199,7 @@ class Sqoop(object):
         self.table = config.get('table')
         self.direct = config.get('direct')
         self.mappers = config.get('mappers', 1)
+        self.options = config.get('options', '')
         self.query = config.text
 
     def build_query(self, params):
@@ -191,13 +223,18 @@ class Entity(object):
         # nested entities with another datasource.
         self.nested_entities_global_ds = []
         self.sqoop_imports = []
+        self.log_msg_counter = 0
 
         self.datasource_name = config.get('datasource')
         self.name = config.get('name')
+        self.autoload_fields = config.get('autoload_fields')
+        self.fields_loaded = False
 
         if hasattr(config, 'query'):  # query is child element
             self.query_target = config.query.get('target')
             self.query = config.query.text
+            self.autoload_sqoop_dataset = (config.query.get('autoload_sqoop_dataset', None) == 'true')
+            self.sqoop_dataset_name = config.query.get('sqoop_dataset_name')
         else:  # query is attribute
             self.query = config.get('query')
             self.query_target = None
@@ -220,7 +257,7 @@ class Entity(object):
         Loads entity fields dictionary.
         """
         for field_config in config.xpath("field"):
-            field = Field(field_config)
+            field = Field(field_config, self)
             self.fields[field.name] = field
 
     def load_sqoop_imports(self, config):
@@ -261,15 +298,44 @@ class EntityProcessor(object):
             
         self.datasource = import_handler.plan.datasources.get(
             entity.datasource_name)
+
+        if self.datasource is None:
+            raise ImportHandlerException("Datasource or transformed field {0} not found, "
+                "but it used in the entity {1}".format(entity.datasource_name, entity.name))
+
         # Process sqoop imports
         for sqoop_import in self.entity.sqoop_imports:
 
             sqoop_import.datasource = import_handler.plan.datasources.get(
                 sqoop_import.datasource_name)
             if sqoop_import.query:
+                from utils import SCHEMA_INFO_FIELDS, PIG_TEMPLATE, construct_pig_sample
                 sqoop_query = sqoop_import.build_query(params)
                 logging.info('Run query %s' % sqoop_query)
+                # We running db datasource query to create a table
+                #   
                 sqoop_iter = sqoop_import.datasource.run_queries(sqoop_query)
+                if self.entity.autoload_sqoop_dataset:
+                    sql = """select * from {0} limit 1;
+select {1} from INFORMATION_SCHEMA.COLUMNS where table_name = '{0}' order by ordinal_position;
+                    """.format(sqoop_import.table,
+                    ','.join(SCHEMA_INFO_FIELDS))
+
+                    try:
+                        iterator = sqoop_import.datasource._get_iter(sql)
+                        fields_data = [{key: opt[i] for i, key in enumerate(
+                                        SCHEMA_INFO_FIELDS)}
+                                       for opt in iterator]
+                    except Exception, exc:
+                        return ValueError(
+                            "Can't execute the query: {0}. Error: {1}".format(sql, exc))
+
+                    fields_str = construct_pig_sample(fields_data)
+                    load_dataset_script = PIG_TEMPLATE.format(
+                        self.entity.sqoop_dataset_name,
+                        sqoop_import.target,
+                        fields_str)
+                    query = "{0}\n{1}".format(load_dataset_script, query)
 
         if self.datasource.type == 'pig':
             self.datasource.run_sqoop_imports(self.entity.sqoop_imports)
@@ -278,6 +344,14 @@ class EntityProcessor(object):
         if self.datasource.type == 'input':
             query = import_handler.params[query]
 
+        if self.datasource.type in DATASOURCES_REQUIRE_QUERY and \
+                (query is None or not query.strip(' \t\n\r')):
+            raise ImportHandlerException(
+                "Query not specified in the entity {0}, but {1}"
+                " datasource {2} require it".format(
+                    self.entity.name,
+                    self.datasource.type,
+                    self.datasource.name))
         self.iterator = self.datasource._get_iter(
             query, self.entity.query_target)
 
@@ -288,6 +362,23 @@ class EntityProcessor(object):
         row = self.iterator.next()
         row_data = {}
         row_data.update(self.params)
+
+        if self.entity.autoload_fields and not self.entity.fields_loaded:
+            # We need to autoload fields on the first row processing
+            logging.info('Auto load fields')
+            from utils import isint, isfloat
+            for key, val in row.iteritems():
+                if isint(val):
+                    data_type = 'integer'
+                elif isfloat(val):
+                    data_type = 'float'
+                else:
+                    data_type = 'string'
+                if not self.entity.fields.has_key(key):
+                    self.entity.fields[key] = Field(
+                        {'name': key, 'type': data_type, 'column': key}, self.entity)
+            self.entity.fields_loaded = True
+
         for field in self.entity.fields.values():
             row_data.update(self.process_field(field, row, row_data))
 
@@ -306,6 +397,9 @@ class EntityProcessor(object):
     def process_field(self, field, row, row_data=None):
         row_data = row_data or {}
         if field.column:
+            #if not field.column in row:
+            #    logging.warning('{0} not found in the result row: {1}'.format(
+            #        field.column, str(row)[:100]))
             item_value = row.get(field.column, None)
         else:
             item_value = row
@@ -329,7 +423,8 @@ class EntityProcessor(object):
                     result[sub_field.name] = sub_field.process_value(
                         data, **kwargs)
             elif field.transform == 'csv':
-                raise Exception('Not implemented yet')  # TODO:
+                raise ImportHandlerException(
+                    'Fields with transform=csv are not implemented yet')  # TODO:
         else:
             result[field.name] = field.process_value(item_value, **kwargs)
         return result

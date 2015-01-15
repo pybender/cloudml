@@ -14,6 +14,7 @@ It defines classes ImportHandlerException, ExtractionPlan and ImportHandler
 import os
 import sys
 import logging
+import colorer
 
 from core.importhandler import __version__
 from argparse import ArgumentParser

@@ -58,7 +58,7 @@ doesn't match to regular expression %s: %s" % (self.name, self.regex, value))
             return strategy(value, format=self.format)
         except ValueError:
             raise ImportHandlerException(
-                'Value of the input parameter %s invalid %s%s: %s' %
+                'Value of the input parameter %s is invalid %s%s: %s' %
                 (self.name, self.type,
                  " in format %s" % self.format if self.format else "",
                  value))

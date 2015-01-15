@@ -17,10 +17,12 @@ class Metrics(object):
         self._probs = None
         self._true_data = OrderedDict()
         self._classes_set = None
+        self._empty_labels = []
 
     def evaluate_model(self, labels, classes, vectorized_data, classifier,
-                       segment='default'):
+                       empty_labels, segment='default'):
         self._labels += labels
+        self._empty_labels = empty_labels
         if self._classes_set and not classes == self._classes_set:
             raise ValueError('Classes was set before to %s, '
                              'now it is being set with %s, '
@@ -146,6 +148,19 @@ class ClassificationModelMetrics(Metrics):
                 labels = [1 if label == pos_label else 0 for label in self._labels]
                 fpr, tpr, thresholds = \
                     sk_metrics.roc_curve(labels, self._probs[:, i])
+
+                # definitely we can set NaN arrays directly to 0 without
+                # checking empty_labels, but it would leave a backdoor for bugs,
+                # where unknown reasons for producing NaN would be ignored as a
+                # byproduct
+                if pos_label in self._empty_labels:
+                    tpr = numpy.zeros_like(tpr)
+
+                # A very edge case where there is only one label in the test set
+                if self.classes_count - len(self._empty_labels) == 1 and \
+                        numpy.all(numpy.isnan(fpr)):
+                    fpr = numpy.zeros_like(fpr)
+
                 self._roc_curve[pos_label] = [fpr, tpr]
 
         return self._roc_curve
@@ -179,12 +194,12 @@ class ClassificationModelMetrics(Metrics):
             y_true_type = type(self._labels[0])
             y_pred_type = type(self._preds[0])
             if y_true_type != y_pred_type:
-                labels = [y_pred_type(y) for y in self._labels]
+                y_true = [y_pred_type(y) for y in self._labels]
             else:
-                labels = self._labels
+                y_true = self._labels
+            classes = [y_pred_type(y) for y in self._classes_set]
             self._confusion_matrix = \
-                sk_metrics.confusion_matrix(labels,
-                                            self._preds)
+                sk_metrics.confusion_matrix(y_true, self._preds, classes)
         return self._confusion_matrix
 
     @property

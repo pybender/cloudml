@@ -31,10 +31,6 @@
             vendor="postgres" />
 
 
-        <pig name="pig"
-             jobid="jobid"
-             amazon_access_token="something"
-             amazon_token_secret="something" />
 
     </datasources>
 

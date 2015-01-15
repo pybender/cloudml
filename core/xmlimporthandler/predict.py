@@ -14,7 +14,7 @@ class PredictModel(object):
             raise ImportHandlerException('Either value or script'
                                          ' attribute need to be defined')
 
-        #self.positive_label = PositiveLabel(config.xpath('positive_label[1]'))
+        self.positive_label = PositiveLabel(config.xpath('positive_label'))
 
         self.weights = []
         for weight in config.xpath('weight'):
@@ -30,13 +30,14 @@ class PositiveLabel(object):
     Allows overriding which label to use as positive label.
     """
     def __init__(self, config):
-        if isinstance(config, list):
-            config = config[0]
-        if not config:
-            self.value = 'true'
-        else:
+        if config:
+            if isinstance(config, list):
+                config = config[0]
             self.value = config.get('value') or 'true'
-        self.script = config.get('script')
+            self.script = config.get('script')
+        else:
+            self.value = None
+            self.script = None
 
     def __repr__(self):
         return self.value
@@ -46,6 +47,12 @@ class Weight(object):
     def __init__(self, config):
         self.label = config.get('label')
         self.script = config.get('script')
+        try:
+            self.value = float(config.get('value', 1))
+        except Exception, exc:
+            raise ImportHandlerException(
+                'Invalid predict model weight: {0}.'
+                'Should be a float value.'.format(config.get('value')))
 
 
 class ResultLabel(object):

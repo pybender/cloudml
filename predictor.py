@@ -26,7 +26,7 @@ from core.trainer.trainer import list_to_dict, Trainer
 
 
 def roc(iterator, trainer, params):
-    result = trainer.predict(iterator)
+    result = trainer.predict(iterator, store_vect_data=True)
     probs = result['probs'][:, np.where(result['classes'] == True)]
     fpr, tpr, thresholds = metrics.roc_curve(result['true_labels'], probs)
     roc_auc = metrics.auc(fpr, tpr)
@@ -47,7 +47,7 @@ def dump_results_csv(iterator, trainer, params):
             data_row[field] = row_data.get(field, None)
         data.append(data_row)
 
-    result = trainer.predict(iterator, store_items)
+    result = trainer.predict(iterator, store_items, store_vect_data=True)
     probs = result['probs']
     with open(out, 'w') as csv_fp:
         csv_out = csv.writer(csv_fp)
@@ -86,6 +86,10 @@ def main(argv=None):
             action='store_true',
             help='store extracted data to given file.',
             default=False)
+        parser.add_argument(
+            '-s', '--store-vect', dest='store_vect',
+            help='store vectorized data to given file.',
+            metavar='store-vect-file')
         parser.add_argument(
             '-o', '--output', dest='output',
             help='store trained classifier to given file.',
@@ -157,13 +161,18 @@ def main(argv=None):
         if args.input is not None:
             eval_fp.close()
 
+        if args.store_vect is not None:
+            logging.info('Storing vectorized data to %s' % args.store_vect)
+            trainer.store_vect_data(trainer.predict_data.values(), args.store_vect)
+
+
     except KeyboardInterrupt:
         ### handle keyboard interrupt ###
         return 0
     except ImportHandlerException, e:
         logging.warn('Invalid extraction plan: %s' % e.message)
         return 1
-    except Exception, e:
+    except KeyboardInterrupt, e:
         indent = len(program_name) * ' '
         sys.stderr.write(program_name + ': ' + repr(e) + '\n')
         sys.stderr.write(indent + '  for help use --help')
