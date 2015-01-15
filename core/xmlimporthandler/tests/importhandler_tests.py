@@ -57,18 +57,18 @@ class TestField(unittest.TestCase):
         with self.assertRaises(ImportHandlerException):
             field = Field({
                 'name': 'field_name',
-                'type': 'int'})
+                'type': 'int'}, entity=None)
 
     def test_field_required(self):
         field_required = Field({
             'name': 'field_name',
             'type': 'string',
             'required': 'true'
-        })
+        }, entity=None)
         field = Field({
             'name': 'field_name',
             'type': 'string'
-        })
+        }, entity=None)
         with self.assertRaises(FieldException):
             field_required.process_value(None, None)
         value = field.process_value(None, None)
