@@ -422,6 +422,7 @@ select {1} from INFORMATION_SCHEMA.COLUMNS where table_name = '{0}' order by ord
                 for sub_field in nested_entity.fields.values():
                     result[sub_field.name] = sub_field.process_value(
                         data, **kwargs)
+                    kwargs['row_data'].update(result)
             elif field.transform == 'csv':
                 raise ImportHandlerException(
                     'Fields with transform=csv are not implemented yet')  # TODO:
