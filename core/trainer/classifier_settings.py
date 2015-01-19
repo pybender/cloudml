@@ -3,19 +3,14 @@
 LOGISTIC_REGRESSION = 'logistic regression'
 SVR = 'support vector regression'
 SGD_CLASSIFIER = 'stochastic gradient descent classifier'
-DECISION_TREE_CLASSIFIER = 'decision trees classifier'
+DECISION_TREE_CLASSIFIER = 'decision tree classifier'
 DECISION_TREE_REGRESSOR = 'decision tree regressor'
 
 CLASSIFIER_MODELS = (
     LOGISTIC_REGRESSION, SGD_CLASSIFIER, DECISION_TREE_CLASSIFIER)
 REGRESSION_MODELS = (SVR, DECISION_TREE_REGRESSOR)
 
-
-DECISION_TREE_PARAMS = (
-    {'name': "criterion",
-     'type': 'string',
-     'choices': ['gini', 'entropy'],
-     'default': 'gini'},
+DECISION_TREE_PARAMS = [
     {'name': "splitter",
      'type': 'string',
      'choices': ['best', 'random'],
@@ -29,7 +24,15 @@ DECISION_TREE_PARAMS = (
     {'name': "random_state", 'type': 'integer'},
     # {'name': "min_density", 'type': 'integer'},
     # {'name': "compute_importances", 'type': 'boolean'}
-)
+]
+
+
+DECISION_TREE_CLASSIFIER_PARAMS = [
+    {'name': "criterion",
+     'type': 'string',
+     'choices': ['gini', 'entropy'],
+     'default': 'gini'}] + DECISION_TREE_PARAMS
+
 
 CLASSIFIERS = {
     LOGISTIC_REGRESSION: {
@@ -90,8 +93,12 @@ CLASSIFIERS = {
         'defaults': {'C': 1.0, 'epsilon': 0.1}},
     DECISION_TREE_CLASSIFIER: {
         'cls': 'sklearn.tree.DecisionTreeClassifier',
-        'parameters': DECISION_TREE_PARAMS},
-    DECISION_TREE_REGRESSOR: {
-        'cls': 'sklearn.tree.DecisionTreeRegressor',
-        'parameters': DECISION_TREE_PARAMS},
+        'parameters': DECISION_TREE_CLASSIFIER_PARAMS},
+    # DECISION_TREE_REGRESSOR: {
+    #     'cls': 'sklearn.tree.DecisionTreeRegressor',
+    #     'parameters': [
+    #         {'name': "criterion",
+    #          'type': 'string',
+    #          'choices': ['mse'],
+    #          'default': 'mse'}] + DECISION_TREE_PARAMS},
 }
