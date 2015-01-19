@@ -573,14 +573,13 @@ class Trainer():
                 # Note: Possible problems when value of the group_by field
                 # equals `DEFAULT_SEGMENT`
                 # if segment != DEFAULT_SEGMENT:
-                if hasattr(classifier, '_enc'):
+                if hasattr(classifier, 'classes_'):
                     classes_[segment] = map(str, classifier.classes_.tolist())
 
             assert all(map(
                 lambda x: x == classes_.values()[0], classes_.values())), \
                 'The assumption is that all segments should have the same ' \
                 'classifier.classes_'
-
             return classes_.values()[0]
         else:
             return map(str, self._classifier[DEFAULT_SEGMENT].classes_.tolist())
