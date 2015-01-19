@@ -1,0 +1,56 @@
+from ..classifier_settings import *
+from weights import WeightsCalculator
+
+
+class BaseTrainedModelVisualizator(object):
+    def __init__(self, trainer):
+        self._trainer = trainer
+        self.weights_calc = WeightsCalculator(trainer)
+
+    def generate(self, segment, true_data):
+        self.weights_calc.generate(segment, true_data)
+
+    def get_weights(self, segment):
+        return self.weights_calc.get_weights(segment)
+
+    def get_visualization(self, segment):
+        return {
+            'weights': self.get_weights(segment),
+            'classifier_type': self._trainer.classifier_type
+        }
+
+
+class LRTrainingVisualizer(BaseTrainedModelVisualizator):
+    pass
+
+
+class SVRTrainingVisualizer(BaseTrainedModelVisualizator):
+    pass
+
+
+class SGDTrainingVisualizer(BaseTrainedModelVisualizator):
+    pass
+
+
+class DecisionTreeTrainingVisualizer(BaseTrainedModelVisualizator):
+    def get_visualization(self, segment):
+        res = super(DecisionTreeTrainingVisualizer,
+                    self).get_visualization(segment)
+        from utils import build_tree
+        clf = self._trainer.get_classifier(segment)
+        res['tree'] = 'tree'  # build_tree(
+        #   clf.tree_, self.weights_calc.get_weights(segment, sined=False))
+        return tree
+
+
+class Visualizator(object):
+    TRAINING_VISUALIZER_DICT = {
+        LOGISTIC_REGRESSION: LRTrainingVisualizer,
+        SVR: SVRTrainingVisualizer,
+        SGD_CLASSIFIER: SGDTrainingVisualizer,
+        DECISION_TREE_CLASSIFIER: DecisionTreeTrainingVisualizer
+    }
+
+    @classmethod
+    def factory(cls, trainer):
+        return cls.TRAINING_VISUALIZER_DICT[trainer.classifier_type](trainer)
