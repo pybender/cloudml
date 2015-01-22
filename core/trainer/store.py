@@ -13,7 +13,7 @@ class TrainerStorage(object):
         self._feature_model = trainer._feature_model
         self._features = trainer.features
         self._segments = trainer._segments
-        self._feature_weights = trainer._feature_weights
+        self.visualization = trainer.visualization
         print __version__
         self.version = __version__
 
@@ -40,13 +40,12 @@ class TrainerStorage(object):
             trainer.set_features(storage._features)
             if hasattr(storage, "_segments"):
                 trainer._segments = storage._segments
-            if hasattr(storage, "_feature_weights"):
-                trainer._feature_weights = storage._feature_weights
+            if hasattr(storage, "visualization"):
+                trainer.visualization = storage.visualization
         else:
             trainer._feature_model.group_by = []
             trainer.set_classifier({ "default":storage._classifier})
             trainer.set_features({ "default":storage._feature_model.features})
-
 
         return trainer
 

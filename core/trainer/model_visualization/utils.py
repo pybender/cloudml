@@ -3,8 +3,11 @@ import json
 import logging
 
 
-def build_tree(weights, decision_tree):
-    logging.error(weights)
+def build_tree(decision_tree, weights_list):
+    weights = []
+    for class_label, class_weights in weights_list.iteritems():
+        weights += class_weights
+
     feature_names = [f['name'] for f in weights]
 
     root = {}

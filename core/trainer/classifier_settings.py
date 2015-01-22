@@ -6,8 +6,15 @@ SGD_CLASSIFIER = 'stochastic gradient descent classifier'
 DECISION_TREE_CLASSIFIER = 'decision tree classifier'
 DECISION_TREE_REGRESSOR = 'decision tree regressor'
 
+# don't support sparse matrix
+GRADIENT_BOOSTING_CLASSIFIER = 'gradient boosting classifier'
+
+EXTRA_TREES_CLASSIFIER = 'extra trees classifier'
+RANDOM_FOREST_CLASSIFIER = 'random forest classifier'
+
 CLASSIFIER_MODELS = (
-    LOGISTIC_REGRESSION, SGD_CLASSIFIER, DECISION_TREE_CLASSIFIER)
+    LOGISTIC_REGRESSION, SGD_CLASSIFIER, DECISION_TREE_CLASSIFIER,
+    EXTRA_TREES_CLASSIFIER, RANDOM_FOREST_CLASSIFIER, GRADIENT_BOOSTING_CLASSIFIER)
 REGRESSION_MODELS = (SVR, DECISION_TREE_REGRESSOR)
 
 DECISION_TREE_PARAMS = [
@@ -15,7 +22,7 @@ DECISION_TREE_PARAMS = [
      'type': 'string',
      'choices': ['best', 'random'],
      'default': 'best'},
-    {'name': 'max_features', 'type': 'any'},
+    #{'name': 'max_features', 'type': 'integer'},
     {'name': "max_depth", 'type': 'integer'},
     {'name': "min_samples_split", 'type': 'integer', 'default': 2},
     {'name': "min_samples_leaf", 'type': 'integer', 'default': 1},
@@ -94,11 +101,40 @@ CLASSIFIERS = {
     DECISION_TREE_CLASSIFIER: {
         'cls': 'sklearn.tree.DecisionTreeClassifier',
         'parameters': DECISION_TREE_CLASSIFIER_PARAMS},
-    # DECISION_TREE_REGRESSOR: {
-    #     'cls': 'sklearn.tree.DecisionTreeRegressor',
-    #     'parameters': [
-    #         {'name': "criterion",
-    #          'type': 'string',
-    #          'choices': ['mse'],
-    #          'default': 'mse'}] + DECISION_TREE_PARAMS},
+    GRADIENT_BOOSTING_CLASSIFIER: {
+        'cls': 'sklearn.ensemble.GradientBoostingClassifier',
+        'parameters': [
+            {'name': "loss",
+             'type': 'string',
+             'choices': ['deviance'],
+             'default': 'deviance'},
+            {'name': "learning_rate", 'type': 'float', 'default': 0.1},
+            {'name': "n_estimators", 'type': 'integer', 'default': 100},
+            {'name': "max_depth", 'type': 'integer', 'default': 3},
+            {'name': "min_samples_split", 'type': 'integer', 'default': 2},
+            {'name': "min_samples_leaf", 'type': 'integer', 'default': 1},
+            {'name': "subsample", 'type': 'float', 'default': 1.0},
+            {'name': "max_features",
+             'type': 'string',
+             'choices': ['auto', 'sqrt', 'log2'],
+             'default': 'auto'},
+            {'name': "max_leaf_nodes", 'type': 'integer'},
+            {'name': "verbose", 'type': 'integer', 'default': 0},
+            {'name': "warm_start", 'type': 'boolean'}]},
+    EXTRA_TREES_CLASSIFIER: {
+        'cls': 'sklearn.ensemble.ExtraTreesClassifier',
+        'parameters': [
+            {'name': "criterion",
+             'type': 'string',
+             'choices': ['gini', 'entropy'],
+             'default': 'gini'},
+            {'name': "n_estimators", 'type': 'integer', 'default': 10}]},
+    RANDOM_FOREST_CLASSIFIER: {
+        'cls': 'sklearn.ensemble.RandomForestClassifier',
+        'parameters': [
+            {'name': "criterion",
+             'type': 'string',
+             'choices': ['gini', 'entropy'],
+             'default': 'gini'},
+            {'name': "n_estimators", 'type': 'integer', 'default': 10}]}
 }

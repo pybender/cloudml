@@ -56,6 +56,7 @@ class WeightsCalculator(object):
         from ..trainer import _adjust_classifier_class
         for class_index, label in enumeration:
             label = _adjust_classifier_class(target_feature, label)
+            logging.info('Get weights for label %s' % label)
             self.weights[segment][label] = []
 
             # filling weights
@@ -118,7 +119,7 @@ class WeightsCalculator(object):
                 <class_label2>: etc}
         """
         if not segment in self._calculated_segments:
-            raise ValueError("Feature weights for this segment wasn't filled")
+            raise ValueError("Feature weights for this segment wasn't filled: %s" % self.weights)
 
         if signed:
             result = {}
@@ -143,6 +144,7 @@ class WeightsCalculator(object):
         if self._trainer.classifier_type in (LOGISTIC_REGRESSION, SVR):
             return clf_weights[class_index]
         else:
+            # TODO: Why???
             return clf_weights
 
     def _get_feature_names_from_vectorizer(self, name, vectorizer):

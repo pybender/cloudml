@@ -38,9 +38,23 @@ class DecisionTreeTrainingVisualizer(BaseTrainedModelVisualizator):
                     self).get_visualization(segment)
         from utils import build_tree
         clf = self._trainer.get_classifier(segment)
-        res['tree'] = 'tree'  # build_tree(
-        #   clf.tree_, self.weights_calc.get_weights(segment, sined=False))
-        return tree
+        res['tree'] = build_tree(
+            clf.tree_,
+            self.weights_calc.get_weights(segment, signed=False)
+        )
+        return res
+
+
+class GBTrainingVisualizer(BaseTrainedModelVisualizator):
+    pass
+
+
+class ExtraTreesTrainingVisualizer(BaseTrainedModelVisualizator):
+    pass
+
+
+class RandomForestTrainingVisualizer(BaseTrainedModelVisualizator):
+    pass
 
 
 class Visualizator(object):
@@ -48,7 +62,10 @@ class Visualizator(object):
         LOGISTIC_REGRESSION: LRTrainingVisualizer,
         SVR: SVRTrainingVisualizer,
         SGD_CLASSIFIER: SGDTrainingVisualizer,
-        DECISION_TREE_CLASSIFIER: DecisionTreeTrainingVisualizer
+        DECISION_TREE_CLASSIFIER: DecisionTreeTrainingVisualizer,
+        GRADIENT_BOOSTING_CLASSIFIER: GBTrainingVisualizer,
+        EXTRA_TREES_CLASSIFIER: ExtraTreesTrainingVisualizer,
+        RANDOM_FOREST_CLASSIFIER: RandomForestTrainingVisualizer
     }
 
     @classmethod

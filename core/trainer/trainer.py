@@ -84,7 +84,8 @@ class Trainer(object):
         self._ignored = 0
         self.train_time = {}
         self._segments = {}
-        self._feature_weights = {}
+        self.visualization = {}
+        #self._feature_weights = {}
 
         self.intermediate_data = defaultdict(dict)
 
@@ -238,12 +239,17 @@ class Trainer(object):
 
     def generate_trained_model_visualization(self, segment, true_data):
         self.model_visualizer.generate(segment, true_data)
+        self.visualization[segment] = self.model_visualizer.get_visualization(segment)
 
     def get_visualization(self, segment):
-        return self.model_visualizer.get_visualization(segment)
+        if not self.visualization or not self.visualization.has_key(segment):
+            self.visualization[segment] = self.model_visualizer.get_visualization(segment)
+        return self.visualization[segment]
 
     def get_weights(self, segment=DEFAULT_SEGMENT):
-        return self.model_visualizer.get_weights(segment)
+        if not self.visualization or not self.visualization.has_key(segment):
+            self.visualization[segment] = self.model_visualizer.get_visualization(segment)
+        return self.visualization[segment]['weights']
 
     # evaluating model related
 
@@ -415,10 +421,11 @@ class Trainer(object):
     def _get_labels(self):
         if self.with_segmentation:
             classes_ = {}
-            for segment, classifier in self._classifier.iteritems():
+            for segment, count in self._segments.iteritems():
                 # Note: Possible problems when value of the group_by field
                 # equals `DEFAULT_SEGMENT`
                 # if segment != DEFAULT_SEGMENT:
+                classifier = self._classifier[segment]
                 if hasattr(classifier, 'classes_'):
                     classes_[segment] = map(str, classifier.classes_.tolist())
 
@@ -521,10 +528,8 @@ class Trainer(object):
 
         return result
 
-    def _get_segment_name(self, row_data):
-        return "_".join(
-            [str(row_data[feature_name]) for feature_name in
-             self._feature_model.group_by])
+    def _get_segments_info(self):
+         return self._segments
 
     def _get_target_variable_labels(self, segment):
         """
