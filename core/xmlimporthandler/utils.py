@@ -1,3 +1,4 @@
+import json
 from string import Template
 from distutils.util import strtobool
 
@@ -123,3 +124,47 @@ def isint(x):
         return False
     else:
         return a == b
+
+
+def getjson(x):
+    try:
+        res = json.loads(x)
+    except:
+        return None
+    return res
+
+
+def autoload_fields_by_row(entity, row, prefix=''):
+    from entities import Entity, Field
+    for key, val in row.iteritems():
+        data_type = 'string'
+        if not entity.fields.has_key(key):
+            if isint(val):
+                data_type = 'integer'
+            elif isfloat(val):
+                data_type = 'float'
+            else:
+                item_dict = getjson(val)
+                if item_dict:
+                    entity.fields[key] = Field({
+                        'name': key,
+                        'column': key,
+                        'transform': 'json'}, entity)
+                    if not key in entity.nested_entities_field_ds:
+                        json_entity = Entity(dict(name=key, datasource=key))
+                        autoload_fields_by_row(json_entity, item_dict, prefix='{0}-'.format(key))
+                        entity.nested_entities_field_ds[key] = json_entity
+                    continue
+
+            if prefix:
+                field_config = {
+                    'name': prefix + key,
+                    'jsonpath': '$.{0}'.format('.'.join(key.split('-')))}
+            else:
+                field_config = {
+                    'name': key,
+                    'type': data_type,
+                    'column': key}
+            entity.fields[key] = Field(field_config, entity)
+
+    entity.fields_loaded = True
