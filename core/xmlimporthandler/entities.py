@@ -1,5 +1,5 @@
 """
-Classes to process XML Import Handler import section.
+Classes to process XML Import Hafvndler import section.
 """
 from collections import OrderedDict
 import json
@@ -239,6 +239,9 @@ class Entity(object):
             self.query = config.get('query')
             self.query_target = None
 
+        if isinstance(config, dict):
+            return
+
         self.load_fields(config)
         self.load_nested_entities(config)
         self.load_sqoop_imports(config)
@@ -366,18 +369,8 @@ select {1} from INFORMATION_SCHEMA.COLUMNS where table_name = '{0}' order by ord
         if self.entity.autoload_fields and not self.entity.fields_loaded:
             # We need to autoload fields on the first row processing
             logging.info('Auto load fields')
-            from utils import isint, isfloat
-            for key, val in row.iteritems():
-                if isint(val):
-                    data_type = 'integer'
-                elif isfloat(val):
-                    data_type = 'float'
-                else:
-                    data_type = 'string'
-                if not self.entity.fields.has_key(key):
-                    self.entity.fields[key] = Field(
-                        {'name': key, 'type': data_type, 'column': key}, self.entity)
-            self.entity.fields_loaded = True
+            from utils import autoload_fields_by_row
+            autoload_fields_by_row(self.entity, row)
 
         for field in self.entity.fields.values():
             row_data.update(self.process_field(field, row, row_data))
