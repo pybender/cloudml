@@ -14,31 +14,45 @@ RANDOM_FOREST_CLASSIFIER = 'random forest classifier'
 
 CLASSIFIER_MODELS = (
     LOGISTIC_REGRESSION, SGD_CLASSIFIER, DECISION_TREE_CLASSIFIER,
-    EXTRA_TREES_CLASSIFIER, RANDOM_FOREST_CLASSIFIER, GRADIENT_BOOSTING_CLASSIFIER)
+    EXTRA_TREES_CLASSIFIER, RANDOM_FOREST_CLASSIFIER,
+    GRADIENT_BOOSTING_CLASSIFIER)
 REGRESSION_MODELS = (SVR, DECISION_TREE_REGRESSOR)
 
-DECISION_TREE_PARAMS = [
-    {'name': "splitter",
-     'type': 'string',
-     'choices': ['best', 'random'],
-     'default': 'best'},
-    #{'name': 'max_features', 'type': 'integer'},
-    {'name': "max_depth", 'type': 'integer'},
-    {'name': "min_samples_split", 'type': 'integer', 'default': 2},
-    {'name': "min_samples_leaf", 'type': 'integer', 'default': 1},
-    {'name': "max_leaf_nodes", 'type': 'integer'},
-    # TODO: support RandomState instance
-    {'name': "random_state", 'type': 'integer'},
-    # {'name': "min_density", 'type': 'integer'},
-    # {'name': "compute_importances", 'type': 'boolean'}
-]
 
+# PARAMETERS
+class Params:
+    n_estimators = {'name': "n_estimators", 'type': 'integer', 'default': 10}
+    tree_criterion = {
+        'name': "criterion",
+        'type': 'string',
+        'choices': ['gini', 'entropy'],
+        'default': 'gini'}
 
-DECISION_TREE_CLASSIFIER_PARAMS = [
-    {'name': "criterion",
-     'type': 'string',
-     'choices': ['gini', 'entropy'],
-     'default': 'gini'}] + DECISION_TREE_PARAMS
+    max_features = {
+        'name': "max_features",
+        'type': 'string',
+        'choices': ['auto', 'sqrt', 'log2'],
+        'default': 'auto'}
+    max_depth = {'name': "max_depth", 'type': 'integer'}
+    min_samples_split = {
+        'name': "min_samples_split",
+        'type': 'integer', 'default': 2}
+    min_samples_leaf = {
+        'name': "min_samples_leaf",
+        'type': 'integer', 'default': 1}
+    max_leaf_nodes = {'name': "max_leaf_nodes", 'type': 'integer'}
+    bootstrap = {'name': "bootstrap", 'type': 'boolean', 'default': True}
+    oob_score = {'name': "oob_score", 'type': 'boolean'}
+    n_jobs = {'name': "n_jobs", 'type': 'integer', 'default': 1}
+    random_state = {'name': "random_state", 'type': 'integer'}
+    verbose = {'name': "verbose", 'type': 'integer', 'default': 0}
+    tree_splitter = {
+        'name': "splitter",
+        'type': 'string',
+        'choices': ['best', 'random'],
+        'default': 'best'}
+    min_density = {'name': "min_density", 'type': 'integer'}
+    compute_importances = {'name': "compute_importances", 'type': 'boolean'}
 
 
 CLASSIFIERS = {
@@ -100,7 +114,13 @@ CLASSIFIERS = {
         'defaults': {'C': 1.0, 'epsilon': 0.1}},
     DECISION_TREE_CLASSIFIER: {
         'cls': 'sklearn.tree.DecisionTreeClassifier',
-        'parameters': DECISION_TREE_CLASSIFIER_PARAMS},
+        'parameters': [
+            Params.tree_criterion, Params.tree_splitter,
+            Params.max_features, Params.max_depth,
+            Params.min_samples_split, Params.min_samples_leaf,
+            Params.max_leaf_nodes, Params.random_state,
+            Params.min_density, Params.compute_importances
+        ]},
     GRADIENT_BOOSTING_CLASSIFIER: {
         'cls': 'sklearn.ensemble.GradientBoostingClassifier',
         'parameters': [
@@ -109,32 +129,28 @@ CLASSIFIERS = {
              'choices': ['deviance'],
              'default': 'deviance'},
             {'name': "learning_rate", 'type': 'float', 'default': 0.1},
-            {'name': "n_estimators", 'type': 'integer', 'default': 100},
-            {'name': "max_depth", 'type': 'integer', 'default': 3},
-            {'name': "min_samples_split", 'type': 'integer', 'default': 2},
-            {'name': "min_samples_leaf", 'type': 'integer', 'default': 1},
+            Params.n_estimators,
+            Params.max_features, Params.max_depth,
+            Params.min_samples_split, Params.min_samples_leaf,
+            Params.max_leaf_nodes,
             {'name': "subsample", 'type': 'float', 'default': 1.0},
-            {'name': "max_features",
-             'type': 'string',
-             'choices': ['auto', 'sqrt', 'log2'],
-             'default': 'auto'},
-            {'name': "max_leaf_nodes", 'type': 'integer'},
-            {'name': "verbose", 'type': 'integer', 'default': 0},
-            {'name': "warm_start", 'type': 'boolean'}]},
+            Params.verbose]},
     EXTRA_TREES_CLASSIFIER: {
         'cls': 'sklearn.ensemble.ExtraTreesClassifier',
         'parameters': [
-            {'name': "criterion",
-             'type': 'string',
-             'choices': ['gini', 'entropy'],
-             'default': 'gini'},
-            {'name': "n_estimators", 'type': 'integer', 'default': 10}]},
+            Params.tree_criterion, Params.n_estimators,
+            Params.max_features, Params.max_depth,
+            Params.min_samples_split, Params.min_samples_leaf,
+            Params.max_leaf_nodes, Params.bootstrap,
+            Params.oob_score, Params.n_jobs,
+            Params.random_state, Params.verbose]},
     RANDOM_FOREST_CLASSIFIER: {
         'cls': 'sklearn.ensemble.RandomForestClassifier',
         'parameters': [
-            {'name': "criterion",
-             'type': 'string',
-             'choices': ['gini', 'entropy'],
-             'default': 'gini'},
-            {'name': "n_estimators", 'type': 'integer', 'default': 10}]}
+            Params.tree_criterion, Params.n_estimators,
+            Params.max_features, Params.max_depth,
+            Params.min_samples_split, Params.min_samples_leaf,
+            Params.max_leaf_nodes, Params.bootstrap,
+            Params.oob_score, Params.n_jobs,
+            Params.random_state, Params.verbose]}
 }

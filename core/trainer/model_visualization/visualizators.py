@@ -50,10 +50,22 @@ class GBTrainingVisualizer(BaseTrainedModelVisualizator):
 
 
 class ExtraTreesTrainingVisualizer(BaseTrainedModelVisualizator):
-    pass
+    def get_visualization(self, segment):
+        res = super(ExtraTreesTrainingVisualizer,
+                    self).get_visualization(segment)
+        from utils import build_tree
+        trees_clf = self._trainer.get_classifier(segment)
+        res['trees'] = []
+        for clf in trees_clf.estimators_:
+            tree = build_tree(
+                clf.tree_,
+                self.weights_calc.get_weights(segment, signed=False)
+            )
+            res['trees'].append(tree)
+        return res
 
 
-class RandomForestTrainingVisualizer(BaseTrainedModelVisualizator):
+class RandomForestTrainingVisualizer(ExtraTreesTrainingVisualizer):
     pass
 
 
