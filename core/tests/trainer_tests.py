@@ -116,6 +116,8 @@ class TrainerSegmentTestCase(unittest.TestCase):
             'Segment1': segment1_mock,
             'Segment2': segment2_mock
         }
+        # [20, 10] - count of the elements in each segment
+        segments = dict(zip(classifier.keys(), [20, 10]))
         segment1_mock._enc = 'something'
         segment1_mock.classes_.tolist.return_value = ['False', 'True']
         segment2_mock._enc = 'something'
@@ -123,6 +125,7 @@ class TrainerSegmentTestCase(unittest.TestCase):
 
         trainer = Trainer(self._config)
         trainer.set_classifier(classifier)
+        trainer._segments = segments
         trainer.feature_model.group_by = ['smth']
         self.assertEqual(['False', 'True'], trainer._get_labels())
 
@@ -131,6 +134,7 @@ class TrainerSegmentTestCase(unittest.TestCase):
         segment2_mock.classes_.tolist.return_value = ['False', 'True']
         trainer = Trainer(self._config)
         trainer.set_classifier(classifier)
+        trainer._segments = segments
         trainer.feature_model.group_by = ['smth']
         self.assertRaises(AssertionError, trainer._get_labels)
 
