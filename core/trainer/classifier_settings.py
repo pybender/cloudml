@@ -30,7 +30,7 @@ class Params:
 
     max_features = {
         'name': "max_features",
-        'type': 'string',
+        'type': 'int_float_string_none',
         'choices': ['auto', 'sqrt', 'log2'],
         'default': 'auto'}
     max_depth = {'name': "max_depth", 'type': 'integer'}
