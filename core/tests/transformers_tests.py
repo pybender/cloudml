@@ -12,7 +12,7 @@ import unittest
 from core.trainer.transformers import get_transformer, ScalerDecorator, Ntile
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.preprocessing import Scaler
+#from sklearn.preprocessing import Scaler
 
 
 class TransformersTest(unittest.TestCase):

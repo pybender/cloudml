@@ -19,13 +19,15 @@ def copy_expected(source_params, expected):
     return result
 
 
-def parse_parameters(config, settings):
+def parse_parameters(config, settings, brief=True):
     """
     Parse config parameters according to settings.
     """
     defaults = settings.get('defaults', {})
     source_params = defaults.copy()
     expected = settings.get('parameters', {})
+    if not brief:
+        expected = [p['name'] for p in expected]
     source_params.update(config.get('params', {}))
     return copy_expected(source_params, expected)
 
