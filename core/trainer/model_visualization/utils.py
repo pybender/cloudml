@@ -8,7 +8,7 @@ def build_tree(decision_tree, weights_list):
     for class_label, class_weights in weights_list.iteritems():
         weights += class_weights
 
-    feature_names = [f['name'] for f in weights]
+    feature_names = [f['name'] if 'name' in f else 'noname' for f in weights]
 
     root = {}
 
@@ -26,7 +26,8 @@ def build_tree(decision_tree, weights_list):
                 "criterion": criterion,
                 "impurity": tree.impurity[node_id],
                 "samples": int(tree.n_node_samples[node_id]),
-                "value": value.tolist()
+                "value": value.tolist(),
+                "type": "branch"
             }
         else:
             if feature_names is not None:
@@ -37,8 +38,10 @@ def build_tree(decision_tree, weights_list):
             return {
                 "id": str(node_id),
                 "rule": feature,
+                "type": "leaf",
                 criterion:  round(tree.impurity[node_id], 4),
-                "samples": int(tree.n_node_samples[node_id])
+                "samples": int(tree.n_node_samples[node_id]),
+                "name": "%s <= %.4f" % (feature, tree.threshold[node_id])
             }
 
     def recurse(item, tree, node_id, criterion, parent=None, depth=0):
@@ -57,7 +60,7 @@ def build_tree(decision_tree, weights_list):
                     parent=node_id,
                     depth=depth + 1)
             recurse(item['right'], tree,
-                    left_child,
+                    right_child,
                     criterion=criterion,
                     parent=node_id,
                     depth=depth + 1)

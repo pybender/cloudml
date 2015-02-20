@@ -42,6 +42,9 @@ class DecisionTreeTrainingVisualizer(BaseTrainedModelVisualizator):
             clf.tree_,
             self.weights_calc.get_weights(segment, signed=False)
         )
+        # exporting to dot file
+        # from sklearn import tree
+        # tree.export_graphviz(clf, out_file='tree.dot')
         return res
 
 
