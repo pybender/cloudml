@@ -10,9 +10,9 @@ def build_tree(decision_tree, weights_list):
 
     feature_names = [f['name'] if 'name' in f else 'noname' for f in weights]
 
-    root = {}
+    root = []
 
-    def node_to_str(tree, node_id, criterion):
+    def node_to_str(tree, node_id, criterion, type_='yes'):
         if not isinstance(criterion, sklearn.tree.tree.six.string_types):
             criterion = "impurity"
 
@@ -27,7 +27,8 @@ def build_tree(decision_tree, weights_list):
                 "impurity": tree.impurity[node_id],
                 "samples": int(tree.n_node_samples[node_id]),
                 "value": value.tolist(),
-                "type": "branch"
+                "node_type": "leaf",
+                "type": type_
             }
         else:
             if feature_names is not None:
@@ -38,32 +39,32 @@ def build_tree(decision_tree, weights_list):
             return {
                 "id": str(node_id),
                 "rule": feature,
-                "type": "leaf",
+                "node_type": "branch",
                 criterion:  round(tree.impurity[node_id], 4),
                 "samples": int(tree.n_node_samples[node_id]),
-                "name": "%s <= %.4f" % (feature, tree.threshold[node_id])
+                "name": "%s <= %.4f" % (feature, tree.threshold[node_id]),
+                "type": type_,
+                "children": []
             }
 
-    def recurse(item, tree, node_id, criterion, parent=None, depth=0):
-        tabs = "  " * depth
+    def recurse(item, tree, node_id, criterion,
+                parent=None, type_='yes'):
 
         left_child = tree.children_left[node_id]
         right_child = tree.children_right[node_id]
 
-        item['item'] = node_to_str(tree, node_id, criterion)
-        if left_child != sklearn.tree._tree.TREE_LEAF and depth < 100:
-            item['left'] = {}
-            item['right'] = {}
-            recurse(item['left'], tree,
+        node = node_to_str(tree, node_id, criterion, type_)
+        item.append(node)
+        if left_child != sklearn.tree._tree.TREE_LEAF:
+            recurse(node['children'], tree,
                     left_child,
                     criterion=criterion,
-                    parent=node_id,
-                    depth=depth + 1)
-            recurse(item['right'], tree,
+                    parent=node_id)
+            recurse(node['children'], tree,
                     right_child,
                     criterion=criterion,
                     parent=node_id,
-                    depth=depth + 1)
+                    type_='no')
 
     recurse(root, decision_tree, 0, criterion="impurity")
-    return root
+    return root[0] if root else None
