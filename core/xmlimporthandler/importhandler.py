@@ -5,6 +5,7 @@ import os
 import logging
 import json
 import gzip
+import datetime
 from lxml import etree
 from lxml import objectify
 from decimal import Decimal
@@ -26,6 +27,8 @@ class DecimalEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Decimal):
             return "%.2f" % obj
+        if hasattr(obj, 'isoformat'):
+            return obj.isoformat()
         return json.JSONEncoder.default(self, obj)
 
 

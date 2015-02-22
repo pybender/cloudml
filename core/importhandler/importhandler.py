@@ -18,6 +18,7 @@ import sys
 import json
 import logging
 import gzip
+import datetime
 
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
@@ -297,6 +298,8 @@ from  decimal import Decimal
 
 class DecimalEncoder(json.JSONEncoder):
     def default(self, obj):
+        if hasattr(obj, 'isoformat'):
+            return obj.isoformat()
         if isinstance(obj, Decimal):
             return "%.2f" % obj
         return json.JSONEncoder.default(self, obj)

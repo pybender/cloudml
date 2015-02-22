@@ -382,7 +382,7 @@ class PigDataSource(BaseDataSource):
             visible_to_all_users=True,
             bootstrap_actions=bootstrap_actions,
             ec2_keyname=self.ec2_keyname,
-            keep_alive=self.keep_alive,
+            #keep_alive=self.keep_alive,
             num_instances=self.num_instances,
             master_instance_type=self.master_instance_type,
             slave_instance_type=self.slave_instance_type,
