@@ -460,7 +460,6 @@ class Trainer(object):
             self._count += 1
             try:
                 data = self._apply_feature_types(row)
-
                 if self.with_segmentation:
                     segment = self._get_segment_name(data)
                 else:
@@ -818,6 +817,53 @@ class Trainer(object):
                     # Convert item to csc_matrix, since hstack fails with arrays
                     vectorized_data.append(scipy.sparse.csc_matrix(item))
         return vectorized_data
+
+    def get_nonzero_vectorized_data(self):
+        vectorized_data = {}
+        res = {}
+        for segment in self._vect_data:
+            for feature_name, feature in self.features[segment].iteritems():
+                if feature_name not in self._feature_model.group_by and \
+                    not feature_name == self._feature_model.target_variable:
+
+                    item = self._test_prepare_feature(feature,
+                                              self._vect_data[segment][
+                                                  feature_name])
+                    transformer = feature['transformer']
+                    preprocessor = feature['type'].preprocessor
+                    if item is not None:
+                        if isinstance(item, numpy.ndarray):
+                            value = item.tolist()[0][0]
+                            if value:
+                                vectorized_data[feature_name] = item.tolist()[0][0]
+                        else:
+                            vectorized_data[feature_name] = {}
+                            if transformer is not None and hasattr(transformer, 'num_topics'):
+                                item = item.todense().tolist()
+                                for j in range(0, transformer.num_features):
+                                    subfeature = '%s->Topic #%d' % (feature_name.replace(".", "->"), j)
+                                    if item[0][j] != 0:
+                                        vectorized_data[feature_name][subfeature] = item[0][j]
+                            elif transformer is not None and hasattr(transformer,
+                                                           'get_feature_names'):
+                                index = 0
+                                item = item.todense().tolist()
+                                for subfeature in transformer.get_feature_names():
+                                    if item[0][index]:
+                                        vectorized_data[feature_name][subfeature] = item[0][index]
+                                    index +=1
+                            elif preprocessor is not None and hasattr(preprocessor,
+                                                          'get_feature_names'):
+                                index = 0
+                                item = item.todense().tolist()
+                                for subfeature in preprocessor.get_feature_names():
+                                    if item[0][index]:
+                                        vectorized_data[feature_name][subfeature] = item[0][index]
+                                    index +=1
+                            if not vectorized_data[feature_name].items():
+                                vectorized_data.pop(feature_name)
+            res[segment] = vectorized_data
+        return res
 
 
 def list_to_dict(user_params):
