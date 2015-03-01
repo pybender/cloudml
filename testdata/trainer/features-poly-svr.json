@@ -1,0 +1,61 @@
+{
+  "schema-name":"test",
+  "classifier":{
+    "type":"support vector regression",
+    "params": {
+      "epsilon": 0.1,
+      "C": 1,
+      "kernel": "poly"
+    }
+  },
+  "features":[
+    {
+      "name":"hire_outcome",
+      "type":"int",
+      "is-target-variable":true
+    },
+    {
+      "name":"contractor.dev_adj_score_recent",
+      "type":"float",
+      "is-required":true,
+      "transformer":{
+        "type": "Ntile",
+        "params": {"number_tile": 2}
+      }
+    },
+    {
+      "name":"contractor.dev_is_looking",
+      "type":"boolean",
+      "is-required":false
+    },
+    {
+      "name":"contractor.dev_country",
+      "type":"categorical",
+      "is-required":false
+    },
+    {
+      "name":"contractor.dev_title",
+      "type": "text",
+      "transformer":{
+        "type":"Tfidf",
+        "params": {
+          "ngram_range_min":1,
+          "ngram_range_max":1,
+          "min_df":3}
+      }
+    },
+    {
+      "name":"contractor.dev_test",
+      "type": "float",
+      "input-format": "dict"
+    },
+    {"name": "contractor.skills",
+     "type": "categorical",
+     "params": {"split_pattern": "\\s*,\\s*"}
+    },
+    {"name":"contractor.dev_scores",
+    "type":"float",
+    "input-format": "dict"
+    }
+  ]
+}

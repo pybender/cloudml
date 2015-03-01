@@ -266,7 +266,11 @@ class Trainer(object):
         self.metrics = self.metrics_class()
 
         self._prepare_data(iterator, callback, save_raw=save_raw)
-        self._test_empty_labels = self._check_data_for_test()
+        if self.model_type == self.TYPE_CLASSIFICATION:
+            self._test_empty_labels = self._check_data_for_test()
+        else:
+            self._test_empty_labels = []
+
         count = self._count
         if percent:
             self._count = int(self._count * percent / 100)
@@ -590,16 +594,22 @@ class Trainer(object):
         # Get X and y
         logging.info('Extracting features for segment %s ...', segment)
         labels = self._get_target_variable_labels(segment)
-        classes = self._get_classifier_adjusted_classes(segment)
         vectorized_data = self._get_vectorized_data(
             segment, self._test_prepare_feature)
         logging.info("Memory usage (vectorized data generated): %f" %
                      memory_usage(-1, interval=0, timeout=None)[0])
         logging.info('Evaluating model...')
 
-        self.metrics.evaluate_model(labels, classes, vectorized_data,
-                                    self._classifier[segment],
-                                    self._test_empty_labels[segment], segment)
+        if self.model_type == self.TYPE_CLASSIFICATION:
+            classes = self._get_classifier_adjusted_classes(segment)
+            self.metrics.evaluate_model(labels, classes, vectorized_data,
+                                        self._classifier[segment],
+                                        self._test_empty_labels[segment], segment)
+        else:
+            # TODO: _test_empty_labels
+            self.metrics.evaluate_model(labels, vectorized_data,
+                                        self._classifier[segment],
+                                        [], segment)
         
         self.generate_trained_model_visualization(segment, self.metrics._true_data[segment])
         logging.info("Memory usage: %f" %

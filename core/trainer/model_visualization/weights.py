@@ -70,46 +70,50 @@ class WeightsCalculator(object):
                     'weight': coef
                 })
 
-            # determine feature names
-            index = 0
-            for feature_name, feature in features.items():
-                base_name = feature_name.replace(".", "->")
-                if not (self._trainer.is_target_variable(feature_name) or
-                        self._trainer.is_group_by_variable(feature_name)):
-                    transformer = feature['transformer']
-                    preprocessor = feature['type'].preprocessor
-
-                    if transformer is not None and \
-                            hasattr(transformer, 'num_topics'):
-                        for tj in range(0, transformer.num_features - 1):
-                            name = '%s->Topic #%d' % (base_name, tj)
-                            self.weights[segment][label][index + tj]['name'] = name
-                        index += transformer.num_topics
-
-                    elif transformer is not None and \
-                            hasattr(transformer, 'get_feature_names'):
-                        names = self._get_feature_names_from_vectorizer(base_name, transformer)
-                        for vj, name in enumerate(names):
-                            self.weights[segment][label][index + vj]['name'] = name
-
-                        index += len(names)
-
-                    elif preprocessor is not None and \
-                            hasattr(preprocessor, 'get_feature_names'):
-                        names = self._get_feature_names_from_vectorizer(
-                            base_name, preprocessor)
-                        for vj, name in enumerate(names):
-                            self.weights[segment][label][index + vj]['name'] = name
-                        index += len(names)
-
-                    else:
-                        self.weights[segment][label][index]['name'] = base_name
-                        index += 1
+            self.determine_feature_names(features, segment, label=label)
 
             if len(clf.classes_) == 2:
                 break
 
         self._calculated_segments.append(segment)
+
+    # determine feature names
+    def determine_feature_names(self, features, segment, label):
+        index = 0
+        for feature_name, feature in features.items():
+            base_name = feature_name.replace(".", "->")
+            if not (self._trainer.is_target_variable(feature_name) or
+                    self._trainer.is_group_by_variable(feature_name)):
+                transformer = feature['transformer']
+                preprocessor = feature['type'].preprocessor
+
+                if transformer is not None and \
+                        hasattr(transformer, 'num_topics'):
+                    for tj in range(0, transformer.num_features - 1):
+                        name = '%s->Topic #%d' % (base_name, tj)
+                        self.weights[segment][label][index + tj]['name'] = name
+                    index += transformer.num_topics
+
+                elif transformer is not None and \
+                        hasattr(transformer, 'get_feature_names'):
+                    names = self._get_feature_names_from_vectorizer(base_name, transformer)
+                    for vj, name in enumerate(names):
+                        self.weights[segment][label][index + vj]['name'] = name
+
+                    index += len(names)
+
+                elif preprocessor is not None and \
+                        hasattr(preprocessor, 'get_feature_names'):
+                    names = self._get_feature_names_from_vectorizer(
+                        base_name, preprocessor)
+                    for vj, name in enumerate(names):
+                        self.weights[segment][label][index + vj]['name'] = name
+                    index += len(names)
+
+                else:
+                    self.weights[segment][label][index]['name'] = base_name
+                    index += 1
+
 
     def get_weights(self, segment, signed=True):
         """
@@ -141,7 +145,7 @@ class WeightsCalculator(object):
         gini importance (decision tree classifier) list.
         """
         clf_weights = self._get_clf_weights(clf)
-        if self._trainer.classifier_type in (LOGISTIC_REGRESSION, SVR):
+        if self._trainer.classifier_type in (LOGISTIC_REGRESSION, ):
             return clf_weights[class_index]
         else:
             # TODO: Why???
@@ -168,3 +172,38 @@ class WeightsCalculator(object):
         positive = sorted(positive, key=itemgetter('name'), reverse=True)
         negative = sorted(negative, key=itemgetter('name'), reverse=False)
         return {'positive': positive, 'negative': negative}
+
+
+class SVRWeightsCalculator(WeightsCalculator):
+    LABEL = 'default'
+
+    def generate(self, segment, true_data):
+        """
+        Calculates list of feature weights for specified segment
+        and store it to the weights dict.
+        """
+        self.weights[segment] = {}  # weights by the class_label
+        features = self._trainer.get_features(segment)
+
+        logging.info('Calculating feature weights for %s segment' % segment)
+
+        # filling weights
+        clf = self._trainer.get_classifier(segment)
+        # TODO: !!!
+        clf_weights = self._get_clf_weights(clf).toarray()[0]
+
+        self.fill_weights(clf_weights, true_data, segment, label=self.LABEL)
+        self.determine_feature_names(features, segment, label=self.LABEL)
+        self._calculated_segments.append(segment)
+
+    def fill_weights(self, weights, true_data, segment, label):
+        true_data.data = numpy.absolute(true_data.data)
+        mean_data = true_data.mean(0).transpose()
+        self.weights[segment][label] = []
+        for i, coef in enumerate(weights):
+            t = mean_data[i].tolist()[0][0]
+            feature_weight = t * numpy.abs(coef)
+            self.weights[segment][label].append({
+                'feature_weight': feature_weight,
+                'weight': coef
+            })

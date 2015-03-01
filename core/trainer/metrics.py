@@ -8,6 +8,7 @@ import sklearn.metrics as sk_metrics
 
 class Metrics(object):
     METRICS_TO_CALC = ()
+    DEFAULTS = {}
 
     def __init__(self):
         self._labels = []
@@ -16,7 +17,7 @@ class Metrics(object):
         self._preds = None
         self._probs = None
         self._true_data = OrderedDict()
-        self._classes_set = None
+        self._classes_set = []
         self._empty_labels = []
 
     def evaluate_model(self, labels, classes, vectorized_data, classifier,
@@ -64,7 +65,6 @@ class Metrics(object):
         else:
             self._probs = numpy.vstack((self._probs, probs))
 
-
     @property
     def classes_set(self):
         """
@@ -96,6 +96,7 @@ class Metrics(object):
         # TODO: Think about moving logic to serializer
         # and make Metrics class serializable
         res = {}
+        res.update(self.DEFAULTS)
         #self._true_data = hstack(self._vectorized_data)
         metrics = self._get_metrics_names()
         for metric_name in metrics.keys():
@@ -133,6 +134,7 @@ class ClassificationModelMetrics(Metrics):
                                 'roc_curve': 'ROC curve',
                                 'roc_auc': 'Area under ROC curve',
                                 }
+    DEFAULTS = {'type': 'classification'}
 
     @property
     def roc_curve(self):
@@ -213,14 +215,8 @@ class ClassificationModelMetrics(Metrics):
     @property
     def accuracy(self):
         if not hasattr(self, '_accuracy'):
-            #labels = [str(l) for l in self._labels]
-            y_true_type = type(self._labels[0])
-            y_pred_type = type(self._preds[0])
-            if y_true_type != y_pred_type:
-                labels = [y_pred_type(y) for y in self._labels]
-            else:
-                labels = self._labels
-            self._accuracy = sk_metrics.accuracy_score(labels, self._preds)
+            labels, preds = prepare_labels_preds(self._labels, self._preds)
+            self._accuracy = sk_metrics.accuracy_score(labels, preds)
         return self._accuracy
 
     def _get_metrics_names(self):
@@ -234,17 +230,79 @@ class RegressionModelMetrics(Metrics):
     """
     Represents metrics for regression model
     """
-    METRICS_TO_CALC = {'rsme': 'Root square mean error'}
+    METRICS_TO_CALC = {
+        'explained_variance_score': 'Explained variance regression score function',
+        'mean_absolute_error': 'Mean absolute error regression loss',
+        'mean_squared_error': 'Mean squared error regression loss',
+        'r2_score': 'R^2 (coefficient of determination) regression score function.',
+    }
+    DEFAULTS = {'type': 'regression'}
 
     @property
-    def rsme(self):
-        if not hasattr(self, '_rsme'):
-            sum = 0
-            for i, y in enumerate(self._labels):
-                x = self._true_data.getrow(i)
-                # TODO nader20140712, introduction of segments will cause
-                # the following line to break
-                yp = self._classifier.predict(x)[0]
-                sum += (y - yp) ** 2
-            self._rsme = numpy.sqrt(sum / len(self._labels))
-        return self._rsme
+    def explained_variance_score(self):
+        if not hasattr(self, '_explained_variance_score'):
+            labels, preds = prepare_labels_preds(self._labels, self._preds)
+            self._explained_variance_score = sk_metrics.explained_variance_score(labels, preds)
+        return self._explained_variance_score
+
+    @property
+    def mean_absolute_error(self):
+        if not hasattr(self, '_mean_absolute_error'):
+            labels, preds = prepare_labels_preds(self._labels, self._preds)
+            self._mean_absolute_error = sk_metrics.mean_absolute_error(labels, preds)
+        return self._mean_absolute_error
+
+    @property
+    def mean_squared_error(self):
+        if not hasattr(self, '_mean_squared_error'):
+            labels, preds = prepare_labels_preds(self._labels, self._preds)
+            self._mean_squared_error = sk_metrics.mean_squared_error(labels, preds)
+        return self._mean_squared_error
+
+    @property
+    def r2_score(self):
+        if not hasattr(self, '_r2_score'):
+            labels, preds = prepare_labels_preds(self._labels, self._preds)
+            self._r2_score = sk_metrics.r2_score(labels, preds)
+        return self._r2_score
+
+    def evaluate_model(self, labels, vectorized_data, classifier,
+                       empty_labels, segment='default'):
+        self._labels += labels
+        self._empty_labels = empty_labels
+        self._classifier[segment] = classifier
+
+        # Evaluating model...
+        if(len(vectorized_data) == 1):
+            if isinstance(vectorized_data[0], csc_matrix):
+                true_data = vectorized_data[0]
+            else:
+                true_data = numpy.array(vectorized_data[0])
+        else:
+            try:
+                true_data = hstack(vectorized_data)
+            except ValueError:
+                true_data = numpy.hstack(vectorized_data)
+        try:
+            self._true_data[segment] = true_data.tocsr()
+        except:
+            self._true_data[segment] = true_data
+
+        preds = classifier.predict(true_data)
+        
+        if self._preds is None:
+            self._preds = preds
+        else:
+            self._preds = numpy.append(self._preds, preds)
+
+        self._prob = None
+
+
+def prepare_labels_preds(labels, preds):
+    y_true_type = type(labels[0])
+    y_pred_type = type(preds[0])
+    if y_true_type != y_pred_type:
+        labels = [y_pred_type(y) for y in labels]
+    else:
+        labels = labels
+    return labels, preds

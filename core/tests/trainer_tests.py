@@ -25,15 +25,48 @@ TARGET = 'target'
 FORMATS = ['csv', 'json']
 
 
-
-class TrainerSegmentTestCase(unittest.TestCase):
+class BaseTrainerTestCase(unittest.TestCase):
+    FEATURES_FILE = 'features.json'
 
     def setUp(self):
         logging.basicConfig(format='[%(asctime)s] %(levelname)s - %(message)s',
                             level=logging.DEBUG)
         self._config = FeatureModel(os.path.join(BASEDIR, 'trainer',
-                                    'features_segment.json'))
+                                    self.FEATURES_FILE))
         self._trainer = None
+
+    def _load_data(self, fmt='json'):
+        """
+        Load test data.
+        """
+        with open(os.path.join(BASEDIR, 'trainer',
+                               'trainer.data.{}'.format(fmt))) as fp:
+            self._data = list(streamingiterload(
+                fp.readlines(), source_format=fmt))
+
+        self._trainer = Trainer(self._config)
+        self._trainer.train(self._data)
+
+    def _train(self, fmt='json'):
+        with open(os.path.join(BASEDIR, 'trainer',
+                               'trainer.data.segment.{}'.format(fmt))) as fp:
+            self._data = list(streamingiterload(
+                fp.readlines(), source_format=fmt))
+
+        self._trainer = Trainer(self._config)
+        self._trainer.train(self._data)
+
+    def _get_iterator(self, fmt='json'):
+        with open(os.path.join(BASEDIR, 'trainer',
+                               'trainer.data.segment.{}'.format(fmt))) as fp:
+            self._data = list(streamingiterload(
+                fp.readlines(), source_format=fmt))
+
+        return self._data
+
+
+class TrainerSegmentTestCase(BaseTrainerTestCase):
+    FEATURES_FILE = 'features_segment.json'
 
     def test_trained_model_visualization(self):
         #for fmt in FORMATS:
@@ -70,13 +103,10 @@ class TrainerSegmentTestCase(unittest.TestCase):
 
         metr =  self._trainer.test(self._get_iterator())
 
-
     def test_predict(self):
-
         self._train()
         results = self._trainer.predict(self._get_iterator())
         self.assertEqual(results['classes'].tolist(),['0', '1'])
-
 
     def _train(self, fmt='json'):
         with open(os.path.join(BASEDIR, 'trainer',
@@ -139,14 +169,8 @@ class TrainerSegmentTestCase(unittest.TestCase):
         self.assertRaises(AssertionError, trainer._get_labels)
 
 
-class TrainerTestCase(unittest.TestCase):
-
-    def setUp(self):
-        logging.basicConfig(format='[%(asctime)s] %(levelname)s - %(message)s',
-                            level=logging.DEBUG)
-        self._config = FeatureModel(os.path.join(BASEDIR, 'trainer',
-                                    'features.json'))
-        self._trainer = None
+class TrainerTestCase(BaseTrainerTestCase):
+    FEATURES_FILE = 'features.json'
 
     def test_train(self):
         for fmt in FORMATS:
@@ -288,7 +312,6 @@ class TrainerTestCase(unittest.TestCase):
                 self.assertTrue(clazz_weights.has_key('negative'))
                 self.assertIsInstance(clazz_weights['positive'], list)
                 self.assertIsInstance(clazz_weights['negative'], list)
-
 
     def test_test_ndim_outcome(self):
         """
@@ -437,18 +460,6 @@ class TrainerTestCase(unittest.TestCase):
                                                              [0, 3, 0],
                                                              [0, 0, 0]])
 
-    def _load_data(self, fmt):
-        """
-        Load test data.
-        """
-        with open(os.path.join(BASEDIR, 'trainer',
-                               'trainer.data.{}'.format(fmt))) as fp:
-            self._data = list(streamingiterload(
-                fp.readlines(), source_format=fmt))
-
-        self._trainer = Trainer(self._config)
-        self._trainer.train(self._data)
-
 
 class HelpersTestCase(unittest.TestCase):
 
@@ -486,6 +497,70 @@ class HelpersTestCase(unittest.TestCase):
 
         self.assertEqual(1, _adjust_classifier_class(f, '1'))
         self.assertEqual(0, _adjust_classifier_class(f, '0'))
+
+
+class LinearSVRTestCase(BaseTrainerTestCase):
+    FEATURES_FILE = 'features-svr.json'
+
+    def test_train(self):
+        self._load_data()
+        self.assertEquals(
+            self._trainer._classifier[DEFAULT_SEGMENT].coef_.shape, (1, 19))
+        features = self._trainer.features
+        title_feature = features[DEFAULT_SEGMENT]['contractor.dev_title']
+        title_vectorizer = title_feature['transformer']
+        self.assertEquals(
+            title_vectorizer.get_feature_names(), ['engineer', 'python'])
+
+        vis = self._trainer.get_visualization(segment='default')
+        self.assertEquals(vis['classifier_type'], u'support vector regression')
+
+        weights = vis['weights']
+        self.assertTrue(weights)
+        w = weights['default']['positive'][0]
+        self.assertEquals(w['name'], 'contractor->skills->article-writing1')
+        self.assertEquals(w['feature_weight'], 0.026535104037632779)
+        self.assertEquals(w['weight'], 0.15921062422579668)
+
+    def test_test(self):
+        from core.trainer.metrics import RegressionModelMetrics
+        self._load_data()
+        metrics = self._trainer.test(self._data)
+        self.assertIsInstance(metrics, RegressionModelMetrics)
+
+        self.assertEquals(
+            metrics.explained_variance_score, 0.95991958087004026)
+        self.assertEquals(metrics.mean_absolute_error, 0.1001002294369978)
+        self.assertEquals(metrics.mean_squared_error,  0.010020104782490174)
+        self.assertEquals(metrics.r2_score, 0.95991958087003926)
+
+
+class PolySVRTestCase(BaseTrainerTestCase):
+    FEATURES_FILE = 'features-poly-svr.json'
+
+    def test_train(self):
+        self._load_data()
+        features = self._trainer.features
+        title_feature = features[DEFAULT_SEGMENT]['contractor.dev_title']
+        title_vectorizer = title_feature['transformer']
+        self.assertEquals(
+            title_vectorizer.get_feature_names(), ['engineer', 'python'])
+
+        vis = self._trainer.get_visualization(segment='default')
+        self.assertEquals(vis['classifier_type'], u'support vector regression')
+        self.assertFalse('weights' in vis)
+
+    def test_test(self):
+        from core.trainer.metrics import RegressionModelMetrics
+        self._load_data()
+        metrics = self._trainer.test(self._data)
+        self.assertIsInstance(metrics, RegressionModelMetrics)
+
+        self.assertEquals(
+            metrics.explained_variance_score, 0.56256553495882655)
+        self.assertEquals(metrics.mean_absolute_error, 0.22601789895449262)
+        self.assertEquals(metrics.mean_squared_error,  0.12263815453522724)
+        self.assertEquals(metrics.r2_score, 0.509447381859091)
 
 
 if __name__ == '__main__':

@@ -105,7 +105,10 @@ CLASSIFIERS = {
         'parameters': (
             {'name': "C", 'type': 'float'},
             {'name': 'epsilon', 'type': 'float'},
-            {'name': 'kernel', 'type': 'string'},
+            {'name': 'kernel',
+             'type': 'string',
+             'default': 'linear',
+             'choices': ['linear', 'poly', 'rbf', 'sigmoid', 'precomputed']},
             {'name': 'degree', 'type': 'integer'},
             {'name': 'gamma', 'type': 'float'},
             {'name': 'coef0', 'type': 'float'},
