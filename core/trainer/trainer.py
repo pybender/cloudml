@@ -420,6 +420,7 @@ class Trainer(object):
         Keyword arguments:
         fp -- the file to store the trained model.
         """
+        # FIXME: JSON always dumps all keys as string!
         json.dump(self.get_weights(), fp, indent=4)
 
     def _get_labels(self):

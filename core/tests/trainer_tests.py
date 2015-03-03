@@ -169,7 +169,7 @@ class TrainerSegmentTestCase(BaseTrainerTestCase):
         self.assertRaises(AssertionError, trainer._get_labels)
 
 
-class TrainerTestCase(BaseTrainerTestCase):
+class LogisticRegressionTrainerTestCase(BaseTrainerTestCase):
     FEATURES_FILE = 'features.json'
 
     def test_train(self):
@@ -181,6 +181,8 @@ class TrainerTestCase(BaseTrainerTestCase):
             self.assertEquals(title_vectorizer.get_feature_names(), ['engineer',
                                                                      'python'])
             self.assertEqual(['0', '1'], self._trainer._get_labels())
+            vis = self._trainer.get_visualization(segment='default')
+            self.assertEquals(vis['classifier_type'], u'logistic regression')
 
     def test_train_class_weight(self):
         config = {
@@ -200,8 +202,7 @@ class TrainerTestCase(BaseTrainerTestCase):
         self.assertEquals(self._trainer._classifier[DEFAULT_SEGMENT].coef_.shape, (1, 19))
         title_feature = self._trainer.features[DEFAULT_SEGMENT]['contractor.dev_title']
         title_vectorizer = title_feature['transformer']
-        self.assertEquals(title_vectorizer.get_feature_names(), ['engineer',
-                                                                 'python'])
+        self.assertEquals(title_vectorizer.get_feature_names(), ['engineer', 'python'])
 
     def test_store_feature_weights(self):
         for fmt in FORMATS:
@@ -220,8 +221,9 @@ class TrainerTestCase(BaseTrainerTestCase):
 
             with open(path) as fp:
                 weights_dict = json.load(fp)
+                # FIXME: JSON always dumps all keys as string!
+                # Here should be int type
                 weights = weights_dict['1']
-                print weights
                 self.assertIn('positive', weights)
                 self.assertIn('negative', weights)
 
@@ -561,6 +563,160 @@ class PolySVRTestCase(BaseTrainerTestCase):
         self.assertEquals(metrics.mean_absolute_error, 0.22601789895449262)
         self.assertEquals(metrics.mean_squared_error,  0.12263815453522724)
         self.assertEquals(metrics.r2_score, 0.509447381859091)
+
+
+class DecisionTreeClfTestCase(BaseTrainerTestCase):
+    FEATURES_FILE = 'features-decision-tree-classifier.json'
+
+    def test_train(self):
+        self._load_data()
+        features = self._trainer.features
+        title_feature = features[DEFAULT_SEGMENT]['contractor.dev_title']
+        title_vectorizer = title_feature['transformer']
+        self.assertEquals(
+            title_vectorizer.get_feature_names(), ['engineer', 'python'])
+
+        vis = self._trainer.get_visualization(segment='default')
+        self.assertEquals(vis['classifier_type'], u'decision tree classifier')
+        self.assertTrue(vis['tree'], 'Decision Tree was not generated')
+
+        weights = vis['weights']
+        self.assertTrue(weights)
+        w = weights[1]['positive'][0]
+        self.assertEquals(w['name'], 'contractor->skills->article-writing')
+        self.assertEquals(w['feature_weight'], 0.16666666666666666)
+        self.assertEquals(w['weight'], 0.5)
+
+    def test_test(self):
+        from core.trainer.metrics import ClassificationModelMetrics
+        self._load_data()
+        metrics = self._trainer.test(self._data)
+        self.assertIsInstance(metrics, ClassificationModelMetrics)
+        self.assertEquals(metrics.accuracy, 1)
+        self.assertEqual(metrics.roc_auc, {1: 1.0})
+
+
+class ExtraTreesClfTestCase(BaseTrainerTestCase):
+    FEATURES_FILE = 'features-extra-trees-classifier.json'
+
+    def test_train(self):
+        self._load_data()
+        features = self._trainer.features
+        title_feature = features[DEFAULT_SEGMENT]['contractor.dev_title']
+        title_vectorizer = title_feature['transformer']
+        self.assertEquals(
+            title_vectorizer.get_feature_names(), ['engineer', 'python'])
+
+        vis = self._trainer.get_visualization(segment='default')
+        self.assertEquals(vis['classifier_type'], u'extra trees classifier')
+        self.assertTrue(vis['trees'], 'Decision Trees was not generated')
+
+        weights = vis['weights']
+        self.assertTrue(weights)
+        w = weights[1]['positive'][0]
+        # TODO: why every time we have different weights?
+        # self.assertEquals(w['name'], 'contractor->skills->microsoft-word')
+        # self.assertEquals(w['feature_weight'], 0.02777777777777778)
+        # self.assertEquals(w['weight'], 0.5)
+
+    def test_test(self):
+        from core.trainer.metrics import ClassificationModelMetrics
+        self._load_data()
+        metrics = self._trainer.test(self._data)
+        self.assertIsInstance(metrics, ClassificationModelMetrics)
+        self.assertEquals(metrics.accuracy, 1)
+        self.assertEqual(metrics.roc_auc, {1: 1.0})
+
+
+class RandomForestClfTestCase(BaseTrainerTestCase):
+    FEATURES_FILE = 'features-random-forest-classifier.json'
+
+    def test_train(self):
+        self._load_data()
+        features = self._trainer.features
+        title_feature = features[DEFAULT_SEGMENT]['contractor.dev_title']
+        title_vectorizer = title_feature['transformer']
+        self.assertEquals(
+            title_vectorizer.get_feature_names(), ['engineer', 'python'])
+
+        vis = self._trainer.get_visualization(segment='default')
+        self.assertEquals(vis['classifier_type'], u'random forest classifier')
+        self.assertTrue(vis['trees'], 'Decision Trees was not generated')
+
+        weights = vis['weights']
+        self.assertTrue(weights)
+        w = weights[1]['positive'][0]
+        # TODO: why every time we have different weights?
+        # self.assertEquals(w['name'], 'contractor->skills->microsoft-word')
+        # self.assertEquals(w['feature_weight'], 0.02777777777777778)
+        # self.assertEquals(w['weight'], 0.5)
+
+    def test_test(self):
+        from core.trainer.metrics import ClassificationModelMetrics
+        self._load_data()
+        metrics = self._trainer.test(self._data)
+        self.assertIsInstance(metrics, ClassificationModelMetrics)
+
+
+# TODO: sparse matrix was passed, but dense data is required. Use X.toarray() to convert to a dense numpy array.
+# class GradientBoostingClfTestCase(BaseTrainerTestCase):
+#     FEATURES_FILE = 'features-gradient-boosting-classifier.json'
+
+#     def test_train(self):
+#         self._load_data()
+#         features = self._trainer.features
+#         title_feature = features[DEFAULT_SEGMENT]['contractor.dev_title']
+#         title_vectorizer = title_feature['transformer']
+#         self.assertEquals(
+#             title_vectorizer.get_feature_names(), ['engineer', 'python'])
+
+#         vis = self._trainer.get_visualization(segment='default')
+#         self.assertEquals(vis['classifier_type'], u'gradient boosting classifier')
+
+#         weights = vis['weights']
+#         self.assertTrue(weights)
+#         w = weights[1]['positive'][0]
+#         # TODO: why every time we have different weights?
+#         # self.assertEquals(w['name'], 'contractor->skills->microsoft-word')
+#         # self.assertEquals(w['feature_weight'], 0.02777777777777778)
+#         # self.assertEquals(w['weight'], 0.5)
+
+#     def test_test(self):
+#         from core.trainer.metrics import ClassificationModelMetrics
+#         self._load_data()
+#         metrics = self._trainer.test(self._data)
+#         self.assertIsInstance(metrics, ClassificationModelMetrics)
+
+
+# class SGDClfTestCase(BaseTrainerTestCase):
+#     FEATURES_FILE = 'features-sgd-classifier.json'
+
+#     def test_train(self):
+#         self._load_data()
+#         features = self._trainer.features
+#         title_feature = features[DEFAULT_SEGMENT]['contractor.dev_title']
+#         title_vectorizer = title_feature['transformer']
+#         self.assertEquals(
+#             title_vectorizer.get_feature_names(), ['engineer', 'python'])
+
+#         vis = self._trainer.get_visualization(segment='default')
+#         self.assertEquals(vis['classifier_type'], u'random forest classifier')
+#         self.assertTrue(vis['trees'], 'Decision Trees was not generated')
+
+#         weights = vis['weights']
+#         self.assertTrue(weights)
+#         w = weights[1]['positive'][0]
+#         # TODO: why every time we have different weights?
+#         # self.assertEquals(w['name'], 'contractor->skills->microsoft-word')
+#         # self.assertEquals(w['feature_weight'], 0.02777777777777778)
+#         # self.assertEquals(w['weight'], 0.5)
+
+#     def test_test(self):
+#         from core.trainer.metrics import ClassificationModelMetrics
+#         self._load_data()
+#         metrics = self._trainer.test(self._data)
+#         self.assertIsInstance(metrics, ClassificationModelMetrics)
+
 
 
 if __name__ == '__main__':
