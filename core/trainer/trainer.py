@@ -238,8 +238,13 @@ class Trainer(object):
         logging.info('Training completed...')
 
     def generate_trained_model_visualization(self, segment, true_data):
+        logging.info("Genarate trained model visualization")
+        logging.info("Memory usage: %f" %
+                     memory_usage(-1, interval=0, timeout=None)[0])
         self.model_visualizer.generate(segment, true_data)
         self.visualization[segment] = self.model_visualizer.get_visualization(segment)
+        logging.info("Memory usage (after generating model visualisation): %f" %
+                     memory_usage(-1, interval=0, timeout=None)[0])
 
     def get_visualization(self, segment):
         if not self.visualization or not self.visualization.has_key(segment):
