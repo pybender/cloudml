@@ -168,7 +168,7 @@ class WeightsCalculator(object):
         positive = []
         negative = []
         for item in self.weights[segment][class_label]:
-            if item['name'] is None:
+            if 'name' in item:
                 logging.debug(
                     "There isn't a name in weight: %s. Segment %s, label %s. %s",
                     item, segment, class_label, item['debug'] if 'debug' in item else 'no debug')
