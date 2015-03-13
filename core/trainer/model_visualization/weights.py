@@ -82,8 +82,13 @@ class WeightsCalculator(object):
         index = 0
         for feature_name, feature in features.items():
             base_name = feature_name.replace(".", "->")
-            if not (self._trainer.is_target_variable(feature_name) or
-                    self._trainer.is_group_by_variable(feature_name)):
+            if self._trainer.is_target_variable(feature_name) or \
+                    self._trainer.is_group_by_variable(feature_name):
+                logging.debug(
+                    "We don't set name (%s) to the group or target value. Segment %s, label %s",
+                    base_name, segment, label)
+                self.weights[segment][label][index]['debug'] = 'name: %s, is target or groupped'
+            else:
                 transformer = feature['transformer']
                 preprocessor = feature['type'].preprocessor
 
@@ -113,7 +118,6 @@ class WeightsCalculator(object):
                 else:
                     self.weights[segment][label][index]['name'] = base_name
                     index += 1
-
 
     def get_weights(self, segment, signed=True):
         """
@@ -164,10 +168,15 @@ class WeightsCalculator(object):
         positive = []
         negative = []
         for item in self.weights[segment][class_label]:
-            if item['weight'] > 0:
-                positive.append(item)
+            if item['name'] is None:
+                logging.debug(
+                    "There isn't a name in weight: %s. Segment %s, label %s. %s",
+                    item, segment, class_label, item['debug'] if 'debug' in item else 'no debug')
             else:
-                negative.append(item)
+                if item['weight'] > 0:
+                    positive.append(item)
+                else:
+                    negative.append(item)
 
         positive = sorted(positive, key=itemgetter('name'), reverse=True)
         negative = sorted(negative, key=itemgetter('name'), reverse=False)
