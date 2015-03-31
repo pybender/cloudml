@@ -87,7 +87,7 @@ class WeightsCalculator(object):
                 logging.debug(
                     "We don't set name (%s) to the group or target value. Segment %s, label %s",
                     base_name, segment, label)
-                self.weights[segment][label][index]['debug'] = 'name: %s, is target or groupped'
+                #self.weights[segment][label][index]['debug'] = 'name: %s, is target or groupped'
             else:
                 transformer = feature['transformer']
                 preprocessor = feature['type'].preprocessor

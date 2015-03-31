@@ -20,7 +20,7 @@ class ScriptManager(object):
         except Exception,  exc:
             raise ImportHandlerException(
                 "Exception occurs while adding python script: {0}. {1}".format(
-                    script[:100], exc))
+                    script[:250], exc))
 
     def execute_function(self, script, value,
                          row_data=None, local_vars={}):
