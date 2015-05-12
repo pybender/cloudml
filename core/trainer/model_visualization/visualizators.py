@@ -65,15 +65,21 @@ class SGDTrainingVisualizer(BaseTrainedModelVisualizator):
 
 
 class DecisionTreeTrainingVisualizer(BaseTrainedModelVisualizator):
-    def get_visualization(self, segment):
-        res = super(DecisionTreeTrainingVisualizer,
-                    self).get_visualization(segment)
+    DEFAULT_DEEP = 10
+
+    def regenerate_tree(self, segment, weights, deep=DEFAULT_DEEP):
         from utils import build_tree
         clf = self._trainer.get_classifier(segment)
-        res['tree'] = build_tree(
-            clf.tree_,
-            self.weights_calc.get_weights(segment, signed=False)
-        )
+        #import pdb; pdb.set_trace()
+        return build_tree(clf.tree_, weights, max_deep=deep)
+
+    def get_visualization(self, segment, deep=DEFAULT_DEEP):
+        res = super(DecisionTreeTrainingVisualizer,
+                    self).get_visualization(segment)
+        weights = self.weights_calc.get_weights(segment, signed=False)
+        res['all_weights'] = weights
+        res['tree'] = self.regenerate_tree(segment, weights, deep)
+        res['parameters'] = {'deep': deep}
         # exporting to dot file
         # from sklearn import tree
         # tree.export_graphviz(clf, out_file='tree.dot')

@@ -246,9 +246,9 @@ class Trainer(object):
         logging.info("Memory usage (after generating model visualisation): %f" %
                      memory_usage(-1, interval=0, timeout=None)[0])
 
-    def get_visualization(self, segment):
+    def get_visualization(self, segment, **kwargs):
         if not self.visualization or not self.visualization.has_key(segment):
-            self.visualization[segment] = self.model_visualizer.get_visualization(segment)
+            self.visualization[segment] = self.model_visualizer.get_visualization(segment, **kwargs)
         return self.visualization[segment]
 
     def get_weights(self, segment=DEFAULT_SEGMENT):
