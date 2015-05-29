@@ -1,16 +1,15 @@
+# Authors: Ioannis Foukarakis <ifoukarakis@upwork.com>
+#          Nikolay Melnik <nmelnik@upwork.com>
+
 from mock import MagicMock, patch
 import numpy
-from core.trainer.feature_types import PrimitiveFeatureTypeInstance
-from sklearn.preprocessing import MinMaxScaler
-
-__author__ = 'ifouk'
-
-
 import json
 import unittest
 import os
 import logging
 from StringIO import StringIO
+from core.trainer.feature_types import PrimitiveFeatureTypeInstance
+from sklearn.preprocessing import MinMaxScaler
 
 
 from core.trainer.config import FeatureModel
@@ -20,9 +19,14 @@ from jsonpath import jsonpath
 from core.trainer.store import store_trainer, load_trainer
 from core.trainer.streamutils import streamingiterload
 
-BASEDIR = 'testdata'
 TARGET = 'target'
 FORMATS = ['csv', 'json']
+
+BASEDIR = 'testdata'
+TRAINER_NDIM_OUTCOME = os.path.join(
+    BASEDIR, 'trainer', 'trainer.data.ndim_outcome.json')
+FEATURES_NDIM_OUTCOME = os.path.join(
+    BASEDIR, 'trainer', 'features.ndim_outcome.json')
 
 
 class BaseTrainerTestCase(unittest.TestCase):
@@ -69,20 +73,67 @@ class TrainerSegmentTestCase(BaseTrainerTestCase):
     FEATURES_FILE = 'features_segment.json'
 
     def test_trained_model_visualization(self):
-        #for fmt in FORMATS:
+        # for fmt in FORMATS:
         self._train()
         self.assertEquals(self._trainer._classifier[''].coef_.shape, (1, 15))
-        self.assertEquals(self._trainer._classifier['USA'].coef_.shape, (1, 14))
-        self.assertEquals(self._trainer._classifier['Canada'].coef_.shape, (1, 13))
-        weights = {'': [[0.064919069751063666, 0.0, 0.19722302855611831, 0.79525860445052987, 0.093483460441531663, 0.16353058402912282, 0.064919069751063666, 0.064919069751063666, 0.064919069751063666, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], 'Canada': [[0.0, 0.0, 0.0010504036212994055, 0.0010504036212994055, 1.4492042523793169, 1.2755465085032549, 0.0021008072425988118, 0.0021008072425988118, 0.11301245547569275, 0.0, 0.018907265183389307, 0.018907265183389307, 0.0084032289703952472]], 'USA': [[0.12371049253298733, 0.037212322240579243, 0.17299634058481614, 0.75354952537172959, 0.381054179743532, 0.17299634058481614, 0.17299634058481617, 0.17299634058481617, 0.037212322240579243, 0.0, 0.0, 0.0, 0.33491090016521313, 0.14884928896231697]]}
+        self.assertEquals(self._trainer._classifier['USA'].coef_.shape,
+                          (1, 14))
+        self.assertEquals(self._trainer._classifier['Canada'].coef_.shape,
+                          (1, 13))
+        weights = {'': [[0.064919069751063666,
+                         0.0,
+                         0.19722302855611831,
+                         0.79525860445052987,
+                         0.093483460441531663,
+                         0.16353058402912282,
+                         0.064919069751063666,
+                         0.064919069751063666,
+                         0.064919069751063666,
+                         0.0,
+                         0.0,
+                         0.0,
+                         0.0,
+                         0.0,
+                         0.0]],
+                   'Canada': [[0.0,
+                               0.0,
+                               0.0010504036212994055,
+                               0.0010504036212994055,
+                               1.4492042523793169,
+                               1.2755465085032549,
+                               0.0021008072425988118,
+                               0.0021008072425988118,
+                               0.11301245547569275,
+                               0.0,
+                               0.018907265183389307,
+                               0.018907265183389307,
+                               0.0084032289703952472]],
+                   'USA': [[0.12371049253298733,
+                            0.037212322240579243,
+                            0.17299634058481614,
+                            0.75354952537172959,
+                            0.381054179743532,
+                            0.17299634058481614,
+                            0.17299634058481617,
+                            0.17299634058481617,
+                            0.037212322240579243,
+                            0.0, 0.0, 0.0,
+                            0.33491090016521313,
+                            0.14884928896231697]]}
         for segment in weights:
-            visualization = self._trainer.get_visualization(segment)['weights'][1]
-            print [item['feature_weight'] for item in visualization['positive']]
-            print [item['feature_weight'] for item in visualization['negative']]
+            visualization = \
+                self._trainer.get_visualization(segment)['weights'][1]
+            print [item['feature_weight'] for item in
+                   visualization['positive']]
+            print [item['feature_weight'] for item in
+                   visualization['negative']]
             # TODO:
-            # self._trainer.weights[segment][0] = map(lambda x: round(x, 15), self._trainer._feature_weights[segment][0])
-            # weights[segment][0] = map(lambda x: round(x, 15), weights[segment][0])
-            # self.assertListEqual(self._trainer._feature_weights[segment][0], weights[segment][0])
+            # self._trainer.weights[segment][0] = map(lambda x: round(x, 15),
+            #    self._trainer._feature_weights[segment][0])
+            # weights[segment][0] = map(lambda x: round(x, 15),
+            #    weights[segment][0])
+            # self.assertListEqual(self._trainer._feature_weights[segment][0],
+            #    weights[segment][0])
         self.assertEquals(
             self._trainer.get_weights('USA')[1]['positive'][0],
             {'feature_weight': 0.17299634058481614,
@@ -90,23 +141,26 @@ class TrainerSegmentTestCase(BaseTrainerTestCase):
              'weight': 0.17299634058481614})
 
     def test_train_and_test(self):
-        #for fmt in FORMATS:
+        # for fmt in FORMATS:
         self._train()
         self.assertEquals(self._trainer._classifier[''].coef_.shape, (1, 15))
-        self.assertEquals(self._trainer._classifier['USA'].coef_.shape, (1, 14))
-        self.assertEquals(self._trainer._classifier['Canada'].coef_.shape, (1, 13))
-        title_feature = self._trainer.features['Canada']['contractor.dev_title']
+        self.assertEquals(self._trainer._classifier['USA'].coef_.shape,
+                          (1, 14))
+        self.assertEquals(self._trainer._classifier['Canada'].coef_.shape,
+                          (1, 13))
+        title_feature = \
+            self._trainer.features['Canada']['contractor.dev_title']
         title_vectorizer = title_feature['transformer']
         self.assertEquals(title_vectorizer.get_feature_names(), ['engineer',
                                                                  'python'])
         self.assertEqual(['0', '1'], self._trainer._get_labels())
 
-        metr =  self._trainer.test(self._get_iterator())
+        metr = self._trainer.test(self._get_iterator())
 
     def test_predict(self):
         self._train()
         results = self._trainer.predict(self._get_iterator())
-        self.assertEqual(results['classes'].tolist(),['0', '1'])
+        self.assertEqual(results['classes'].tolist(), ['0', '1'])
 
     def _train(self, fmt='json'):
         with open(os.path.join(BASEDIR, 'trainer',
@@ -132,11 +186,11 @@ class TrainerSegmentTestCase(BaseTrainerTestCase):
         self.assertEqual(transform['']['Y'], [1, 0])
         self.assertEqual(transform['USA']['Y'], [0, 1])
         self.assertEqual(transform['Canada']['Y'], [1, 0])
-        self.assertTrue(transform[''].has_key('X'))
+        self.assertTrue('X' in transform[''])
         self.assertTrue(transform['']['X'].shape[0], 3)
-        self.assertTrue(transform['USA'].has_key('X'))
+        self.assertTrue('X' in transform['USA'])
         self.assertTrue(transform['USA']['X'].shape[0], 2)
-        self.assertTrue(transform['Canada'].has_key('X'))
+        self.assertTrue('X' in transform['Canada'])
         self.assertTrue(transform['Canada']['X'].shape[0], 1)
 
     def test_get_labels(self):
@@ -175,11 +229,14 @@ class LogisticRegressionTrainerTestCase(BaseTrainerTestCase):
     def test_train(self):
         for fmt in FORMATS:
             self._load_data(fmt)
-            self.assertEquals(self._trainer._classifier[DEFAULT_SEGMENT].coef_.shape, (1, 19))
-            title_feature = self._trainer.features[DEFAULT_SEGMENT]['contractor.dev_title']
+            self.assertEquals(
+                self._trainer._classifier[DEFAULT_SEGMENT].coef_.shape,
+                (1, 19))
+            title_feature = \
+                self._trainer.features[DEFAULT_SEGMENT]['contractor.dev_title']
             title_vectorizer = title_feature['transformer']
-            self.assertEquals(title_vectorizer.get_feature_names(), ['engineer',
-                                                                     'python'])
+            self.assertEquals(title_vectorizer.get_feature_names(),
+                              ['engineer', 'python'])
             self.assertEqual(['0', '1'], self._trainer._get_labels())
             vis = self._trainer.get_visualization(segment='default')
             self.assertEquals(vis['classifier_type'], u'logistic regression')
@@ -199,10 +256,14 @@ class LogisticRegressionTrainerTestCase(BaseTrainerTestCase):
         }
         self._config._process_classifier(config)
         self._load_data('json')
-        self.assertEquals(self._trainer._classifier[DEFAULT_SEGMENT].coef_.shape, (1, 19))
-        title_feature = self._trainer.features[DEFAULT_SEGMENT]['contractor.dev_title']
+        self.assertEquals(
+            self._trainer._classifier[DEFAULT_SEGMENT].coef_.shape, (1, 19))
+        features = self._trainer.features[DEFAULT_SEGMENT]
+        title_feature = features['contractor.dev_title']
         title_vectorizer = title_feature['transformer']
-        self.assertEquals(title_vectorizer.get_feature_names(), ['engineer', 'python'])
+        self.assertEquals(
+            title_vectorizer.get_feature_names(),
+            ['engineer', 'python'])
 
     def test_store_feature_weights(self):
         for fmt in FORMATS:
@@ -244,14 +305,16 @@ class LogisticRegressionTrainerTestCase(BaseTrainerTestCase):
             with open(path, 'wb') as fp:
                 store_trainer(self._trainer, fp)
 
-            self.assertTrue(os.path.exists(path), 'Feature model not stored!!!')
+            self.assertTrue(
+                os.path.exists(path), 'Feature model not stored!!!')
 
             with open(path, 'rb') as fp:
                 new_trainer = load_trainer(fp)
 
             old_model = self._trainer._feature_model
             new_model = new_trainer._feature_model
-            self.assertEqual(old_model.target_variable, new_model.target_variable)
+            self.assertEqual(
+                old_model.target_variable, new_model.target_variable)
             self.assertEqual(old_model.schema_name, new_model.schema_name)
 
             # Check that two models have same feature types
@@ -263,7 +326,8 @@ class LogisticRegressionTrainerTestCase(BaseTrainerTestCase):
 
             # Check that two models have same feature types
             self.assertEqual(len(old_model.features), len(new_model.features))
-            self.assertEqual(old_model.features.keys(), new_model.features.keys())
+            self.assertEqual(
+                old_model.features.keys(), new_model.features.keys())
 
     def test_test(self):
         """
@@ -283,19 +347,20 @@ class LogisticRegressionTrainerTestCase(BaseTrainerTestCase):
 
             roc_curve = metrics.roc_curve
             pos_label = metrics.classes_set[1]
-            self.assertTrue(roc_curve.has_key(pos_label))
+            self.assertTrue(pos_label in roc_curve)
             self.assertEqual(2, len(roc_curve[pos_label]))
             self.assertIsInstance(roc_curve[pos_label][0], ndarray)
             self.assertIsInstance(roc_curve[pos_label][1], ndarray)
 
-            self.assertTrue(metrics.roc_auc.has_key(pos_label))
+            self.assertTrue(pos_label in metrics.roc_auc)
             self.assertEquals(metrics.roc_auc[pos_label], 1.0)
 
             self.assertEquals(metrics.avarage_precision, 0.0)
             # make sure we have tested all published metrics
             for key in ClassificationModelMetrics.BINARY_METRICS.keys():
-                self.assertTrue(hasattr(metrics, key),
-                                'metric %s was not found or not tested' % (key))
+                self.assertTrue(
+                    hasattr(metrics, key),
+                    'metric %s was not found or not tested' % (key))
 
             # make sure we can serialize the metric dictionary
             try:
@@ -310,8 +375,8 @@ class LogisticRegressionTrainerTestCase(BaseTrainerTestCase):
             weights = self._trainer.get_weights()
             self.assertEqual(1, len(weights.keys()))
             for clazz, clazz_weights in weights.iteritems():
-                self.assertTrue(clazz_weights.has_key('positive'))
-                self.assertTrue(clazz_weights.has_key('negative'))
+                self.assertTrue('positive' in clazz_weights)
+                self.assertTrue('negative' in clazz_weights)
                 self.assertIsInstance(clazz_weights['positive'], list)
                 self.assertIsInstance(clazz_weights['negative'], list)
 
@@ -324,9 +389,9 @@ class LogisticRegressionTrainerTestCase(BaseTrainerTestCase):
 
         self._config = FeatureModel(os.path.join(BASEDIR, 'trainer',
                                                  'features.ndim_outcome.json'))
-
-        with open(os.path.join(BASEDIR, 'trainer', 'trainer.data.ndim_outcome.json')) as fp:
-            self._data = list(streamingiterload(fp.readlines(), source_format='json'))
+        with open(TRAINER_NDIM_OUTCOME) as fp:
+            self._data = list(streamingiterload(
+                fp.readlines(), source_format='json'))
 
         self._trainer = Trainer(self._config)
         self._trainer.train(self._data)
@@ -338,22 +403,22 @@ class LogisticRegressionTrainerTestCase(BaseTrainerTestCase):
         self.assertIsInstance(metrics, ClassificationModelMetrics)
         self.assertEquals(metrics.accuracy, 1.0)
         self.assertIsInstance(metrics.confusion_matrix, ndarray)
-        #precision, recall = metrics.precision_recall_curve
-        #self.assertIsInstance(precision, ndarray)
-        #self.assertIsInstance(recall, ndarray)
+        # precision, recall = metrics.precision_recall_curve
+        # self.assertIsInstance(precision, ndarray)
+        # self.assertIsInstance(recall, ndarray)
         roc_curve = metrics.roc_curve
         for pos_label in metrics.classes_set:
-            self.assertTrue(roc_curve.has_key(pos_label))
+            self.assertTrue(pos_label in roc_curve)
             self.assertEqual(2, len(roc_curve[pos_label]))
             self.assertIsInstance(roc_curve[pos_label][0], ndarray)
             self.assertIsInstance(roc_curve[pos_label][1], ndarray)
 
-            self.assertTrue(metrics.roc_auc.has_key(pos_label))
+            self.assertTrue(pos_label in metrics.roc_auc)
             self.assertEquals(metrics.roc_auc[pos_label], 1.0)
 
         for key in ClassificationModelMetrics.MORE_DIMENSIONAL_METRICS.keys():
             self.assertTrue(hasattr(metrics, key),
-                           'metric %s was not found or not tested' % (key))
+                            'metric %s was not found or not tested' % (key))
 
         # make sure we can serialize the metric dictionary
         try:
@@ -368,20 +433,22 @@ class LogisticRegressionTrainerTestCase(BaseTrainerTestCase):
         weights = self._trainer.get_weights()
         self.assertEqual(metrics.classes_count, len(weights.keys()))
         for clazz, clazz_weights in weights.iteritems():
-            self.assertTrue(clazz in metrics.classes_set,
-                            "{0} not in {1}".format(clazz, metrics.classes_set))
-            self.assertTrue(clazz_weights.has_key('positive'))
-            self.assertTrue(clazz_weights.has_key('negative'))
+            self.assertTrue(
+                clazz in metrics.classes_set,
+                "{0} not in {1}".format(clazz, metrics.classes_set))
+            self.assertTrue('positive' in clazz_weights)
+            self.assertTrue('negative' in clazz_weights)
             self.assertIsInstance(clazz_weights['positive'], list)
             self.assertIsInstance(clazz_weights['negative'], list)
 
     def test_transform(self):
-        for fmt in ['json']: #FORMATS:
+        for fmt in ['json']:  # FORMATS:
             self._load_data(fmt)
             transform = self._trainer.transform(self._data)
             self.assertEqual(1, len(transform))
-            self.assertEqual(transform[DEFAULT_SEGMENT]['Y'], [1, 0, 0, 1, 0, 1])
-            self.assertTrue(transform[DEFAULT_SEGMENT].has_key('X'))
+            self.assertEqual(
+                transform[DEFAULT_SEGMENT]['Y'], [1, 0, 0, 1, 0, 1])
+            self.assertTrue('X' in transform[DEFAULT_SEGMENT])
             self.assertTrue(transform[DEFAULT_SEGMENT]['X'].shape[0], 6)
 
     def test_no_examples_for_label(self):
@@ -393,18 +460,19 @@ class LogisticRegressionTrainerTestCase(BaseTrainerTestCase):
 
         def do_train(exclude_labels):
 
-            config = FeatureModel(os.path.join(BASEDIR, 'trainer',
-                                                     'features.ndim_outcome.json'))
+            config = FeatureModel(FEATURES_NDIM_OUTCOME)
 
-            with open(os.path.join(BASEDIR, 'trainer', 'trainer.data.ndim_outcome.json')) as fp:
+            with open(TRAINER_NDIM_OUTCOME) as fp:
                 dataset = json.loads(fp.read())
 
             train_lines = json.dumps(dataset)
             test_lines = json.dumps(filter(
                 lambda x: x['hire_outcome'] not in exclude_labels, dataset))
 
-            train_data = list(streamingiterload(train_lines, source_format='json'))
-            test_data = list(streamingiterload(test_lines, source_format='json'))
+            train_data = list(streamingiterload(
+                train_lines, source_format='json'))
+            test_data = list(streamingiterload(
+                test_lines, source_format='json'))
 
             self._trainer = Trainer(config)
             self._trainer.train(train_data)
@@ -658,7 +726,8 @@ class RandomForestClfTestCase(BaseTrainerTestCase):
         self.assertIsInstance(metrics, ClassificationModelMetrics)
 
 
-# TODO: sparse matrix was passed, but dense data is required. Use X.toarray() to convert to a dense numpy array.
+# TODO: sparse matrix was passed, but dense data is required.
+# Use X.toarray() to convert to a dense numpy array.
 # class GradientBoostingClfTestCase(BaseTrainerTestCase):
 #     FEATURES_FILE = 'features-gradient-boosting-classifier.json'
 
@@ -671,7 +740,8 @@ class RandomForestClfTestCase(BaseTrainerTestCase):
 #             title_vectorizer.get_feature_names(), ['engineer', 'python'])
 
 #         vis = self._trainer.get_visualization(segment='default')
-#         self.assertEquals(vis['classifier_type'], u'gradient boosting classifier')
+#         self.assertEquals(
+#           vis['classifier_type'], u'gradient boosting classifier')
 
 #         weights = vis['weights']
 #         self.assertTrue(weights)
@@ -700,7 +770,8 @@ class RandomForestClfTestCase(BaseTrainerTestCase):
 #             title_vectorizer.get_feature_names(), ['engineer', 'python'])
 
 #         vis = self._trainer.get_visualization(segment='default')
-#         self.assertEquals(vis['classifier_type'], u'random forest classifier')
+#         self.assertEquals(
+#             vis['classifier_type'], u'random forest classifier')
 #         self.assertTrue(vis['trees'], 'Decision Trees was not generated')
 
 #         weights = vis['weights']
@@ -716,8 +787,6 @@ class RandomForestClfTestCase(BaseTrainerTestCase):
 #         self._load_data()
 #         metrics = self._trainer.test(self._data)
 #         self.assertIsInstance(metrics, ClassificationModelMetrics)
-
-
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,11 +1,6 @@
-__author__ = 'ifoukarakis'
+# Authors: Ioannis Foukarakis <ifoukarakis@upwork.com>
+#          Nikolay Melnik <nmelnik@upwork.com>
 
-"""
-Created on Jan 24, 2013
-
-@author: ifoukarakis
-
-"""
 import unittest
 from core.trainer.feature_types import FEATURE_TYPE_FACTORIES,\
     InvalidFeatureTypeException, RegexFeatureTypeInstance

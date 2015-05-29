@@ -1,11 +1,5 @@
-__author__ = 'ifoukarakis'
-
-"""
-Created on Jan 27, 2013
-
-@author: ifoukarakis
-
-"""
+# Authors: Ioannis Foukarakis <ifoukarakis@upwork.com>
+#          Nikolay Melnik <nmelnik@upwork.com>
 
 import unittest
 import os

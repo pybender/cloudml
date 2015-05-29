@@ -1,8 +1,5 @@
-'''
-Created on Nov 16, 2012
+# Authors: Ioannis Foukarakis <ifoukarakis@upwork.com>
 
-@author: ifoukarakis
-'''
 import unittest
 import os
 

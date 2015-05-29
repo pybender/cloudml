@@ -10,6 +10,7 @@ class ProcessException(Exception):
         self._column = column
         self.Errors = Errors
 
+
 class ImportHandlerException(Exception):
     def __init__(self, message, Errors=None):
         # Call the base class constructor with the parameters it needs

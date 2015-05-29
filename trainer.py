@@ -12,7 +12,8 @@ It defines class Trainer.
 @copyright:  2013 odesk. All rights reserved.
 """
 
-__author__ = 'ifouk'
+# Authors: Ioannis Foukarakis <ifoukarakis@upwork.com>
+#          Nikolay Melnik <nmelnik@upwork.com>
 
 import os
 import sys
@@ -126,7 +127,8 @@ def main(argv=None):
 
                 if args.store_train_vect is not None:
                     logging.info(
-                        'Storing train vectorized data to %s' % args.store_train_vect)
+                        'Storing train vectorized data to %s' %
+                        args.store_train_vect)
                     trainer.vect_data2csv(args.store_train_vect)
 
                 if args.test_percent and args.skip_tests is False \
@@ -183,7 +185,8 @@ def main(argv=None):
 
         if args.store_vect is not None:
             logging.info('Storing vectorized data to %s' % args.store_vect)
-            trainer.store_vect_data(trainer.metrics._true_data.values(),args.store_vect)
+            trainer.store_vect_data(
+                trainer.metrics._true_data.values(), args.store_vect)
 
         if args.output is not None:
             logging.info('Storing feature weights to %s' % args.weights)
@@ -191,7 +194,7 @@ def main(argv=None):
                 store_trainer(trainer, trainer_fp)
 
     except KeyboardInterrupt:
-        ### handle keyboard interrupt ###
+        # handle keyboard interrupt
         return 0
     except SchemaException, e:
         logging.warn('Invalid feature model: %s' % e.message)

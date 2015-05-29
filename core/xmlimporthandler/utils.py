@@ -1,4 +1,5 @@
 import json
+import os
 from string import Template
 from distutils.util import strtobool
 
@@ -49,20 +50,15 @@ def process_primitive(strategy, raise_exc=True):
             if value is not None else None
     return process
 
+
 def process_bool(value):
-    val =  bool(strtobool(str(value)))
+    val = bool(strtobool(str(value)))
     return val
 
 
-PIG_TEMPLATE = """register 's3://odesk-match-staging/pig/lib/elephant-bird-core-4.4.jar';
-register 's3://odesk-match-staging/pig/lib/elephant-bird-pig-4.4.jar';
-register 's3://odesk-match-staging/pig/lib/elephant-bird-hadoop-compat-4.4.jar';
-register 's3://odesk-match-staging/pig/lib/piggybank-0.12.0.jar';
-
-{0} = LOAD '${1}*' USING org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'YES_MULTILINE') AS (
-{2}
-);"""
-
+DIR = os.path.dirname(__file__)
+with open(os.path.join(DIR, 'pig_template.txt')) as fp:
+    PIG_TEMPLATE = fp.read()
 
 SCHEMA_INFO_FIELDS = [
     'column_name', 'data_type', 'character_maximum_length',
@@ -110,7 +106,7 @@ def construct_pig_sample(fields_data):
 def isfloat(x):
     try:
         a = float(x)
-    except :
+    except:
         return False
     else:
         return True
@@ -120,7 +116,7 @@ def isint(x):
     try:
         a = float(x)
         b = int(a)
-    except :
+    except:
         return False
     else:
         return a == b
@@ -138,7 +134,7 @@ def autoload_fields_by_row(entity, row, prefix=''):
     from entities import Entity, Field
     for key, val in row.iteritems():
         data_type = 'string'
-        if not entity.fields.has_key(key):
+        if key not in entity.fields:
             if isint(val):
                 data_type = 'integer'
             elif isfloat(val):
@@ -150,9 +146,10 @@ def autoload_fields_by_row(entity, row, prefix=''):
                         'name': key,
                         'column': key,
                         'transform': 'json'}, entity)
-                    if not key in entity.nested_entities_field_ds:
+                    if key not in entity.nested_entities_field_ds:
                         json_entity = Entity(dict(name=key, datasource=key))
-                        autoload_fields_by_row(json_entity, item_dict, prefix='{0}-'.format(key))
+                        autoload_fields_by_row(
+                            json_entity, item_dict, prefix='{0}-'.format(key))
                         entity.nested_entities_field_ds[key] = json_entity
                     continue
 

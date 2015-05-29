@@ -12,8 +12,6 @@ It defines class Trainer.
 @copyright:  2013 odesk. All rights reserved.
 """
 
-__author__ = 'ifouk'
-
 import os
 import sys
 import logging
@@ -26,6 +24,8 @@ from importhandler.importhandler import ImportHandlerException, \
 from store import store_trainer
 from streamutils import streamingiterload
 from trainer import Trainer, list_to_dict
+
+__author__ = 'ifouk'
 
 
 def main(argv=None):
@@ -150,7 +150,7 @@ def main(argv=None):
                 store_trainer(trainer, trainer_fp)
 
     except KeyboardInterrupt:
-        ### handle keyboard interrupt ###
+        # handle keyboard interrupt
         return 0
     except SchemaException, e:
         logging.warn('Invalid feature model: %s' % e.message)

@@ -1,7 +1,7 @@
 from sklearn.feature_extraction import DictVectorizer
 
-from base import FeatureTypeBase, FeatureTypeInstanceBase,\
-                 InvalidFeatureTypeException
+from base import FeatureTypeBase, FeatureTypeInstanceBase, \
+    InvalidFeatureTypeException
 
 
 __author__ = 'nmelnik'
@@ -45,17 +45,20 @@ class PrimitiveFeatureTypeBase(FeatureTypeBase):
                                  default_scaler=self.default_scaler,
                                  python_type=self.python_type)
         raise InvalidFeatureTypeException(
-                    'Not all required parameters set')
+            'Not all required parameters set')
 
 
 class BooleanFeatureType(PrimitiveFeatureTypeBase):
     python_type = bool
 
+
 class IntFeatureType(PrimitiveFeatureTypeBase):
     python_type = int
 
+
 class FloatFeatureType(PrimitiveFeatureTypeBase):
     python_type = float
+
 
 class StrFeatureType(PrimitiveFeatureTypeBase):
     python_type = str

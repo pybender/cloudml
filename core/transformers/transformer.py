@@ -32,8 +32,9 @@ class Transformer(object):
         except ValueError as e:
             raise TransformerSchemaException(message='%s %s ' % (config, e))
 
-        if not 'transformer-name' in data:
-            raise TransformerSchemaException(message="transformer-name is missing")
+        if 'transformer-name' not in data:
+            raise TransformerSchemaException(
+                message="transformer-name is missing")
 
         self.name = data['transformer-name']
         self.type = data['type']
@@ -48,13 +49,16 @@ class Transformer(object):
         factory = FEATURE_TYPE_FACTORIES.get(data['type'], None)
 
         if factory is None:
-            raise TransformerSchemaException('Unknown type: %s' % (data['type']))
+            raise TransformerSchemaException('Unknown type: %s'
+                                             % (data['type']))
 
         try:
             feature_type = factory.get_instance(data.get('params', None),
-                                        data.get('input-format', 'plain'))
+                                                data.get('input-format',
+                                                         'plain'))
         except:
-            raise TransformerSchemaException('Feature type error: %s' % (data['type']))
+            raise TransformerSchemaException('Feature type error: %s'
+                                             % (data['type']))
 
         self.feature = {'name': data['field-name'],
                         'type': feature_type,
@@ -68,7 +72,6 @@ class Transformer(object):
         self.voc_size = len(self.feature['transformer'].vocabulary_)
         logging.info('Vocabulary size: %d' % self.voc_size)
         logging.info('Train completed')
-
 
     def transform(self, data):
         return self.feature['transformer'].transform(data)
@@ -94,7 +97,3 @@ class Transformer(object):
                     self._ignored += 1
                 else:
                     raise e
-
-
-
-

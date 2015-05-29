@@ -30,7 +30,6 @@ class ProcessException(Exception):
         self.Errors = Errors
 
 
-
 def extract_skill_weights(data, opening_skills):
     weight_per_tier = {
         '1': 1,
@@ -63,6 +62,7 @@ def extract_skill_weights(data, opening_skills):
             result[skill] = sum_weights[skill]
 
     return result
+
 
 ###
 ### Functions to use for implementing each strategy
@@ -154,7 +154,7 @@ and "value" for target feature %s' % (feature['name']))
                     try:
                         result[feature['name']] = eval(value)
                     except Exception, e:
-                        logging.exception('Error when evaluate feature %s, value: %s, expression_type: %s' % 
+                        logging.exception('Error when evaluate feature %s, value: %s, expression_type: %s' %
                             (feature['name'], value, expression_type))
                         raise ProcessException('%s (expression: %s)' %
                                        (e, value))

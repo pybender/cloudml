@@ -52,7 +52,7 @@ def csviterload(stream):
 
 
 def jsoniterload(stream):
-    ### TODO: Consider memory mapping file
+    # TODO: Consider memory mapping file
     reader = JsonStreamReader()
     for line in stream:
         try:

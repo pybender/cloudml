@@ -39,7 +39,8 @@ class SVRTrainingVisualizer(BaseTrainedModelVisualizator):
 
     def generate(self, segment, true_data):
         if self.kernel == 'linear':
-            return super(SVRTrainingVisualizer, self).generate(segment, true_data)
+            return super(SVRTrainingVisualizer, self).generate(
+                segment, true_data)
 
     def get_weights(self, segment):
         if self.kernel == 'linear':
@@ -55,8 +56,6 @@ class SVRTrainingVisualizer(BaseTrainedModelVisualizator):
         }
         if self.kernel == 'linear':
             res['weights'] = self.get_weights(segment)
-        # clf = self._trainer.get_classifier(segment)
-        #res['support_vectors_'] = clf.support_vectors_
         return res
 
 
@@ -65,12 +64,11 @@ class SGDTrainingVisualizer(BaseTrainedModelVisualizator):
 
 
 class DecisionTreeTrainingVisualizer(BaseTrainedModelVisualizator):
-    DEFAULT_DEEP = 10
+    DEFAULT_DEEP = 100
 
     def regenerate_tree(self, segment, weights, deep=DEFAULT_DEEP):
         from utils import build_tree
         clf = self._trainer.get_classifier(segment)
-        #import pdb; pdb.set_trace()
         return build_tree(clf.tree_, weights, max_deep=deep)
 
     def get_visualization(self, segment, deep=DEFAULT_DEEP):
@@ -91,18 +89,25 @@ class GBTrainingVisualizer(BaseTrainedModelVisualizator):
 
 
 class ExtraTreesTrainingVisualizer(BaseTrainedModelVisualizator):
-    def get_visualization(self, segment):
-        res = super(ExtraTreesTrainingVisualizer,
-                    self).get_visualization(segment)
+    DEFAULT_DEEP = 100
+
+    def regenerate_trees(self, segment, weights, deep=DEFAULT_DEEP):
         from utils import build_tree
+        trees = []
         trees_clf = self._trainer.get_classifier(segment)
-        res['trees'] = []
         for clf in trees_clf.estimators_:
             tree = build_tree(
                 clf.tree_,
                 self.weights_calc.get_weights(segment, signed=False)
             )
-            res['trees'].append(tree)
+            trees.append(tree)
+        return trees
+
+    def get_visualization(self, segment, deep=DEFAULT_DEEP):
+        res = super(ExtraTreesTrainingVisualizer,
+                    self).get_visualization(segment)
+        weights = self.weights_calc.get_weights(segment, signed=False)
+        res['trees'] = self.regenerate_trees(segment, weights, deep)
         return res
 
 

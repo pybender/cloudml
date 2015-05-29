@@ -1,4 +1,5 @@
-__author__ = 'ifouk'
+# Authors: Ioannis Foukarakis <ifoukarakis@upwork.com>
+
 
 import unittest
 from core.trainer.utils import copy_expected, is_empty

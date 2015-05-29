@@ -8,7 +8,7 @@ Command line util for train transformers
 @copyright:  2014 odesk. All rights reserved.
 """
 
-__author__ = 'nmelnik'
+# Author: Nikolay Melnik <nmelnik@upwork.com>
 
 import os
 import sys
@@ -21,8 +21,10 @@ from core.importhandler.importhandler import ImportHandlerException, \
 
 from core.trainer import __version__
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
-from core.transformers.transformer import Transformer, TransformerSchemaException
+from core.transformers.transformer import Transformer, \
+    TransformerSchemaException
 from core.trainer.streamutils import streamingiterload
+
 
 def main(argv=None):
     program_name = os.path.basename(sys.argv[0])
@@ -59,8 +61,8 @@ def main(argv=None):
         if args.input is not None:
             file_format = os.path.splitext(args.input)[1][1:]
             with open(args.input, 'r') as train_fp:
-                transformer.train(streamingiterload(train_fp,
-                                                source_format=file_format))
+                transformer.train(
+                    streamingiterload(train_fp, source_format=file_format))
         elif args.extraction is not None:
             train_context = list_to_dict(args.train_params)
             plan = ExtractionPlan(args.extraction)
@@ -76,7 +78,7 @@ def main(argv=None):
                 pickle.dump(transformer, trainer_fp)
 
     except KeyboardInterrupt:
-        ### handle keyboard interrupt ###
+        # handle keyboard interrupt
         return 0
     except TransformerSchemaException, e:
         logging.warn('Invalid feature model: %s' % e.message)

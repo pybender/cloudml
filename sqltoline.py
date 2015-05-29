@@ -1,4 +1,4 @@
-#/usr/bin/env python
+# /usr/bin/env python
 import sys
 import re
 import logging
@@ -13,8 +13,8 @@ sql = ''.join(open(sys.argv[1]).readlines())
 for i, statement in enumerate(sqlparse.split(sql)):
     if not statement.strip():
         continue
-    formatted = sqlparse.format(statement, 
-                                keyword_case='lower', 
+    formatted = sqlparse.format(statement,
+                                keyword_case='lower',
                                 strip_comments=True,
                                 reindent=True)
     print '\nStatement #%d' % (i + 1, )

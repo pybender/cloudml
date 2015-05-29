@@ -1,7 +1,4 @@
 import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
-
 import json
 import re
 import math
@@ -12,14 +9,15 @@ from sklearn.feature_extraction.readability import Readability
 
 from exceptions import ProcessException
 
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
 
 def process_key_value(key_path, value_path, value):
     # Treat as a dictionary
     keys = jsonpath(value, key_path)
     try:
-        values = map(float,
-                     jsonpath(value,
-                     value_path))
+        values = map(float, jsonpath(value, value_path))
     except ValueError as e:
         raise ProcessException(e)
     except TypeError as e:

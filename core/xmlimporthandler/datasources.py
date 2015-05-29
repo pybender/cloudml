@@ -160,7 +160,9 @@ class PigDataSource(BaseDataSource):
     AMAZON_TOKEN_SECRET = 'H1Az3zGas51FV/KTaOsmbdmtJNiYp74RfOgd17Bj'
     BUCKET_NAME = 'odesk-match-prod'
     DEFAILT_AMI_VERSION = '3.1.0'
-    SQOOP_COMMANT = '''sqoop import --verbose --connect "%(connect)s" --username %(user)s --password %(password)s --table %(table)s --direct-split-size 4000000000 -m %(mappers)s %(options)s'''
+    SQOOP_COMMANT = '''sqoop import --verbose --connect "%(connect)s" \
+--username %(user)s --password %(password)s --table %(table)s \
+--direct-split-size 4000000000 -m %(mappers)s %(options)s'''
 
     def __init__(self, config):
         super(PigDataSource, self).__init__(config)
@@ -203,7 +205,8 @@ class PigDataSource(BaseDataSource):
 
     def store_query_to_s3(self, query, query_target=None):
         if query_target:
-            query += "\nSTORE %s INTO '$output' USING JsonStorage();" % query_target
+            query += \
+                "\nSTORE %s INTO '$output' USING JsonStorage();" % query_target
         b = self.s3_conn.get_bucket(self.bucket_name)
         k = Key(b)
         logging.info("Store pig script to s3: %s" % query)
@@ -216,7 +219,7 @@ class PigDataSource(BaseDataSource):
         b = self.s3_conn.get_bucket(self.bucket_name)
         k = Key(b)
         k.key = 'cloudml/pig/' + self.name + '_script.sh'
-        #k.set_contents_from_filename(
+        # k.set_contents_from_filename(
         #    "./core/xmlimporthandler/install_sqoop.sh")
         k.set_contents_from_string(script)
         logging.info("Store pig script to s3: %" % script)
@@ -226,7 +229,7 @@ class PigDataSource(BaseDataSource):
         b = self.s3_conn.get_bucket(self.bucket_name)
         k = Key(b)
         import cStringIO
-        #TODO: Need getting data from all nodes
+        # TODO: Need getting data from all nodes
         k.key = "%spart-m-00000" % self.result_path
         type_result = 'm'
         if not k.exists():
@@ -308,8 +311,10 @@ class PigDataSource(BaseDataSource):
             self.steps.append(install_pig_step)
             install_sqoop_step = JarStep(
                 name='Install sqoop',
-                jar='s3n://elasticmapreduce/libs/script-runner/script-runner.jar',
-                step_args=['s3n://%s/cloudml/pig/install_sqoop.sh' % self.bucket_name, ])
+                jar='s3n://elasticmapreduce/libs/script-runner/\
+script-runner.jar',
+                step_args=['s3n://%s/cloudml/pig/install_sqoop.sh'
+                           % self.bucket_name, ])
             self.steps.append(install_sqoop_step)
 
     def run_sqoop_imports(self, sqoop_imports=[]):
@@ -348,13 +353,6 @@ class PigDataSource(BaseDataSource):
             if retval != 0:
                 raise ImportHandlerException('Sqoop import  failed')
 
-            #sqoop_script_uri = self.store_sqoop_script_to_s3(sqoop_script)
-            # sqoop_step = JarStep(name='Run sqoop import',
-            #     jar='s3n://elasticmapreduce/libs/script-runner/script-runner.jar',
-            #     step_args=[sqoop_script_uri,],
-            #     action_on_failure='CONTINUE')
-            # self.steps.append(sqoop_step)
-
     #############################
     # get_iter and it's helpers #
     #############################
@@ -382,12 +380,12 @@ class PigDataSource(BaseDataSource):
             visible_to_all_users=True,
             bootstrap_actions=bootstrap_actions,
             ec2_keyname=self.ec2_keyname,
-            #keep_alive=self.keep_alive,
+            # keep_alive=self.keep_alive,
             num_instances=self.num_instances,
             master_instance_type=self.master_instance_type,
             slave_instance_type=self.slave_instance_type,
-            ##api_params={'Instances.Ec2SubnetId':'subnet-3f5bc256'},
-            action_on_failure='CONTINUE',  # CANCEL_AND_WAIT
+            # api_params={'Instances.Ec2SubnetId':'subnet-3f5bc256'},
+            action_on_failure='CONTINUE',
             steps=self.steps)
         logging.info('New JobFlow id is %s' % self.jobid)
 
@@ -401,7 +399,6 @@ class PigDataSource(BaseDataSource):
         pig_step = PigStep(
             self.name,
             pig_file=pig_file,
-            #pig_versions=self.pig_version,
             pig_args=pig_args)
         pig_step.action_on_failure = 'CONTINUE'
         self.steps.append(pig_step)
@@ -444,7 +441,7 @@ socks proxy localhost:12345''' % {'dns': masterpublicdnsname})
             step_number = len(status.steps) + 1
             logging.info('Using existing emr jobflow: %s' % self.jobid)
             step_list = self.emr_conn.add_jobflow_steps(self.jobid, self.steps)
-            #step_id = step_list.stepids[0].value
+            # step_id = step_list.stepids[0].value
         else:
             step_number = 1
             self._run_jobflow()

@@ -1,4 +1,4 @@
-__author__ = 'ifouk'
+# Authors: Ioannis Foukarakis <ifoukarakis@upwork.com>
 
 import cPickle as pickle
 
@@ -44,8 +44,8 @@ class TrainerStorage(object):
                 trainer.visualization = storage.visualization
         else:
             trainer._feature_model.group_by = []
-            trainer.set_classifier({ "default":storage._classifier})
-            trainer.set_features({ "default":storage._feature_model.features})
+            trainer.set_classifier({"default": storage._classifier})
+            trainer.set_features({"default": storage._feature_model.features})
 
         return trainer
 

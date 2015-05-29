@@ -20,8 +20,8 @@ from core.importhandler import __version__
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 
-#from core.importhandler.importhandler import ImportHandlerException, ExtractionPlan, ImportHandler
-from core.xmlimporthandler.importhandler import ImportHandlerException, ExtractionPlan, ImportHandler
+from core.xmlimporthandler.importhandler import ImportHandlerException, \
+    ExtractionPlan, ImportHandler
 
 
 def main(argv=None):
@@ -46,9 +46,10 @@ def main(argv=None):
                             metavar='user-param')
         parser.add_argument('-V', '--version', action='version',
                             version=program_version_message)
-        parser.add_argument('-f', '--format', dest='format',
-                            help='store extracted data using given format (json or csv).',
-                            metavar='format', default='json')
+        parser.add_argument(
+            '-f', '--format', dest='format',
+            help='store extracted data using given format (json or csv).',
+            metavar='format', default='json')
         parser.add_argument(dest='path',
                             help='file containing extraction plan',
                             metavar='path')
@@ -85,7 +86,7 @@ def main(argv=None):
             logging.info('Total %s lines' % (extractor.count, ))
             logging.info('Ignored %s lines' % (extractor.ignored, ))
     except KeyboardInterrupt:
-        ### handle keyboard interrupt ###
+        # handle keyboard interrupt
         return 0
     # except ImportHandlerException, e:
     #     logging.warn(e.message)

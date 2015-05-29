@@ -11,6 +11,7 @@ It defines class Trainer.
 
 @copyright:  2013 odesk. All rights reserved.
 """
+
 import logging
 import os
 import sklearn.metrics as metrics
@@ -40,7 +41,7 @@ def dump_results_csv(iterator, trainer, params):
         fields = params['fields'].split(',')
     data = []
 
-    #Callback function to store items
+    # Callback function to store items
     def store_items(row_data):
         data_row = {}
         for field in fields:
@@ -150,7 +151,7 @@ def main(argv=None):
 
             iterator = eval_handler
         else:
-            #TO DO: Add mutually exclusive group
+            # TODO: Add mutually exclusive group
             logging.info('Need to either specify -i or -e')
             parser.print_help()
             return 1
@@ -163,11 +164,11 @@ def main(argv=None):
 
         if args.store_vect is not None:
             logging.info('Storing vectorized data to %s' % args.store_vect)
-            trainer.store_vect_data(trainer.predict_data.values(), args.store_vect)
-
+            trainer.store_vect_data(
+                trainer.predict_data.values(), args.store_vect)
 
     except KeyboardInterrupt:
-        ### handle keyboard interrupt ###
+        # handle keyboard interrupt
         return 0
     except ImportHandlerException, e:
         logging.warn('Invalid extraction plan: %s' % e.message)

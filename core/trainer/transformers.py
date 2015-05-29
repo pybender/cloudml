@@ -1,4 +1,4 @@
-__author__ = 'nmelnik'
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
 
 from copy import deepcopy
 import numpy
@@ -39,7 +39,7 @@ class Ntile(object):
 
         """
         self.fit(X)
-        return  self.transform(X)
+        return self.transform(X)
 
     def transform(self, X):
         """
@@ -56,9 +56,12 @@ class Ntile(object):
                 previous = self.ranges[n]
             if X[i] != n + 1:
                 X[i] = n + 1
-        import numpy, scipy.sparse
+        import numpy
+        import scipy.sparse
         return numpy.transpose(
-            scipy.sparse.csc_matrix([0.0 if item is None else float(item) for item in X]))
+            scipy.sparse.csc_matrix([0.0 if item is None else float(item)
+                                     for item in X]))
+
 
 class ScalerDecorator(object):
     """
@@ -130,7 +133,7 @@ class SuppressTransformer:
     """
     A vectorizer that suppresses the input feature.
     """
-    #TODO: Make it a sublcass of vectorizer?
+    # TODO: Make it a sublcass of vectorizer?
 
 
 def get_lda_vectorizer(params):
@@ -186,11 +189,13 @@ def get_tfidf_vectorizer(params):
 
     return TfidfVectorizer(**params)
 
+
 def get_ntile_transformer(params):
     """
     Creates a Ntile transfprmer.
     """
     return Ntile(**params)
+
 
 def get_dict_vectorizer(params):
     """
@@ -259,20 +264,20 @@ TRANSFORMERS = {
                        'sublinear_tf', 'ngram_range_min',
                        'ngram_range_max'],
         'parameters_types': {'min_df': float_or_int, 'max_df': float_or_int,
-                            'ngram_range_min': int, 'ngram_range_max': int},
+                             'ngram_range_min': int, 'ngram_range_max': int},
         'default': '',
         'defaults': {}
     },
     'Lda': {
         'mthd': get_lda_vectorizer,
         'parameters': ['charset', 'charset_error',
-                        'strip_accents', 'lowercase',
-                        'stop_words', 'token_pattern',
-                        'analyzer', 'max_df', 'min_df',
-                        'max_features', 'vocabulary',
-                        'binary',
-                        'num_topics', 'id2word', 'alpha',
-                        'eta', 'distributed', 'topic_file'],
+                       'strip_accents', 'lowercase',
+                       'stop_words', 'token_pattern',
+                       'analyzer', 'max_df', 'min_df',
+                       'max_features', 'vocabulary',
+                       'binary',
+                       'num_topics', 'id2word', 'alpha',
+                       'eta', 'distributed', 'topic_file'],
         'parameters_types': {'min_df': float_or_int, 'max_df': float_or_int},
         'default': '',
         'defaults': {}
@@ -280,15 +285,15 @@ TRANSFORMERS = {
     'Lsi': {
         'mthd': get_lsi_vectorizer,
         'parameters': ['charset', 'charset_error',
-                        'strip_accents', 'lowercase',
-                        'stop_words', 'token_pattern',
-                        'analyzer', 'max_df', 'min_df',
-                        'max_features', 'vocabulary',
-                        'binary',
-                        'num_topics', 'id2word',
-                        'distributed', 'onepass',
-                        'power_iters', 'extra_samples',
-                        'topic_file'],
+                       'strip_accents', 'lowercase',
+                       'stop_words', 'token_pattern',
+                       'analyzer', 'max_df', 'min_df',
+                       'max_features', 'vocabulary',
+                       'binary',
+                       'num_topics', 'id2word',
+                       'distributed', 'onepass',
+                       'power_iters', 'extra_samples',
+                       'topic_file'],
         'parameters_types': {'min_df': float_or_int, 'max_df': float_or_int},
         'default': '',
         'defaults': {}

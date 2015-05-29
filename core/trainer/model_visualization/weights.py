@@ -85,9 +85,8 @@ class WeightsCalculator(object):
             if self._trainer.is_target_variable(feature_name) or \
                     self._trainer.is_group_by_variable(feature_name):
                 logging.debug(
-                    "We don't set name (%s) to the group or target value. Segment %s, label %s",
-                    base_name, segment, label)
-                #self.weights[segment][label][index]['debug'] = 'name: %s, is target or groupped'
+                    "We don't set name (%s) to the group or target value."
+                    "Segment %s, label %s", base_name, segment, label)
             else:
                 transformer = feature['transformer']
                 preprocessor = feature['type'].preprocessor
@@ -101,7 +100,8 @@ class WeightsCalculator(object):
 
                 elif transformer is not None and \
                         hasattr(transformer, 'get_feature_names'):
-                    names = self._get_feature_names_from_vectorizer(base_name, transformer)
+                    names = self._get_feature_names_from_vectorizer(
+                        base_name, transformer)
                     for vj, name in enumerate(names):
                         self.weights[segment][label][index + vj]['name'] = name
 
@@ -126,8 +126,9 @@ class WeightsCalculator(object):
         :return: {<class_label>:{'positive':[...], 'negative':[...]},
                 <class_label2>: etc}
         """
-        if not segment in self._calculated_segments:
-            raise ValueError("Feature weights for this segment wasn't filled: %s" % self.weights)
+        if segment not in self._calculated_segments:
+            raise ValueError("Feature weights for this segment wasn't"
+                             "filled: {0}".format(self.weights))
 
         if signed:
             result = {}
@@ -169,9 +170,10 @@ class WeightsCalculator(object):
         negative = []
         for item in self.weights[segment][class_label]:
             if 'name' not in item:
-                logging.debug(
-                    "There isn't a name in weight: %s. Segment %s, label %s. %s",
-                    item, segment, class_label, item['debug'] if 'debug' in item else 'no debug')
+                debug = item['debug'] if 'debug' in item else 'no debug'
+                logging.debug("There isn't a name in weight: %s."
+                              " Segment %s, label %s. %s",
+                              item, segment, class_label, debug)
             else:
                 if item['weight'] > 0:
                     positive.append(item)

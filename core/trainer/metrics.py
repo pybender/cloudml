@@ -25,9 +25,9 @@ class Metrics(object):
         self._labels += labels
         self._empty_labels = empty_labels
         if self._classes_set and not classes == self._classes_set:
-            raise ValueError('Classes was set before to %s, '
-                             'now it is being set with %s, '
-                             'which should be equal' % (self._classes_set, classes))
+            raise ValueError(
+                'Classes was set before to %s, now it is being set with %s, '
+                'which should be equal' % (self._classes_set, classes))
         self._classes_set = classes
 
         # if not self._vectorized_data:
@@ -54,7 +54,7 @@ class Metrics(object):
             self._true_data[segment] = true_data
         probs = classifier.predict_proba(true_data)
         preds = classifier.predict(true_data)
-        
+
         if self._preds is None:
             self._preds = preds
         else:
@@ -89,7 +89,8 @@ class Metrics(object):
             elif isinstance(v, numpy.ndarray):
                 value = [recursive_convert(item) for item in v.tolist()]
             elif isinstance(v, dict):
-                value = dict([(x, recursive_convert(y)) for x, y in v.iteritems()])
+                value = dict([(x, recursive_convert(y))
+                              for x, y in v.iteritems()])
 
             return value
 
@@ -97,7 +98,6 @@ class Metrics(object):
         # and make Metrics class serializable
         res = {}
         res.update(self.DEFAULTS)
-        #self._true_data = hstack(self._vectorized_data)
         metrics = self._get_metrics_names()
         for metric_name in metrics.keys():
             res[metric_name] = recursive_convert(getattr(self, metric_name))
@@ -143,22 +143,25 @@ class ClassificationModelMetrics(Metrics):
         """
         if not hasattr(self, '_roc_curve'):
             self._roc_curve = {}
-            calculation_range = [1] if self.classes_count == 2 else range(len(self.classes_set))
+            calculation_range = [1] if self.classes_count == 2 \
+                else range(len(self.classes_set))
             for i in calculation_range:
                 pos_label = self.classes_set[i]
                 # on-vs-all labeling
-                labels = [1 if label == pos_label else 0 for label in self._labels]
+                labels = [1 if label == pos_label else 0
+                          for label in self._labels]
                 fpr, tpr, thresholds = \
                     sk_metrics.roc_curve(labels, self._probs[:, i])
 
                 # definitely we can set NaN arrays directly to 0 without
-                # checking empty_labels, but it would leave a backdoor for bugs,
-                # where unknown reasons for producing NaN would be ignored as a
-                # byproduct
+                # checking empty_labels, but it would leave a backdoor
+                # for bugs, where unknown reasons for producing NaN would
+                # be ignored as a byproduct
                 if pos_label in self._empty_labels:
                     tpr = numpy.zeros_like(tpr)
 
-                # A very edge case where there is only one label in the test set
+                # A very edge case where there is only one label in the
+                # test set
                 if self.classes_count - len(self._empty_labels) == 1 and \
                         numpy.all(numpy.isnan(fpr)):
                     fpr = numpy.zeros_like(fpr)
@@ -169,7 +172,7 @@ class ClassificationModelMetrics(Metrics):
 
     @property
     def avarage_precision(self):
-        from ml_metrics import apk #, mapk
+        from ml_metrics import apk
         if not hasattr(self, '_apk'):
             self._apk = apk(self._labels, self._preds)
         return self._apk
@@ -182,7 +185,8 @@ class ClassificationModelMetrics(Metrics):
         """
         if not hasattr(self, '_roc_auc'):
             self._roc_auc = {}
-            calculation_range = [1] if self.classes_count == 2 else range(len(self.classes_set))
+            calculation_range = [1] if self.classes_count == 2 \
+                else range(len(self.classes_set))
             for i in calculation_range:
                 pos_label = self.classes_set[i]
                 fpr = self.roc_curve[pos_label][0]
@@ -231,10 +235,12 @@ class RegressionModelMetrics(Metrics):
     Represents metrics for regression model
     """
     METRICS_TO_CALC = {
-        'explained_variance_score': 'Explained variance regression score function',
+        'explained_variance_score': 'Explained variance regression score'
+                                    'function',
         'mean_absolute_error': 'Mean absolute error regression loss',
         'mean_squared_error': 'Mean squared error regression loss',
-        'r2_score': 'R^2 (coefficient of determination) regression score function.',
+        'r2_score': 'R^2 (coefficient of determination) regression'
+                    'score function.',
     }
     DEFAULTS = {'type': 'regression'}
 
@@ -242,21 +248,24 @@ class RegressionModelMetrics(Metrics):
     def explained_variance_score(self):
         if not hasattr(self, '_explained_variance_score'):
             labels, preds = prepare_labels_preds(self._labels, self._preds)
-            self._explained_variance_score = sk_metrics.explained_variance_score(labels, preds)
+            self._explained_variance_score = \
+                sk_metrics.explained_variance_score(labels, preds)
         return self._explained_variance_score
 
     @property
     def mean_absolute_error(self):
         if not hasattr(self, '_mean_absolute_error'):
             labels, preds = prepare_labels_preds(self._labels, self._preds)
-            self._mean_absolute_error = sk_metrics.mean_absolute_error(labels, preds)
+            self._mean_absolute_error = \
+                sk_metrics.mean_absolute_error(labels, preds)
         return self._mean_absolute_error
 
     @property
     def mean_squared_error(self):
         if not hasattr(self, '_mean_squared_error'):
             labels, preds = prepare_labels_preds(self._labels, self._preds)
-            self._mean_squared_error = sk_metrics.mean_squared_error(labels, preds)
+            self._mean_squared_error = \
+                sk_metrics.mean_squared_error(labels, preds)
         return self._mean_squared_error
 
     @property
@@ -289,7 +298,7 @@ class RegressionModelMetrics(Metrics):
             self._true_data[segment] = true_data
 
         preds = classifier.predict(true_data)
-        
+
         if self._preds is None:
             self._preds = preds
         else:

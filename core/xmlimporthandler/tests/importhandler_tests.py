@@ -77,8 +77,8 @@ class TestField(unittest.TestCase):
 
 class TestInput(unittest.TestCase):
     def test_params_validation(self):
-    # <!-- Boolean parameter -->
-    # <param name="only_fjp" type="boolean" />
+        # <!-- Boolean parameter -->
+        # <param name="only_fjp" type="boolean" />
         inp = Input(dict(name="application", type="integer", regex="\d+"))
         self.assertEqual(inp.process_value('1'), 1)
         self.assertRaises(ImportHandlerException, inp.process_value, 'str')
@@ -88,8 +88,8 @@ class TestInput(unittest.TestCase):
         self.assertEqual(inp.process_value('Monday 11. March 2002'),
                          datetime(2002, 3, 11, 0, 0))
         with self.assertRaisesRegexp(
-                ImportHandlerException, "Value of the input parameter created is \
-invalid date in format %A %d. %B %Y: 11/03/02"):
+                ImportHandlerException, "Value of the input parameter \
+created is invalid date in format %A %d. %B %Y: 11/03/02"):
             inp.process_value('11/03/02')
         with self.assertRaisesRegexp(
                 ImportHandlerException, "Input parameter created is required"):
@@ -117,7 +117,8 @@ def http_mock(url, request):
 
 class HttpXMLPlanTest(unittest.TestCase):
     def setUp(self):
-        self._plan = ExtractionPlan(os.path.join(BASEDIR,
+        self._plan = ExtractionPlan(os.path.join(
+                                    BASEDIR,
                                     'extractorxml',
                                     'http-train-import-handler.xml'))
 
@@ -145,7 +146,8 @@ class HttpXMLPlanTest(unittest.TestCase):
 
 class CsvXMLPlanTest(unittest.TestCase):
     def setUp(self):
-        self._plan = ExtractionPlan(os.path.join(BASEDIR,
+        self._plan = ExtractionPlan(os.path.join(
+                                    BASEDIR,
                                     'extractorxml',
                                     'csv-train-import-handler.xml'))
 
@@ -200,7 +202,8 @@ def db_iter_mock(*args, **kwargs):
 
 class ImportHandlerTest(unittest.TestCase):
     def setUp(self):
-        self._plan = ExtractionPlan(os.path.join(BASEDIR,
+        self._plan = ExtractionPlan(os.path.join(
+                                    BASEDIR,
                                     'extractorxml',
                                     'train-import-handler.xml'))
 
@@ -218,7 +221,8 @@ class ImportHandlerTest(unittest.TestCase):
         self.assertEqual(row['check_boolean'], True)
         self.assertEqual(row['check_integer_with_float'], None)
         self.assertEqual(row['check_json'], ROW["json_field"])
-        self.assertEqual(row['check_json_jsonpath'], "Professional and experienced person")
+        self.assertEqual(row['check_json_jsonpath'], "Professional and \
+experienced person")
 
         # Checking subentries as json datasources
         self.assertEqual(row['employer.country'], 'Philippines')
@@ -266,7 +270,8 @@ class ImportHandlerTest(unittest.TestCase):
 
 class PredictTest(unittest.TestCase):
     def setUp(self):
-        self._plan = ExtractionPlan(os.path.join(BASEDIR,
+        self._plan = ExtractionPlan(os.path.join(
+                                    BASEDIR,
                                     'extractorxml',
                                     'generic-import-handler.xml'))
 
@@ -284,7 +289,8 @@ def db_row_iter_mock(*args, **kwargs):
 
 class CompositeTypeTest(unittest.TestCase):
     def setUp(self):
-        self._plan = ExtractionPlan(os.path.join(BASEDIR,
+        self._plan = ExtractionPlan(os.path.join(
+                                    BASEDIR,
                                     'extractorxml',
                                     'composite-type-import-handler.xml'))
 
@@ -304,13 +310,26 @@ class CompositeTypeTest(unittest.TestCase):
 class InputDatasourceTest(unittest.TestCase):
 
     def setUp(self):
-        self._plan = ExtractionPlan(os.path.join(BASEDIR,
+        self._plan = ExtractionPlan(os.path.join(
+                                    BASEDIR,
                                     'extractorxml',
                                     'input-datasource-handler.xml'))
 
     def test_json(self):
         self._extractor = ImportHandler(self._plan, {
-            'contractor_info': '{ "skills":[{"skl_status":"0","ts_tests_count":"0","skl_name":"microsoft-excel","skl_external_link":"http:\/\/en.wikipedia.org\/wiki\/Microsoft_Excel","skl_has_tests":"1","skl_pretty_name":"Microsoft Excel","skill_uid":"475721704063008779","skl_rank":"1","skl_description":"Microsoft Excel is a proprietary commercial spreadsheet application written and distributed by Microsoft for Microsoft Windows and Mac OS X. It features calculation, graphing tools, pivot tables, and a macro programming language called Visual Basic for Applications."},{"skl_status":"0","ts_tests_count":"0","skl_name":"microsoft-word","skl_external_link":"http:\/\/en.wikipedia.org\/wiki\/Microsoft_Word","skl_has_tests":"1","skl_pretty_name":"Microsoft Word","skill_uid":"475721704071397377","skl_rank":"2","skl_description":"Microsoft Office Word is a word processor designed by Microsoft."}]}',
+            'contractor_info': '{ "skills":[{"skl_status":"0","ts_tests_count"\
+:"0","skl_name":"microsoft-excel","skl_external_link":"http:\/\/en.wikipedia.\
+org\/wiki\/Microsoft_Excel","skl_has_tests":"1","skl_pretty_name":"Microsoft\
+ Excel","skill_uid":"475721704063008779","skl_rank":"1","skl_description":\
+ "Microsoft Excel is a proprietary commercial spreadsheet application written\
+ and distributed by Microsoft for Microsoft Windows and Mac OS X. It features\
+ calculation, graphing tools, pivot tables, and a macro programming language\
+ called Visual Basic for Applications."},{"skl_status":"0","ts_tests_count":\
+ "0","skl_name":"microsoft-word","skl_external_link":"http:\/\/en.wikipedia.\
+ org\/wiki\/Microsoft_Word","skl_has_tests":"1","skl_pretty_name":"Microsoft\
+  Word","skill_uid":"475721704071397377","skl_rank":"2","skl_description":\
+  "Microsoft Office Word is a word processor designed by Microsoft."}]}',
         })
         row = self._extractor.next()
-        self.assertEqual(row['contractor.skills'], 'microsoft-excel,microsoft-word')
+        self.assertEqual(row['contractor.skills'],
+                         'microsoft-excel,microsoft-word')

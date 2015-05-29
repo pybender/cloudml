@@ -76,8 +76,6 @@ class NoseCommand(Command):
             os.mkdir('target')
         nose.run(argv=['', '--verbose',
                        '--with-xunit', '--xunit-file=target/nosetests.xml'])
-        #argv = ['--with-xunit']
-        #nose.main(argv=argv)
 
 
 class CoverageCommand(Command):
@@ -99,9 +97,9 @@ class CoverageCommand(Command):
         tc._run_tests()
 
         cov.stop()
-        cov.save()
         cov.html_report(directory='target/coverage/html')
         cov.xml_report(outfile='target/coverage/coverage.xml')
+        cov.save()
 
 
 class SonarCommand(Command):

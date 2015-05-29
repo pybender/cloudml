@@ -1,11 +1,6 @@
-__author__ = 'ifoukarakis'
+# Authors: Ioannis Foukarakis <ifoukarakis@upwork.com>
+#          Nikolay Melnik <nmelnik@upwork.com>
 
-"""
-Created on Jan 24, 2013
-
-@author: ifoukarakis
-
-"""
 import unittest
 import os
 
@@ -15,13 +10,14 @@ from core.trainer.feature_types import RegexFeatureTypeInstance, \
     PrimitiveFeatureTypeInstance
 from core.trainer.scalers import ScalerException
 
+
+__author__ = 'ifoukarakis'
 BASEDIR = 'testdata'
 
 
 class ConfigTest(unittest.TestCase):
     def setUp(self):
         self.config = FeatureModel(os.path.join(BASEDIR, 'features.json'))
-
 
     def test_process_group_by(self):
         group_by = ['wwww']
@@ -32,7 +28,6 @@ class ConfigTest(unittest.TestCase):
         self.config._process_group_by(group_by)
 
         self.assertEqual(self.config.group_by, group_by)
-        
 
     def test_load_features(self):
         self.assertEqual(1, len(self.config._named_feature_types))
@@ -266,12 +261,13 @@ class ConfigTest(unittest.TestCase):
         self.assertIn('another_test_feature', self.config.features)
         result = self.config.features['another_test_feature']
         self.assertEqual('another_test_feature', result['name'])
-        self.assertTrue(isinstance(result['type'], PrimitiveFeatureTypeInstance))
+        self.assertTrue(isinstance(result['type'],
+                                   PrimitiveFeatureTypeInstance))
         self.assertIsNone(result['transformer'])
         self.assertFalse(result['required'])
 
     def test_process_feature_with_scaler(self):
-        from sklearn.preprocessing import MinMaxScaler 
+        from sklearn.preprocessing import MinMaxScaler
         feature = {
             'name': 'another_test_feature',
             'type': 'int',
