@@ -1,3 +1,5 @@
+# Author: Nikolay Melnik <nmelnik@upwork.com>
+
 import json
 import os
 from string import Template

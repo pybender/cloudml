@@ -1,212 +1,192 @@
 #! /usr/bin/env python
 # encoding: utf-8
-"""
-importhandler-- extract values from DB according to extraction plan.
-
-It defines classes ImportHandlerException, ExtractionPlan and ImportHandler
-
-@author:     ifoukarakis, papadimitriou
-
-@copyright: 2013 oDesk. All rights reserved.
 
 """
+Classes for extracting values from various datasources according\
+to extraction plan.
+It defines classes ExtractionPlan and ImportHandler
+"""
 
-__author__ = 'ifouk'
+# Author: Nikolay Melnik <nmelnik@upwork.com>
 
 import os
-import sys
-import json
 import logging
+import json
 import gzip
 import datetime
+from lxml import etree
+from lxml import objectify
+from decimal import Decimal
+from collections import defaultdict
 
-from argparse import ArgumentParser
-from argparse import RawDescriptionHelpFormatter
-from db import postgres_iter
-from processors import extract_parameters
-from processors import PROCESS_STRATEGIES, ProcessException
+from datasources import DataSource
+from inputs import Input
+from entities import Entity, EntityProcessor
+from utils import iterchildren
+from exceptions import ImportHandlerException, ProcessException
+from scripts import ScriptManager
+from predict import Predict
 
-from core.xmlimporthandler.scripts import ScriptManager
+
+BASEDIR = os.path.abspath(os.path.dirname(__file__))
+
+__all__ = ['ExtractionPlan', 'ImportHandler']
 
 
-class ImportHandlerException(Exception):
-    def __init__(self, message, Errors=None):
-        # Call the base class constructor with the parameters it needs
-        Exception.__init__(self, message)
-        self.Errors = Errors
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return "%.2f" % obj
+        if hasattr(obj, 'isoformat'):
+            return obj.isoformat()
+        return json.JSONEncoder.default(self, obj)
 
 
 class ExtractionPlan(object):
     """
-    Reads extraction plan configuration from a file containing a JSON object.
-
+    Reads and validates extraction plan configuration from a XML file.
     """
     def __init__(self, config, is_file=True):
+        if is_file:
+            with open(config, 'r') as fp:
+                config = fp.read()
+
+        if not config:
+            raise ImportHandlerException('import handler file is empty')
+
         try:
-            if is_file:
-                with open(config, 'r') as fp:
-                    data = json.load(fp)
-            else:
-                data = json.loads(config)
-        except ValueError as e:
-            raise ImportHandlerException(message='%s %s ' % (config, e))
-        
-        if 'target_schema' not in data:
-            raise ImportHandlerException('No target schema defined in config')
-        self.schema_name = data['target_schema']
+            self.data = objectify.fromstring(config)
+        except etree.XMLSyntaxError as e:
+            raise ImportHandlerException(
+                "Can't parse import handler file XML: {0}. "
+                "Got exception: {1}".format(config, e)
+            )
 
-        if len(data.get('datasource', [])) == 0:
-            raise ImportHandlerException('No datasource defined in config')
-        self.datasource = data['datasource']
+        if not self.is_valid():
+            raise ImportHandlerException(
+                "There is an error in the import handler's XML, "
+                "line {0}. {1}".format(self.error.line, self.error.message))
 
-        if len(data.get('queries', [])) == 0:
-            raise ImportHandlerException('No queries defined in config')
-        self.queries = data['queries']
+        self.inputs = {}
+        self.load_inputs(self.data)
+
+        self.datasources = {}
+        self.load_datasources(self.data)
 
         self.script_manager = ScriptManager()
-        self.load_scripts(data)
+        self.load_scripts(self.data)
 
-        for query in self.queries:
-            self._validate_items(query)
+        # Loading import section
+        self.entity = Entity(self.data['import'].entity)
 
-        self._find_required_input()
+        # Predict section
+        self.predict = Predict(self.data.predict) if \
+            hasattr(self.data, 'predict') else None
+
+    # Loading sections methods
+
+    def load_inputs(self, config):
+        """
+        Loads dictionary of the input parameters
+        from import handler configuration.
+        """
+        if not hasattr(config, "inputs"):
+            logging.debug("No input parameters declared")
+            return
+
+        inputs_conf = config.inputs
+        if inputs_conf is not None:
+            for param_conf in inputs_conf.xpath("param"):
+                inp = Input(param_conf)
+                self.inputs[inp.name] = inp
+
+    def load_datasources(self, config):
+        """
+        Loads global datasources from configuration.
+        """
+        for ds_config in iterchildren(config.datasources):
+            ds = DataSource.factory(ds_config)
+            if ds.name in self.datasources:
+                raise ImportHandlerException(
+                    'There are few datasources with name {0}'.format(ds.name))
+            self.datasources[ds.name] = ds
+
+        ds = DataSource.DATASOURCE_DICT['input']()
+        self.datasources[ds.name] = ds
 
     def load_scripts(self, config):
         """
         Loads and executes javascript from import handler configuration.
         """
-        script = config.get('script', None)
-        if script:
-            self.script_manager.add_python(script)
+        for script in config.xpath("script"):
+            if script.text:
+                self.script_manager.add_python(script.text)
 
-    def _find_required_input(self):
-        """
-        Iterates over the plan's queries in order to find which parameters
-        should be provided by the user.
+    # Schema Validation specific methods
 
-        """
-        self.input_params = []
+    @property
+    def error(self):
+        if not hasattr(self, '_error'):
+            self._validate_schema()
+        return self._error
 
-        for query in self.queries:
-            user_params = extract_parameters(query.get('sql', ''))
-            self.input_params.extend(user_params)
+    def is_valid(self):
+        return not self.error
 
-    def _validate_items(self, query):
-        """
-        Validates that all necessary fields of the query are there.
+    @classmethod
+    def get_schema(cls):
+        with open(os.path.join(BASEDIR, 'schema.xsd'), 'r') as schema_fp:
+            return etree.parse(schema_fp)
 
-        Keyword arguments:
-        query -- a dictionary containing the query's configuration
+    @classmethod
+    def get_datasources_config(cls):
+        schema = cls.get_schema()
+        conf = defaultdict(list)
+        namespaces = {'xs': 'http://www.w3.org/2001/XMLSchema'}
+        datasources = schema.xpath(
+            '//xs:element[@name = "datasources"]/'
+            'xs:complexType/xs:sequence/xs:element', namespaces=namespaces
+        )
+        for d in datasources:
+            params = conf[d.attrib['name']]
+            for a in d.xpath('xs:complexType/xs:attribute[@name != "name"]',
+                             namespaces=namespaces):
+                params.append({
+                    'name': a.attrib['name'],
+                    'type': str(a.attrib.get('type')).replace('xs:', ''),
+                    'required': a.attrib.get('use') == 'required'
+                })
+        return dict(conf)
 
-        """
-        for item in query.get('items'):
-            target_features = item.get('target_features', [])
-            if len(target_features) == 0:
-                raise ImportHandlerException('Query item must define at least '
-                                             'one target feature')
-            for feature in target_features:
-                if 'name' not in feature:
-                    raise ImportHandlerException('Target features must have '
-                                                 'a name')
+    def _validate_schema(self):
+        logging.debug('Validating schema...')
+        self._error = None
+        with open(os.path.join(BASEDIR, 'schema.xsd'), 'r') as schema_fp:
+            xmlschema_doc = etree.parse(schema_fp)
+            xmlschema = etree.XMLSchema(xmlschema_doc)
+            is_valid = xmlschema(self.data)
+            if not is_valid:
+                log = xmlschema.error_log
+                error = log.last_error
+                self._error = error
 
-class BaseImportHandler(object):
 
-    def __init__(self, plan):
-        self._plan = plan
+class ImportHandler(object):
 
-        # Currently we support a single query. This might change in the future.
-        self._query = self._plan.queries[0]
-        self.script_manager = self._plan.script_manager
+    def __init__(self, plan, params={}, callback=None):
+        super(ImportHandler, self).__init__()
         self.count = 0
         self.ignored = 0
+        self.params = {}
+        self.plan = plan
+        self.callback = callback
+
+        self.process_input_params(params)
+        self.entity_processor = EntityProcessor(
+            self.plan.entity, import_handler=self)
 
     def __iter__(self):
         return self
-
-    def _process_row(self, row, query):
-        """
-        Processes a single row from DB.
-        """
-        # Hold data of current row processed so far
-        row_data = {}
-        for item in query['items']:
-            strategy = PROCESS_STRATEGIES.get(item.get('process_as', 'identity'))
-            if strategy is None:
-                raise ImportHandlerException('Unknown strategy %s'
-                                             % item['process_as'])
-            # Get value from query for this item
-            source = item.get('source', None)
-            item_value = row.get(source, None)
-            result = strategy(item_value, item, row_data, self.script_manager)
-            row_data.update(result)
-        return row_data
-
-class ImportHandler(BaseImportHandler):
-    DB_ITERS = {
-        'postgres': postgres_iter
-    }
-
-    def __init__(self, plan, params=None):
-        super(ImportHandler, self).__init__(plan)
-        if params is None:
-            params = {}
-
-        logging.info('Running query %s' % self._query['name'])
-        datasource = self._plan.datasource[0]
-
-        self._validate_input_params(params)
-        if not isinstance(self._query['sql'], list):
-            self._query['sql'] = [self._query['sql']]
-        sql = map(lambda x: x % params, self._query['sql'])
-        iter_func = self._get_db_iter(datasource)
-        self._iterator = iter_func(sql, datasource['db']['conn'])
-
-    def next(self):
-        if self.count % 1000 == 0:
-            logging.info('Processed %s rows so far' % (self.count, ))
-        result = None
-        while result is None:
-            try:
-                row = self._process_row(self._iterator.next(), self._query)
-                self.count += 1
-                return row
-            except ProcessException, e:
-                logging.debug('Ignored line #%d: %s' % (self.count, str(e)))
-                self.ignored += 1
-
-    def _validate_input_params(self, params):
-        """
-        Validates that all required input params of the current extraction plan
-        exist in the given param dictionary.
-
-        Keyword arguments
-        params -- the parameters to check
-
-        """
-        param_set = set()
-        if params is not None:
-            param_set = set(params.keys())
-
-        required_set = set(self._plan.input_params)
-        missing = required_set.difference(param_set)
-        if len(missing) > 0:
-            raise ImportHandlerException('Missing input parameters: %s'
-                                         % ', '.join(missing))
-
-
-    def _get_db_iter(self, datasource):
-
-        if 'conn' not in datasource['db']:
-            raise ImportHandlerException('No database connection details '
-                                         'defined')
-
-        db_iter = self.DB_ITERS.get(datasource['db']['vendor'])
-
-        if db_iter is None:
-            raise ImportHandlerException('Database type %s not supported'
-                                         % datasource['db']['vendor'])
-
-        return db_iter
 
     def store_data_json(self, output, compress=False):
         """
@@ -266,40 +246,34 @@ class ImportHandler(BaseImportHandler):
             for row_data in self:
                 writer.writerow(_encode(row_data))
 
-
-class RequestImportHandler(BaseImportHandler):
-
-    def __init__(self, plan, request):
-        super(RequestImportHandler, self).__init__(plan)
-        self._request = request
-        self._iterator = self._request.__iter__()
-        datasource = self._plan.datasource[0]
-        if not datasource['type'] == 'http':
-            raise ImportHandlerException('Datasource type should be "http"')
-
     def next(self):
         if self.count % 1000 == 0:
             logging.info('Processed %s rows so far' % (self.count, ))
         result = None
         while result is None:
             try:
-                row = self._process_row(self._iterator.next(), self._query)
+                result = self.entity_processor.process_next()
                 self.count += 1
-                return row
+                return result
             except ProcessException, e:
                 logging.debug('Ignored line #%d: %s' % (self.count, str(e)))
                 self.ignored += 1
-                raise e
 
+    def process_input_params(self, params):
+        """
+        Validates that all required input params of the current extraction plan
+        exist in the given param dictionary.
 
+        Keyword arguments
+        params -- the parameters to check
+        """
+        logging.info('Validate input parameters.')
+        param_set = set(params.keys() if params else ())
+        required_set = set(self.plan.inputs.keys())
+        missing = required_set.difference(param_set)
+        if len(missing) > 0:
+            raise ImportHandlerException('Missing input parameters: %s'
+                                         % ', '.join(missing))
 
-from  decimal import Decimal
-
-
-class DecimalEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if hasattr(obj, 'isoformat'):
-            return obj.isoformat()
-        if isinstance(obj, Decimal):
-            return "%.2f" % obj
-        return json.JSONEncoder.default(self, obj)
+        for name, inp in self.plan.inputs.iteritems():
+            self.params[name] = inp.process_value(params[name])

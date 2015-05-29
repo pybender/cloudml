@@ -1,9 +1,18 @@
+"""
+Python script manager.
+"""
+
+# Author: Nikolay Melnik <nmelnik@upwork.com>
+
 from utils import ParametrizedTemplate
 
 # Context:
 from processors import composite_string, composite_python, \
     composite_readability, process_key_value
 from exceptions import ImportHandlerException
+
+
+__all__ = ['ScriptManager']
 
 
 class ScriptManager(object):

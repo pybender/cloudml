@@ -20,7 +20,7 @@ from core.importhandler import __version__
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 
-from core.xmlimporthandler.importhandler import ImportHandlerException, \
+from core.importhandler.importhandler import ImportHandlerException, \
     ExtractionPlan, ImportHandler
 
 

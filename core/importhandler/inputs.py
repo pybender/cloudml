@@ -1,9 +1,18 @@
+"""
+Classes for processing user input data.
+"""
+
+# Author: Nikolay Melnik <nmelnik@upwork.com>
+
 import re
 from datetime import datetime
 
 from exceptions import ImportHandlerException
-from core.importhandler.db import postgres_iter
+from db import postgres_iter
 from utils import process_primitive
+
+
+__all__ = ['Input']
 
 
 def process_date(value, format):

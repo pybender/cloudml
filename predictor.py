@@ -19,7 +19,7 @@ import sys
 import csv
 import numpy as np
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
-from core.importhandler.importhandler import ImportHandlerException,\
+from core.importhandler.importhandler import ImportHandlerException, \
     ExtractionPlan, ImportHandler
 from core.trainer.streamutils import streamingiterload
 from core.trainer.store import load_trainer

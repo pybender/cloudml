@@ -1,3 +1,9 @@
+"""
+Custom XML Import Handler exceptions.
+"""
+
+# Author: Nikolay Melnik <nmelnik@upwork.com>
+
 
 class ProcessException(Exception):
     """

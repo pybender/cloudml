@@ -1,3 +1,9 @@
+"""
+Classes for definition inline predict section of XML import handlers.
+"""
+
+# Author: Nikolay Melnik <nmelnik@upwork.com>
+
 from exceptions import ImportHandlerException
 
 

@@ -1,6 +1,9 @@
 """
-Classes to process XML Import Hafvndler import section.
+Classes to process XML Import Handler import section.
 """
+
+# Author: Nikolay Melnik <nmelnik@upwork.com>
+
 from collections import OrderedDict
 import json
 import logging

@@ -1,14 +1,14 @@
 """
-Created on Dec 13, 2012
-
-@author: ifoukarakis
-
+This module utility methods for querying on PostgreSQL database.
 """
+
+# Author: Ioannis Foukarakis <ifoukarakis@upwork.com>
+# Created on Dec 13, 2012
+
 import psycopg2
 import psycopg2.extras
 
 from uuid import uuid4
-
 from time import time
 
 

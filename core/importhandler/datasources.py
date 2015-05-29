@@ -1,3 +1,9 @@
+"""
+This module gathers DataSource classes.
+"""
+
+# Author: Nikolay Melnik <nmelnik@upwork.com>
+
 import logging
 import csv
 import time
@@ -14,12 +20,15 @@ from boto.emr.step import PigStep, InstallPigStep, JarStep
 from boto.emr import BootstrapAction
 
 from exceptions import ImportHandlerException, ProcessException
-from core.importhandler.db import postgres_iter, run_queries
+from db import postgres_iter, run_queries
 
 logging.getLogger('boto').setLevel(logging.INFO)
 
 
 DATASOURCES_REQUIRE_QUERY = ['db', 'pig']
+
+
+__all__ = ['DATASOURCES_REQUIRE_QUERY', 'DataSource']
 
 
 class BaseDataSource(object):

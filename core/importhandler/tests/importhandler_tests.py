@@ -6,12 +6,12 @@ from datetime import datetime
 from mock import patch
 from httmock import HTTMock, urlmatch
 
-from core.xmlimporthandler.importhandler import ExtractionPlan, \
+from core.importhandler.importhandler import ExtractionPlan, \
     ImportHandlerException, ImportHandler
-from core.xmlimporthandler.scripts import ScriptManager
-from core.xmlimporthandler.entities import Field, FieldException
-from core.xmlimporthandler.inputs import Input
-from core.xmlimporthandler.predict import Predict
+from core.importhandler.scripts import ScriptManager
+from core.importhandler.entities import Field, FieldException
+from core.importhandler.inputs import Input
+from core.importhandler.predict import Predict
 from constants import ROW, PARAMS
 
 BASEDIR = os.path.abspath(
@@ -207,7 +207,7 @@ class ImportHandlerTest(unittest.TestCase):
                                     'extractorxml',
                                     'train-import-handler.xml'))
 
-    @patch('core.xmlimporthandler.datasources.DbDataSource._get_iter',
+    @patch('core.importhandler.datasources.DbDataSource._get_iter',
            return_value=db_iter_mock())
     def test_imports(self, mock_db):
         self._extractor = ImportHandler(self._plan, PARAMS)
@@ -294,7 +294,7 @@ class CompositeTypeTest(unittest.TestCase):
                                     'extractorxml',
                                     'composite-type-import-handler.xml'))
 
-    @patch('core.xmlimporthandler.datasources.DbDataSource._get_iter',
+    @patch('core.importhandler.datasources.DbDataSource._get_iter',
            return_value=db_row_iter_mock())
     def composite_test(self, mock_db):
         self._extractor = ImportHandler(self._plan, {
