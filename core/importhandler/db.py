@@ -1,9 +1,10 @@
 """
-This module utility methods for querying on PostgreSQL database.
+This module is a generic place used to hold helper functions
+connect and query with databases.
 """
 
-# Author: Ioannis Foukarakis <ifoukarakis@upwork.com>
-# Created on Dec 13, 2012
+# Authors: Ioannis Foukarakis <ifoukarakis@upwork.com>
+#          Nikolay Melnik <nmelnik@upwork.com>
 
 import psycopg2
 import psycopg2.extras
@@ -13,6 +14,18 @@ from time import time
 
 
 def run_queries(queries, conn_string):
+    """
+    Executes queries on PostgreSQL databse.
+
+    queries: list of strings
+        the SQL query to execute
+    conn_string: string
+        the connection string
+    """
+    from importhandler import ImportHandlerException
+    if not queries:
+        raise ImportHandlerException('Empty query list')
+
     conn = psycopg2.connect(conn_string)
     for query in queries:
         cursor = conn.cursor().execute(query)
@@ -23,11 +36,16 @@ def postgres_iter(queries, conn_string):
     """
     Iterator for iterating on a Postgres query using a named cursor.
 
-    Keyword arguments:
-    query -- the SQL query to execute
-    conn_string -- the connection string
+    queries: list of strings
+        the SQL query to execute
+    conn_string: string
+        the connection string
 
     """
+    from importhandler import ImportHandlerException
+    if not queries:
+        raise ImportHandlerException('Empty query list')
+
     conn = psycopg2.connect(conn_string)
     for query in queries[:-1]:
         cursor = conn.cursor().execute(query)

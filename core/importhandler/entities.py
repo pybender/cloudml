@@ -352,7 +352,7 @@ order by ordinal_position;""".format(sqoop_import.table,
 
         if self.datasource.type == 'pig':
             self.datasource.run_sqoop_imports(self.entity.sqoop_imports)
-            self.datasource.set_ih(import_handler)
+            self.datasource.set_import_handler(import_handler)
 
         if self.datasource.type == 'input':
             query = import_handler.params[query]
