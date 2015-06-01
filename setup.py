@@ -75,7 +75,8 @@ class NoseCommand(Command):
         if not os.path.exists('target'):
             os.mkdir('target')
         nose.run(argv=['', '--verbose',
-                       '--with-xunit', '--xunit-file=target/nosetests.xml'])
+                       '--with-xunit', '--xunit-file=target/nosetests.xml',
+                       '--with-doctest'])
 
 
 class CoverageCommand(Command):
@@ -97,8 +98,8 @@ class CoverageCommand(Command):
         tc._run_tests()
 
         cov.stop()
-        cov.html_report(directory='target/coverage/html')
-        cov.xml_report(outfile='target/coverage/coverage.xml')
+        cov.html_report(directory='./target/coverage/html')
+        cov.xml_report(outfile='./target/coverage/coverage.xml')
         cov.save()
 
 
