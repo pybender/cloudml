@@ -23,8 +23,8 @@ import colorer
 from core.trainer.config import FeatureModel, SchemaException
 from core.trainer import __version__
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
-from core.importhandler.importhandler import ImportHandlerException, \
-    ExtractionPlan, ImportHandler
+from core.importhandler.exceptions import ImportHandlerException
+from core.importhandler.importhandler import ExtractionPlan, ImportHandler
 from core.trainer.store import store_trainer
 from core.trainer.streamutils import streamingiterload
 from core.trainer.trainer import Trainer, list_to_dict, TransformerNotFound

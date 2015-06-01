@@ -683,7 +683,6 @@ socks proxy localhost:12345''' % {'dns': masterpublicdnsname})
 
 
 class InputDataSource(BaseDataSource):
-
     def __init__(self, config=None):
         self.config = {}
         self.name = 'input'

@@ -8,48 +8,12 @@ from httmock import HTTMock, urlmatch
 
 from core.importhandler.importhandler import ExtractionPlan, \
     ImportHandlerException, ImportHandler
-from core.importhandler.scripts import ScriptManager
 from core.importhandler.entities import Field, FieldException
-from core.importhandler.inputs import Input
 from core.importhandler.predict import Predict
 from constants import ROW, PARAMS
 
 BASEDIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), '../../../testdata'))
-
-
-class ScriptManagerTest(unittest.TestCase):
-    def setUp(self):
-        self.manager = ScriptManager()
-
-    def test_script(self):
-        self.assertEqual(self.manager._exec('1+2'), 3)
-
-    def test_manager(self):
-        self.manager.add_python("""def intToBoolean(a):
-            return a == 1
-        """)
-        self.assertEqual(self.manager._exec('intToBoolean(1)'), True)
-
-    def test_match_1888(self):
-        def check(script):
-            print script
-            self.manager.add_python(script)
-            self.assertEqual(self.manager._exec('stripSpecial("abc<")'), "abc")
-
-        SCRIPT1 = """
-pattern='[<>]+'
-def stripSpecial(value):
-    import re
-    return re.sub(pattern, \" \", value).strip()
-"""
-        SCRIPT2 = """
-import re
-def stripSpecial(value):
-    return re.sub(\"[<>]+\", \" \", value).strip()
-"""
-        check(SCRIPT1)
-        check(SCRIPT2)
 
 
 class TestField(unittest.TestCase):
@@ -73,27 +37,6 @@ class TestField(unittest.TestCase):
             field_required.process_value(None, None)
         value = field.process_value(None, None)
         self.assertEqual(value, None)
-
-
-class TestInput(unittest.TestCase):
-    def test_params_validation(self):
-        # <!-- Boolean parameter -->
-        # <param name="only_fjp" type="boolean" />
-        inp = Input(dict(name="application", type="integer", regex="\d+"))
-        self.assertEqual(inp.process_value('1'), 1)
-        self.assertRaises(ImportHandlerException, inp.process_value, 'str')
-        self.assertRaises(ImportHandlerException, inp.process_value, '-1')
-
-        inp = Input(dict(name="created", type="date", format="%A %d. %B %Y"))
-        self.assertEqual(inp.process_value('Monday 11. March 2002'),
-                         datetime(2002, 3, 11, 0, 0))
-        with self.assertRaisesRegexp(
-                ImportHandlerException, "Value of the input parameter \
-created is invalid date in format %A %d. %B %Y: 11/03/02"):
-            inp.process_value('11/03/02')
-        with self.assertRaisesRegexp(
-                ImportHandlerException, "Input parameter created is required"):
-            inp.process_value(None)
 
 
 # class PigXMLPlanTest(unittest.TestCase):

@@ -19,8 +19,8 @@ import logging
 from config import FeatureModel, SchemaException
 from __init__ import __version__
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
-from importhandler.importhandler import ImportHandlerException, \
-    ExtractionPlan, ImportHandler
+from core.importhandler.exceptions import ImportHandlerException
+from core.importhandler.importhandler import ExtractionPlan, ImportHandler
 from store import store_trainer
 from streamutils import streamingiterload
 from trainer import Trainer, list_to_dict

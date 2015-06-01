@@ -9,7 +9,7 @@ from datetime import datetime
 
 from exceptions import ImportHandlerException
 from db import postgres_iter
-from utils import process_primitive
+from utils import process_primitive, process_bool
 
 
 __all__ = ['Input']
@@ -28,7 +28,7 @@ class Input(object):
     PROCESS_STRATEGIES = {
         'string': process_primitive(str, raise_exc=True),
         'float': process_primitive(float, raise_exc=True),
-        'boolean': process_primitive(bool, raise_exc=True),
+        'boolean': process_primitive(process_bool, raise_exc=True),
         'integer': process_primitive(int, raise_exc=True),
         'date': process_date
     }
