@@ -1,3 +1,9 @@
+"""
+Unittests for datasources classes.
+"""
+
+# Author: Nikolay Melnik <nmelnik@upwork.com>
+
 import unittest
 import os
 from mock import patch, MagicMock

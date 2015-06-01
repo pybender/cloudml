@@ -150,6 +150,7 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
             match = re.search(self.regex, value)
             if match:
                 value = match.group(0)
+                print value
             else:
                 return None
 

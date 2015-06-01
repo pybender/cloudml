@@ -8,35 +8,11 @@ from httmock import HTTMock, urlmatch
 
 from core.importhandler.importhandler import ExtractionPlan, \
     ImportHandlerException, ImportHandler
-from core.importhandler.entities import Field, FieldException
 from core.importhandler.predict import Predict
 from constants import ROW, PARAMS
 
 BASEDIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), '../../../testdata'))
-
-
-class TestField(unittest.TestCase):
-    def test_field_declaration_validation(self):
-        with self.assertRaises(ImportHandlerException):
-            field = Field({
-                'name': 'field_name',
-                'type': 'int'}, entity=None)
-
-    def test_field_required(self):
-        field_required = Field({
-            'name': 'field_name',
-            'type': 'string',
-            'required': 'true'
-        }, entity=None)
-        field = Field({
-            'name': 'field_name',
-            'type': 'string'
-        }, entity=None)
-        with self.assertRaises(FieldException):
-            field_required.process_value(None, None)
-        value = field.process_value(None, None)
-        self.assertEqual(value, None)
 
 
 # class PigXMLPlanTest(unittest.TestCase):
