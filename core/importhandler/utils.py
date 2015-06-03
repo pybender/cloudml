@@ -179,7 +179,6 @@ def autoload_fields_by_row(entity, row, prefix=''):
     prefix:  string
         prefix to be added to the name.
     """
-    print "start"
     def getjson(x):
         try:
             res = json.loads(x)

@@ -1,5 +1,5 @@
 """
-Unittests for inline predict section classes.
+Unittests for utility methods.
 """
 
 # Author: Nikolay Melnik <nmelnik@upwork.com>

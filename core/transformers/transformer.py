@@ -1,3 +1,10 @@
+"""
+Module gathers classes and methods for implementing pretrained
+transformers.
+"""
+
+# Author: Nikolay Melnik <nmelnik@upwork.com>
+
 import logging
 import json
 
@@ -10,13 +17,10 @@ class TransformerSchemaException(Exception):
     """
     Exception to be raised if there is an error parsing or using the
     configuration.
-
     """
 
     def __init__(self, message, Errors=None):
-        # Call the base class constructor with the parameters it needs
-        Exception.__init__(self, message)
-        # Now for your custom code...
+        super(TransformerSchemaException, self).__init__(message)
         self.Errors = Errors
 
 
@@ -36,7 +40,11 @@ class Transformer(object):
             raise TransformerSchemaException(
                 message="transformer-name is missing")
 
-        self.name = data['transformer-name']
+        self.name = data['transformer-name'].strip(' \t\n\r')
+        if not self.name:
+            raise TransformerSchemaException(
+                message="transformer-name is missing")
+
         self.type = data['type']
 
         # Get transformer
