@@ -1,5 +1,5 @@
 """
-Process specific fields methods.
+Methods that would be avaiable in python scripts.
 """
 
 # Author: Nikolay Melnik <nmelnik@upwork.com>
@@ -19,7 +19,11 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 
 
-def process_key_value(key_path, value_path, value):
+def process_key_value(key_path, value_path, value):  # pragma: no cover
+    """
+    Method is obsolete, use jsonpath, key_path, value_path parameters
+    of the field.
+    """
     # Treat as a dictionary
     keys = jsonpath(value, key_path)
     try:
@@ -35,12 +39,12 @@ def process_key_value(key_path, value_path, value):
     return result
 
 
-def composite_string(expression_value, value, row_data):
+def composite_string(expression_value, value, row_data):  # pragma: no cover
     res = expression_value % dict(row_data)
     return res.decode('utf8', 'ignore')
 
 
-def composite_python(expression_value, value, row_data):
+def composite_python(expression_value, value, row_data):  # pragma: no cover
     res = composite_string(expression_value, value, row_data)
     try:
         return eval(res)
@@ -50,7 +54,8 @@ def composite_python(expression_value, value, row_data):
         raise
 
 
-def composite_readability(expression_value, value, r_type, row_data):
+def composite_readability(expression_value, value,
+                          r_type, row_data):  # pragma: no cover
     res = composite_string(expression_value, value, row_data)
     if r_type not in READABILITY_METHODS:
         raise Exception('Readability_type "%s" is not defined' % r_type)

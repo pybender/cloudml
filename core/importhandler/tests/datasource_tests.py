@@ -170,7 +170,7 @@ class DataSourcesTest(unittest.TestCase):
     @patch('time.sleep', return_value=None)
     def test_pig_datasource(self, sleep_mock):
         ds = PigDataSource(self.PIG)
-        #iter_ = ds._get_iter('query here', 'query target')
+        # iter_ = ds._get_iter('query here', 'query target')
         self.assertRaises(ProcessException, ds._get_iter, 'query here')
 
         get_pig_step = MagicMock()
@@ -200,7 +200,6 @@ class DataSourcesTest(unittest.TestCase):
                                'and_run_steps'.format(pig_import),
                                _create_jobflow_and_run_steps):
                         iter_ = ds._get_iter('query here', 'query target')
-                        #print iter_.next()
 
     def test_input_datasource(self):
         ds = InputDataSource(self.INPUT)

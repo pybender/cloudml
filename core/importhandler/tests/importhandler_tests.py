@@ -1,4 +1,11 @@
+"""
+Unittests for ExtractionPlan and ImportHandler classes.
+"""
+
+# Author: Nikolay Melnik <nmelnik@upwork.com>
+
 import os
+import csv
 import unittest
 import json
 from datetime import datetime
@@ -15,14 +22,15 @@ BASEDIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), '../../../testdata'))
 
 
-# class PigXMLPlanTest(unittest.TestCase):
-#     def setUp(self):
-#         self._plan = ExtractionPlan(os.path.join(BASEDIR,
-#                                     'extractorxml',
-#                                     'pig-train-import-handler.xml'))
-#     def test_pig_datasource(self):
-#         self._extractor = ImportHandler(self._plan, PARAMS)
-#         row = self._extractor.next()
+class PigXMLPlanTest(unittest.TestCase):
+    def setUp(self):
+        self._plan = ExtractionPlan(os.path.join(BASEDIR,
+                                    'extractorxml',
+                                    'pig-train-import-handler.xml'))
+
+    def test_pig_datasource(self):
+        self._extractor = ImportHandler(self._plan, PARAMS)
+        row = self._extractor.next()
 
 
 @urlmatch(netloc='test.odesk.com:11000')
@@ -84,8 +92,6 @@ class ExtractionXMLPlanTest(unittest.TestCase):
             BASEDIR, 'extractorxml', 'generic-import-handler.xml')
         self.importhandler_file = os.path.join(
             BASEDIR, 'extractorxml', 'train-import-handler.xml')
-        self.incorrect_importhandler_file = os.path.join(
-            BASEDIR, 'extractorxml', 'incorrect-import-handler.xml')
 
     def test_load_valid_plan(self):
         ExtractionPlan(self.importhandler_file)
@@ -101,13 +107,20 @@ class ExtractionXMLPlanTest(unittest.TestCase):
             ExtractionPlan(data, is_file=False)
 
     def test_load_plan_with_schema_error(self):
-        with self.assertRaises(ImportHandlerException) as cm:
-            ExtractionPlan(self.incorrect_importhandler_file)
-        the_exception = cm.exception
-        self.assertEqual(
-            str(the_exception)[:17],
-            'There is an error'
-        )
+        def _check(name, err):
+            file_name = os.path.join(BASEDIR, 'extractorxml',
+                                     'invalid', name)
+            with self.assertRaisesRegexp(ImportHandlerException, err):
+                ExtractionPlan(file_name)
+
+        _check("no-entity.xml", "There is an error in the import handler's "
+               "XML, line 15.\W+\w+")
+        _check("datasource_name.xml",
+               "There are few datasources with name odw")
+
+        with self.assertRaisesRegexp(ImportHandlerException,
+                                     "import handler file is empty"):
+            ExtractionPlan(None, is_file=False)
 
     def test_get_ds_config(self):
         conf = ExtractionPlan.get_datasources_config()
@@ -172,6 +185,42 @@ experienced person")
             "SELECT title FROM applications where id==%s;" %
             ROW['application'])
 
+    @patch('core.importhandler.datasources.DbDataSource._get_iter',
+           return_value=db_iter_mock())
+    def test_store_data_json(self, mock_db):
+        self._extractor = ImportHandler(self._plan, PARAMS)
+        self._extractor.store_data_json("data.json.bak")
+        self.assertTrue(os.path.isfile("data.json.bak"))
+        with open("data.json.bak") as fp:
+            json_data = fp.read()
+            data = json.loads(json_data)
+            self.assertEquals(data['application_id'], 555)
+        os.remove("data.json.bak")
+
+        self._extractor.store_data_json("data.gz.bak", True)
+        self.assertTrue(os.path.isfile("data.gz.bak"))
+        os.remove("data.gz.bak")
+
+    @patch('core.importhandler.datasources.DbDataSource._get_iter',
+           return_value=db_iter_mock())
+    def test_store_data_csv(self, mock_db):
+        self._extractor = ImportHandler(self._plan, PARAMS)
+        self._extractor.store_data_csv("data.csv.bak")
+        self.assertTrue(os.path.isfile("data.csv.bak"))
+        with open("data.csv.bak") as fp:
+            reader = csv.reader(fp)
+            rows = [row for row in reader]
+            self.assertEquals(len(rows), 2)
+        os.remove("data.csv.bak")
+
+    @patch('core.importhandler.datasources.DbDataSource._get_iter',
+           return_value=db_iter_mock())
+    def test_store_data_csv_compressed(self, mock_db):
+        self._extractor = ImportHandler(self._plan, PARAMS)
+        self._extractor.store_data_csv("data.gz.bak", True)
+        self.assertTrue(os.path.isfile("data.gz.bak"))
+        os.remove("data.gz.bak")
+
     def test_validate_input_params(self):
         self._extractor = ImportHandler(self._plan, PARAMS)
         with self.assertRaisesRegexp(
@@ -224,31 +273,3 @@ class CompositeTypeTest(unittest.TestCase):
         self.assertEqual(row['country_pair'], 'Australia,Philippines')
         self.assertEqual(
             row['tsexams']['English Spelling Test (U.S. Version)'], 5)
-
-
-class InputDatasourceTest(unittest.TestCase):
-
-    def setUp(self):
-        self._plan = ExtractionPlan(os.path.join(
-                                    BASEDIR,
-                                    'extractorxml',
-                                    'input-datasource-handler.xml'))
-
-    def test_json(self):
-        self._extractor = ImportHandler(self._plan, {
-            'contractor_info': '{ "skills":[{"skl_status":"0","ts_tests_count"\
-:"0","skl_name":"microsoft-excel","skl_external_link":"http:\/\/en.wikipedia.\
-org\/wiki\/Microsoft_Excel","skl_has_tests":"1","skl_pretty_name":"Microsoft\
- Excel","skill_uid":"475721704063008779","skl_rank":"1","skl_description":\
- "Microsoft Excel is a proprietary commercial spreadsheet application written\
- and distributed by Microsoft for Microsoft Windows and Mac OS X. It features\
- calculation, graphing tools, pivot tables, and a macro programming language\
- called Visual Basic for Applications."},{"skl_status":"0","ts_tests_count":\
- "0","skl_name":"microsoft-word","skl_external_link":"http:\/\/en.wikipedia.\
- org\/wiki\/Microsoft_Word","skl_has_tests":"1","skl_pretty_name":"Microsoft\
-  Word","skill_uid":"475721704071397377","skl_rank":"2","skl_description":\
-  "Microsoft Office Word is a word processor designed by Microsoft."}]}',
-        })
-        row = self._extractor.next()
-        self.assertEqual(row['contractor.skills'],
-                         'microsoft-excel,microsoft-word')

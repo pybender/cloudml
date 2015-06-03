@@ -13,7 +13,7 @@ from uuid import uuid4
 from time import time
 
 
-def run_queries(queries, conn_string):
+def run_queries(queries, conn_string):  # pragma: no cover
     """
     Executes queries on PostgreSQL databse.
 
@@ -32,7 +32,7 @@ def run_queries(queries, conn_string):
     conn.commit()
 
 
-def postgres_iter(queries, conn_string):
+def postgres_iter(queries, conn_string):  # pragma: no cover
     """
     Iterator for iterating on a Postgres query using a named cursor.
 

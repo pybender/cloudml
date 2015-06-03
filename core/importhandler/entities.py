@@ -14,17 +14,71 @@ from jsonpath import jsonpath
 
 from exceptions import ProcessException, ImportHandlerException
 from utils import get_key, ParametrizedTemplate, process_primitive, \
-    process_bool
+    process_bool, load_json
 from datasources import DATASOURCES_REQUIRE_QUERY
 
 
-class FieldException(Exception):
-    pass
+__all__ = ['Field', 'Entity', 'EntityProcessor']
 
 
 class Field(object):
     """
     Represents entity field.
+
+    config: lxml.etree._Element
+        parsed by lxml.objectify field definition tag.
+    entity: Entity
+        parent entity tag.
+
+    Config contains attributes:
+        name: string
+            name of the field
+        type: string, optional (default="string")
+            type of the field: string, float, boolean, json, integer
+        column: string, optional
+            if entity is using a DB or CSV datasource, it will use
+            data from this column
+        jsonpath: string, optional
+            if entity is a JSON datasource, it will use this jsonpath to
+            extract data
+        delimiter: string, optional
+            concatenates values using the defined separator. Used together
+            with jsonpath only.
+        join: string
+            concatenates values using the defined separator. Used together
+            with jsonpath only.
+        multipart: string, optional
+            boolean (true/false), if the results of jsonpath is
+            complex/multipart value or simple value, Used only with jsonpath
+        key_path: string, optional
+            a JSON path expression for identifying the keys of a map.
+            Used together with value_path.
+        value_path: string, optional
+            JSON path expression for identifying the values of a map.
+            Used together with key_path.
+        script: string
+            call the Javascript defined in this element and assign the
+            result to this field. May use any of the built-in functions
+            or any one defined in a Script element. Variables can also
+            be used in script elements.
+        regex: string, optional
+            applies the given regular expression and assigns the first
+            match to the value
+        split: string, optional
+            splits the value to an array of values
+        dateFormat: string, optional
+            transforms value to a date using the given date/time format
+        template: string, optional
+            used to define a template for strings. May use variables.
+        transform: string, optional
+            transforms this field to a datasource. For example, it can
+            be used to parse JSON or CSV data stored in a DB column.
+            Its values can be either json or csv.
+        headers: string, optional
+            used only if transform="csv". Defines the header names
+            for each item in the CSV field.
+        required: string, optional, (default='false')
+            whether this field is required to have a value or not.
     """
     PROCESS_STRATEGIES = {
         'string': process_primitive(str),
@@ -124,17 +178,20 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
                 # Treat as a dictionary
                 keys = jsonpath(value[0], self.key_path)
                 strategy = self.PROCESS_STRATEGIES.get(self.type)
-                try:
-                    values = map(strategy, jsonpath(value[0], self.value_path))
-                except (ValueError, TypeError) as e:
-                    if self.entity.log_msg_counter < 100:
-                        self.entity.log_msg_counter += 1
-                        logging.warning(
-                            "Can't convert value '{0}' to {1} while "
-                            "processing field {2}".format(value[:100],
-                                                          self.type,
-                                                          self.name))
-                    raise ProcessException(e)
+                values = []
+                for value in jsonpath(value[0], self.value_path):
+                    try:
+                        value = strategy(value)
+                    except (ValueError, TypeError) as e:
+                        if self.entity.log_msg_counter < 100:
+                            self.entity.log_msg_counter += 1
+                            logging.warning(
+                                "Can't convert value '{0}' to {1} while "
+                                "processing field {2}".format(value[:100],
+                                                              self.type,
+                                                              self.name))
+                        value = None
+                    values.append(value)
                 convert_type = False
                 if keys is not False and values is not False:
                     value = dict(zip(keys, values))
@@ -190,15 +247,37 @@ processing field {2}".format(value[:100],
                              self.name))
                 value = None
 
-        # TODO: should it be here or before transformation?
         if self.required and not value:
-            raise FieldException('Field {} is required'.format(self.name))
+            raise ProcessException('Field {} is required'.format(self.name))
 
         return value
 
 
 class Sqoop(object):
+    """
+    Tag sqoop instructs import handler torun a Sqoop import.
+    It should be used only on entities that have a pig datasource.
 
+    config: lxml.etree._Element
+        parsed by lxml.objectify sqoop definition tag.
+
+    A sqoop tag may contain the following attributes:
+    target: string
+        the target file to save imported data on HDFS.
+    datasource: string
+        DB datasource name to use for importing the data
+    table: string
+        the name of the table to import its data.
+    where: string, optional
+        an expression that might be passed to the table for
+        filtering the rows to import
+    direct: string, optional
+        whether to use direct import
+    mappers: string, optional (default=1)
+        an integer number with the mappers to use for importing
+        data. If table is a view or doesn't have a key it should
+        be 1.
+    """
     def __init__(self, config):
         self.datasource_name = config.get('datasource')
         self.target = config.get('target')
@@ -222,6 +301,21 @@ class Sqoop(object):
 class Entity(object):
     """
     Represents import handler's import entity.
+
+    config: lxml.etree._Element
+        parsed by lxml.objectify field definition tag.
+
+    The possible attributes of the element are the following:
+    name: strinh
+        a unique name to identify the entity
+    datasource: string
+        the datasource name to use for importing data
+    query:string, optional
+        a string that provides instructions on how to query
+        a datasource.
+    autoload_fields: boolean, optional (default=False)
+        when setted we could not define fields. They would
+        be loaded from the pig results.
     """
     def __init__(self, config):
         self.fields = OrderedDict()
@@ -295,6 +389,9 @@ class Entity(object):
 
 
 class EntityProcessor(object):
+    """
+    Helper class that makes the logic of processing entity fields.
+    """
     def __init__(self, entity, import_handler, extra_params={}):
         self.import_handler = import_handler
         self.entity = entity
@@ -329,7 +426,7 @@ class EntityProcessor(object):
                 sqoop_iter = sqoop_import.datasource.run_queries(sqoop_query)
             if self.entity.autoload_sqoop_dataset:
                 from utils import SCHEMA_INFO_FIELDS, PIG_TEMPLATE, \
-                    construct_pig_sample
+                    construct_pig_fields
                 sql = """select * from {0} limit 1;
 select {1} from INFORMATION_SCHEMA.COLUMNS where table_name = '{0}'
 order by ordinal_position;""".format(sqoop_import.table,
@@ -344,7 +441,7 @@ order by ordinal_position;""".format(sqoop_import.table,
                     return ValueError("Can't execute the query: {0}."
                                       "Error: {1}".format(sql, exc))
 
-                fields_str = construct_pig_sample(fields_data)
+                fields_str = construct_pig_fields(fields_data)
                 load_dataset_script = PIG_TEMPLATE.format(
                     self.entity.sqoop_dataset_name,
                     sqoop_import.target,
@@ -437,12 +534,3 @@ order by ordinal_position;""".format(sqoop_import.table,
         Returns nested entity, that use this csv/json field as datasource.
         """
         return self.entity.nested_entities_field_ds.get(field.name)
-
-
-def load_json(val):
-    if isinstance(val, basestring):
-        try:
-            return json.loads(val)
-        except:
-            raise ProcessException('Couldn\'t parse JSON message')
-    return val

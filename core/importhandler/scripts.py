@@ -3,6 +3,7 @@ Python script manager.
 """
 
 # Author: Nikolay Melnik <nmelnik@upwork.com>
+
 import logging
 
 from utils import ParametrizedTemplate

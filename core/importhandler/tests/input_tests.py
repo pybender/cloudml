@@ -4,12 +4,16 @@ Unittests for processing user input data classes.
 
 # Author: Nikolay Melnik <nmelnik@upwork.com>
 
+import os
 import unittest
 from lxml import objectify
 from datetime import datetime
 
 from core.importhandler.inputs import Input
 from core.importhandler.exceptions import ImportHandlerException
+
+BASEDIR = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '../../../testdata'))
 
 
 class TestInput(unittest.TestCase):
@@ -43,3 +47,33 @@ created is invalid date in format %A %d. %B %Y: 11/03/02"):
 
         inp = Input(dict(name="application", type="invalid"))
         self.assertRaises(ImportHandlerException, inp.process_value, 'str')
+
+
+class InputDatasourceTest(unittest.TestCase):
+
+    def setUp(self):
+        from core.importhandler.importhandler import ExtractionPlan
+        self._plan = ExtractionPlan(os.path.join(
+                                    BASEDIR,
+                                    'extractorxml',
+                                    'input-datasource-handler.xml'))
+
+    def test_json(self):
+        from core.importhandler.importhandler import ImportHandler
+        self._extractor = ImportHandler(self._plan, {
+            'contractor_info': '{ "skills":[{"skl_status":"0","ts_tests_count"\
+:"0","skl_name":"microsoft-excel","skl_external_link":"http:\/\/en.wikipedia.\
+org\/wiki\/Microsoft_Excel","skl_has_tests":"1","skl_pretty_name":"Microsoft\
+ Excel","skill_uid":"475721704063008779","skl_rank":"1","skl_description":\
+ "Microsoft Excel is a proprietary commercial spreadsheet application written\
+ and distributed by Microsoft for Microsoft Windows and Mac OS X. It features\
+ calculation, graphing tools, pivot tables, and a macro programming language\
+ called Visual Basic for Applications."},{"skl_status":"0","ts_tests_count":\
+ "0","skl_name":"microsoft-word","skl_external_link":"http:\/\/en.wikipedia.\
+ org\/wiki\/Microsoft_Word","skl_has_tests":"1","skl_pretty_name":"Microsoft\
+  Word","skill_uid":"475721704071397377","skl_rank":"2","skl_description":\
+  "Microsoft Office Word is a word processor designed by Microsoft."}]}',
+        })
+        row = self._extractor.next()
+        self.assertEqual(row['contractor.skills'],
+                         'microsoft-excel,microsoft-word')

@@ -3,6 +3,7 @@
 import json
 import os
 from string import Template
+from datetime import datetime
 from distutils.util import strtobool
 
 
@@ -20,12 +21,14 @@ def iterchildren(config):
 def get_key(config, key):
     """
     Returns attribute value or sub_tag value.
-    For example:
-        <entity some_key="...."/>
-        or
-        <entity>
-            <some_key>.....<some_key>
-        </entity>
+
+    >>> from lxml import objectify
+    >>> tag1 = objectify.fromstring('<entity key="value1"/>')
+    >>> get_key(tag1, "key")
+    'value1'
+    >>> tag2 = objectify.fromstring("<entity><key>value2</key></entity>")
+    >>> get_key(tag2, "key")
+    'value2'
     """
     val = config.get(key)
     if val is None and hasattr(config, key):
@@ -33,7 +36,7 @@ def get_key(config, key):
     return val
 
 
-def convert_single_or_list(value, process_fn, raise_exc=False):
+def convert_single_or_list(value, process_fn):
     try:
         if isinstance(value, (list, tuple)):
             return [process_fn(item) for item in value]
@@ -41,14 +44,11 @@ def convert_single_or_list(value, process_fn, raise_exc=False):
             return process_fn(value)
     except ValueError:
         raise
-        if raise_exc:
-            raise
-        return None
 
 
-def process_primitive(strategy, raise_exc=True):
+def process_primitive(strategy):
     def process(value, **kwargs):
-        return convert_single_or_list(value, strategy, raise_exc) \
+        return convert_single_or_list(value, strategy) \
             if value is not None else None
     return process
 
@@ -57,6 +57,9 @@ def process_bool(value):
     val = bool(strtobool(str(value)))
     return val
 
+
+def process_date(value, format):
+    return datetime.strptime(value, format)
 
 DIR = os.path.dirname(__file__)
 with open(os.path.join(DIR, 'pig_template.txt')) as fp:
@@ -83,6 +86,21 @@ PIG_FIELDS_MAP = {
 
 
 def get_pig_type(field):
+    """
+    Gets corresponding pig field type by sql-db field definition.
+
+    field: dict
+        declaration of the sql-table field, that contains data_type
+
+    >>> get_pig_type({'column_name': 'title', 'data_type': 'integer'})
+    'int'
+    >>> get_pig_type({'column_name': 'created', 'data_type': 'timestamp'})
+    'chararray'
+    >>> get_pig_type({'column_name': 'accuracy', 'data_type': 'double-x'})
+    'double'
+    >>> get_pig_type({'column_name': 'created', 'data_type': 'custom'})
+    'chararray'
+    """
     type_ = field['data_type']
     if type_ in PIG_FIELDS_MAP:
         return PIG_FIELDS_MAP[type_]
@@ -93,7 +111,17 @@ def get_pig_type(field):
     return "chararray"
 
 
-def construct_pig_sample(fields_data):
+def construct_pig_fields(fields_data):
+    """
+    Constructs pig fields declaration by definition of the sql-db fields.
+
+    >>> fields = [{'column_name': 'title', 'data_type': 'integer'}, \
+                  {'column_name': 'created', 'data_type': 'timestamp'}, \
+                  {'column_name': 'accuracy', 'data_type': 'double'}, \
+                  {'column_name': 'created', 'data_type': 'custom'}]
+    >>> construct_pig_fields(fields)
+    'title:int\\n, created:chararray\\n, accuracy:double\\n, created:chararray'
+    """
     fields_str = ""
     is_first = True
     for field in fields_data:
@@ -106,6 +134,14 @@ def construct_pig_sample(fields_data):
 
 
 def isfloat(x):
+    """
+    >>> isfloat('1.5')
+    True
+    >>> isfloat('5')
+    True
+    >>> isfloat('5,0')
+    False
+    """
     try:
         a = float(x)
     except:
@@ -115,6 +151,14 @@ def isfloat(x):
 
 
 def isint(x):
+    """
+    >>> isint('1.5')
+    False
+    >>> isint('5')
+    True
+    >>> isint('other')
+    False
+    """
     try:
         a = float(x)
         b = int(a)
@@ -124,15 +168,10 @@ def isint(x):
         return a == b
 
 
-def getjson(x):
-    try:
-        res = json.loads(x)
-    except:
-        return None
-    return res
-
-
 def autoload_fields_by_row(entity, row, prefix=''):
+    """
+    Autoloads entity fields, by imported data row.
+    """
     from entities import Entity, Field
     for key, val in row.iteritems():
         data_type = 'string'
@@ -142,7 +181,7 @@ def autoload_fields_by_row(entity, row, prefix=''):
             elif isfloat(val):
                 data_type = 'float'
             else:
-                item_dict = getjson(val)
+                item_dict = load_json(val)
                 if item_dict:
                     entity.fields[key] = Field({
                         'name': key,
@@ -167,3 +206,12 @@ def autoload_fields_by_row(entity, row, prefix=''):
             entity.fields[key] = Field(field_config, entity)
 
     entity.fields_loaded = True
+
+
+def load_json(val):
+    if isinstance(val, basestring):
+        try:
+            return json.loads(val)
+        except:
+            raise ProcessException('Couldn\'t parse JSON message')
+    return val

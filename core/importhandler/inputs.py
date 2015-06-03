@@ -5,31 +5,29 @@ Classes for processing user input data.
 # Author: Nikolay Melnik <nmelnik@upwork.com>
 
 import re
-from datetime import datetime
 
 from exceptions import ImportHandlerException
 from db import postgres_iter
-from utils import process_primitive, process_bool
+from utils import process_primitive, process_bool, process_date
 
 
 __all__ = ['Input']
 
 
-def process_date(value, format):
-    return datetime.strptime(value, format)
-
-
 class Input(object):
     """
     Input parameter configuration.
+
+    config: lxml.etree._Element
+        parsed by lxml.objectify input definition tag.
     """
 # TODO: int in documentation.
 # We need use int or integer everywhere
     PROCESS_STRATEGIES = {
-        'string': process_primitive(str, raise_exc=True),
-        'float': process_primitive(float, raise_exc=True),
-        'boolean': process_primitive(process_bool, raise_exc=True),
-        'integer': process_primitive(int, raise_exc=True),
+        'string': process_primitive(str),
+        'float': process_primitive(float),
+        'boolean': process_primitive(process_bool),
+        'integer': process_primitive(int),
         'date': process_date
     }
 
