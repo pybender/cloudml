@@ -504,6 +504,7 @@ class PigDataSource(BaseDataSource):
             sbuffer = cStringIO.StringIO()
             k = Key(b)
             k.key = "%spart-%s-%05d" % (self.result_path, type_result, i)
+            print k.key
             if not k.exists():
                 break
             logging.info('Getting from s3 file %s' % k.key)

@@ -9,8 +9,9 @@ import csv
 import unittest
 import json
 from datetime import datetime
-
-from mock import patch
+import boto
+from moto import mock_s3, mock_emr
+from mock import patch, Mock, MagicMock
 from httmock import HTTMock, urlmatch
 
 from core.importhandler.importhandler import ExtractionPlan, \
@@ -23,14 +24,59 @@ BASEDIR = os.path.abspath(
 
 
 class PigXMLPlanTest(unittest.TestCase):
+    PIG_DS = 'core.importhandler.datasources.PigDataSource'
+
     def setUp(self):
         self._plan = ExtractionPlan(os.path.join(BASEDIR,
                                     'extractorxml',
                                     'pig-train-import-handler.xml'))
 
-    def test_pig_datasource(self):
+    @mock_s3
+    @mock_emr
+    @patch('subprocess.Popen')
+    @patch('time.sleep', return_value=None)
+    @patch("boto.emr.connection.EmrConnection.describe_jobflow")
+    @patch(PIG_DS + '._create_jobflow_and_run_steps')
+    def test_pig_datasource(self, _create_jobflow_and_run_steps,
+                            describe_jobflow, sleep_mock, sqoop_mock):
+        # Sqoop import subprocess mock
+        process_mock = Mock()
+        attrs = {'wait.return_value': 0,
+                 'stdout.readlines.return_value': []}
+        process_mock.configure_mock(**attrs)
+        sqoop_mock.return_value = process_mock
+
+        # check pig job status mock
+        def _get_status_mock(status_state, state):
+            item_mock = MagicMock()
+            item_mock.state = status_state
+            status_mock = MagicMock()
+            status_mock.state = state
+            status_mock.steps = [item_mock, item_mock, item_mock]
+            return status_mock
+
+        status_mocks = [_get_status_mock('COMPLETED', 'COMPLETED')]
+        describe_jobflow.side_effect = status_mocks
+
+        # Creating nessesary buckets and keys.
+        from boto.s3.key import Key
+        s3_conn = boto.connect_s3("token", "secret")
+        bucket = s3_conn.create_bucket('the_bucket')
+        key = Key(bucket)
+        key.key = "cloudml/output/pig"
+        key.set_contents_from_string('This is a test of S3')
+
         self._extractor = ImportHandler(self._plan, PARAMS)
+
+        # This S3 key should contains results of pig processing
+        pig_ds = self._extractor.plan.datasources['pig']
+        key = Key(bucket)
+        key.key = "{0}part-r-00000".format(pig_ds.result_path)
+        key.set_contents_from_string('{"opening": 57}')
+
+        # Checking iterator
         row = self._extractor.next()
+        self.assertEquals(row['opening_id'], 57)
 
 
 @urlmatch(netloc='test.odesk.com:11000')

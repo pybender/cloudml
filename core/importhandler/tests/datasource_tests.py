@@ -6,6 +6,7 @@ Unittests for datasources classes.
 
 import unittest
 import os
+from moto import mock_s3, mock_emr
 from mock import patch, MagicMock
 from lxml import objectify
 
@@ -40,7 +41,7 @@ class DataSourcesTest(unittest.TestCase):
         """<csv name="csvDataSource" src="%s/stats.csv"></csv>""" % BASEDIR)
     PIG = objectify.fromstring("""<pig name="jar"
         amazon_access_token="token"
-        amazon_token_secret="secret"  />""")
+        amazon_token_secret="secret" bucket_name="mybucket" />""")
     INPUT = objectify.fromstring("""<input name="jar" />""")
 
     def test_base_datasource(self):
@@ -167,40 +168,6 @@ class DataSourcesTest(unittest.TestCase):
         iter_ = ds._get_iter()
         self.assertRaises(ImportHandlerException, iter_.next)
 
-    @patch('time.sleep', return_value=None)
-    def test_pig_datasource(self, sleep_mock):
-        ds = PigDataSource(self.PIG)
-        # iter_ = ds._get_iter('query here', 'query target')
-        self.assertRaises(ProcessException, ds._get_iter, 'query here')
-
-        get_pig_step = MagicMock()
-        clear_output_folder = MagicMock()
-        _create_jobflow_and_run_steps = MagicMock()
-
-        def _get_status_mock(status_state, state):
-            item_mock = MagicMock()
-            item_mock.state = status_state
-            status_mock = MagicMock()
-            status_mock.state = state
-            status_mock.steps = [item_mock, item_mock, item_mock]
-            return status_mock
-
-        status_mocks = [_get_status_mock('RUNNING', 'RUNNING'),
-                        _get_status_mock('WAITING', 'WAITING'),
-                        _get_status_mock('COMPLETED', 'COMPLETED')]
-        describe_jobflow = MagicMock(side_effect=status_mocks)
-        pig_import = 'core.importhandler.datasources.PigDataSource'
-        with patch('{}.get_pig_step'.format(pig_import), get_pig_step):
-            with patch('{}.clear_output_folder'.format(pig_import),
-                       clear_output_folder):
-                with patch("boto.emr.connection.EmrConnection."
-                           "describe_jobflow", describe_jobflow):
-                    # create new job flow.
-                    with patch('{}._create_jobflow_'
-                               'and_run_steps'.format(pig_import),
-                               _create_jobflow_and_run_steps):
-                        iter_ = ds._get_iter('query here', 'query target')
-
     def test_input_datasource(self):
         ds = InputDataSource(self.INPUT)
         ds._get_iter('{"key": "val"}')
@@ -233,3 +200,56 @@ class DataSourcesTest(unittest.TestCase):
         ds = DataSource.factory(self.INPUT)
         self.assertEquals(type(ds), InputDataSource)
         self.assertEquals(ds.type, 'input')
+
+
+class PigDataSourceTests(unittest.TestCase):
+
+    @patch('time.sleep', return_value=None)
+    def test_get_iter(self, sleep_mock):
+        ds = PigDataSource(DataSourcesTest.PIG)
+        self.assertRaises(ProcessException, ds._get_iter, 'query here')
+
+        get_pig_step = MagicMock()
+        clear_output_folder = MagicMock()
+        _create_jobflow_and_run_steps = MagicMock()
+
+        def _get_status_mock(status_state, state):
+            item_mock = MagicMock()
+            item_mock.state = status_state
+            status_mock = MagicMock()
+            status_mock.state = state
+            status_mock.steps = [item_mock, item_mock, item_mock]
+            return status_mock
+
+        status_mocks = [_get_status_mock('RUNNING', 'RUNNING'),
+                        _get_status_mock('WAITING', 'WAITING'),
+                        _get_status_mock('COMPLETED', 'COMPLETED')]
+        describe_jobflow = MagicMock(side_effect=status_mocks)
+        pig_import = 'core.importhandler.datasources.PigDataSource'
+        with patch('{}.get_pig_step'.format(pig_import), get_pig_step):
+            with patch('{}.clear_output_folder'.format(pig_import),
+                       clear_output_folder):
+                with patch("boto.emr.connection.EmrConnection."
+                           "describe_jobflow", describe_jobflow):
+                    # create new job flow.
+                    with patch('{}._create_jobflow_'
+                               'and_run_steps'.format(pig_import),
+                               _create_jobflow_and_run_steps):
+                        iter_ = ds._get_iter('query here', 'query target')
+
+    @mock_s3
+    def test_generate_download_url(self):
+        ds = PigDataSource(DataSourcesTest.PIG)
+        bucket = ds.s3_conn.create_bucket('mybucket')
+
+        url = ds.generate_download_url(step=0, log_type='stdout')
+        self.assertTrue(url)
+
+    @mock_s3
+    @mock_emr
+    def test_get_pig_step(self):
+        ds = PigDataSource(DataSourcesTest.PIG)
+        bucket = ds.s3_conn.create_bucket('mybucket')
+
+        pig_step = ds.get_pig_step('query')
+        self.assertTrue(pig_step)

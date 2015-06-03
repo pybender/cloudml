@@ -170,8 +170,23 @@ def isint(x):
 
 def autoload_fields_by_row(entity, row, prefix=''):
     """
-    Autoloads entity fields, by imported data row.
+    Autoloads entity fields from imported data row.
+
+    entity: core.importhandler.Entity
+        entity, where we need add fields and subentities.
+    row: dict
+        data, loaded from datasource.
+    prefix:  string
+        prefix to be added to the name.
     """
+    print "start"
+    def getjson(x):
+        try:
+            res = json.loads(x)
+        except:
+            return None
+        return res
+
     from entities import Entity, Field
     for key, val in row.iteritems():
         data_type = 'string'
@@ -181,13 +196,15 @@ def autoload_fields_by_row(entity, row, prefix=''):
             elif isfloat(val):
                 data_type = 'float'
             else:
-                item_dict = load_json(val)
+                item_dict = getjson(val)
+                print "!!!!!!!!!!!!", key, item_dict
                 if item_dict:
                     entity.fields[key] = Field({
                         'name': key,
                         'column': key,
                         'transform': 'json'}, entity)
                     if key not in entity.nested_entities_field_ds:
+                        print "not in"
                         json_entity = Entity(dict(name=key, datasource=key))
                         autoload_fields_by_row(
                             json_entity, item_dict, prefix='{0}-'.format(key))
@@ -213,5 +230,7 @@ def load_json(val):
         try:
             return json.loads(val)
         except:
-            raise ProcessException('Couldn\'t parse JSON message')
+            from exceptions import ProcessException
+            raise ProcessException(
+                'Couldn\'t parse JSON message: {}'.format(val))
     return val
