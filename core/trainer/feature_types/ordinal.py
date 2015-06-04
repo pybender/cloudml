@@ -1,7 +1,6 @@
+# Author: Nikolay Melnik <nmelnik@upwork.com>
+
 from base import FeatureTypeBase, FeatureTypeInstanceBase
-
-
-__author__ = 'nmelnik'
 
 
 class OrdinalFeatureTypeInstance(FeatureTypeInstanceBase):

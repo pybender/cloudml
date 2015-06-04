@@ -1,3 +1,10 @@
+"""
+This module holds classes and utils to calculate evaluation model
+metrics.
+"""
+
+# Author: Nikolay Melnik <nmelnik@upwork.com>
+
 import logging
 from collections import OrderedDict
 
@@ -5,8 +12,10 @@ import numpy
 from scipy.sparse import hstack, csc_matrix
 import sklearn.metrics as sk_metrics
 
+from classifier_settings import TYPE_CLASSIFICATION, TYPE_REGRESSION
 
-class Metrics(object):
+
+class BaseMetrics(object):
     METRICS_TO_CALC = ()
     DEFAULTS = {}
 
@@ -119,7 +128,7 @@ class Metrics(object):
         return self.METRICS_TO_CALC
 
 
-class ClassificationModelMetrics(Metrics):
+class ClassificationModelMetrics(BaseMetrics):
     """
     Represents metrics for classification model
     """
@@ -230,7 +239,7 @@ class ClassificationModelMetrics(Metrics):
             return self.MORE_DIMENSIONAL_METRICS
 
 
-class RegressionModelMetrics(Metrics):
+class RegressionModelMetrics(BaseMetrics):
     """
     Represents metrics for regression model
     """
@@ -315,3 +324,17 @@ def prepare_labels_preds(labels, preds):
     else:
         labels = labels
     return labels, preds
+
+
+class Metrics(object):
+    CONFIG = {
+        TYPE_CLASSIFICATION: ClassificationModelMetrics,
+        TYPE_REGRESSION: RegressionModelMetrics
+    }
+
+    @classmethod
+    def factory(cls, model_type):
+        if model_type not in cls.CONFIG:
+            raise ImportHandlerException(
+                '{0} model type isn\'t supported'.format(model_type))
+        return cls.CONFIG[model_type]()

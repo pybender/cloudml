@@ -1,7 +1,7 @@
+# Author: Nikolay Melnik <nmelnik@upwork.com>
+
 from base import FeatureTypeBase, FeatureTypeInstanceBase,\
     InvalidFeatureTypeException
-
-__author__ = 'nmelnik'
 
 
 class CompositeFeatureType(FeatureTypeBase):

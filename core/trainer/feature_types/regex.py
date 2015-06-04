@@ -1,8 +1,8 @@
+# Author: Nikolay Melnik <nmelnik@upwork.com>
+
 import re
 
 from base import FeatureTypeBase, FeatureTypeInstanceBase
-
-__author__ = 'nmelnik'
 
 
 class RegexFeatureTypeInstance(FeatureTypeInstanceBase):

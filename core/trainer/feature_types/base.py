@@ -1,18 +1,13 @@
-
-_author__ = 'nmelnik'
+# Author: Nikolay Melnik <nmelnik@upwork.com>
 
 
 class InvalidFeatureTypeException(Exception):
     """
     Exception to be raised if there is an error parsing or using the
     configuration.
-
     """
-
     def __init__(self, message, Errors=None):
-        # Call the base class constructor with the parameters it needs
-        Exception.__init__(self, message)
-        # Now for your custom code...
+        super(InvalidFeatureTypeException, self).__init__(message)
         self.Errors = Errors
 
 

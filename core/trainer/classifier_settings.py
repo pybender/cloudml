@@ -1,4 +1,10 @@
-# TODO: Maybe this settings should be moved to another place
+"""
+This module gathers classifiers description.
+"""
+
+# Author: Nikolay Melnik <nmelnik@upwork.com>
+# TODO: Maybe this settings should be moved to another place,
+# for example xml file.
 
 LOGISTIC_REGRESSION = 'logistic regression'
 SVR = 'support vector regression'
@@ -19,8 +25,14 @@ CLASSIFIER_MODELS = (
 REGRESSION_MODELS = (SVR, DECISION_TREE_REGRESSOR)
 
 
-# PARAMETERS
+TYPE_CLASSIFICATION = 'classification'
+TYPE_REGRESSION = 'regression'
+
+
 class Params:
+    """
+    Different parameters description.
+    """
     n_estimators = {'name': "n_estimators", 'type': 'integer', 'default': 10}
     tree_criterion = {
         'name': "criterion",
@@ -157,3 +169,10 @@ CLASSIFIERS = {
             Params.oob_score, Params.n_jobs,
             Params.random_state, Params.verbose]}
 }
+
+
+def get_model_type(classifier_type):
+    if classifier_type in CLASSIFIER_MODELS:
+        return TYPE_CLASSIFICATION
+    elif classifier_type in REGRESSION_MODELS:
+        return TYPE_REGRESSION

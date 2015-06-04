@@ -1,9 +1,9 @@
+# Author: Nikolay Melnik <nmelnik@upwork.com>
+
 from datetime import datetime
 import calendar
 
 from base import FeatureTypeBase, FeatureTypeInstanceBase
-
-__author__ = 'nmelnik'
 
 
 class DateFeatureTypeInstance(FeatureTypeInstanceBase):

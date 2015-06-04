@@ -1,5 +1,5 @@
-# # Authors: Ioannis Foukarakis <ifoukarakis@upwork.com>
-# #          Nikolay Melnik <nmelnik@upwork.com>
+# Authors: Ioannis Foukarakis <ifoukarakis@upwork.com>
+#          Nikolay Melnik <nmelnik@upwork.com>
 
 # import unittest
 # import os

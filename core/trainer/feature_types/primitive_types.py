@@ -1,10 +1,9 @@
+# Author: Nikolay Melnik <nmelnik@upwork.com>
+
 from sklearn.feature_extraction import DictVectorizer
 
 from base import FeatureTypeBase, FeatureTypeInstanceBase, \
     InvalidFeatureTypeException
-
-
-__author__ = 'nmelnik'
 
 
 class PrimitiveFeatureTypeInstance(FeatureTypeInstanceBase):

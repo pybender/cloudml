@@ -1,18 +1,20 @@
 """
-Created on Dec 13, 2012
-
-@author: ifoukarakis
+This module holds classes and utils to parse model configuration
+from features.json file.
 """
+
+# Authors: Ioannis Foukarakis <ifoukarakis@upwork.com>
+#          Nikolay Melnik <nmelnik@upwork.com>
 
 import json
 import importlib
+from collections import OrderedDict
 
 from feature_types import FEATURE_TYPE_FACTORIES
 from feature_types import InvalidFeatureTypeException
 from utils import parse_parameters
 from transformers import get_transformer
 from scalers import get_scaler
-from collections import OrderedDict
 from classifier_settings import CLASSIFIERS
 
 
@@ -20,20 +22,21 @@ class SchemaException(Exception):
     """
     Exception to be raised if there is an error parsing or using the
     configuration.
-
     """
-
     def __init__(self, message, Errors=None):
-        # Call the base class constructor with the parameters it needs
-        Exception.__init__(self, message)
-        # Now for your custom code...
+        super(SchemaException, self).__init__(message)
         self.Errors = Errors
 
 
 class FeatureModel(object):
     """
-    Reads training data configuration from a file containing a JSON object.
+    Reads training data configuration from a file containing a JSON o
 
+    config: string
+        path to features configuration json file, when 'is_file' is True.
+        Otherwise it's features configuration string in json format.
+    is_file: boolean
+        whether needed to load file or plain configuration string passed.
     """
     def __init__(self, config, is_file=True):
         try:
@@ -76,16 +79,16 @@ class FeatureModel(object):
     def _process_group_by(self, group_by):
         for i in group_by:
             if i not in self.features:
-                raise SchemaException('Can not group by %s' % i)
+                raise SchemaException(
+                    'Can not group by %s. Feature doesn\'t exist' % i)
             self.group_by.append(i)
 
     def _process_classifier(self, config):
         """
         Reads config for classifier and stores it to classifier attribute.
 
-        Keyword arguments
-        config -- a dictionary containing the configuration of the feature type
-
+        config: dict
+            a dictionary containing the configuration of the feature type
         """
         classifier_config = config.get('classifier', None)
         if classifier_config is None:
@@ -110,9 +113,8 @@ class FeatureModel(object):
         Used for processing named feature types. Named feature types are the
         ones defined in "feature-type" part of the configuration.
 
-        Keyword arguments
-        config -- a dictionary containing the configuration of the feature type
-
+        config: dict
+            a dictionary containing the configuration of the feature type
         """
 
         # Check if named feature type has a name
@@ -133,9 +135,8 @@ class FeatureModel(object):
         Creates the actual feature type parser object using the given
         configuration.
 
-        Keyword arguments
-        config -- a dictionary containing the configuration of the feature type
-
+        config: dict
+            a dictionary containing the configuration of the feature type
         """
         if 'type' not in config:
             raise SchemaException('Type not set on individual feature type')
@@ -153,7 +154,10 @@ class FeatureModel(object):
 
     def _process_feature(self, feature):
         '''
-        Validate each feature.
+        Validates each feature.
+
+        feature: dict
+            a dictionary containing the configuration of the feature
         '''
         if 'name' not in feature:
             raise SchemaException('Features must have a name')
@@ -206,8 +210,7 @@ class FeatureModel(object):
 
     def __str__(self):
         """
-        Returns a string with information about this cofniguration.
-
+        Returns a string with information about this configuration.
         """
         return """Schema name: %s
                # of named feature types: %d

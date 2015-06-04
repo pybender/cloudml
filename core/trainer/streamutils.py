@@ -1,8 +1,9 @@
-'''
-Created on Nov 16, 2012
+"""
+Json stream loading utilities.
+"""
 
-@author: ifoukarakis
-'''
+# Author: Ioannis Foukarakis <ifoukarakis@upwork.com>
+
 import json
 import csv
 
