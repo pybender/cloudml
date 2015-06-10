@@ -851,7 +851,7 @@ def _adjust_classifier_class(feature, str_value):
     # elif isinstance(feature['type'], PrimitiveFeatureTypeInstance) and \
     #         feature['type'].python_type is bool:
     #     return str_value.lower() in ['true', '1']
-    else:
+    # else:
     return feature['type'].transform(str_value)
 
 

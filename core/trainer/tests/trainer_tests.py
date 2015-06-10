@@ -655,8 +655,8 @@ class LinearSVRTestCase(BaseTrainerTestCase):
         self.assertTrue(weights)
         w = weights['default']['positive'][0]
         self.assertEquals(w['name'], 'contractor->skills->article-writing1')
-        self.assertEquals(w['feature_weight'], 0.026535104037632779)
-        self.assertEquals(w['weight'], 0.15921062422579668)
+        self.assertEquals(w['feature_weight'], 0.028949994360129603)
+        self.assertEquals(w['weight'], 0.17369996616077762)
 
     def test_test(self):
         from core.trainer.metrics import RegressionModelMetrics
@@ -665,10 +665,10 @@ class LinearSVRTestCase(BaseTrainerTestCase):
         self.assertIsInstance(metrics, RegressionModelMetrics)
 
         self.assertEquals(
-            metrics.explained_variance_score, 0.95991958087004026)
-        self.assertEquals(metrics.mean_absolute_error, 0.1001002294369978)
-        self.assertEquals(metrics.mean_squared_error,  0.010020104782490174)
-        self.assertEquals(metrics.r2_score, 0.95991958087003926)
+            metrics.explained_variance_score, 0.95981716030733577)
+        self.assertEquals(metrics.mean_absolute_error, 0.10022799623585577)
+        self.assertEquals(metrics.mean_squared_error,  0.010045709923166066)
+        self.assertEquals(metrics.r2_score, 0.95981716030733577)
 
 
 class PolySVRTestCase(BaseTrainerTestCase):
@@ -693,10 +693,10 @@ class PolySVRTestCase(BaseTrainerTestCase):
         self.assertIsInstance(metrics, RegressionModelMetrics)
 
         self.assertEquals(
-            metrics.explained_variance_score, 0.56256553495882655)
-        self.assertEquals(metrics.mean_absolute_error, 0.22601789895449262)
-        self.assertEquals(metrics.mean_squared_error,  0.12263815453522724)
-        self.assertEquals(metrics.r2_score, 0.509447381859091)
+            metrics.explained_variance_score, 0.54846098419678913)
+        self.assertEquals(metrics.mean_absolute_error, 0.22709828516285002)
+        self.assertEquals(metrics.mean_squared_error,  0.12740248170650412)
+        self.assertEquals(metrics.r2_score, 0.49039007317398353)
 
 
 class DecisionTreeClfTestCase(BaseTrainerTestCase):
