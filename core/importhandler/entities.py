@@ -205,6 +205,8 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
                 value = filter(None, value)
 
         if self.regex:
+            if value is None:
+                return None
             match = re.search(self.regex, value)
             if match:
                 value = match.group(0)
@@ -228,6 +230,8 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
 
         # TODO: could we use python formats for date?
         if self.dateFormat:  # TODO: would be returned datetime, Is it OK?
+            if value is None:
+                return None
             value = datetime.strptime(value, self.dateFormat)
             convert_type = False
 

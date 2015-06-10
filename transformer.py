@@ -2,10 +2,6 @@
 # encoding: utf-8
 """
 Command line util for train transformers
-
-@author:     nmelnik
-
-@copyright:  2014 odesk. All rights reserved.
 """
 
 # Author: Nikolay Melnik <nmelnik@upwork.com>
@@ -86,12 +82,6 @@ def main(argv=None):
     except ImportHandlerException, e:
         logging.warn('Invalid extraction plan: %s' % e.message)
         return 1
-    # except Exception, e:
-    #     raise e
-    #     indent = len(program_name) * ' '
-    #     sys.stderr.write(program_name + ': ' + repr(e) + '\n')
-    #     sys.stderr.write(indent + '  for help use --help')
-    #     return 2
 
 if __name__ == '__main__':
     sys.exit(main())

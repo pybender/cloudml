@@ -36,3 +36,4 @@ readme_nli.txt
 
 cloudml.egg-info*
 *coverage
+config.py

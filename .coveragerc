@@ -4,6 +4,7 @@ branch = True
 omit = config*
        *test*
        *ve*
+       setup.py
 
 [report]
 exclude_lines =

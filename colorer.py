@@ -5,7 +5,7 @@ import platform
 # now we patch Python code to add color support to logging.StreamHandler
 
 
-def add_coloring_to_emit_windows(fn):
+def add_coloring_to_emit_windows(fn):  # pragma: no cover
         # add methods we need to the class
     def _out_handle(self):
         import ctypes
@@ -75,7 +75,7 @@ def add_coloring_to_emit_windows(fn):
     return new
 
 
-def add_coloring_to_emit_ansi(fn):
+def add_coloring_to_emit_ansi(fn):  # pragma: no cover
     # add methods we need to the class
     def new(*args):
         levelno = args[1].levelno
@@ -95,12 +95,12 @@ def add_coloring_to_emit_ansi(fn):
         return fn(*args)
     return new
 
-if platform.system() == 'Windows':
+if platform.system() == 'Windows':  # pragma: no cover
     # Windows does not support ANSI escapes and we are using
     # API calls to set the console color
     logging.StreamHandler.emit = add_coloring_to_emit_windows(
         logging.StreamHandler.emit)
-else:
+else:  # pragma: no cover
     # all non-Windows platforms are supporting ANSI escapes so we use them
     logging.StreamHandler.emit = add_coloring_to_emit_ansi(
         logging.StreamHandler.emit)
