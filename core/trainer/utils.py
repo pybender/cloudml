@@ -1,15 +1,19 @@
-__author__ = 'ifouk'
+"""
+This module gathers utility functions to for model training, evaluation, etc.
+"""
+
+# Authors: Ioannis Foukarakis <ifoukarakis@upwork.com>
+#          Nikolay Melnik <nmelnik@upwork.com>
 
 
 def copy_expected(source_params, expected):
     """
     Filters dictionary of source_params to include only keys in expected.
 
-    Keyword arguments:
-    source_params -- initial dictionary to be filtered
-    expected -- keyword arguments expected to be present in the resulting
-                dictionary
-
+    source_params: dict
+        initial dictionary to be filtered
+    expected: list
+        keyword arguments expected to be present in the resulting dictionary
     """
     result = {}
     for param in expected:
@@ -37,8 +41,8 @@ def is_empty(var):
     Returns true if item is None or has a length of zero (if this item has
     a length).
 
-    Keyword arguments:
-    var -- the item to check if is empty.
+    var: string
+        the item to check if is empty.
     """
 
     if var is None:
@@ -55,6 +59,20 @@ def is_empty(var):
 
 
 def float_or_int(value):
+    """
+    >>> float_or_int(1)
+    1
+    >>> float_or_int(1.5)
+    1.5
+    >>> float_or_int("1")
+    1
+    >>> float_or_int('1.5')
+    1.5
+    >>> float_or_int("s")
+    Traceback (most recent call last):
+    ...
+    ValueError: could not convert string to float: s
+    """
     if isinstance(value, (int, float)):
         return value
     value = float(value)

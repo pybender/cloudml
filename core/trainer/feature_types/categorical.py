@@ -1,28 +1,28 @@
-from functools import update_wrapper
+"""
+This module gather classes and utils for categorical and categorical_label
+feature types processing.
+"""
+
+# Author: Nikolay Melnik <nmelnik@upwork.com>
+
 import re
+from functools import update_wrapper
 
 from sklearn.feature_extraction.text import CountVectorizer
 
-from base import FeatureTypeBase, FeatureTypeInstanceBase,\
+from base import FeatureTypeBase, FeatureTypeInstanceBase, \
     InvalidFeatureTypeException
-
-__author__ = 'nmelnik'
 
 
 class CategoricalFeatureTypeInstance(FeatureTypeInstanceBase):
-
     def transform(self, value):
         default = str()
         params = self.active_params()
-        if params is not None:
+        if params:
             default = params.get('default', default)
         if value is None:
             return default
-        try:
-            return str(value)
-        except ValueError:
-            pass
-        return default
+        return str(value)
 
 
 class CategoricalFeatureType(FeatureTypeBase):
@@ -47,12 +47,9 @@ class CategoricalFeatureType(FeatureTypeBase):
                                        token_pattern=token_pattern,
                                        min_df=min_df,
                                        binary=True)
-        if set(self.required_params).issubset(set_params):
-            return self.instance(params,
-                                 self.default_params,
-                                 preprocessor=preprocessor)
-        raise InvalidFeatureTypeException('Not all required parameters set')
-
+        return self.instance(params,
+                             self.default_params,
+                             preprocessor=preprocessor)
 
 def tokenizer_func(x, split_pattern):
     return re.split(split_pattern, x)

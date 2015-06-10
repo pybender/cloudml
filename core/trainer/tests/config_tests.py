@@ -11,7 +11,6 @@ from core.trainer.feature_types import RegexFeatureTypeInstance, \
 from core.trainer.scalers import ScalerException
 
 
-__author__ = 'ifoukarakis'
 BASEDIR = 'testdata'
 
 
@@ -35,6 +34,7 @@ class ConfigTest(unittest.TestCase):
                       self.config.required_feature_names)
         self.assertNotIn('tsexams',
                          self.config.required_feature_names)
+        self.assertTrue(str(self.config).startswith("Schema name: bestmatch"))
 
     def test_load_vectorizers(self):
         expected_vectorizers = {
@@ -110,13 +110,9 @@ class ConfigTest(unittest.TestCase):
                 'penalty': 'l1'
             }
         }
-        try:
+        with self.assertRaisesRegexp(SchemaException,
+                                     "Invalid classifier type"):
             self.config._process_classifier(config)
-            self.fail('Should not be able to create classifier config for '
-                      'invalid classifier type')
-        except SchemaException:
-            # Should happen
-            pass
 
     def test_process_classifier_no_type(self):
         config = {
@@ -124,13 +120,9 @@ class ConfigTest(unittest.TestCase):
                 'penalty': 'l1'
             }
         }
-        try:
+        with self.assertRaisesRegexp(SchemaException,
+                                     "Invalid classifier type"):
             self.config._process_classifier(config)
-            self.fail('Should not be able to create classifier with no '
-                      'classifier type defined')
-        except SchemaException:
-            # Should happen
-            pass
 
     def test_process_named_feature_type(self):
         named_ft = {
@@ -150,11 +142,9 @@ class ConfigTest(unittest.TestCase):
             'type': 'zavarakatranemia',
             'params': {'pattern': '(\d\.\d+)'}
         }
-        try:
+        with self.assertRaisesRegexp(SchemaException,
+                                     "Unknown type: zavarakatranemia"):
             self.config._process_named_feature_type(named_ft)
-            self.fail('Shouldn\'t be able to create unknown type')
-        except SchemaException:
-            pass
 
         self.assertEqual(1, len(self.config._named_feature_types))
 
@@ -163,11 +153,9 @@ class ConfigTest(unittest.TestCase):
             'name': 'floating_point',
             'type': 'regex'
         }
-        try:
+        with self.assertRaisesRegexp(SchemaException,
+                                     "Cannot create instance of feature type"):
             self.config._process_named_feature_type(named_ft)
-            self.fail('Shouldn\'t be able to create type with required params')
-        except SchemaException:
-            pass
 
         self.assertEqual(1, len(self.config._named_feature_types))
 
@@ -176,11 +164,9 @@ class ConfigTest(unittest.TestCase):
             'type': 'regex',
             'params': {'pattern': '(\d\.\d+)'}
         }
-        try:
+        with self.assertRaisesRegexp(SchemaException,
+                                     "Feature types should have a name"):
             self.config._process_named_feature_type(named_ft)
-            self.fail('Shouldn\'t be able to create named type without name')
-        except SchemaException:
-            pass
 
         self.assertEqual(1, len(self.config._named_feature_types))
 
@@ -201,11 +187,9 @@ class ConfigTest(unittest.TestCase):
             'type': 'zavarakatranemia',
             'params': {'pattern': '(\d\.\d+)'}
         }
-        try:
+        with self.assertRaisesRegexp(SchemaException,
+                                     "Feature types should have a name"):
             self.config._process_named_feature_type(ft)
-            self.fail('Shouldn\'t be able to create unknown type')
-        except SchemaException:
-            pass
 
         self.assertEqual(1, len(self.config._named_feature_types))
 
@@ -214,11 +198,9 @@ class ConfigTest(unittest.TestCase):
             'name': 'floating_point',
             'type': 'regex'
         }
-        try:
+        with self.assertRaisesRegexp(SchemaException,
+                                     "Cannot create instance of feature type"):
             self.config._process_named_feature_type(ft)
-            self.fail('Shouldn\'t be able to create type with required params')
-        except SchemaException:
-            pass
 
         self.assertEqual(1, len(self.config._named_feature_types))
 
@@ -275,10 +257,9 @@ class ConfigTest(unittest.TestCase):
                 'type': 'ee'
             }
         }
-        try:
+        with self.assertRaisesRegexp(ScalerException,
+                                     "Scaler 'ee' isn't supported."):
             self.config._process_feature(feature)
-        except ScalerException:
-            pass
 
         feature = {
             'name': 'another_test_feature',
@@ -320,12 +301,47 @@ class ConfigTest(unittest.TestCase):
         feature = {
             'type': 'int'
         }
-        try:
+        with self.assertRaisesRegexp(
+                SchemaException,
+                "Features should have a name: {'type': 'int'}"):
             self.config._process_feature(feature)
-            self.fail('Should not be able to create feature without name')
-        except SchemaException:
-            # Should happen
-            pass
 
-if __name__ == '__main__':
-    unittest.main()
+    def test_invalid_data(self):
+        with self.assertRaisesRegexp(
+                SchemaException, "No JSON object could be decoded"):
+            FeatureModel(
+                os.path.join(BASEDIR, 'trainer', 'invalid-features.json'))
+
+        with self.assertRaisesRegexp(
+                SchemaException, "No JSON object could be decoded"):
+            FeatureModel("invalid json", is_file=False)
+
+        with self.assertRaisesRegexp(
+                SchemaException, "schema-name is missing"):
+            FeatureModel('{"key": 1}', is_file=False)
+
+        with self.assertRaisesRegexp(
+                SchemaException, "No target variable defined"):
+            FeatureModel(os.path.join(
+                BASEDIR, 'trainer', 'features-no-target-feature.json'))
+
+        with self.assertRaisesRegexp(
+                SchemaException, "No classifier configuration defined"):
+            FeatureModel(os.path.join(
+                BASEDIR, 'trainer', 'features-no-classifier.json'))
+
+        with self.assertRaisesRegexp(
+                SchemaException,
+                "Feature type 'str_to_timezone' already defined"):
+            FeatureModel(os.path.join(
+                BASEDIR, 'trainer', 'features-type-duplicates.json'))
+
+        with self.assertRaisesRegexp(
+                SchemaException, "Feature hire_outcome should have a type"):
+            FeatureModel(os.path.join(
+                BASEDIR, 'trainer', 'features-no-type.json'))
+
+        with self.assertRaisesRegexp(
+                SchemaException, "Type not set on individual feature type"):
+            FeatureModel(os.path.join(
+                BASEDIR, 'trainer', 'features-feature_type_without-type.json'))

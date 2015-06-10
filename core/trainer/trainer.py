@@ -24,7 +24,8 @@ from feature_types import FEATURE_TYPE_DEFAULTS
 from transformers import TRANSFORMERS, SuppressTransformer
 from utils import is_empty
 
-from config import FeatureModel, SchemaException
+from config import FeatureModel
+from exceptions import EmptyDataException, SchemaException
 from metrics import ClassificationModelMetrics, RegressionModelMetrics
 from model_visualization import TrainedModelVisualizator
 from exceptions import ItemParseException, InvalidTrainerFile, \
@@ -98,12 +99,14 @@ class Trainer(object):
     def is_group_by_variable(self, feature_name):
         return feature_name in self.feature_model.group_by
 
-    # todo:
-
     def get_transformer(self, name):
-        raise TransformerNotFound()
+        raise TransformerNotFound(
+            "Transformer with name {} not found".format(name))
 
     def set_transformer_getter(self, method):
+        """
+        Sets pretrained transformer getter for the model.
+        """
         self.get_transformer = method
 
     def set_classifier(self, classifier):
@@ -126,12 +129,12 @@ class Trainer(object):
 
     # train model related
 
-    def train(self, iterator=None, percent=0, store_vect_data=False):
+    def train(self, iterator, percent=0, store_vect_data=False):
         """
         Train the model using the given data. Appropriate SciPy vectorizers
         will be used to bring data to the appropriate format.
 
-        data_iter: iterator
+        iterator: iterator
             an iterator that provides a dictionary with keys feature
             names and value the values of the features per column.
         percent: integer from 0 to 100
@@ -139,11 +142,12 @@ class Trainer(object):
             determines whether we need to store vectorized data token
             'intermediate_data' field.
         """
-        logging.info("Memory usage: %f" %
-                     memory_usage(-1, interval=0, timeout=None)[0])
+        log_memory_usage("Memory usage")
 
         if iterator:
             self._segments = self._prepare_data(iterator)
+        else:
+            raise EmptyDataException("No rows found in the iterator")
 
         if self.with_segmentation:
             logging.info(
@@ -153,14 +157,16 @@ class Trainer(object):
                 logging.info("'%s' - %d records" % (segment, records))
 
         if percent:
+            if percent < 0 or percent > 100:
+                raise ValueError("percent parameter should be from 0 to 100")
+
             self._count = self._count - int(self._count * percent / 100)
             for segment in self._vect_data:
                 for item in self._vect_data[segment]:
                     item = item[:self._count]
         logging.info('Processed %d lines, ignored %s lines'
                      % (self._count, self._ignored))
-        logging.info("Memory usage: %f" %
-                     memory_usage(-1, interval=0, timeout=None)[0])
+        log_memory_usage("Memory usage")
         for segment in self._vect_data:
             logging.info('Starting train "%s" segment' % segment)
             self._train_segment(segment, store_vect_data)
@@ -171,26 +177,21 @@ class Trainer(object):
 
         self.features[segment] = deepcopy(self._feature_model.features)
         labels = self._get_target_variable_labels(segment)
-        vectorized_data = \
-            self._get_vectorized_data(segment,
-                                      self._train_prepare_feature)
-        logging.info("Memory usage (vectorized data generated): %f" %
-                     memory_usage(-1, interval=0, timeout=None)[0])
+        vectorized_data = self._get_vectorized_data(
+            segment, self._train_prepare_feature)
+        log_memory_usage("Memory usage (vectorized data generated)")
         logging.info('Training model...')
         true_data = scipy.sparse.hstack(vectorized_data)
-        logging.info("Memory usage (true data generated): %f" %
-                     memory_usage(-1, interval=0, timeout=None)[0])
+        log_memory_usage("Memory usage (true data generated)")
         vectorized_data = None
-        logging.info("Memory usage (vectorized data cleared): %f" %
-                     memory_usage(-1, interval=0, timeout=None)[0])
+        log_memory_usage("Memory usage (vectorized data cleared)")
 
         logging.info('Number of features: %s' % (true_data.shape[1], ))
         if segment != DEFAULT_SEGMENT:
             self._classifier[segment] = \
                 deepcopy(self._classifier[DEFAULT_SEGMENT])
         self._classifier[segment].fit(true_data, [str(l) for l in labels])
-        logging.info("Memory usage (model fitted with true data): %f" %
-                     memory_usage(-1, interval=0, timeout=None)[0])
+        log_memory_usage("Memory usage (model fitted with true data)")
 
         self.generate_trained_model_visualization(segment, true_data)
 
@@ -200,21 +201,15 @@ class Trainer(object):
                 'labels': labels}
 
         true_data = None
-        logging.info("Memory usage (true data cleared): %f" %
-                     memory_usage(-1, interval=0, timeout=None)[0])
+        log_memory_usage("Memory usage (true data cleared)")
         self.train_time[segment] = strftime('%Y-%m-%d %H:%M:%S %z', gmtime())
         logging.info('Training completed...')
 
     def generate_trained_model_visualization(self, segment, true_data):
+        log_memory_usage("Memory usage")
         logging.info("Genarate trained model visualization")
-        logging.info("Memory usage: %f" %
-                     memory_usage(-1, interval=0, timeout=None)[0])
         self.model_visualizer.generate(segment, true_data)
-        self.visualization[segment] = \
-            self.model_visualizer.get_visualization(segment)
-        logging.info("Memory usage (after generating model \
-visualisation): %f" %
-                     memory_usage(-1, interval=0, timeout=None)[0])
+        log_memory_usage("Memory usage (after gen model visualization)")
 
     def get_visualization(self, segment, **kwargs):
         if not self.visualization or segment not in self.visualization:
@@ -517,102 +512,8 @@ visualisation): %f" %
                     raise e
         return segments
 
-    def _apply_feature_types(self, row_data):
-        """
-        Apply the transformation dictated by feature type instance (if any).
-
-        Keyword arguments:
-        row_data -- current row's data to be processed.
-
-        """
-        result = {}
-        for feature_name, feature in self._feature_model.features.iteritems():
-            ft = feature.get('type', None)
-            item = row_data.get(feature_name, None)
-            if feature.get('required', True):
-                item = self._find_default(item, feature)
-            input_format = feature.get('input-format', 'plain')
-            if ft is not None:
-                try:
-                    if input_format == 'plain':
-                        result[feature_name] = ft.transform(item)
-                    elif input_format == 'dict':
-                        if item is None:
-                            item = {}
-                        for k, v in item.iteritems():
-                            item[k] = ft.transform(v)
-                        result[feature_name] = item
-                    elif input_format == 'list':
-                        result[feature_name] = map(ft.transform, item)
-                except Exception as e:
-                    logging.warn('Error processing feature %s: %s'
-                                 % (feature_name, e))
-                    raise ItemParseException('Error processing feature %s: %s'
-                                             % (feature_name, e))
-            else:
-                result[feature_name] = item
-
-        return result
-
     def _get_segments_info(self):
         return self._segments
-
-    def _get_target_variable_labels(self, segment):
-        """
-        using `_feature_model.target_variable` retrieves the features
-        labels/values from `_vect_data` for the given segment
-        :param segment:
-        :return: list of string values of `_feature_model.target_variable` in
-         `_vect_data`
-        """
-        if self._vect_data is None or self._vect_data == {}:
-            raise Exception('trainer._vect_data was not prepared')
-        return self._vect_data[segment][self.feature_model.target_variable]
-
-    def _get_vectorized_data(self, segment, fn_prepare_feature):
-        """
-        applies transforms to features values in `_vect_data`
-        :param segment:
-        :param fn_prepare_feature: function responsible for preparing feature
-        :return: sparse matrix of tranformed data
-        """
-        if self._vect_data is None or self._vect_data == {}:
-            raise Exception('trainer._vect_data was not prepared')
-
-        vectorized_data = []
-        for feature_name, feature in self.features[segment].iteritems():
-            if feature_name not in self.feature_model.group_by and \
-                    not feature_name == self.feature_model.target_variable:
-                item = fn_prepare_feature(feature,
-                                          self._vect_data[segment][
-                                              feature_name])
-                if item is not None:
-                    # Convert item to csc_matrix, since hstack
-                    # fails with arrays
-                    vectorized_data.append(scipy.sparse.csc_matrix(item))
-        return vectorized_data
-
-    def _find_default(self, value, feature):
-        """
-        Checks if value is None or empty (string, list), and attempts to find
-        the default value. Priority for default value is based on the
-        following:
-        1. If 'default' is set in feature model, then this has top priority.
-        2. If feature has a transformer, transformer's default is used.
-        3. If feature has a type with a default value, this one is used.
-        """
-        result = value
-
-        if is_empty(value):
-            if feature.get('default') is not None:
-                result = feature.get('default')
-            elif feature.get('transformer-type') is not None and \
-                    feature.get('transformer') is not None:
-                result = TRANSFORMERS[feature['transformer-type']]['default']
-            elif feature.get('type') is not None:
-                result = FEATURE_TYPE_DEFAULTS.get(feature['type'], value)
-
-        return result
 
     def _evaluate_segment(self, segment):
         # Get X and y
@@ -620,8 +521,7 @@ visualisation): %f" %
         labels = self._get_target_variable_labels(segment)
         vectorized_data = self._get_vectorized_data(
             segment, self._test_prepare_feature)
-        logging.info("Memory usage (vectorized data generated): %f" %
-                     memory_usage(-1, interval=0, timeout=None)[0])
+        log_memory_usage("Memory usage (vectorized data generated)")
         logging.info('Evaluating model...')
 
         if self.model_type == TYPE_CLASSIFICATION:
@@ -636,10 +536,10 @@ visualisation): %f" %
                                         self._classifier[segment],
                                         [], segment)
 
-        self.generate_trained_model_visualization(
-            segment, self.metrics._true_data[segment])
-        logging.info("Memory usage: %f" %
-                     memory_usage(-1, interval=0, timeout=None)[0])
+        # FIXME: do we need it?
+        # self.generate_trained_model_visualization(
+        #     segment, self.metrics._true_data[segment])
+        log_memory_usage("Memory usage")
 
     def _get_segment_name(self, row_data):
         return "_".join(
@@ -931,15 +831,15 @@ def _adjust_classifier_class(feature, str_value):
     {"Class1": 1, "Class2": 2} gets labels of say [1, 2, 2, 1, 1]
     while the classes in the classifier is ['1', '2']
 
-    :param feature: the feature responsible for the transform
-    :param value: value of the feature at the data point as stored by
-     the classifier
-    :return: The feature value at the data point with correct data type
+    feature: dict
+        the feature responsible for the transform
+    value: string
+        value of the feature at the data point as stored by the classifier
+
+    Returns the feature value at the data point with correct data type
     """
     from core.trainer.feature_types.ordinal import OrdinalFeatureTypeInstance
-    from core.trainer.feature_types.primitive_types import \
-        PrimitiveFeatureTypeInstance
-    assert isinstance(str_value, str) or isinstance(str_value, unicode), \
+    assert isinstance(str_value, basestring), \
         'str_value should be string it is of type %s' % (type(str_value))
 
     if isinstance(feature['type'], OrdinalFeatureTypeInstance):
@@ -948,8 +848,13 @@ def _adjust_classifier_class(feature, str_value):
         except ValueError:
             value = 0
         return value
-    elif isinstance(feature['type'], PrimitiveFeatureTypeInstance) and \
-            feature['type'].python_type is bool:
-        return str_value.lower() in ['true', '1']
+    # elif isinstance(feature['type'], PrimitiveFeatureTypeInstance) and \
+    #         feature['type'].python_type is bool:
+    #     return str_value.lower() in ['true', '1']
     else:
-        return feature['type'].transform(str_value)
+    return feature['type'].transform(str_value)
+
+
+def log_memory_usage(msg):
+    logging.info(
+        "%s: %f" % (msg, memory_usage(-1, interval=0, timeout=None)[0]))

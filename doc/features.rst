@@ -266,8 +266,8 @@ date              pattern              Parses the input value as a date using th
 regex             pattern              Uses the regular expression defined in parameter pattern to transform the input string. Note that in case of multiple matches, only the first one is used
 map               pattern              Looks up the input value in the directory defined by parameter 'mappings'. If there is no key in the directory equal to the input value, null is returned.
 composite         chain                Allows applying multiple types to input data. Parameter chain defines a list of types, which are applied sequentially to the input value. For example, first type can be a regular expression, while second a mapping.
-categorical_label
-categorical
+categorical_label                      A categorical label feature is a feature that can take on one of a limited, and usually fixed, number of possible values.
+categorical                            Use CountVectorizer preprocessor which implements tokenization and occurrence counting.
 text
 ================= ==================== =================
 

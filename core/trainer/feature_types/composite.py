@@ -9,14 +9,12 @@ class CompositeFeatureType(FeatureTypeBase):
     Factory class for creating composite feature type instances. A composite
     feature type applies transformations based on individual 'primitive'
     feature types.
-
     """
     required_params = ['chain']
 
     def __init__(self):
         """
         Invoked whenever creating a feature type.
-
         """
         super(CompositeFeatureType, self).__init__(None)
 
@@ -25,15 +23,14 @@ class CompositeFeatureType(FeatureTypeBase):
         Iterate over the feature type definitions in "chain" array, and create
         the appropriate composite feature type instance.
 
-        Keyword arguments
-        params -- a dictionary containing the configuration for individual
-                  feature type instances.
-
+        params: dict
+            a dictionary containing the configuration for individual feature
+            type instances.
         """
         from . import FEATURE_TYPE_FACTORIES
         # Check that we have 'chain' as param
         if 'chain' not in params:
-            raise InvalidFeatureTypeException('Composite feature types must '
+            raise InvalidFeatureTypeException('Composite feature types should '
                                               'define property "chain"')
         # For each item in chain, check that it is a valid feature type.
         ft_instances = []
@@ -53,7 +50,6 @@ class CompositeFeatureTypeInstance(FeatureTypeInstanceBase):
     """
     Decorator object for composite feature type instances. Invokes
     sequentially the strategies created.
-
     """
     def __init__(self, strategies):
         self.strategies = strategies
@@ -64,9 +60,8 @@ class CompositeFeatureTypeInstance(FeatureTypeInstanceBase):
         Iterate over all feature type instances and transform value
         sequentially.
 
-        Keyword arguments
-        value -- the value to transform
-
+        value: string
+            the value to transform
         """
         current_value = value
         for ft_instance in self.strategies:

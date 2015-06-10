@@ -59,7 +59,8 @@ def get_scaler(scaler_config, default_scaler):
         return None
 
     if scaler_type not in SCALERS:
-        raise ScalerException('Scaler %s do not support' % scaler_type)
+        raise ScalerException(
+            "Scaler '{0}' isn\'t supported.".format(scaler_type))
 
     params = parse_parameters(scaler_config, SCALERS[scaler_type])
 

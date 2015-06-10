@@ -4,7 +4,6 @@ import json
 import os
 from string import Template
 from datetime import datetime
-from distutils.util import strtobool
 
 
 class ParametrizedTemplate(Template):
@@ -51,11 +50,6 @@ def process_primitive(strategy):
         return convert_single_or_list(value, strategy) \
             if value is not None else None
     return process
-
-
-def process_bool(value):
-    val = bool(strtobool(str(value)))
-    return val
 
 
 def process_date(value, format):

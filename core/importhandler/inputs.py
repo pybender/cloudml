@@ -8,7 +8,8 @@ import re
 
 from exceptions import ImportHandlerException
 from db import postgres_iter
-from utils import process_primitive, process_bool, process_date
+from utils import process_primitive, process_date
+from core.utils import process_bool
 
 
 __all__ = ['Input']

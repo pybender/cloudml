@@ -1,0 +1,29 @@
+{
+  "schema-name":"test",
+  "classifier":{
+    "type":"logistic regression",
+    "params": {"penalty": "l2"}
+  },
+  "features":[
+    {
+      "name":"hire_outcome",
+      "type":"int",
+      "is-target-variable":true
+    }],
+    "feature-types":[
+    {
+      "name":"str_to_timezone",
+      "type": "composite",
+      "params": {
+        "chain": [
+          { "type": "regex", "params": { "pattern": "UTC([-\\+]+\\d\\d).*"  }},
+          { "type": "int" }
+        ]
+      }
+    },
+    {
+      "name":"str_to_timezone",
+      "type": "int"
+    }
+  ]
+}

@@ -172,7 +172,20 @@ CLASSIFIERS = {
 
 
 def get_model_type(classifier_type):
+    """
+    >>> get_model_type('support vector regression')
+    'regression'
+    >>> get_model_type('logistic regression')
+    'classification'
+    >>> get_model_type('some clf')
+    Traceback (most recent call last):
+        ...
+    SchemaException: classifier some clf not supported
+    """
     if classifier_type in CLASSIFIER_MODELS:
         return TYPE_CLASSIFICATION
     elif classifier_type in REGRESSION_MODELS:
         return TYPE_REGRESSION
+    from exceptions import SchemaException
+    raise SchemaException(
+        'classifier {0} not supported'.format(classifier_type))

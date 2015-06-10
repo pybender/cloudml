@@ -14,7 +14,6 @@ class InvalidFeatureTypeException(Exception):
 class FeatureTypeInstanceBase(object):
     """
     Decorator object for feature type instances.
-
     """
     def __init__(self, params=None, default_params=None,
                  default_value=None, preprocessor=None,
@@ -41,7 +40,6 @@ class FeatureTypeBase(object):
     """
     Class for defining feature type factory objects. Provides basic
     functionality for validating feature type configuration.
-
     """
 
     instance = FeatureTypeInstanceBase
@@ -53,12 +51,9 @@ class FeatureTypeBase(object):
     default_value = None
     default_scaler = 'MinMaxScaler'
 
-    def __init__(self, preprocessor=None, ):
+    def __init__(self, preprocessor=None):
         """
         Invoked whenever creating a feature type.
-
-        Keyword arguments:
-
         """
         self._preprocessor = preprocessor
 

@@ -12,10 +12,8 @@ Contents:
    getting_started
    features
    import_handlers
+   command_line_utils
    developers_guide
-
-
-.. automodule:: core.importhandler
 
 
 .. seealso::

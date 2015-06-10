@@ -1,9 +1,9 @@
 # .coveragerc to control coverage.py
 [run]
 branch = True
-omit = *config*
-source = 
-    core
+omit = config*
+       *test*
+       *ve*
 
 [report]
 exclude_lines =

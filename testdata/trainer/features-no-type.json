@@ -1,0 +1,13 @@
+{
+  "schema-name":"test",
+  "classifier":{
+    "type":"logistic regression",
+    "params": {"penalty": "l2"}
+  },
+  "features":[
+    {
+      "name":"hire_outcome",
+      "is-target-variable":true
+    }
+  ]
+}

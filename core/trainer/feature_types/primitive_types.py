@@ -1,27 +1,39 @@
+"""
+This module gathers all primitive feature types processors.
+"""
+
 # Author: Nikolay Melnik <nmelnik@upwork.com>
 
 from sklearn.feature_extraction import DictVectorizer
 
 from base import FeatureTypeBase, FeatureTypeInstanceBase, \
     InvalidFeatureTypeException
+from core.utils import process_bool
+
+
+PROCESSOR_MAP = {
+    'bool': process_bool,
+    'int': int,
+    'float': float,
+    'str': str
+}
 
 
 class PrimitiveFeatureTypeInstance(FeatureTypeInstanceBase):
-
     def __init__(self, *args, **kwargs):
         python_type = kwargs.pop('python_type')
         super(PrimitiveFeatureTypeInstance, self).__init__(*args, **kwargs)
         self.python_type = python_type
 
     def transform(self, value):
-        default = self.python_type()
+        default = PROCESSOR_MAP[self.python_type]()
         params = self.active_params()
         if params is not None:
             default = params.get('default', default)
         if value is None:
             return default
         try:
-            return self.python_type(value)
+            return PROCESSOR_MAP[self.python_type](value)
         except ValueError:
             pass
         return default
@@ -48,16 +60,31 @@ class PrimitiveFeatureTypeBase(FeatureTypeBase):
 
 
 class BooleanFeatureType(PrimitiveFeatureTypeBase):
-    python_type = bool
+    """
+    Converts the value to boolean. Uses python bool() function.
+    Thus bool(0) = false, bool(null) = false, bool('') = false.
+    """
+    python_type = 'bool'
 
 
 class IntFeatureType(PrimitiveFeatureTypeBase):
-    python_type = int
+    """
+    Converts each item to an integer. In case the value is null,
+    the trainer checks for parameter named default. If it is set,
+    then its value is used, otherwise 0 is used.
+    """
+    python_type = 'int'
 
 
 class FloatFeatureType(PrimitiveFeatureTypeBase):
-    python_type = float
+    """
+    Converts each item to a float.
+    """
+    python_type = 'float'
 
 
 class StrFeatureType(PrimitiveFeatureTypeBase):
-    python_type = str
+    """
+    String feature type.
+    """
+    python_type = 'str'

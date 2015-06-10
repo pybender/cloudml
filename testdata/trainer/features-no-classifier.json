@@ -1,0 +1,10 @@
+{
+  "schema-name":"test",
+  "features":[
+    {
+      "name":"hire_outcome",
+      "type":"int",
+      "is-target-variable":true
+    }
+  ]
+}

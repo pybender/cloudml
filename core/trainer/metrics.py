@@ -15,6 +15,9 @@ import sklearn.metrics as sk_metrics
 from classifier_settings import TYPE_CLASSIFICATION, TYPE_REGRESSION
 
 
+__all__ = ['Metrics']
+
+
 class BaseMetrics(object):
     METRICS_TO_CALC = ()
     DEFAULTS = {}
@@ -38,12 +41,6 @@ class BaseMetrics(object):
                 'Classes was set before to %s, now it is being set with %s, '
                 'which should be equal' % (self._classes_set, classes))
         self._classes_set = classes
-
-        # if not self._vectorized_data:
-        #     self._vectorized_data = vectorized_data
-        # else:
-        #     for a, b in zip(self._vectorized_data, vectorized_data):
-        #         a =  numpy.append(a, b)
         self._classifier[segment] = classifier
 
         # Evaluating model...
@@ -77,7 +74,7 @@ class BaseMetrics(object):
     @property
     def classes_set(self):
         """
-        :return: classes as recognized by underline classifer
+        Returns classes as recognized by underline classifer
         """
         return self._classes_set
 
@@ -112,6 +109,7 @@ class BaseMetrics(object):
             res[metric_name] = recursive_convert(getattr(self, metric_name))
         return res
 
+    # TODO: is it used?
     def to_serializable_dict(self):
         return self.get_metrics_dict()
 
@@ -335,6 +333,7 @@ class Metrics(object):
     @classmethod
     def factory(cls, model_type):
         if model_type not in cls.CONFIG:
-            raise ImportHandlerException(
+            from exceptions import SchemaException
+            raise SchemaException(
                 '{0} model type isn\'t supported'.format(model_type))
         return cls.CONFIG[model_type]()

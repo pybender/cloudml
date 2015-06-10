@@ -16,16 +16,7 @@ from utils import parse_parameters
 from transformers import get_transformer
 from scalers import get_scaler
 from classifier_settings import CLASSIFIERS
-
-
-class SchemaException(Exception):
-    """
-    Exception to be raised if there is an error parsing or using the
-    configuration.
-    """
-    def __init__(self, message, Errors=None):
-        super(SchemaException, self).__init__(message)
-        self.Errors = Errors
+from exceptions import SchemaException
 
 
 class FeatureModel(object):
@@ -70,7 +61,7 @@ class FeatureModel(object):
             self._process_feature(feature)
 
         if self.target_variable is None:
-            raise SchemaException('No target variable defined!!!')
+            raise SchemaException('No target variable defined')
 
         group_by = data.get('group-by', None)
         if group_by:
@@ -119,11 +110,12 @@ class FeatureModel(object):
 
         # Check if named feature type has a name
         if 'name' not in config:
-            raise SchemaException('Feature types must have a name')
+            raise SchemaException(
+                'Feature types should have a name: {0}'.format(config))
 
         # Check if named feature type is not already defined
         if config['name'] in self._named_feature_types:
-            raise SchemaException('Feature %s already defined'
+            raise SchemaException("Feature type '%s' already defined"
                                   % (config['name']))
 
         feature_type_instance = self._process_feature_type(config)
@@ -150,7 +142,9 @@ class FeatureModel(object):
             return factory.get_instance(config.get('params', None),
                                         config.get('input-format', 'plain'))
         except InvalidFeatureTypeException, e:
-            raise SchemaException('Cannot create instance of feature type', e)
+            raise SchemaException(
+                'Cannot create instance of feature type: {0}. '
+                'Err: {1}'.format(config, e), e)
 
     def _process_feature(self, feature):
         '''
@@ -160,11 +154,13 @@ class FeatureModel(object):
             a dictionary containing the configuration of the feature
         '''
         if 'name' not in feature:
-            raise SchemaException('Features must have a name')
+            raise SchemaException(
+                'Features should have a name: {0}'.format(feature))
 
         if 'type' not in feature:
-            raise SchemaException('Feature %s must have a type' %
-                                  feature['name'])
+            raise SchemaException(
+                'Feature {0} should have a type: {1}'.format(
+                    feature['name'], feature))
 
         # Check if feature has a type definition
         feature_type = None

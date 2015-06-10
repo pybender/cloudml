@@ -1,26 +1,38 @@
-class ItemParseException(Exception):
-    """
-    Exception to be raised if there is an error parsing an item according to
-    its feature type
+# Authors: Ioannis Foukarakis <ifoukarakis@upwork.com>
+#          Nikolay Melnik <nmelnik@upwork.com>
 
-    """
 
+class BaseException(Exception):
     def __init__(self, message, Errors=None):
-        # Call the base class constructor with the parameters it needs
-        Exception.__init__(self, message)
-        # Now for your custom code...
+        super(BaseException, self).__init__(message)
         self.Errors = Errors
 
 
-class InvalidTrainerFile(Exception):
+class SchemaException(BaseException):
+    """
+    Exception to be raised if there is an error parsing or using the
+    configuration.
+    """
+
+
+class ItemParseException(BaseException):
+    """
+    Exception to be raised if there is an error parsing an item according to
+    its feature type
+    """
+
+
+class InvalidTrainerFile(BaseException):
     """
     Exception to be raised if trainer could not be unpickled from file.
     """
-    pass
 
 
-class TransformerNotFound(Exception):
+class TransformerNotFound(BaseException):
     """
     Exception to be raised if predefined transormer could not be found.
     """
+
+
+class EmptyDataException(BaseException):
     pass

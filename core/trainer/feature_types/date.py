@@ -1,7 +1,7 @@
 # Author: Nikolay Melnik <nmelnik@upwork.com>
 
-from datetime import datetime
 import calendar
+from datetime import datetime
 
 from base import FeatureTypeBase, FeatureTypeInstanceBase
 
@@ -12,26 +12,24 @@ class DateFeatureTypeInstance(FeatureTypeInstanceBase):
         """
         Convert date to UNIX timestamp.
 
-        Keyword arguments:
-        value -- the value to convert
-        params -- params containing the pattern
+        value: string
+            the value to convert
 
+        Note:
+            Feature should containing the 'pattern' in parameters.
         """
         params = self.active_params()
         if value is None:
             return self._default_value
+
         try:
             return calendar.timegm(
                 datetime.strptime(value, params['pattern']).timetuple())
-        except ValueError:
-            pass
-        except TypeError:
-            pass
-        return self._default_value
+        except (ValueError, TypeError):
+            return self._default_value
 
 
 class DateFeatureType(FeatureTypeBase):
     instance = DateFeatureTypeInstance
     required_params = ['pattern']
-    # Default is Jan 1st, 2000
-    default_value = 946684800
+    default_value = 946684800  # Default is Jan 1st, 2000

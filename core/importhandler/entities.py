@@ -14,7 +14,8 @@ from jsonpath import jsonpath
 
 from exceptions import ProcessException, ImportHandlerException
 from utils import get_key, ParametrizedTemplate, process_primitive, \
-    process_bool, load_json
+    load_json
+from core.utils import process_bool
 from datasources import DATASOURCES_REQUIRE_QUERY
 
 

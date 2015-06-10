@@ -18,6 +18,8 @@ from core.trainer.trainer import Trainer, DEFAULT_SEGMENT, \
 from jsonpath import jsonpath
 from core.trainer.store import store_trainer, load_trainer
 from core.trainer.streamutils import streamingiterload
+from core.trainer.exceptions import EmptyDataException
+from core.test_utils import get_iterator
 
 TARGET = 'target'
 FORMATS = ['csv', 'json']
@@ -51,14 +53,18 @@ class BaseTrainerTestCase(unittest.TestCase):
         self._trainer = Trainer(self._config)
         self._trainer.train(self._data)
 
-    def _train(self, fmt='json'):
+    def _train(self, fmt='json', store_vect_data=False,
+               configure=None, start_training=True):
         with open(os.path.join(BASEDIR, 'trainer',
                                'trainer.data.segment.{}'.format(fmt))) as fp:
             self._data = list(streamingiterload(
                 fp.readlines(), source_format=fmt))
 
         self._trainer = Trainer(self._config)
-        self._trainer.train(self._data)
+        if configure is not None:
+            configure(self._trainer)
+        if start_training:
+            self._trainer.train(self._data, store_vect_data=store_vect_data)
 
     def _get_iterator(self, fmt='json'):
         with open(os.path.join(BASEDIR, 'trainer',
@@ -71,6 +77,24 @@ class BaseTrainerTestCase(unittest.TestCase):
 
 class TrainerSegmentTestCase(BaseTrainerTestCase):
     FEATURES_FILE = 'features_segment.json'
+
+    def test_get_nonzero_vectorized_data(self):
+        self._train()
+        vect_data = self._trainer.get_nonzero_vectorized_data()
+        self.assertEquals(vect_data[''][u'contractor.dev_is_looking'], 1.0)
+
+    def test_get_vectorized_data(self):
+        self._train()
+        vect_data = self._trainer._get_vectorized_data(
+            '', self._trainer._train_prepare_feature)
+
+    def test_vect_data2csv(self):
+        self._train(store_vect_data=True)
+        self._trainer.vect_data2csv('vect_data.csv')
+
+        self._train()
+        self.assertRaises(
+            ValueError, self._trainer.vect_data2csv, 'vect_data.csv')
 
     def test_trained_model_visualization(self):
         # for fmt in FORMATS:
@@ -162,14 +186,14 @@ class TrainerSegmentTestCase(BaseTrainerTestCase):
         results = self._trainer.predict(self._get_iterator())
         self.assertEqual(results['classes'].tolist(), ['0', '1'])
 
-    def _train(self, fmt='json'):
+    def _train(self, fmt='json', store_vect_data=False):
         with open(os.path.join(BASEDIR, 'trainer',
                                'trainer.data.segment.{}'.format(fmt))) as fp:
             self._data = list(streamingiterload(
                 fp.readlines(), source_format=fmt))
 
         self._trainer = Trainer(self._config)
-        self._trainer.train(self._data)
+        self._trainer.train(self._data, store_vect_data=store_vect_data)
 
     def _get_iterator(self, fmt='json'):
         with open(os.path.join(BASEDIR, 'trainer',
@@ -227,8 +251,11 @@ class LogisticRegressionTrainerTestCase(BaseTrainerTestCase):
     FEATURES_FILE = 'features.json'
 
     def test_train(self):
+        from sklearn.linear_model import LogisticRegression
         for fmt in FORMATS:
             self._load_data(fmt)
+            self.assertEquals(
+                type(self._trainer.classifier), LogisticRegression)
             self.assertEquals(
                 self._trainer._classifier[DEFAULT_SEGMENT].coef_.shape,
                 (1, 19))
@@ -274,11 +301,9 @@ class LogisticRegressionTrainerTestCase(BaseTrainerTestCase):
 
             self.assertTrue(os.path.exists(path), 'Weights were not stored!!!')
 
-            positive_expected = ['contractor->dev_is_looking']
-
-            # This is unintentional. Truly!
-            negative_expected = ['contractor->dev_adj_score_recent',
-                                 'contractor->dev_country->usa']
+            expected = ['contractor->dev_is_looking',
+                        'contractor->dev_adj_score_recent',
+                        'contractor->dev_country->usa']
 
             with open(path) as fp:
                 weights_dict = json.load(fp)
@@ -288,13 +313,9 @@ class LogisticRegressionTrainerTestCase(BaseTrainerTestCase):
                 self.assertIn('positive', weights)
                 self.assertIn('negative', weights)
 
-                container = jsonpath(weights['positive'], '$.*.name')
-                for item in positive_expected:
-                    self.assertIn(item, container,
-                                  'Item %s not in weights!' % item)
-
-                container = jsonpath(weights['negative'], '$.*.name')
-                for item in negative_expected:
+                container = jsonpath(weights['negative'], '$.*.name') + \
+                    jsonpath(weights['positive'], '$.*.name')
+                for item in expected:
                     self.assertIn(item, container,
                                   'Item %s not in weights!' % item)
 
@@ -529,6 +550,51 @@ class LogisticRegressionTrainerTestCase(BaseTrainerTestCase):
         self.assertEqual(metrics.confusion_matrix.tolist(), [[0, 0, 0],
                                                              [0, 3, 0],
                                                              [0, 0, 0]])
+
+    def test_with_percent(self):
+        data = get_iterator('trainer', 'test.data')
+
+        self._train(start_training=False)
+        self._trainer.clear_temp_data()
+        self._trainer.train(self._data)
+        metrics = self._trainer.test(data)
+        self.assertEquals(self._trainer._count, 6)
+        self.assertEquals(metrics.accuracy, 0.66666666666666663)
+
+        self._trainer.train(data, percent=40)
+        self.assertEquals(self._trainer._count, 4)  # 6 - 40%
+        metrics = self._trainer.test(data, percent=50)
+        self.assertEquals(self._trainer._count, 3)  # 6 - 50%
+        self.assertEquals(metrics.accuracy, 1)
+
+        self.assertTrue(self._trainer._raw_data)
+        self.assertTrue(self._trainer._vect_data)
+        self._trainer.clear_temp_data()
+        self.assertFalse(self._trainer._raw_data)
+        self.assertFalse(self._trainer._vect_data)
+
+    def test_corrupted_data(self):
+        data = get_iterator('trainer', 'corrupted.data')
+
+        self._train(start_training=False)
+
+        from core.trainer.exceptions import EmptyDataException
+        with self.assertRaisesRegexp(
+                EmptyDataException, "No rows found in the iterator"):
+            self._trainer.train(data)
+
+    def test_grid_search(self):
+        data = get_iterator('trainer', 'trainer.data')
+        test_data = get_iterator('trainer', 'test.data')
+        self._train(start_training=False)
+        params = {'penalty': ['l1', 'l2']}
+        clf = self._trainer.grid_search(
+            params, data, test_data, score='accuracy')['default']
+        grids = []
+        for item in clf.grid_scores_:
+            grids.append({'parameters': item.parameters,
+                          'mean': item.mean_validation_score})
+        self.assertEquals(len(grids), 2)
 
 
 class HelpersTestCase(unittest.TestCase):
@@ -788,5 +854,55 @@ class RandomForestClfTestCase(BaseTrainerTestCase):
 #         metrics = self._trainer.test(self._data)
 #         self.assertIsInstance(metrics, ClassificationModelMetrics)
 
-if __name__ == '__main__':
-    unittest.main()
+
+class ModelWithPretrainedTransformer(BaseTrainerTestCase):
+    """
+    Tests the model with pretrained transformer defined.
+    """
+    FEATURES_FILE = 'features-with-pretrained-transformer.json'
+
+    def setUp(self):
+        super(ModelWithPretrainedTransformer, self).setUp()
+        from core.transformers.tests import _get_config, Transformer
+        config = _get_config('transformer.json')
+        self.transformer = Transformer(config)
+
+    def test_train(self):
+        # need to set get_transformer method
+        from core.trainer.exceptions import TransformerNotFound
+        with self.assertRaisesRegexp(
+                TransformerNotFound,
+                "Transformer with name bestmatch not found"):
+            self._train()
+
+        from sklearn.utils.validation import NotFittedError
+        with self.assertRaisesRegexp(
+                NotFittedError, "TfidfVectorizer - Vocabulary wasn't fitted."):
+            self._train(configure=self._get_configure_fn())
+
+        self._train_transformer()
+        self._train(configure=self._get_configure_fn())
+        features = self._trainer.features
+        title_feature = features[DEFAULT_SEGMENT]['contractor.dev_title']
+        title_vectorizer = title_feature['transformer']
+        self.assertItemsEqual(
+            title_vectorizer.get_feature_names(), ['python'])
+
+    def test_test(self):
+        self._train_transformer()
+        self._train(configure=self._get_configure_fn())
+
+        from core.trainer.metrics import ClassificationModelMetrics
+        metrics = self._trainer.test(self._data)
+        self.assertIsInstance(metrics, ClassificationModelMetrics)
+
+    def _train_transformer(self):
+        self.transformer.train(self._get_iterator())
+
+    def _get_configure_fn(self):
+        def configure(trainer):
+            def get_transformer(name):
+                return self.transformer.feature['transformer']
+
+            trainer.set_transformer_getter(get_transformer)
+        return configure
