@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<plan xmlns:buildings="http://www.example.org/NewXMLSchema">
+
+    <!--Inputs required for this import handler to run -->
+    <inputs>
+        <param name="start" type="date" />
+        <param name="end" type="date" />
+    </inputs>
+    <script>
+    <![CDATA[def always99(a):
+        return 99
+    ]]>
+    </script>
+
+    <datasources>
+        <!--
+            Define data sources to be used. Data sources
+        -->
+        <db name="odw" 
+            host="localhost"
+            dbname="odw"
+            user="postgres"
+            password="postgres"
+            vendor="postgres" />
+    </datasources>
+
+    <import>
+        <entity name="application" datasource="odw">
+            <query target="results">
+                <![CDATA[CREATE TABLE results AS
+  SELECT qi.*, 'class' || (trunc(random() * 2) + 1)::char hire_outcome 
+  FROM public.ja_quick_info qi where qi.file_provenance_date >= '#{start}'
+  AND qi.file_provenance_date < '#{end}' 
+  LIMIT(100);
+  ]]>
+            </query>
+            <!-- "Convert" fields to datasources -->
+            <field name="contractor.dev_title" type="string" column="contractor.dev_title"/>
+            <field name="application_id" type="integer" column="application" required="true" />
+
+        </entity>
+    </import>
+</plan>

@@ -12,13 +12,14 @@ import sys
 import logging
 import colorer
 
-from core.trainer.config import FeatureModel, SchemaException
-from core.trainer import __version__
-from core.importhandler.exceptions import ImportHandlerException
-from core.importhandler.importhandler import ExtractionPlan, ImportHandler
-from core.trainer.store import store_trainer
-from core.trainer.streamutils import streamingiterload
-from core.trainer.trainer import Trainer, list_to_dict, TransformerNotFound
+from cloudml.trainer.config import FeatureModel, SchemaException
+from cloudml.trainer import __version__
+from cloudml.importhandler.exceptions import ImportHandlerException
+from cloudml.importhandler.importhandler import ExtractionPlan, ImportHandler
+from cloudml.trainer.store import store_trainer
+from cloudml.trainer.streamutils import streamingiterload
+from cloudml.trainer.trainer import Trainer, list_to_dict, TransformerNotFound
+from cloudml.utils import init_logging, determine_data_format
 
 
 # Status codes
@@ -122,6 +123,7 @@ def main(argv=None):
     else:
         logging.warn('You must define either an input file or '
                      'an extraction plan')
+        parser.print_help()
         return PARAMETERS_REQUIRED
 
     if args.weights is not None:
@@ -134,6 +136,7 @@ def main(argv=None):
         if not hasattr(trainer, 'metrics'):
             logging.warn('Model was trained, but not evaluated. '
                          'You need to add --test or --test-percent param.')
+            parser.print_help()
             return PARAMETERS_REQUIRED
         trainer.store_vect_data(
             trainer.metrics._true_data.values(), args.store_vect)
@@ -209,14 +212,6 @@ def create_parser():
     return parser
 
 
-def init_logging(debug):
-    logging_level = logging.INFO
-    if debug is True:
-        logging_level = logging.DEBUG
-    logging.basicConfig(format='[%(asctime)s] %(levelname)s - %(message)s',
-                        level=logging_level)
-
-
 def transformer_getter(transformer_path):
     def get_transformer(name):
         from os import listdir, makedirs
@@ -247,20 +242,6 @@ def parse_percent(percent_str):
         return 0
 
     return percent
-
-
-def determine_data_format(filepath):
-    try:
-        format = os.path.splitext(filepath)[1][1:]
-    except Exception:
-        logging.warning("Could not determine input data file format."
-                        "'json' would be used.")
-        return 'json'
-    if format not in ('json', 'csv'):
-        logging.warning("Input data file format is invalid {0}. "
-                        "Trying to parse it as 'json'")
-        return 'json'
-    return format
 
 
 if __name__ == '__main__':

@@ -139,14 +139,11 @@ The details of the parameters passed to trainer.py are the following:
 predictor.py
 ------------
 
-The predictor loads a trained classifier and its configuration, and attempts to
-classify incoming data. Different types of input data should be allowed,
-including:
+The predictor loads a trained classifier and its configuration, and attempts to classify incoming data. Different types of input data should be allowed, including:
 * file containing multiple JSON objects and
 * import handler extraction plan (see Import Handler below).
 
-Predictor also provides functionality for evaluating current trained classifier,
-allowing definition of evaluation function to use.
+Predictor also provides functionality for evaluating current trained classifier, allowing definition of evaluation function to use.
 
 Predictor's configuration is performed entirely from the command line.
 
@@ -201,8 +198,7 @@ The details of the parameters passed to predict.py are the following:
     <tr>
       <td>-i input-data, --input input-data</td>
       <td>Read train data from file 'input-data'. Input file may contain
-      multiple JSON objects, each one containing the feature data for each row
-      data.</td>
+      multiple JSON objects, each one containing the feature data for each row data.</td>
     </tr>
     <tr>
       <td>-e extraction-plan</td>

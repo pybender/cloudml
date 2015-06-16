@@ -11,10 +11,16 @@ from os.path import splitext, basename, join as pjoin
 PROJECT_BASE_DIR = ''
 TEST_PATHS = ['tests']
 
+def parse_requirements(requirements):
+    with open(requirements) as f:
+        return [l.strip('\n') for l in f if l.strip('\n') and not l.startswith('#')]
+
+
+install_requires = parse_requirements('requirements.txt')
 
 def read_version_string():
     sys.path.insert(0, pjoin(os.getcwd()))
-    from core import __version__
+    from cloudml import __version__
     version = __version__
     sys.path.pop(0)
     return version
@@ -133,7 +139,7 @@ setup(
     package_dir={
         'cloudml': 'core'
     },
-    url='http://www.odesk.com',
+    url='http://www.upwork.com',
     cmdclass={
         'test': NoseCommand,
         'coverage': CoverageCommand,
@@ -146,6 +152,6 @@ setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.7',
     ],
-    install_requires=['jsonpath', 'scipy'],
-    test_requires=['nose', 'coverage']
+    install_requires=install_requires,
+    test_requires=['nose', 'coverage', 'moto==0.3.3', 'mock==1.0.1']
 )
