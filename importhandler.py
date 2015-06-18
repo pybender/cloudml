@@ -10,7 +10,7 @@ importhandler-- extract values from DB according to extraction plan.
 import os
 import sys
 import logging
-import colorer
+import cloudml.colorer
 
 from cloudml.importhandler.importhandler import ImportHandlerException, \
     ExtractionPlan, ImportHandler
