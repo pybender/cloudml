@@ -22,25 +22,49 @@ Cloudml requires:
 
 - Python (>= 2.6)
  
-Install cloudml with pip
+Unix installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This is usually the fastest way to install or upgrade to the latest stable
-release::
+1. Install setuptools http://pypi.python.org/pypi/setuptools
 
-    pip install cloudml
+2. Install pip::
 
+    $ easy_install pip
 
-From source package
-~~~~~~~~~~~~~~~~~~~
+3. Make sure that you have the following dev packages::
 
-Download the source package from http://pypi.python.org/pypi/cloudml/
-, unpack the sources and cd into the source directory.
+    $ sudo apt-get install python-dev libxml2-dev libxslt1-dev
 
-This packages uses distutils, which is the default way of installing
-python modules. The install command is::
+4.1. Check that you have LAPACK, BLAS and ATLAS libraries, if not::
 
-    python setup.py install
+    $ sudo apt-get install liblapack-dev gfortran libpq-dev libevent-dev
+
+4.2. Install Numpy::
+
+    $ pip install -U numpy
+
+4.3. Install SciPy::
+
+    $ pip install scipy
+
+or simply::
+
+4. Install SciPy and NumPy from repositories (WARNING: can be outdated)::
+
+    $ sudo apt-get install python-numpy python-scipy
+
+5. Install NLTK, jsonpath, and boto::
+    $ sudo apt-get install nltk
+    $ sudo apt-get install jsonpath==0.54
+    $ sudo apt-get install boto==2.32.1
+
+6. Install cloudml with pip::
+
+    $ pip install cloudml
+
+To build cloudml from the source package download the source package from http://pypi.python.org/pypi/cloudml, unpack the sources into a directory, cd into this directory and run::
+
+    $ python setup.py install
 
 
 .. _install_development_version:
@@ -56,9 +80,7 @@ git clone https://github.com/odeskdataproducts/cloudml.git
 Testing
 =======
 
-Testing requires having the `nose
-<http://somethingaboutorange.com/mrl/projects/nose/>`_ library. After
-installation, the package can be tested by executing *from outside* the
-source directory::
+Testing requires having the `nose <http://somethingaboutorange.com/mrl/projects/nose/>`_ module.
+To start testing cd outside of a source directory and execute::
 
     $ python setup.py test
