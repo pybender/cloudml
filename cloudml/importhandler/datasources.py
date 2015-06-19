@@ -309,7 +309,7 @@ class PigDataSource(BaseDataSource):
     def __init__(self, config):
         super(PigDataSource, self).__init__(config)
         self.import_handler = None
-        from config import AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET, \
+        from local_config import AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET, \
             S3_LOG_URI, BUCKET_NAME, DEFAILT_AMI_VERSION, \
             DEFAULT_INSTANCE_TYPE, DEFAULT_NUM_INSTANCES
         self.amazon_access_token = self.config.get(

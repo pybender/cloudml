@@ -22,7 +22,7 @@ Cloudml requires:
 
 - Python (>= 2.6)
  
-Unix installation
+Ubuntu installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 1. Install setuptools http://pypi.python.org/pypi/setuptools
@@ -53,12 +53,8 @@ or simply::
 
     $ sudo apt-get install python-numpy python-scipy
 
-5. Install NLTK, jsonpath, and boto::
-    $ sudo apt-get install nltk
-    $ sudo apt-get install jsonpath==0.54
-    $ sudo apt-get install boto==2.32.1
 
-6. Install cloudml with pip::
+5. Install cloudml with pip::
 
     $ pip install cloudml
 
