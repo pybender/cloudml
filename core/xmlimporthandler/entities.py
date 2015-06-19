@@ -357,7 +357,7 @@ select {1} from INFORMATION_SCHEMA.COLUMNS where table_name = '{0}' order by ord
                     self.datasource.type,
                     self.datasource.name))
         self.iterator = self.datasource._get_iter(
-            query, self.entity.query_target, self.params)
+            query, self.entity.query_target, import_handler.params)
 
     def process_next(self):
         """
