@@ -35,7 +35,7 @@ class BaseDataSource(object):
         self.name = config.get('name')  # unique
         self.type = config.tag
 
-    def _get_iter(self, query=None, query_target=None):
+    def _get_iter(self, query=None, query_target=None, params=None):
         raise Exception('Not implemented')
 
     def get_params(self):
@@ -51,7 +51,7 @@ class DbDataSource(BaseDataSource):
     Database connection.
     """
 
-    def _get_iter(self, query, query_target=None):
+    def _get_iter(self, query, query_target=None, params=None):
         return self._run(query, query_target)
 
     def run_queries(self, query):
@@ -88,7 +88,7 @@ class DbDataSource(BaseDataSource):
 
 
 class HttpDataSource(BaseDataSource):
-    def _get_iter(self, query=None, query_target=None):
+    def _get_iter(self, query=None, query_target=None, params=None):
         attrs = self.config.attrib
 
         if 'url' not in attrs:
@@ -118,7 +118,7 @@ class HttpDataSource(BaseDataSource):
 
 
 class CsvDataSource(BaseDataSource):
-    def _get_iter(self, query=None, query_target=None):
+    def _get_iter(self, query=None, query_target=None, params=None):
         attrs = self.config.attrib
 
         headers = []
@@ -429,7 +429,7 @@ socks proxy localhost:12345''' % {'dns': masterpublicdnsname})
         self.print_logs(self.log_path, step_number)
         raise ImportHandlerException('Emr jobflow %s failed' % self.jobid)
 
-    def _get_iter(self, query, query_target=None):
+    def _get_iter(self, query, query_target=None, params=None):
         logging.info('Processing pig datasource...')
         try:
             self._append_pig_step(query, query_target)
@@ -518,7 +518,9 @@ class InputDataSource(BaseDataSource):
     def get_params(self):
         return {}
 
-    def _get_iter(self, query=None, query_target=None):
+    def _get_iter(self, query=None, query_target=None, params=None):
+        if query == 'any':
+            return iter([params])
         try:
             result = json.loads(query)
         except Exception as exc:
