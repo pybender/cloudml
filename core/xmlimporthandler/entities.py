@@ -345,7 +345,7 @@ select {1} from INFORMATION_SCHEMA.COLUMNS where table_name = '{0}' order by ord
             self.datasource.run_sqoop_imports(self.entity.sqoop_imports)
             self.datasource.set_ih(import_handler)
 
-        if self.datasource.type == 'input':
+        if self.datasource.type == 'input' and query != 'any':
             query = import_handler.params[query]
 
         if self.datasource.type in DATASOURCES_REQUIRE_QUERY and \
