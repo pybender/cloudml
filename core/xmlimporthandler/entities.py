@@ -364,6 +364,7 @@ select {1} from INFORMATION_SCHEMA.COLUMNS where table_name = '{0}' order by ord
         Returns entity's processed next row data.
         """
         row = self.iterator.next()
+        print "row", row
         row_data = {}
         row_data.update(self.params)
 
@@ -384,8 +385,10 @@ select {1} from INFORMATION_SCHEMA.COLUMNS where table_name = '{0}' order by ord
                 extra_params=row_data)
             # NOTE: Nested entity datasource should return only one row. Right?
             row_data.update(nested_processor.process_next())
+        fields = [i.name for i in self.entity.fields.values()]
         for p in self.params:
-            row_data.pop(p)
+            if p not in fields:
+                row_data.pop(p)
         return row_data
 
     def process_field(self, field, row, row_data=None):
