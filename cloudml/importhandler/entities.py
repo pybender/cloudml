@@ -457,7 +457,7 @@ order by ordinal_position;""".format(sqoop_import.table,
             self.datasource.run_sqoop_imports(self.entity.sqoop_imports)
             self.datasource.set_import_handler(import_handler)
 
-        if self.datasource.type == 'input':
+        if self.datasource.type == 'input' and query != 'any':
             query = import_handler.params[query]
 
         if self.datasource.type in DATASOURCES_REQUIRE_QUERY and \
@@ -469,7 +469,7 @@ order by ordinal_position;""".format(sqoop_import.table,
                     self.datasource.type,
                     self.datasource.name))
         self.iterator = self.datasource._get_iter(
-            query, self.entity.query_target)
+            query, self.entity.query_target, import_handler.params)
 
     def process_next(self):
         """
@@ -496,8 +496,10 @@ order by ordinal_position;""".format(sqoop_import.table,
                 extra_params=row_data)
             # NOTE: Nested entity datasource should return only one row. Right?
             row_data.update(nested_processor.process_next())
+        fields = [i.name for i in self.entity.fields.values()]
         for p in self.params:
-            row_data.pop(p)
+            if p not in fields:
+                row_data.pop(p)
         return row_data
 
     def process_field(self, field, row, row_data=None):

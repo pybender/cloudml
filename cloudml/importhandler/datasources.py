@@ -43,7 +43,7 @@ class BaseDataSource(object):
             raise ImportHandlerException('name is required')
         self.type = config.tag
 
-    def _get_iter(self, query=None, query_target=None):
+    def _get_iter(self, query=None, query_target=None, params=None):
         """
         Gets datasource iterator.
 
@@ -79,7 +79,7 @@ class DbDataSource(BaseDataSource):
         'postgres': [postgres_iter, run_queries]
     }
 
-    def _get_iter(self, query, query_target=None):
+    def _get_iter(self, query, query_target=None, params=None):
         """
         Gets datasource iterator for specified select query.
 
@@ -178,7 +178,7 @@ class HttpDataSource(BaseDataSource):
 
         self.method = attrs.get('method', 'GET')
 
-    def _get_iter(self, query=None, query_target=None):
+    def _get_iter(self, query=None, query_target=None, params=None):
         """
         Returns datasource iterator.
 
@@ -246,7 +246,7 @@ class CsvDataSource(BaseDataSource):
             raise ImportHandlerException('No source given')
         self.src = attrs['src']
 
-    def _get_iter(self, query=None, query_target=None):
+    def _get_iter(self, query=None, query_target=None, params=None):
         def __get_obj(row):
             if len(self.headers) == 0:
                 return row
@@ -397,7 +397,7 @@ class PigDataSource(BaseDataSource):
             if retval != 0:
                 raise ImportHandlerException('Sqoop import  failed')
 
-    def _get_iter(self, query, query_target=None):
+    def _get_iter(self, query, query_target=None, params=None):
         """
         Returns results iterator.
         """
@@ -692,7 +692,9 @@ class InputDataSource(BaseDataSource):
     def get_params(self):
         return {}
 
-    def _get_iter(self, query=None, query_target=None):
+    def _get_iter(self, query=None, query_target=None, params=None):
+        if query == 'any':
+            return iter([params])
         try:
             result = json.loads(query)
         except Exception as exc:
