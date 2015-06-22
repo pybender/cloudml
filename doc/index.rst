@@ -12,6 +12,7 @@ Contents:
    getting_started
    features
    import_handlers
+   online_import_handler
    command_line_utils
    developers_guide
 

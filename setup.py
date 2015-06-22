@@ -29,7 +29,7 @@ def parse_requirements(requirements):
 
 
 install_requires, dependency_links = parse_requirements('requirements.txt')
-print dependency_links
+
 
 def read_version_string():
     sys.path.insert(0, pjoin(os.getcwd()))
@@ -144,9 +144,10 @@ setup(
     name='cloudml',
     version=read_version_string(),
     description='Machine learning as a service scipy-trainer',
-    author='Panagiotis Papadimitriou, Ioannis Foukarakis',
+    author='Panagiotis Papadimitriou, Ioannis Foukarakis \
+Nikolay Melnik',
     author_email='papadimitriou@cloud.upwork.com, \
-ifoukarakis@cloud.upwork.com',
+ifoukarakis@cloud.upwork.com, nmelnik@cloud.upwork.com',
     maintainer='Nikolay Melnik',
     maintainer_email='nmelnik@cloud.upwork.com',
     packages=find_packages(),
@@ -156,9 +157,9 @@ ifoukarakis@cloud.upwork.com',
     package_dir={
         'cloudml': 'cloudml'
     },
-    package_data = {
+    package_data={
         '': ['*.txt', '*.rst']
-        },
+    },
     url='http://www.upwork.com',
     cmdclass={
         'test': NoseCommand,

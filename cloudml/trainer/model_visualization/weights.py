@@ -1,3 +1,5 @@
+# Author: Nikolay Melnik <nmelnik@upwork.com>
+
 import logging
 import numpy
 from operator import itemgetter

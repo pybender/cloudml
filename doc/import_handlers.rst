@@ -111,7 +111,7 @@ Datasources may be:
 - ``CSV files``
 - ``HTTP GET/POST``
 - ``Hadoop with Pig``
-- ``...`` (more to be added)
+- ``Input params``
 
 Datasources are identified by their unique names and can be accessed by
 at any point in the file. Each datasource is using a different tag to
@@ -253,6 +253,12 @@ Pig query
 - ``target`` (**required**) - name of target dataset wich will be stored.
 - ``autoload_sqoop_dataset`` (optional) - when it's true, sqoop dataset will be auto loaded in the pig script (without defining loading statement in script). Require to define `sqoop_dataset_name` attr.
 - ``sqoop_dataset_name`` (optional) - variable name that would be used in the pig script for sqoop results, when ``autoload_sqoop_dataset`` setted.
+  
+
+Input
+~~~~~
+
+Input datasource using only in online import handlers.
 
 
 .. _import:
