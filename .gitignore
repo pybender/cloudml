@@ -7,7 +7,7 @@
 *.vim
 _build
 *.bak
-*.dat
+
 local_config.coffee
 ve
 *.sqlite
