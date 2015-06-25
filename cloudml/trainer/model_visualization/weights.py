@@ -17,7 +17,6 @@ class WeightsCalculator(object):
         # ...
         # }
         self.weights = {}
-        self._calculated_segments = []
 
         self._trainer = trainer
 
@@ -77,9 +76,6 @@ class WeightsCalculator(object):
             if len(clf.classes_) == 2:
                 break
 
-        self._calculated_segments.append(segment)
-
-    # determine feature names
     def determine_feature_names(self, features, segment, label):
         index = 0
         for feature_name, feature in features.items():
@@ -128,9 +124,9 @@ class WeightsCalculator(object):
         :return: {<class_label>:{'positive':[...], 'negative':[...]},
                 <class_label2>: etc}
         """
-        if segment not in self._calculated_segments:
-            raise ValueError("Feature weights for this segment wasn't"
-                             "filled: {0}".format(self.weights))
+        if segment not in self.weights:
+            raise ValueError("Feature weights for {1!s} segment wasn't "
+                             "filled: {0}".format(self.weights, segment))
 
         if signed:
             result = {}
@@ -207,7 +203,7 @@ class SVRWeightsCalculator(WeightsCalculator):
 
         self.fill_weights(clf_weights, true_data, segment, label=self.LABEL)
         self.determine_feature_names(features, segment, label=self.LABEL)
-        self._calculated_segments.append(segment)
+        #self._calculated_segments.append(segment)
 
     def fill_weights(self, weights, true_data, segment, label):
         true_data.data = numpy.absolute(true_data.data)
