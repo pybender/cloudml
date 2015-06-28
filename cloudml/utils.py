@@ -1,5 +1,6 @@
 # Author: Nikolay Melnik <nmelnik@upwork.com>
 import logging
+import os
 
 
 def process_bool(val=None):

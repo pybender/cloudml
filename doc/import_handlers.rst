@@ -1,8 +1,11 @@
 .. _import_handlers:
 
-===================================
+===============
+Import handlers
+===============
+
 Generic Import Handler Format (XML)
-===================================
+-----------------------------------
 
 CloudML predict uses two different approaches for importing data:
 
@@ -25,7 +28,7 @@ production. The rest of the document provides details of the format.
 Top level element
 -----------------
 
-Top level element is ``<plan>``. There's no attributes expected for this
+Top level element is ``<plan>``. There are no attributes expected for this
 element. Plan may contain the following elements:
 
 - :ref:`script <script>` (any)
@@ -54,7 +57,7 @@ Example::
     </script>
 
 It is also possible to reference external Python files. This can be
-done to ease development. Scripts should be expected in the same
+done to ease development. Scripts should be placed in the same
 directory as the XML file.
 
 Example::
@@ -667,3 +670,4 @@ Allows overriding which label to use as positive label. If not defined, true is 
     <model name="rank" value="BestMatch.v31">
         <positive_label values="false"/>
     </model>
+

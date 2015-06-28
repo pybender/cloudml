@@ -4,74 +4,78 @@
 Feature JSON file format
 ========================
 
-It includes information like:
+It includes the following information:
 
 1. The classifier's configuration.
-2. The features (and their name).
+2. The features (and their names).
 3. The type of each feature. This might imply transformation to be done on each item of data.
-4. Generic feature types, in case more than one feature share the same feature type.
+4. Custom user feature types.
 5. Transformers and scalers, that allow converting features to different formats (i.e. Tfidf for converting a text feature to a matrix of TF-IDF features).
 
 .. seealso::
 
-	If you migrating your old import handler files just take a look to
-	:ref:`changes in json files <json_changes>`
+    If you already have an import handler file and you suspect that it is outdated take a look at :ref:`changes in json files <json_changes>`
 
-Here's an example of such a file::
+Here's a minimal example of a feature file.
+..code-block::
 
+    {	"schema-name": "bestmatch",
+        "classifier": {	"type": "logistic regression",
+	        			"params": {"penalty": "l2"}},
+	    "feature-types":
+	    [{
+	    	"name": "str_to_timezone",
+	        "type": "composite",
+	        "params":
+	        { "chain":  [
+	                        {	"type":	"regex",
+			           		    "params": { "pattern": "UTC([-\\+]+\\d\\d).*"}
+	 			            },
+		        		    { "type": "int" }
+				        ]
+	      	}
+	    }],
 
-    {
-	  "schema-name": "bestmatch",
-	  "classifier": {
-	    "type": "logistic regression",
-	    "params": {"penalty": "l2"}
-	  },
-	  "feature-types":[
-	    {
-	      "name":"str_to_timezone",
-	      "type": "composite",
-	      "params": {
-	        "chain": [
-	          { "type": "regex", "params": { "pattern": "UTC([-\\+]+\\d\\d).*"  }},
-	          { "type": "int" }
-	        ]
-	      }
-	    }
-	  ],
-	  "features":[
-	    {
-	      "name":"hire_outcome",
-	      "type":"map",
-	      "params": {
-	        "mappings":{
-	          "class1": 1,
-	          "class2": 0
-	        }
-	      },
-	      "is-target-variable":true
-	    },
-	    {
-	      "name":"tsexams",
-	      "type": "float",
-	      "input-format": "dict",
-	      "default": 0.33,
-	      "is-required": false
-	    },
-	    {
-	      "name":"contractor.dev_blurb",
-	      "type": "text",
-	      "transformer":{
-	        "type":"Tfidf",
-	        "params": {"ngram_range_min":1,
-	                  "ngram_range_max":1,
-	                  "min_df":10}
-	      }
-	    },
-	    {
-	      "name":"contractor.dev_timezone",
-	      "type":"str_to_timezone"
-	    }
-	  ]
+	    "features":
+	    [
+		    {
+		    	"name": "hire_outcome",
+		    	"type": "map",
+		    	"params":
+		    	{
+			        "mappings": {
+			          "class1": 1,
+			          "class2": 0
+			        }
+		      	},
+		        "is-target-variable": true
+		    },
+		    {
+		      "name": "tsexams",
+		      "type": "float",
+		      "input-format": "dict",
+		      "default": 0.33,
+		      "is-required": false
+		    },
+		    {
+		      "name": "contractor.dev_blurb",
+		      "type": "text",
+		      "transformer":
+		      {
+			      "type": "Tfidf",
+			      "params":
+			    	{
+			      	"ngram_range_min": 1,
+			        "ngram_range_max": 1,
+			        "min_df": 10
+			        }
+		      }
+		    },
+		    {
+		      "name": "contractor.dev_timezone",
+		      "type": "str_to_timezone"
+		    }
+		]
 	}
 
 
@@ -113,7 +117,7 @@ Logistic Regression
 `Scikit Learn LogisticRegression <http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html#sklearn.linear_model.LogisticRegression>`_ will be used as the underlying implementation.
 
 
-This classifier has following parameters:
+This classifier has the following parameters:
 
 =================     ============   =============   ===============
 Name                  Type           Default         Description
