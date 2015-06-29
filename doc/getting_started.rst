@@ -13,10 +13,9 @@ Minimal example
 ===============
 
 In this example we are going to measure the impact of a number of factors on the evaluation of TA performance.
-First we download a dataset from the UCI Machine Learning Repository: http://archive.ics.uci.edu/ml and feed it to the import handler
+First we download a dataset from the `UCI Machine Learning Repository <http://archive.ics.uci.edu/ml>`_.
     .. literalinclude:: minimal_example.py
-        :language: python
-        :lines: 1-20
+        :lines: 5, 8-9, 12-13
 
 The config file for a dataset is as follows:
     .. literalinclude:: TA_dataset_config

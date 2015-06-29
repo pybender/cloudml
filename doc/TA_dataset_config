@@ -1,18 +1,21 @@
-<plan>
-<csv name="csvDataSource" src="TA_dataset.csv">
+<plan><datasources>
+    <csv name="csvDataSource" src="TA_dataset.csv">
     <header name="native_speaker" index="0" />
     <header name="course_instructor" index="1" />
     <header name="course" index="2" />
     <header name="summer_or_regular" index="3" />
     <header name="class_size" index="4" />
     <header name="TA_score" index="5" />
-</csv>,
-<entity name="ta" datasource="csv">
-    <field name="native_speaker" type="int" column="0" />
-    <field name="course_instructor" type="int" column="1" />
-    <field name="course" type="int" column="2" />
-    <field name="summer_or_regular" type="int" column="3" />
-    <field name="class_size" type="int" column="4" />
-    <field name="TA_score" type="int" column="5" />
-</entity>
+    </csv>
+</datasources>,
+<import>
+    <entity name="ta" datasource="csv">
+        <field name="native_speaker" type="integer" column="0" />
+        <field name="course_instructor" type="integer" column="1" />
+        <field name="course" type="integer" column="2" />
+        <field name="summer_or_regular" type="integer" column="3" />
+        <field name="class_size" type="integer" column="4" />
+        <field name="TA_score" type="integer" column="5" />
+    </entity>
+</import>
 </plan>
