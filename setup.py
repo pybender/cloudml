@@ -1,7 +1,7 @@
 import os
 import sys
 
-from distutils.core import setup
+from setuptools import setup, find_packages
 from distutils.core import Command
 from unittest import TextTestRunner, TestLoader
 from glob import glob
@@ -11,12 +11,25 @@ from os.path import splitext, basename, join as pjoin
 PROJECT_BASE_DIR = ''
 TEST_PATHS = ['tests']
 
+
 def parse_requirements(requirements):
     with open(requirements) as f:
-        return [l.strip('\n') for l in f if l.strip('\n') and not l.startswith('#')]
+        install_requires = []
+        dependency_links = []
+        for l in f:
+            if not l.strip('\n') or l.startswith('#'):
+                print 'c'
+                continue
+            if l.startswith('-'):
+                dependency_links.append(l.strip('\n').replace('-e ', ''))
+            else:
+                install_requires.append(l.strip('\n'))
+    install_requires.reverse()
+    return install_requires, dependency_links
 
 
-install_requires = parse_requirements('requirements.txt')
+install_requires, dependency_links = parse_requirements('requirements.txt')
+
 
 def read_version_string():
     sys.path.insert(0, pjoin(os.getcwd()))
@@ -131,13 +144,21 @@ setup(
     name='cloudml',
     version=read_version_string(),
     description='Machine learning as a service scipy-trainer',
-    author='Ioannis Foukarakis',
-    author_email='ifoukarakis@odesk.com',
-    packages=[
-        'core',
-    ],
+    author='Panagiotis Papadimitriou, Ioannis Foukarakis \
+Nikolay Melnik',
+    author_email='papadimitriou@cloud.upwork.com, \
+ifoukarakis@cloud.upwork.com, nmelnik@cloud.upwork.com',
+    maintainer='Nikolay Melnik',
+    maintainer_email='nmelnik@cloud.upwork.com',
+    packages=find_packages(),
+    include_package_data=True,
+    scripts=['trainer.py', 'predictor.py',
+               'transformer.py', 'importhandler.py'],
     package_dir={
-        'cloudml': 'core'
+        'cloudml': 'cloudml'
+    },
+    package_data={
+        '': ['*.txt', '*.rst']
     },
     url='http://www.upwork.com',
     cmdclass={
@@ -152,6 +173,8 @@ setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.7',
     ],
+    setup_requires=["numpy==1.7.1"],
     install_requires=install_requires,
-    test_requires=['nose', 'coverage', 'moto==0.3.3', 'mock==1.0.1']
+    dependency_links=dependency_links,
+    tests_require=['nose', 'coverage', 'moto==0.3.3', 'mock==1.0.1']
 )

@@ -13,6 +13,7 @@ import logging
 import numpy
 import csv
 import scipy.sparse
+import platform
 
 from copy import deepcopy
 from collections import defaultdict
@@ -209,6 +210,7 @@ class Trainer(object):
         log_memory_usage("Memory usage")
         logging.info("Genarate trained model visualization")
         self.model_visualizer.generate(segment, true_data)
+        self.get_visualization(segment)
         log_memory_usage("Memory usage (after gen model visualization)")
 
     def get_visualization(self, segment, **kwargs):
@@ -853,5 +855,7 @@ def _adjust_classifier_class(feature, str_value):
 
 
 def log_memory_usage(msg):
+    if platform.system() == 'Windows':
+        return
     logging.info(
         "%s: %f" % (msg, memory_usage(-1, interval=0, timeout=None)[0]))

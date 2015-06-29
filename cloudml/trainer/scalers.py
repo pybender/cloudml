@@ -1,3 +1,5 @@
+# Author: Nikolay Melnik <nmelnik@upwork.com>
+
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 from utils import parse_parameters

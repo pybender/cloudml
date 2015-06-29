@@ -7,7 +7,7 @@
 *.vim
 _build
 *.bak
-*.dat
+
 local_config.coffee
 ve
 *.sqlite
@@ -36,4 +36,4 @@ readme_nli.txt
 
 cloudml.egg-info*
 *coverage
-config.py
+local_config.py

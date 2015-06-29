@@ -1,16 +1,14 @@
-#jsonpath==0.54
+jsonpath==0.54
 psycopg2==2.4.6
-#numpy==1.7.1
-#scipy==0.12.0
-#scikit-learn
+numpy==1.7.1
+scipy==0.12.0
 -e git+https://github.com/odeskdataproducts/scikit-learn.git#egg=scikit-learn
-#-e git+https://github.com/nanli0416/scikit-learn.git@new-feat-feature_extraction-text#egg=scikit-learn
 memory-profiler==0.27
 sqlparse==0.1.11
 ml_metrics==0.1.2
 gensim==0.8.9
-#nltk==2.0.4
+nltk==2.0.4
 requests==2.7.0
 httmock==1.2.2
 lxml==3.3.3
-#boto==2.32.1
+boto==2.32.1

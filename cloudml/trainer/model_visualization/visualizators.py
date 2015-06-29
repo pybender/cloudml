@@ -1,3 +1,5 @@
+# Author: Nikolay Melnik <nmelnik@upwork.com>
+
 from ..classifier_settings import *
 from weights import WeightsCalculator, SVRWeightsCalculator
 
