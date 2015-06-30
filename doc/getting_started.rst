@@ -12,19 +12,44 @@ CloudML gives you a set of tools to build a classifier in a cloud. It consists o
 Minimal example
 ===============
 
-In this example we are going to measure the impact of a number of factors on the evaluation of TA performance.
+In this example we are going to measure the impact of a number of factors on the evaluation of the TA performance.
+
 First we download a dataset from the `UCI Machine Learning Repository <http://archive.ics.uci.edu/ml>`_.
+For example, we can do it using Python interpreter:
     .. literalinclude:: minimal_example.py
+        :language: none
         :lines: 5, 8-9, 12-13
 
-The config file for a dataset is as follows:
+Next we are going to load our data to PostgreSQL database we are to create.
+We will use the Postgres interactive terminal called **psql**:
+    .. literalinclude:: minimal_example.py
+        :language: none
+        :lines: 30-34
+
+We are going to use **importhandler.py** to load the data to the model.
+
+But first we have to describe the structure of the dataset, make an .xml *explanation plan* file.
+The explanation plan for a dataset to load from a Postgres db is as follows:
+    .. literalinclude:: TA_dataset_config_postgres
+        :language: xml
+        :lines: 1-22
+
+Importhandler.py can be run as follows:
+    .. literalinclude:: minimal_example.py
+        :language: none
+        :lines: 36
+
+*(In case you want to omit a step with transferring your data to PostgreSQL)*
+
+The explanation plan for a dataset to load from the .data file is as follows:
     .. literalinclude:: TA_dataset_config
         :language: xml
         :lines: 1-20
 
-For more details see :ref:`features`.
 
-Next we need to describe features of our model.
+For more details see :ref:`import_handlers`.
+
+Next we have to describe features relevant for our model.
 
 The last two things we need to do are training and testing our model::
 

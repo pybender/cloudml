@@ -6,16 +6,33 @@ import cloudml.importhandler.importhandler as imp
 
 # url with a dataset
 >>> url = "http://archive.ics.uci.edu/ml/machine-learning-databases/tae/tae.data"
->>> filename = "TA_dataset.csv"
+>>> filename = "TA_dataset.data"
 
 # download a dataset
 >>> opener = urllib.URLopener()
 >>> opener.retrieve(url, filename)
 
-# load a config file
-plan = imp.ExtractionPlan("TA_dataset_config")
+>>> import psycopg2
+>>> dsn = "dbname=test user=postgres host=localhost"
+>>> con = psycopg2.connect(dsn)
+>>> cur = con.cursor()
+>>> cur.execute("CREATE DATABASE CloudML-test")
+>>> cur.execute("CREATE TABLE TA_dataset (native_speaker INT, instructor INT, course INT, summer_regular INT, class_size INT, TA_score INT)")
+>>> my_file = open(filename)
+>>> sql = "COPY TA_dataset FROM stdin DELIMITER \',\' CSV header;"
+>>> cur.copy_expert(sql, my_file)
+>>> cur.close()
+>>> con.close()
 
-# feed it to the import handler
-import_handler = ImportHandler(plan=plan)
 
-print(import_handler.plan)
+
+
+$ psql user=postgres
+Password:
+postgres=# CREATE TABLESPACE CloudML_test_dbspace LOCATION <insert path>
+postgres=# CREATE DATABASE CloudML_test TABLESPACE CloudML_test_dbspace;
+postgres=# CREATE TABLE TA_dataset (native_speaker INT, instructor INT, course INT, summer_regular INT, class_size INT, TA_score INT);
+postgres=# \copy TA_dataset FROM <insert path to the dataset> DELIMITER ',' CSV
+
+$ python importhandler.py explanation plan
+

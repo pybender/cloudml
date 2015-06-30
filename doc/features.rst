@@ -75,7 +75,7 @@ Here's a minimal example of a feature file.
 		      "name": "contractor.dev_timezone",
 		      "type": "str_to_timezone"
 		    }
-		]
+    	]
 	}
 
 

@@ -1,0 +1,15 @@
+<plan>
+    <datasources>
+        <db dbname="cloudml_test" host="localhost" name="cloudml_test" user="postgres" vendor="postgres" />
+    </datasources>
+    <import>
+        <entity datasource="test" name="application">
+            <field column="native_speaker" name="native_speaker" transform="json" type="integer" />
+            <field column="isntructor" name="instructor" transform="json" type="integer" />
+            <field column="coure" name="course" transform="json" type="integer" />
+            <field column="summer_regular" name="summer_regular" transform="json" type="integer" />
+            <field column="class_size" name="class_size" transform="json" type="integer" />
+            <field column="TA_score" name="TA_scrore" transform="json" type="integer" />
+        </entity>
+    </import>
+</plan>
