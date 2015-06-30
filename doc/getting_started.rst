@@ -37,7 +37,7 @@ The explanation plan for a dataset to load from a Postgres db is as follows:
 Importhandler.py can be run as follows:
     .. literalinclude:: minimal_example.py
         :language: none
-        :lines: 36
+        :lines: 37
 
 *(In case you want to omit a step with transferring your data to PostgreSQL)*
 

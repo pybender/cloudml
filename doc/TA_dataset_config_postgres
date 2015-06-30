@@ -1,15 +1,20 @@
 <plan>
     <datasources>
-        <db dbname="cloudml_test" host="localhost" name="cloudml_test" user="postgres" vendor="postgres" />
+        <db dbname="cloudml_db" host="localhost" name="conn_cloudml_db" user="postgres" password="test" vendor="postgres" />
     </datasources>
     <import>
-        <entity datasource="test" name="application">
-            <field column="native_speaker" name="native_speaker" transform="json" type="integer" />
-            <field column="isntructor" name="instructor" transform="json" type="integer" />
-            <field column="coure" name="course" transform="json" type="integer" />
-            <field column="summer_regular" name="summer_regular" transform="json" type="integer" />
-            <field column="class_size" name="class_size" transform="json" type="integer" />
-            <field column="TA_score" name="TA_scrore" transform="json" type="integer" />
+        <entity datasource="conn_cloudml_db" name="dataset">
+            <query>
+                <![CDATA[
+                SELECT native_speaker, instructor, course, summer_regular, class_size, TA_score from ta_dataset t
+                ]]>
+            </query>
+            <field column="t.native_speaker" name="native_speaker" type="integer" />
+            <field column="t.instructor" name="instructor" type="integer" />
+            <field column="t.course" name="course" type="integer" />
+            <field column="t.summer_regular" name="summer_regular" type="integer" />
+            <field column="t.class_size" name="class_size" type="integer" />
+            <field column="t.TA_score" name="TA_score" type="integer" />
         </entity>
     </import>
 </plan>

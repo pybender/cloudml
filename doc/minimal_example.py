@@ -29,10 +29,9 @@ import cloudml.importhandler.importhandler as imp
 
 $ psql user=postgres
 Password:
-postgres=# CREATE TABLESPACE CloudML_test_dbspace LOCATION <insert path>
-postgres=# CREATE DATABASE CloudML_test TABLESPACE CloudML_test_dbspace;
-postgres=# CREATE TABLE TA_dataset (native_speaker INT, instructor INT, course INT, summer_regular INT, class_size INT, TA_score INT);
-postgres=# \copy TA_dataset FROM <insert path to the dataset> DELIMITER ',' CSV
+postgres=# CREATE DATABASE cloudml_db;
+postgres=# CREATE TABLE ta_dataset (native_speaker INT, instructor INT, course INT, summer_regular INT, class_size INT, TA_score INT);
+postgres=# \copy ta_dataset FROM <insert path to the dataset> DELIMITER ',' CSV
 
-$ python importhandler.py explanation plan
 
+$ python importhandler.py explanation_plan

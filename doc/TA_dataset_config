@@ -1,6 +1,6 @@
 <plan>
     <datasources>
-        <csv name="csvDataSource" src="TA_dataset.data" />
+        <csv name="csvDataSource" src="ta_dataset.data" />
     </datasources>
     <import>
         <entity datasource="csvDataSource" name="ta">
