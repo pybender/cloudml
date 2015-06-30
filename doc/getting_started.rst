@@ -24,7 +24,7 @@ Next we are going to load our data to PostgreSQL database we are to create.
 We will use the Postgres interactive terminal called **psql**:
     .. literalinclude:: minimal_example.py
         :language: none
-        :lines: 30-34
+        :lines: 30-35
 
 We are going to use **importhandler.py** to load the data to the model.
 
