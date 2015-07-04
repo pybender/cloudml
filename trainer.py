@@ -162,7 +162,7 @@ def create_parser():
                         version=program_version_message)
     parser.add_argument('-d', '--debug', dest='debug',
                         action='store_true',
-                        help='store extracted data to given file.',
+                        help='debug mode',
                         default=False)
     parser.add_argument('-o', '--output', dest='output',
                         help='store trained classifier to given file.',

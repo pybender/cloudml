@@ -21,6 +21,8 @@ def init_logging(debug):
         logging_level = logging.DEBUG
     logging.basicConfig(format='[%(asctime)s] %(levelname)s - %(message)s',
                         level=logging_level)
+    logger = logging.getLogger()
+    logger.setLevel(logging_level)
 
 def determine_data_format(filepath):
     try:

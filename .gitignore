@@ -10,6 +10,7 @@ _build
 
 local_config.coffee
 ve
+build
 *.sqlite
 
 **/.DS_Store
@@ -20,6 +21,7 @@ fabconf.py
 
 .project
 .settings
+.vagrant
 .idea/*
 
 node_modules/*

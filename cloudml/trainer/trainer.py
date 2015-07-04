@@ -169,7 +169,7 @@ class Trainer(object):
                      % (self._count, self._ignored))
         log_memory_usage("Memory usage")
         for segment in self._vect_data:
-            logging.info('Starting train "%s" segment' % segment)
+            logging.debug('Starting train "%s" segment' % segment)
             self._train_segment(segment, store_vect_data)
 
     def _train_segment(self, segment, store_vect_data=False):
@@ -857,5 +857,5 @@ def _adjust_classifier_class(feature, str_value):
 def log_memory_usage(msg):
     if platform.system() == 'Windows':
         return
-    logging.info(
+    logging.debug(
         "%s: %f" % (msg, memory_usage(-1, interval=0, timeout=None)[0]))

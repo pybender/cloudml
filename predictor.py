@@ -60,6 +60,7 @@ def dump_results_csv(iterator, trainer, params):
 
     result = trainer.predict(iterator, store_items, store_vect_data=True)
     probs = result['probs']
+    print result['classes']
     with open(out, 'w') as csv_fp:
         csv_out = csv.writer(csv_fp)
         csv_out.writerow(['label'] + result['classes'].tolist() + fields)

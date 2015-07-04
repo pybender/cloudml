@@ -158,7 +158,7 @@ ifoukarakis@cloud.upwork.com, nmelnik@cloud.upwork.com',
         'cloudml': 'cloudml'
     },
     package_data={
-        '': ['*.txt', '*.rst']
+        '': ['*.txt', '*.rst', 'schema.xsd']
     },
     url='http://www.upwork.com',
     cmdclass={

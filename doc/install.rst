@@ -41,15 +41,15 @@ Ubuntu installation
 
 4.2. Install Numpy::
 
-    $ pip install -U numpy
+    $ sudo pip install -U numpy==1.7.1
 
 4.3. Install SciPy::
 
-    $ pip install scipy
+    $ sudo pip install scipy==0.12.0
 
 or simply::
 
-4. Install SciPy and NumPy from repositories (WARNING: can be outdated)::
+4. Install SciPy and NumPy from repositories::
 
     $ sudo apt-get install python-numpy python-scipy
 
@@ -66,7 +66,7 @@ To build cloudml from the source package download the source package from http:/
 .. _install_development_version:
 
 Install the latest development version
-=============
+======================================
 
 git clone https://github.com/odeskdataproducts/cloudml.git
 

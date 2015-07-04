@@ -31,7 +31,7 @@ class DataSourcesTest(unittest.TestCase):
         """<http name="jar" method="GET"
         url="http://upwork.com/jar/" />""")
     CSV = objectify.fromstring(
-        """<csv name="csvDataSource" src="%s/stats.csv">
+        """<csv name="csvDataSource" src="%s/stats_header.csv">
             <!-- Note that some columns are ignored -->
             <header name="id" index="0" />
             <header name="name" index="2" />
@@ -135,21 +135,21 @@ class DataSourcesTest(unittest.TestCase):
         iter_ = ds._get_iter()
         res = iter_.next()
         self.assertEquals(
-            res, {'score': 'score1',
-                  'id': 'id1',
-                  'items': [1, 2, 3],
-                  'name': 'name1',
-                  'params': {u'key': u'val'},
-                  'type': 'type1'})
+            res, {'3': 'score1',
+                  '0': 'id1',
+                  '5': [1, 2, 3],
+                  '2': 'name1',
+                  '4': {u'key': u'val'},
+                  '1': 'type1'})
 
         res = iter_.next()
         self.assertEquals(
-            res, {'name': 'name2',
-                  'items': '',
-                  'score': 'score2',
-                  'params': '{{val}}',
-                  'type': 'type2',
-                  'id': 'id2'})
+            res, {'2': 'name2',
+                  '5': '',
+                  '3': 'score2',
+                  '4': '{{val}}',
+                  '1': 'type2',
+                  '0': 'id2'})
 
         # src is missing
         config = objectify.fromstring(

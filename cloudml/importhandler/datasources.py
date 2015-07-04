@@ -249,7 +249,7 @@ class CsvDataSource(BaseDataSource):
     def _get_iter(self, query=None, query_target=None, params=None):
         def __get_obj(row):
             if len(self.headers) == 0:
-                return row
+                return {str(i):row[i] for i in range(0, len(row))}
             obj = {}
             for name, idx in self.headers:
                 if len(row) <= idx:
@@ -260,10 +260,11 @@ class CsvDataSource(BaseDataSource):
             return obj
 
         with open(self.src, 'r') as stream:
-            if len(self.headers) > 0:
-                reader = csv.reader(stream)
-            else:
-                reader = csv.DictReader(stream)
+            # if len(self.headers) > 0:
+            #     reader = csv.reader(stream)
+            # else:
+            #     reader = csv.DictReader(stream)
+            reader = csv.reader(stream)
             for row in reader:
                 obj = __get_obj(row)
                 for key, value in obj.items():
