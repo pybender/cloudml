@@ -91,7 +91,7 @@ class FeatureModel(object):
 
         # Filter only valid parameters
         settings = CLASSIFIERS[self.classifier_type]
-        params = parse_parameters(classifier_config, settings, brief=False)
+        params = parse_parameters(classifier_config, settings)
         self.classifier.update(params)
 
         # Trying to load classifier class

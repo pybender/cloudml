@@ -16,7 +16,7 @@ class NoScaler(StandardScaler):
         return X
 
     def inverse_transform(self, X, copy=None):
-        return X
+        return Xd
 
 
 DEFAULT_SCALER = "MinMaxScaler"
@@ -32,14 +32,20 @@ SCALERS = {
             'feature_range_min': 0,
             'feature_range_max': 1,
             'copy': True},
-        'parameters': ['feature_range_min', 'feature_range_max', 'copy']},
+        'parameters': [
+            {'name': 'feature_range_min', 'type': 'integer', 'default': 0},
+            {'name': 'feature_range_max', 'type': 'integer', 'default': 1},
+            {'name': 'copy', 'type': 'boolean', 'default': True}]},
     'StandardScaler': {
         'class': StandardScaler,
         'defaults': {
             'copy': True,
             'with_std': True,
             'with_mean': True},
-        'parameters': ['copy', 'with_std', 'with_mean']
+        'parameters': [
+            {'name': 'copy', 'type': 'boolean', 'default': True},
+            {'name': 'with_std', 'type': 'boolean', 'default': True},
+            {'name': 'with_mean', 'type': 'boolean', 'default': True}]
     }
 }
 
@@ -65,12 +71,4 @@ def get_scaler(scaler_config, default_scaler):
             "Scaler '{0}' isn\'t supported.".format(scaler_type))
 
     params = parse_parameters(scaler_config, SCALERS[scaler_type])
-
-    # process range params
-    for param_name, param in params.copy().iteritems():
-        if param_name.endswith('_min'):
-            params.pop(param_name)
-            param_name = param_name.replace('_min', '')
-            param_max = params.pop(param_name + '_max')
-            params[param_name] = (param, param_max)
     return SCALERS[scaler_type]['class'](**params)

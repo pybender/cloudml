@@ -23,17 +23,26 @@ def copy_expected(source_params, expected):
     return result
 
 
-def parse_parameters(config, settings, brief=True):
+def parse_parameters(config, settings, process_range_params=True):
     """
     Parse config parameters according to settings.
     """
     defaults = settings.get('defaults', {})
     source_params = defaults.copy()
     expected = settings.get('parameters', {})
-    if not brief:
-        expected = [p['name'] for p in expected]
     source_params.update(config.get('params', {}))
-    return copy_expected(source_params, expected)
+    expected = [item['name'] for item in expected]
+    params = copy_expected(source_params, expected)
+
+    if process_range_params:
+        # process range params
+        for param_name, param in params.copy().iteritems():
+            if param_name.endswith('_min'):
+                params.pop(param_name)
+                param_name = param_name.replace('_min', '')
+                param_max = params.pop(param_name + '_max')
+                params[param_name] = (param, param_max)
+    return params
 
 
 def is_empty(var):
