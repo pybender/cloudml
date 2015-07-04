@@ -1,0 +1,4 @@
+id,type,name,score,params,items
+id1,type1,name1,score1,{"key": "val"},"[1,2,3]"
+id2,type2,name2,score2,{{val}},
+id3,type3,name3,score3,{"key": "val"},
