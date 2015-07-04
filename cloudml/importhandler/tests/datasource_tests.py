@@ -7,7 +7,7 @@ Unittests for datasources classes.
 import unittest
 import os
 from moto import mock_s3, mock_emr
-from mock import patch, MagicMock
+from mock import patch, MagicMock, Mock
 from lxml import objectify
 
 from cloudml.importhandler.datasources import DataSource, BaseDataSource, \
@@ -55,25 +55,30 @@ class DataSourcesTest(unittest.TestCase):
 
     def test_db_datasource(self):
         exec_ = MagicMock()
-        next_ = MagicMock(return_value=1)
+        cur = Mock()
+        cur.__iter__ = Mock(return_value=iter(['result 1', 'result 2']))
+        con = Mock()
+        con.cursor.return_value = cur
+        cur.execute = exec_
+        conn_ = MagicMock(return_value=con)
+
         ds = DataSource.factory(self.DB)
-        with patch('psycopg2.extras.DictCursor.execute', exec_):
-            with patch('psycopg2.extras.DictCursor.next', next_):
-                query = 'select * from tbl;'
-                ds._get_iter(query=query).next()
-                exec_.assert_called_with(query)
+        with patch('psycopg2.connect', conn_):
+            query = 'select * from tbl;'
+            ds._get_iter(query=query).next()
+            exec_.assert_called_with(query)
 
-                exec_.reset_mock()
+            exec_.reset_mock()
 
-                query = 'select * from tbl'
-                ds._get_iter(query=query).next()
-                exec_.assert_called_with(query + ';')
+            query = 'select * from tbl'
+            ds._get_iter(query=query).next()
+            exec_.assert_called_with(query + ';')
 
-                # query is required
-                self.assertRaises(
-                    ImportHandlerException, ds._get_iter, None)
-                self.assertRaises(
-                    ImportHandlerException, ds._get_iter, ' ')
+            # query is required
+            self.assertRaises(
+                ImportHandlerException, ds._get_iter, None)
+            self.assertRaises(
+                ImportHandlerException, ds._get_iter, ' ')
 
     def test_db_datasource_invalid_definition(self):
         # Vendor is invalid

@@ -10,6 +10,7 @@ _build
 
 local_config.coffee
 ve
+src
 build
 *.sqlite
 
