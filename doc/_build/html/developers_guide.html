@@ -1,0 +1,210 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Developer’s guide &mdash; Cloudml 2.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Cloudml 2.0 documentation" href="index.html" />
+    <link rel="prev" title="Command line utils" href="command_line_utils.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="command_line_utils.html" title="Command line utils"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Cloudml 2.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="developer-s-guide">
+<h1>Developer&#8217;s guide<a class="headerlink" href="#developer-s-guide" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="bootsrap-on-ubuntu">
+<h2>Bootsrap on Ubuntu<a class="headerlink" href="#bootsrap-on-ubuntu" title="Permalink to this headline">¶</a></h2>
+<p>Install system requirements:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ sudo apt-get install -y build-essential git python-pip python-dev libxml2-dev libxslt1-dev liblapack-dev gfortran libpq-dev libevent-dev python-virtualenv
+</pre></div>
+</div>
+<p>Clone cloduml repo:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ git clone https://github.com/odeskdataproducts/cloudml.git
+$ cd cloudml
+</pre></div>
+</div>
+<p>Create virtual env:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ virtualenv --no-site-packages ve
+$ . ve/bin/activate
+</pre></div>
+</div>
+<p>Install numpy and scipy:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ export LAPACK=/usr/lib/liblapack.so
+$ export ATLAS=/usr/lib/libatlas.so
+$ export BLAS=/usr/lib/libblas.so
+$ pip install numpy==1.7.1
+$ pip install scipy==0.12.0
+</pre></div>
+</div>
+<p>Install memory-profiler:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ memory-profiler==0.27
+</pre></div>
+</div>
+<p>Install python requirements:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ pip install -r ./requirements.txt
+</pre></div>
+</div>
+<p>Create local config:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ cp local_config.py.tpl local_config.py
+</pre></div>
+</div>
+</div>
+<div class="section" id="bootstrap-using-vagrant">
+<h2>Bootstrap using vagrant<a class="headerlink" href="#bootstrap-using-vagrant" title="Permalink to this headline">¶</a></h2>
+<p>Before diving into cloudml, please <a class="reference external" href="http://docs.vagrantup.com/v2/installation/">install the latest version of Vagrant</a>. And because we&#8217;ll be using <a class="reference external" href="http://www.virtualbox.org/">VirtualBox</a> as our provider for the getting started guide, please install that as well.</p>
+<p>Clone cloduml repo:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ git clone https://github.com/odeskdataproducts/cloudml.git
+</pre></div>
+</div>
+<p>For boot your Vagrant environment. Run the following:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ cd cloudml
+$ vagrant up
+</pre></div>
+</div>
+<p>In 20-30 minutes, this command will finish and you&#8217;ll have a virtual machine running Ubuntu with installed all dependencies.</p>
+<p>For connect to machine run:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ vagrant ssh
+</pre></div>
+</div>
+<p>For run test please go to <cite>/vagrant</cite> directory:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ cd /vagrant
+$ python setup.py test
+</pre></div>
+</div>
+<p>When you&#8217;re done fiddling around with the machine, run <cite>vagrant destroy</cite> back on your host machine, and Vagrant will remove all traces of the virtual machine.</p>
+<p>A <cite>vagrant suspend</cite> effectively saves the exact point-in-time state of the machine, so that when you resume it later, it begins running immediately from that point, rather than doing a full boot.</p>
+</div>
+<div class="section" id="build-docs">
+<h2>Build docs<a class="headerlink" href="#build-docs" title="Permalink to this headline">¶</a></h2>
+<p>For build docs please install:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ sudo pip install Sphinx==1.3.1
+</pre></div>
+</div>
+<p>Build html doc:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ cd doc
+$ make html
+</pre></div>
+</div>
+<p>View doc in ./doc/_build/html directory.</p>
+</div>
+<div class="section" id="run-tests">
+<h2>Run tests<a class="headerlink" href="#run-tests" title="Permalink to this headline">¶</a></h2>
+<p>For run test please install:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ pip install nose coverage moto==0.3.3 mock==1.0.1
+</pre></div>
+</div>
+<p>Run all tests:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ python setup.py test
+</pre></div>
+</div>
+<p>Run tests with coverage:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ python setup.py coverage
+</pre></div>
+</div>
+<p>Run single test:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ nosetests cloudml.tests.trainer_tests:TrainerTestCase.test_features_not_found
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Developer&#8217;s guide</a><ul>
+<li><a class="reference internal" href="#bootsrap-on-ubuntu">Bootsrap on Ubuntu</a></li>
+<li><a class="reference internal" href="#bootstrap-using-vagrant">Bootstrap using vagrant</a></li>
+<li><a class="reference internal" href="#build-docs">Build docs</a></li>
+<li><a class="reference internal" href="#run-tests">Run tests</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="command_line_utils.html"
+                        title="previous chapter">Command line utils</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/developers_guide.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Upwork.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.4</a>
+      
+      |
+      <a href="_sources/developers_guide.txt"
+          rel="nofollow">Page source</a></li>
+    </div>
+
+    
+
+    
+  </body>
+</html>

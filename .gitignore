@@ -5,7 +5,6 @@
 *.swo
 *.swp
 *.vim
-_build
 *.bak
 
 local_config.coffee

@@ -1,0 +1,191 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Installation &mdash; Cloudml 2.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Cloudml 2.0 documentation" href="index.html" />
+    <link rel="next" title="Getting started" href="getting_started.html" />
+    <link rel="prev" title="Welcome to Cloudml’s documentation!" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="getting_started.html" title="Getting started"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to Cloudml’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Cloudml 2.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p>There are different ways to get cloudml installed:</p>
+<blockquote>
+<div><ul class="simple">
+<li><span class="xref std std-ref">Install an official release</span>. This
+is the best approach for users who want a stable version number
+and aren&#8217;t concerned about running a slightly older version of
+cloudml.</li>
+<li><a class="reference internal" href="#install-development-version"><span>Install the latest development version</span></a>. This is best for users who want the
+latest-and-greatest features and aren&#8217;t afraid of running
+brand-new code.</li>
+</ul>
+</div></blockquote>
+<div class="section" id="installing-an-official-release">
+<h2>Installing an official release<a class="headerlink" href="#installing-an-official-release" title="Permalink to this headline">¶</a></h2>
+<p>Cloudml requires:</p>
+<ul class="simple">
+<li>Python (&gt;= 2.6)</li>
+</ul>
+<div class="section" id="ubuntu-installation">
+<h3>Ubuntu installation<a class="headerlink" href="#ubuntu-installation" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic">
+<li><p class="first">Install system requirements:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ sudo apt-get install -y build-essential git python-pip python-dev libxml2-dev libxslt1-dev liblapack-dev gfortran libpq-dev libevent-dev
+</pre></div>
+</div>
+</li>
+<li><p class="first">Install numpy and scipy:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ export LAPACK=/usr/lib/liblapack.so
+$ export ATLAS=/usr/lib/libatlas.so
+$ export BLAS=/usr/lib/libblas.so
+$ pip install numpy==1.7.1
+$ pip install scipy==0.12.0
+</pre></div>
+</div>
+</li>
+<li><p class="first">Install cloudml with pip:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ pip install cloudml
+</pre></div>
+</div>
+</li>
+</ol>
+<p>To build cloudml from the source package download the source package from <a class="reference external" href="http://pypi.python.org/pypi/cloudml">http://pypi.python.org/pypi/cloudml</a>, unpack the sources into a directory, cd into this directory and run:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ python setup.py install
+</pre></div>
+</div>
+</div>
+<div class="section" id="mac-os-installation">
+<h3>Mac Os installation<a class="headerlink" href="#mac-os-installation" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="install-the-latest-development-version">
+<h2>Install the latest development version<a class="headerlink" href="#install-the-latest-development-version" title="Permalink to this headline">¶</a></h2>
+<p>git clone <a class="reference external" href="https://github.com/odeskdataproducts/cloudml.git">https://github.com/odeskdataproducts/cloudml.git</a></p>
+</div>
+<div class="section" id="testing">
+<span id="id1"></span><h2>Testing<a class="headerlink" href="#testing" title="Permalink to this headline">¶</a></h2>
+<p>Testing requires having the <cite>nose</cite>, <cite>coverage</cite>, <cite>moto</cite>, <cite>mock</cite>:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ pip install nose coverage moto==0.3.3 mock==1.0.1
+</pre></div>
+</div>
+<p>To start testing cd to a source directory and execute:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ python setup.py test
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Installation</a><ul>
+<li><a class="reference internal" href="#installing-an-official-release">Installing an official release</a><ul>
+<li><a class="reference internal" href="#ubuntu-installation">Ubuntu installation</a></li>
+<li><a class="reference internal" href="#mac-os-installation">Mac Os installation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#install-the-latest-development-version">Install the latest development version</a></li>
+<li><a class="reference internal" href="#testing">Testing</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to Cloudml&#8217;s documentation!</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="getting_started.html"
+                        title="next chapter">Getting started</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/install.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Upwork.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.4</a>
+      
+      |
+      <a href="_sources/install.txt"
+          rel="nofollow">Page source</a></li>
+    </div>
+
+    
+
+    
+  </body>
+</html>

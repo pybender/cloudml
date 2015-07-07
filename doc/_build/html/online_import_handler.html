@@ -1,0 +1,183 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Online import handlers &mdash; Cloudml 2.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Cloudml 2.0 documentation" href="index.html" />
+    <link rel="next" title="Command line utils" href="command_line_utils.html" />
+    <link rel="prev" title="Generic Import Handler Format (XML)" href="import_handlers.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="command_line_utils.html" title="Command line utils"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="import_handlers.html" title="Generic Import Handler Format (XML)"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Cloudml 2.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="online-import-handlers">
+<h1>Online import handlers<a class="headerlink" href="#online-import-handlers" title="Permalink to this headline">¶</a></h1>
+<p>Online import handlers using for getting data in cloudml-predict.</p>
+<p>For getting data using folowing datasource:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Http</li>
+<li>Input</li>
+</ul>
+</div></blockquote>
+<p>Http datasource use for request data from another services. Input datasource for use data which get from POST of request.</p>
+<div class="section" id="http">
+<h2>Http<a class="headerlink" href="#http" title="Permalink to this headline">¶</a></h2>
+<p>For example:</p>
+<div class="highlight-python"><div class="highlight"><pre>&lt;plan&gt;
+      &lt;inputs&gt;
+        &lt;param name=&quot;opening_id&quot; type=&quot;string&quot;/&gt;
+      &lt;/inputs&gt;
+      &lt;datasources&gt;
+        &lt;http name=&quot;odr&quot; url=&quot;http://odr.prod.sv4.odesk.com/odr/opening/f/&quot;/&gt;
+      &lt;/datasources&gt;
+      &lt;import&gt;
+        &lt;entity datasource=&quot;odr&quot; name=&quot;opening&quot;&gt;
+          &lt;query&gt;&lt;![CDATA[#{opening_id}.json]]&gt;&lt;/query&gt;
+          &lt;field jsonpath=&quot;$.op_title&quot; name=&quot;opening.title&quot; type=&quot;string&quot;/&gt;
+          &lt;field jsonpath=&quot;$.op_job&quot; name=&quot;opening.description&quot; type=&quot;string&quot;/&gt;
+        &lt;/entity&gt;
+      &lt;/import&gt;
+      &lt;predict&gt;
+        &lt;result&gt;
+          &lt;label/&gt;
+          &lt;probability/&gt;
+        &lt;/result&gt;
+      &lt;/predict&gt;
+    &lt;/plan&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="input">
+<h2>Input<a class="headerlink" href="#input" title="Permalink to this headline">¶</a></h2>
+<p>For example:</p>
+<div class="highlight-python"><div class="highlight"><pre>&lt;plan&gt;
+  &lt;inputs&gt;
+    &lt;param name=&quot;rate&quot; type=&quot;float&quot;/&gt;
+    &lt;param name=&quot;title&quot; type=&quot;string&quot;/&gt;
+  &lt;/inputs&gt;
+  &lt;datasources/&gt;
+  &lt;import&gt;
+    &lt;entity datasource=&quot;input&quot; name=&quot;Test_input&quot;&gt;
+      &lt;query&gt;&lt;![CDATA[any]]&gt;&lt;/query&gt;
+      &lt;field column=&quot;title&quot; name=&quot;dev_title&quot; type=&quot;string&quot;/&gt;
+      &lt;field column=&quot;rate&quot; name=&quot;rate&quot; type=&quot;float&quot;/&gt;
+    &lt;/entity&gt;
+  &lt;/import&gt;
+  &lt;predict&gt;
+    &lt;result&gt;
+      &lt;label/&gt;
+      &lt;probability/&gt;
+    &lt;/result&gt;
+  &lt;/predict&gt;
+&lt;/plan&gt;
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Online import handlers</a><ul>
+<li><a class="reference internal" href="#http">Http</a></li>
+<li><a class="reference internal" href="#input">Input</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="import_handlers.html"
+                        title="previous chapter">Generic Import Handler Format (XML)</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="command_line_utils.html"
+                        title="next chapter">Command line utils</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/online_import_handler.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Upwork.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.4</a>
+      
+      |
+      <a href="_sources/online_import_handler.txt"
+          rel="nofollow">Page source</a></li>
+    </div>
+
+    
+
+    
+  </body>
+</html>

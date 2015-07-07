@@ -1,0 +1,352 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Getting started &mdash; Cloudml 2.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Cloudml 2.0 documentation" href="index.html" />
+    <link rel="next" title="Feature JSON file format" href="features.html" />
+    <link rel="prev" title="Install" href="install.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="features.html" title="Feature JSON file format"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="install.html" title="Install"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Cloudml 2.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="getting-started">
+<h1>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
+<p>CloudML aims to provide a set of tools that allow building a classifier on the
+cloud. It consists of three components:</p>
+<ol class="arabic simple">
+<li>Import handler, a utility module that is responsible for feeding the trainer and the predictor with data.</li>
+<li>Predictor, that uses a model produced by the trainer to predict the class of incoming requests,</li>
+<li>Trainer, which receives data from the import handler and trains a classifier to produce a classification model.</li>
+</ol>
+<div class="section" id="import-data">
+<h2>Import data<a class="headerlink" href="#import-data" title="Permalink to this headline">¶</a></h2>
+<p>First we download a dataset from the <a class="reference external" href="http://archive.ics.uci.edu/ml">UCI Machine Learning Repository</a>.</p>
+<p>For example, we can do it using wget command:</p>
+<div class="highlight-python"><div class="highlight"><pre>$wget http://archive.ics.uci.edu/ml/machine-learning-databases/abalone/abalone.data
+</pre></div>
+</div>
+<p>But first we have to describe the structure of the dataset, make an .xml <em>extraction plan</em> file.</p>
+<dl class="docutils">
+<dt>The extraction plan for a dataset to load from a csv file is as follows:</dt>
+<dd><div class="first last highlight-xml"><div class="highlight"><pre><span class="nt">&lt;plan&gt;</span>
+    <span class="nt">&lt;datasources&gt;</span>
+        <span class="nt">&lt;csv</span> <span class="na">name=</span><span class="s">&quot;test_datasource&quot;</span> <span class="na">src=</span><span class="s">&quot;abalone.data&quot;</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/datasources&gt;</span>
+    <span class="nt">&lt;import&gt;</span>
+        <span class="nt">&lt;entity</span> <span class="na">datasource=</span><span class="s">&quot;test_datasource&quot;</span> <span class="na">name=</span><span class="s">&quot;test&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;sex&quot;</span> <span class="na">type=</span><span class="s">&quot;string&quot;</span> <span class="na">column=</span><span class="s">&quot;0&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;length&quot;</span> <span class="na">type=</span><span class="s">&quot;float&quot;</span> <span class="na">column=</span><span class="s">&quot;1&quot;</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;diameter&quot;</span> <span class="na">type=</span><span class="s">&quot;float&quot;</span> <span class="na">column=</span><span class="s">&quot;2&quot;</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;height&quot;</span> <span class="na">type=</span><span class="s">&quot;float&quot;</span> <span class="na">column=</span><span class="s">&quot;3&quot;</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;whole_weight&quot;</span> <span class="na">type=</span><span class="s">&quot;float&quot;</span> <span class="na">column=</span><span class="s">&quot;4&quot;</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;shucked_weight&quot;</span> <span class="na">type=</span><span class="s">&quot;float&quot;</span> <span class="na">column=</span><span class="s">&quot;5&quot;</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;square&quot;</span> <span class="na">type=</span><span class="s">&quot;float&quot;</span> <span class="na">script=</span><span class="s">&quot;length*height&quot;</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;rings&quot;</span> <span class="na">type=</span><span class="s">&quot;integer&quot;</span> <span class="na">column=</span><span class="s">&quot;8&quot;</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;/entity&gt;</span>
+    <span class="nt">&lt;/import&gt;</span>
+<span class="nt">&lt;/plan&gt;</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>Full example of extraction plan <a class="reference download internal" href="_downloads/extract_csv.xml"><code class="xref download docutils literal"><span class="pre">extract_csv.xml</span></code></a></p>
+<p>Run import data and store dataset to abalano.json file:</p>
+<div class="highlight-python"><div class="highlight"><pre>$importhandler.py extract_csv.xml -o abalone.json
+
+2015-07-03 06:30:16,951 - root
+                            - INFO - User-defined parameters:
+2015-07-03 06:30:16,952 - root
+                            - DEBUG - Validating schema...
+2015-07-03 06:30:16,953 - root
+                            - DEBUG - No input parameters declared
+2015-07-03 06:30:16,953 - root
+                            - INFO - Validate input parameters.
+2015-07-03 06:30:16,953 - root
+                            - INFO - Storing data to abalone.json...
+2015-07-03 06:30:16,954 - root
+                            - INFO - Processed 0 rows so far
+2015-07-03 06:30:17,019 - root
+                            - INFO - Processed 1000 rows so far
+2015-07-03 06:30:17,083 - root
+                            - INFO - Processed 2000 rows so far
+2015-07-03 06:30:17,148 - root
+                            - INFO - Processed 3000 rows so far
+2015-07-03 06:30:17,211 - root
+                            - INFO - Processed 4000 rows so far
+2015-07-03 06:30:17,222 - root
+                            - INFO - Total 4177 lines
+2015-07-03 06:30:17,223 - root
+                            - INFO - Ignored 0 lines
+</pre></div>
+</div>
+<p>File <a class="reference download internal" href="_downloads/abalone.json"><code class="xref download docutils literal"><span class="pre">abalone.json</span></code></a> contain json for each row. We should get folowing results:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span><span class="s">&quot;shucked_weight&quot;</span><span class="p">:</span> <span class="mf">0.2245</span><span class="p">,</span> <span class="s">&quot;diameter&quot;</span><span class="p">:</span> <span class="mf">0.365</span><span class="p">,</span> <span class="s">&quot;length&quot;</span><span class="p">:</span> <span class="mf">0.455</span><span class="p">,</span> <span class="s">&quot;square&quot;</span><span class="p">:</span> <span class="mf">0.043225</span><span class="p">,</span> <span class="s">&quot;whole_weight&quot;</span><span class="p">:</span> <span class="mf">0.514</span><span class="p">,</span> <span class="s">&quot;sex&quot;</span><span class="p">:</span> <span class="s">&quot;M&quot;</span><span class="p">,</span> <span class="s">&quot;rings&quot;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span> <span class="s">&quot;height&quot;</span><span class="p">:</span> <span class="mf">0.095</span><span class="p">}</span>
+<span class="p">{</span><span class="s">&quot;shucked_weight&quot;</span><span class="p">:</span> <span class="mf">0.0995</span><span class="p">,</span> <span class="s">&quot;diameter&quot;</span><span class="p">:</span> <span class="mf">0.265</span><span class="p">,</span> <span class="s">&quot;length&quot;</span><span class="p">:</span> <span class="mf">0.35</span><span class="p">,</span> <span class="s">&quot;square&quot;</span><span class="p">:</span> <span class="mf">0.0315</span><span class="p">,</span> <span class="s">&quot;whole_weight&quot;</span><span class="p">:</span> <span class="mf">0.2255</span><span class="p">,</span> <span class="s">&quot;sex&quot;</span><span class="p">:</span> <span class="s">&quot;M&quot;</span><span class="p">,</span> <span class="s">&quot;rings&quot;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span> <span class="s">&quot;height&quot;</span><span class="p">:</span> <span class="mf">0.09</span><span class="p">}</span>
+<span class="o">......</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="describe-features">
+<h2>Describe features<a class="headerlink" href="#describe-features" title="Permalink to this headline">¶</a></h2>
+<p>For create new model you should describe model features using json. You can found info about format in <a class="reference internal" href="features.html#features"><span>Feature JSON file format</span></a> chapter of this documentaion.</p>
+<dl class="docutils">
+<dt>Firts we should define classifier:</dt>
+<dd><div class="first last highlight-json"><div class="highlight"><pre>  &quot;classifier&quot;: {
+    &quot;type&quot;: &quot;logistic regression&quot;,
+    &quot;params&quot;: {&quot;penalty&quot;: &quot;l2&quot;}
+  },
+</pre></div>
+</div>
+</dd>
+<dt>The feateres is as follows:</dt>
+<dd><div class="first last highlight-json"><div class="highlight"><pre>  &quot;features&quot;:[
+    {
+      &quot;name&quot;:&quot;sex&quot;,
+      &quot;type&quot;:&quot;map&quot;,
+      &quot;params&quot;: {
+        &quot;mappings&quot;:{
+          &quot;I&quot;: 0,
+          &quot;M&quot;: 1,
+          &quot;F&quot;: 2
+        }
+      },
+      &quot;is-target-variable&quot;:true,
+      &quot;is-required&quot;:true
+    },
+    {
+      &quot;name&quot;:&quot;square&quot;,
+      &quot;type&quot;:&quot;float&quot;
+    },
+    {
+      &quot;name&quot;:&quot;diameter&quot;,
+      &quot;type&quot;:&quot;float&quot;
+    },
+    {
+      &quot;name&quot;:&quot;whole_weight&quot;,
+      &quot;type&quot;:&quot;float&quot;
+    },
+    {
+      &quot;name&quot;:&quot;shucked_weight&quot;,
+      &quot;type&quot;:&quot;float&quot;
+    },
+    {
+      &quot;name&quot;:&quot;rings&quot;,
+      &quot;type&quot;:&quot;int&quot;
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>Full example we can found in <a class="reference download internal" href="_downloads/features.json"><code class="xref download docutils literal"><span class="pre">feature.json</span></code></a>.</p>
+</div>
+<div class="section" id="train-model">
+<h2>Train model<a class="headerlink" href="#train-model" title="Permalink to this headline">¶</a></h2>
+<p>Train model using command:</p>
+<div class="highlight-python"><div class="highlight"><pre>trainer.py features.json -i abalone.json
+</pre></div>
+</div>
+<p>Output:</p>
+<div class="highlight-python"><div class="highlight"><pre>2015-07-03 18:33:46,317 - root
+                            - INFO - Using &quot;logistic regression&quot;
+2015-07-03 18:33:46,318 - root
+                            - WARNING - Could not determine input data file format.&#39;json&#39; would be used.
+2015-07-03 18:33:46,318 - root
+                            - INFO - Training the model using input file dataset.
+2015-07-03 18:33:46,527 - root
+                            - INFO - Processed 3342 lines, ignored 0 lines
+2015-07-03 18:33:46,550 - root
+                            - INFO - Extracting features for segment default ...
+2015-07-03 18:33:46,552 - root
+                            - INFO - Preparing feature square for train
+2015-07-03 18:33:46,557 - root
+                            - INFO - Preparing feature diameter for train
+2015-07-03 18:33:46,561 - root
+                            - INFO - Preparing feature whole_weight for train
+2015-07-03 18:33:46,568 - root
+                            - INFO - Preparing feature shucked_weight for train
+2015-07-03 18:33:46,571 - root
+                            - INFO - Preparing feature rings for train
+2015-07-03 18:33:46,590 - root
+                            - INFO - Training model...
+2015-07-03 18:33:46,634 - root
+                            - INFO - Number of features: 5
+2015-07-03 18:33:46,690 - root
+                            - INFO - Genarate trained model visualization
+2015-07-03 18:33:46,690 - root
+                            - INFO - Calculate feature weights for default segment
+2015-07-03 18:33:46,691 - root
+                            - INFO - Get weights for label 0
+2015-07-03 18:33:46,691 - root
+                            - INFO - Get weights for label 1
+2015-07-03 18:33:46,691 - root
+                            - INFO - Get weights for label 2
+2015-07-03 18:33:46,721 - root
+                            - INFO - Training completed...
+</pre></div>
+</div>
+<p>For store trained model to file need specify -o option with file name. For example:</p>
+<div class="highlight-python"><div class="highlight"><pre>$trainer.py features.json -i abalone.json -o model.dat
+</pre></div>
+</div>
+</div>
+<div class="section" id="test-model">
+<h2>Test model<a class="headerlink" href="#test-model" title="Permalink to this headline">¶</a></h2>
+<p>For evaluating model we can use part of input dataset. For this we should set percent of data which will be use for test to <cite>-tp</cite> param. For example, if we want to use 20% of dataset for test:</p>
+<div class="highlight-python"><div class="highlight"><pre>trainer.py features.json -i abalone.json -tp 20
+</pre></div>
+</div>
+<p>After run this command we will get folowing info:</p>
+<div class="highlight-python"><div class="highlight"><pre>......
+
+2015-07-03 18:33:46,921 - root
+                            - INFO - Processed 835 lines, ignored 0 lines
+2015-07-03 18:33:46,921 - root
+                            - INFO - Starting test &quot;default&quot; segment
+2015-07-03 18:33:46,921 - root
+                            - INFO - Extracting features for segment default ...
+2015-07-03 18:33:46,949 - root
+                            - INFO - Evaluating model...
+2015-07-03 18:33:46,989 - root
+                            - INFO - Area under ROC curve: {0: 0.87069287725025435, 1: 0.6702269847952107, 2: 0.71342276511627289}
+2015-07-03 18:33:46,996 - root
+                            - INFO - Confusion Matrix: [[1081  210   51]
+ [ 367  897  264]
+ [ 240  753  314]]
+2015-07-03 18:33:46,998 - root
+                            - INFO - ROC curve: {0: [array([ 0.        ,  0.        ,  0.        , ...,  0.99929453,
+        0.99964727,  1.        ]), array([  7.45156483e-04,   1.49031297e-03,   2.23546945e-03, ...,
+         1.00000000e+00,   1.00000000e+00,   1.00000000e+00])], 1: [array([  0.00000000e+00,   3.77500944e-04,   3.77500944e-04, ...,
+         9.99244998e-01,   9.99622499e-01,   1.00000000e+00]), array([  0.00000000e+00,   0.00000000e+00,   6.54450262e-04, ...,
+         1.00000000e+00,   1.00000000e+00,   1.00000000e+00])], 2: [array([ 0.        ,  0.        ,  0.        , ...,  0.99930314,
+        0.99965157,  1.        ]), array([  7.65110941e-04,   1.53022188e-03,   2.29533282e-03, ...,
+         1.00000000e+00,   1.00000000e+00,   1.00000000e+00])]}
+2015-07-03 18:33:47,001 - root
+                            - INFO - Accuracy: 0.548719176442
+</pre></div>
+</div>
+</div>
+<div class="section" id="predict">
+<h2>Predict<a class="headerlink" href="#predict" title="Permalink to this headline">¶</a></h2>
+<p>For predict data using existing trained model and store results to csv file:</p>
+<div class="highlight-python"><div class="highlight"><pre>$predictor.py model.dat -i abalone.json -m csv
+</pre></div>
+</div>
+<p>Results will be stored to result.csv file. First lines from it:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">label</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span>
+<span class="mi">1</span><span class="p">,</span><span class="mf">0.28701459000432328</span><span class="p">,</span><span class="mf">0.40396444257495651</span><span class="p">,</span><span class="mf">0.30902096742072022</span>
+<span class="mi">0</span><span class="p">,</span><span class="mf">0.69853735998655109</span><span class="p">,</span><span class="mf">0.19688865629972377</span><span class="p">,</span><span class="mf">0.10457398371372523</span>
+</pre></div>
+</div>
+<p>Label column is a predicted label. Other columns are probabilities for each class.</p>
+<p>We can build rest api service for predict using cloudml-predict.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Getting started</a><ul>
+<li><a class="reference internal" href="#import-data">Import data</a></li>
+<li><a class="reference internal" href="#describe-features">Describe features</a></li>
+<li><a class="reference internal" href="#train-model">Train model</a></li>
+<li><a class="reference internal" href="#test-model">Test model</a></li>
+<li><a class="reference internal" href="#predict">Predict</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="install.html"
+                        title="previous chapter">Install</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="features.html"
+                        title="next chapter">Feature JSON file format</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/getting_started.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Upwork.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.4</a>
+      
+      |
+      <a href="_sources/getting_started.txt"
+          rel="nofollow">Page source</a></li>
+    </div>
+
+    
+
+    
+  </body>
+</html>

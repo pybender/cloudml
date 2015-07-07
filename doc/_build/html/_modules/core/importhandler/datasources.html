@@ -1,0 +1,807 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>core.importhandler.datasources &mdash; Cloudml 2.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Cloudml 2.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Cloudml 2.0 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for core.importhandler.datasources</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module gathers DataSource classes.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c"># Author: Nikolay Melnik &lt;nmelnik@upwork.com&gt;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">boto</span>
+<span class="kn">import</span> <span class="nn">boto.emr</span>
+<span class="kn">from</span> <span class="nn">boto.s3.key</span> <span class="kn">import</span> <span class="n">Key</span>
+<span class="kn">from</span> <span class="nn">boto.exception</span> <span class="kn">import</span> <span class="n">EmrResponseError</span>
+<span class="kn">from</span> <span class="nn">boto.emr.step</span> <span class="kn">import</span> <span class="n">PigStep</span><span class="p">,</span> <span class="n">InstallPigStep</span><span class="p">,</span> <span class="n">JarStep</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">from</span> <span class="nn">requests</span> <span class="kn">import</span> <span class="n">ConnectionError</span>
+
+<span class="kn">from</span> <span class="nn">exceptions</span> <span class="kn">import</span> <span class="n">ImportHandlerException</span><span class="p">,</span> <span class="n">ProcessException</span>
+<span class="kn">from</span> <span class="nn">db</span> <span class="kn">import</span> <span class="n">postgres_iter</span><span class="p">,</span> <span class="n">run_queries</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s">&#39;boto&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+
+
+<span class="n">DATASOURCES_REQUIRE_QUERY</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;db&#39;</span><span class="p">,</span> <span class="s">&#39;pig&#39;</span><span class="p">]</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;DATASOURCES_REQUIRE_QUERY&#39;</span><span class="p">,</span> <span class="s">&#39;DataSource&#39;</span><span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">BaseDataSource</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for any type of the datasource.</span>
+
+<span class="sd">    config: lxml.etree._Element</span>
+<span class="sd">        parsed by lxml.objectify datasource definition tag.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">)</span>  <span class="c"># unique</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ImportHandlerException</span><span class="p">(</span><span class="s">&#39;name is required&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">tag</span>
+
+    <span class="k">def</span> <span class="nf">_get_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">query_target</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets datasource iterator.</span>
+
+<span class="sd">        query: string</span>
+<span class="sd">            query string could be different dependly of datasource type.</span>
+<span class="sd">        query_target: string</span>
+<span class="sd">            for some datasources it&#39;s a name of the entity where results</span>
+<span class="sd">            would be stored.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Not implemented&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">([</span>
+            <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">attrib</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="s">&#39;name&#39;</span><span class="p">])</span>
+
+
+<span class="c"># TODO: implement named connections like:</span>
+<span class="c"># &lt;db name=&quot;namedDBConnection&quot; name-ref=&quot;myODWConnection&quot; /&gt;</span>
+<div class="viewcode-block" id="DbDataSource"><a class="viewcode-back" href="../../../index.html#core.importhandler.DbDataSource">[docs]</a><span class="k">class</span> <span class="nc">DbDataSource</span><span class="p">(</span><span class="n">BaseDataSource</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Database connection.</span>
+
+<span class="sd">    config: lxml.etree._Element</span>
+<span class="sd">        parsed by lxml.objectify datasource definition tag.</span>
+
+<span class="sd">    Config should contains attributes:</span>
+<span class="sd">        name: string</span>
+<span class="sd">            unique name for this datasource</span>
+<span class="sd">        host: string</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">DB</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;postgres&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">postgres_iter</span><span class="p">,</span> <span class="n">run_queries</span><span class="p">]</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_get_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">query_target</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets datasource iterator for specified select query.</span>
+
+<span class="sd">        query: string</span>
+<span class="sd">            PostgreSQL query string</span>
+<span class="sd">        query_target: string</span>
+<span class="sd">            Name of the table, from with we need to select data.</span>
+<span class="sd">            If `query_target` specified, at the end of the queries</span>
+<span class="sd">            statement would be added select all from table, named</span>
+<span class="sd">            query_target expression.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">query_target</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DbDataSource.run_queries"><a class="viewcode-back" href="../../../index.html#core.importhandler.DbDataSource.run_queries">[docs]</a>    <span class="k">def</span> <span class="nf">run_queries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Runs query on this datasource.</span>
+
+<span class="sd">        query: string</span>
+<span class="sd">            PostgreSql query string with expressions separated by &#39;;&#39;.</span>
+<span class="sd">            &#39;;&#39; is required at the end of the query.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            It using in the PigDataSource before run Sqoop import</span>
+<span class="sd">            for creating the table with intermediate results.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_run</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">query_target</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">run</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">query_target</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">run</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="n">queries</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_queries_list</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">query_target</span><span class="p">)</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">run</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="n">vendor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;vendor&#39;</span><span class="p">]</span>
+        <span class="n">db_iter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DB</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">vendor</span><span class="p">)[</span><span class="n">method</span><span class="p">]</span> <span class="k">if</span> <span class="n">vendor</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">DB</span> <span class="k">else</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="n">db_iter</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ImportHandlerException</span><span class="p">(</span>
+                <span class="s">&#39;Database type </span><span class="si">%s</span><span class="s"> not supported&#39;</span> <span class="o">%</span> <span class="n">vendor</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s">&#39;host&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">attrib</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ImportHandlerException</span><span class="p">(</span>
+                <span class="s">&#39;No database connection details defined&#39;</span><span class="p">)</span>
+
+        <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+        <span class="n">conn_params</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">attrib</span><span class="p">)</span>
+        <span class="n">conn_params</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">)</span>
+        <span class="n">conn_params</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;vendor&#39;</span><span class="p">)</span>
+        <span class="n">conn_string</span> <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">=</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+                                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">conn_params</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()])</span>
+        <span class="k">return</span> <span class="n">db_iter</span><span class="p">(</span><span class="n">queries</span><span class="p">,</span> <span class="n">conn_string</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_queries_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">query_target</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">query</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ImportHandlerException</span><span class="p">(</span>
+                <span class="s">&quot;Query is required in the DB datasource&quot;</span><span class="p">)</span>
+
+        <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s">&#39; </span><span class="se">\t\n\r</span><span class="s">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">query</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ImportHandlerException</span><span class="p">(</span>
+                <span class="s">&quot;Query is required in the DB datasource&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">query</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;;&#39;</span><span class="p">):</span>
+            <span class="n">query</span> <span class="o">+=</span> <span class="s">&#39;;&#39;</span>
+
+        <span class="n">queries</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;;&#39;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">queries</span> <span class="o">=</span> <span class="p">[</span><span class="n">q</span> <span class="o">+</span> <span class="s">&#39;;&#39;</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">queries</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">query_target</span><span class="p">:</span>
+            <span class="n">queries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;SELECT * FROM </span><span class="si">%s</span><span class="s">;&quot;</span> <span class="o">%</span> <span class="n">query_target</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">queries</span>
+
+</div>
+<span class="k">class</span> <span class="nc">HttpDataSource</span><span class="p">(</span><span class="n">BaseDataSource</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Datasource for importing JSON data from remote HTTP services.</span>
+
+<span class="sd">    config: lxml.etree._Element</span>
+<span class="sd">        parsed by lxml.objectify datasource definition tag.</span>
+
+<span class="sd">    Config contains attributes:</span>
+<span class="sd">        name: string</span>
+<span class="sd">            unique name for this datasource</span>
+<span class="sd">        url: string</span>
+<span class="sd">            remote service url</span>
+<span class="sd">        method: string (optional), default=&#39;GET&#39;</span>
+<span class="sd">            http method</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">HttpDataSource</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+        <span class="n">attrs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">attrib</span>
+        <span class="k">if</span> <span class="s">&#39;url&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">attrs</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ImportHandlerException</span><span class="p">(</span><span class="s">&#39;No url given&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">attrs</span><span class="p">[</span><span class="s">&#39;url&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ImportHandlerException</span><span class="p">(</span><span class="s">&#39;No url given&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;method&#39;</span><span class="p">,</span> <span class="s">&#39;GET&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">query_target</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns datasource iterator.</span>
+
+<span class="sd">        query: string</span>
+<span class="sd">            query string of the url.</span>
+<span class="sd">        query_target: string</span>
+<span class="sd">            it isn&#39;t used for this datasource.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">query_target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ImportHandlerException</span><span class="p">(</span>
+                <span class="s">&quot;Http datasource doesn&#39;t support query_target&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">query</span><span class="p">:</span>
+            <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="n">url</span> <span class="o">=</span> <span class="s">&#39;{0}/{1}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span>
+
+        <span class="c"># TODO: params?</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Getting data from: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">url</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">ConnectionError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ImportHandlerException</span><span class="p">(</span>
+                <span class="s">&#39;Cannot reach url: {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)))</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ImportHandlerException</span><span class="p">(</span>
+                <span class="s">&#39;Cannot parse json: {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">iter</span><span class="p">([</span><span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()])</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">())</span>
+
+
+<span class="k">class</span> <span class="nc">CsvDataSource</span><span class="p">(</span><span class="n">BaseDataSource</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Datasource which can use CSV file for getting data from local files.</span>
+
+<span class="sd">    config: lxml.etree._Element</span>
+<span class="sd">        parsed by lxml.objectify datasource definition tag.</span>
+
+<span class="sd">    Config contains:</span>
+<span class="sd">        name: string</span>
+<span class="sd">            unique name for this datasource</span>
+<span class="sd">        src: string</span>
+<span class="sd">            the path to the CSV file</span>
+<span class="sd">        headers: string (optional), default=&#39;GET&#39;</span>
+<span class="sd">            Header information can be defined by adding child &lt;header&gt;</span>
+<span class="sd">            elements to the &lt;csv&gt; element. Each &lt;header&gt; element must</span>
+<span class="sd">            contain exactly two fields:</span>
+<span class="sd">                * name - the name of the column</span>
+<span class="sd">                * index - the column&#39;s index (columns are zero-indexed).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">CsvDataSource</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+        <span class="n">attrs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">attrib</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">headers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s">&#39;header&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;name&#39;</span><span class="p">],</span> <span class="nb">int</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;index&#39;</span><span class="p">])))</span>
+
+        <span class="k">if</span> <span class="s">&#39;src&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">attrs</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ImportHandlerException</span><span class="p">(</span><span class="s">&#39;No source given&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">src</span> <span class="o">=</span> <span class="n">attrs</span><span class="p">[</span><span class="s">&#39;src&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_get_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">query_target</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">__get_obj</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">row</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">idx</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">idx</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">ImportHandlerException</span><span class="p">(</span>
+                        <span class="s">&quot;csv file {0} doesn&#39;t contains column &quot;</span>
+                        <span class="s">&quot;{1}, named {2}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">src</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
+                <span class="n">obj</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">obj</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">src</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">stream</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+                <span class="n">obj</span> <span class="o">=</span> <span class="n">__get_obj</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">obj</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="c"># Try load json field</span>
+                    <span class="n">strkey</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">obj</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="n">strkey</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;{&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">strkey</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;[&#39;</span><span class="p">):</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">obj</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                            <span class="k">pass</span>
+                <span class="k">yield</span> <span class="n">obj</span>
+
+
+<span class="k">class</span> <span class="nc">PigDataSource</span><span class="p">(</span><span class="n">BaseDataSource</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A connection to a remote Hadoop/Pig cluster</span>
+
+<span class="sd">    config: lxml.etree._Element</span>
+<span class="sd">        parsed by lxml.objectify datasource definition tag.</span>
+
+<span class="sd">    Config contains:</span>
+<span class="sd">        name: string</span>
+<span class="sd">            a unique name for this datasource</span>
+<span class="sd">        jobid: string (optional)</span>
+<span class="sd">            id of hadoop pig jobflow</span>
+<span class="sd">        amazon_access_token: string</span>
+<span class="sd">        amazon_token_secret: string</span>
+<span class="sd">        bucket_name: string (optional)</span>
+<span class="sd">            Amazon S3 bucket name to store input data and results</span>
+<span class="sd">        master_instance_type: string (optional)</span>
+<span class="sd">            Instance type of the master node of EMR</span>
+<span class="sd">        slave_instance_type: string (optional)</span>
+<span class="sd">        num_instances: string (optional)</span>
+<span class="sd">        hadoop_params: string (optional)</span>
+<span class="sd">        keep_alive: bool (optional)</span>
+<span class="sd">        ec2_keyname: string (optional)</span>
+<span class="sd">        ami_version: string (optional)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">SQOOP_COMMAND</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;sqoop import --verbose --connect &quot;</span><span class="si">%(connect)s</span><span class="s">&quot; </span><span class="se">\</span>
+<span class="s">--username </span><span class="si">%(user)s</span><span class="s"> --password </span><span class="si">%(password)s</span><span class="s"> --table </span><span class="si">%(table)s</span><span class="s"> </span><span class="se">\</span>
+<span class="s">--direct-split-size 4000000000 -m </span><span class="si">%(mappers)s</span><span class="s"> </span><span class="si">%(options)s</span><span class="s">&#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">PigDataSource</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">import_handler</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="kn">from</span> <span class="nn">config</span> <span class="kn">import</span> <span class="n">AMAZON_ACCESS_TOKEN</span><span class="p">,</span> <span class="n">AMAZON_TOKEN_SECRET</span><span class="p">,</span> \
+            <span class="n">S3_LOG_URI</span><span class="p">,</span> <span class="n">BUCKET_NAME</span><span class="p">,</span> <span class="n">DEFAILT_AMI_VERSION</span><span class="p">,</span> \
+            <span class="n">DEFAULT_INSTANCE_TYPE</span><span class="p">,</span> <span class="n">DEFAULT_NUM_INSTANCES</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">amazon_access_token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s">&#39;amazon_access_token&#39;</span><span class="p">,</span> <span class="n">AMAZON_ACCESS_TOKEN</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">amazon_token_secret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s">&#39;amazon_token_secret&#39;</span><span class="p">,</span> <span class="n">AMAZON_TOKEN_SECRET</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">master_instance_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s">&#39;master_instance_type&#39;</span><span class="p">,</span> <span class="n">DEFAULT_INSTANCE_TYPE</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">slave_instance_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s">&#39;slave_instance_type&#39;</span><span class="p">,</span> <span class="n">DEFAULT_INSTANCE_TYPE</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_instances</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s">&#39;num_instances&#39;</span><span class="p">,</span> <span class="n">DEFAULT_NUM_INSTANCES</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keep_alive</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;keep_alive&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ec2_keyname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;ec2_keyname&#39;</span><span class="p">,</span> <span class="s">&#39;cloudml-control&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hadoop_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;hadoop_params&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ami_version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;ami_version&#39;</span><span class="p">,</span> <span class="n">DEFAILT_AMI_VERSION</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bucket_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;bucket_name&#39;</span><span class="p">,</span> <span class="n">BUCKET_NAME</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">s3_conn</span> <span class="o">=</span> <span class="n">boto</span><span class="o">.</span><span class="n">connect_s3</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">amazon_access_token</span><span class="p">,</span>
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">amazon_token_secret</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">emr_conn</span> <span class="o">=</span> <span class="n">boto</span><span class="o">.</span><span class="n">emr</span><span class="o">.</span><span class="n">connect_to_region</span><span class="p">(</span>
+            <span class="s">&#39;us-west-1&#39;</span><span class="p">,</span>
+            <span class="n">aws_access_key_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">amazon_access_token</span><span class="p">,</span>
+            <span class="n">aws_secret_access_key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">amazon_token_secret</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">jobid</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;jobid&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="n">ts</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result_path</span> <span class="o">=</span> <span class="s">&quot;/cloudml/output/</span><span class="si">%s</span><span class="s">/</span><span class="si">%d</span><span class="s">/&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">ts</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result_uri</span> <span class="o">=</span> <span class="s">&quot;s3n://</span><span class="si">%s%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bucket_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">result_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sqoop_result_uri</span> <span class="o">=</span> <span class="s">&quot;s3n://</span><span class="si">%s</span><span class="s">/cloudml/output/</span><span class="si">%s</span><span class="s">/</span><span class="si">%d</span><span class="s">_sqoop/&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bucket_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">ts</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sqoop_results_uries</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_path</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">S3_LOG_URI</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_uri</span> <span class="o">=</span> <span class="s">&#39;s3://</span><span class="si">%s%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bucket_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_path</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Using ami version </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">ami_version</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">cluster_is_exist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">jobid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">s3_logs_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;s3://{0}{1}/{2}/steps/&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bucket_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jobid</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">set_import_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">import_handler</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">import_handler</span> <span class="o">=</span> <span class="n">import_handler</span>
+
+    <span class="k">def</span> <span class="nf">run_sqoop_imports</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sqoop_imports</span><span class="o">=</span><span class="p">[]):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Runs sqoop imports and saves results to Amazon S3 on</span>
+<span class="sd">        `self.sqoop_result_uri`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">sqoop_import</span> <span class="ow">in</span> <span class="n">sqoop_imports</span><span class="p">:</span>
+            <span class="n">db_param</span> <span class="o">=</span> <span class="n">sqoop_import</span><span class="o">.</span><span class="n">datasource</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">attrib</span>
+            <span class="n">connect</span> <span class="o">=</span> <span class="s">&quot;jdbc:postgresql://</span><span class="si">%s</span><span class="s">:</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">db_param</span><span class="p">[</span><span class="s">&#39;host&#39;</span><span class="p">],</span>
+                <span class="n">db_param</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;port&#39;</span><span class="p">,</span> <span class="s">&#39;5432&#39;</span><span class="p">),</span>
+                <span class="n">db_param</span><span class="p">[</span><span class="s">&#39;dbname&#39;</span><span class="p">])</span>
+            <span class="n">sqoop_script</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SQOOP_COMMAND</span> <span class="o">%</span> <span class="p">{</span>
+                <span class="s">&#39;table&#39;</span><span class="p">:</span> <span class="n">sqoop_import</span><span class="o">.</span><span class="n">table</span><span class="p">,</span>
+                <span class="s">&#39;connect&#39;</span><span class="p">:</span> <span class="n">connect</span><span class="p">,</span>
+                <span class="s">&#39;password&#39;</span><span class="p">:</span> <span class="n">db_param</span><span class="p">[</span><span class="s">&#39;password&#39;</span><span class="p">],</span>
+                <span class="s">&#39;user&#39;</span><span class="p">:</span> <span class="n">db_param</span><span class="p">[</span><span class="s">&#39;user&#39;</span><span class="p">],</span>
+                <span class="s">&#39;mappers&#39;</span><span class="p">:</span> <span class="n">sqoop_import</span><span class="o">.</span><span class="n">mappers</span><span class="p">,</span>
+                <span class="s">&#39;options&#39;</span><span class="p">:</span> <span class="n">sqoop_import</span><span class="o">.</span><span class="n">options</span><span class="p">}</span>
+            <span class="k">if</span> <span class="n">sqoop_import</span><span class="o">.</span><span class="n">where</span><span class="p">:</span>
+                <span class="n">sqoop_script</span> <span class="o">+=</span> <span class="s">&quot; --where </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">sqoop_import</span><span class="o">.</span><span class="n">where</span>
+            <span class="k">if</span> <span class="n">sqoop_import</span><span class="o">.</span><span class="n">direct</span><span class="p">:</span>
+                <span class="n">sqoop_script</span> <span class="o">+=</span> <span class="s">&quot; --direct&quot;</span>
+            <span class="n">sqoop_result_uri</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s%s</span><span class="s">/&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sqoop_result_uri</span><span class="p">,</span> <span class="n">sqoop_import</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sqoop_results_uries</span><span class="p">[</span><span class="n">sqoop_import</span><span class="o">.</span><span class="n">target</span><span class="p">]</span> <span class="o">=</span> <span class="n">sqoop_result_uri</span>
+            <span class="n">sqoop_script</span> <span class="o">+=</span> <span class="s">&quot; --target-dir </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">sqoop_result_uri</span>
+
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Sqoop command: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">sqoop_script</span><span class="p">)</span>
+            <span class="kn">import</span> <span class="nn">subprocess</span>
+
+            <span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
+                <span class="n">sqoop_script</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+                <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">STDOUT</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">readlines</span><span class="p">():</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="n">retval</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">retval</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ImportHandlerException</span><span class="p">(</span><span class="s">&#39;Sqoop import  failed&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">query_target</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns results iterator.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">process_pig_script</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">query_target</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_result</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">generate_download_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">log_type</span><span class="p">,</span> <span class="n">expires_in</span><span class="o">=</span><span class="mi">3600</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates url to download running pig script logs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s3_conn</span><span class="o">.</span><span class="n">get_bucket</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bucket_name</span><span class="p">)</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">Key</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+        <span class="n">key</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="s">&#39;/{1}/{2}/steps/</span><span class="si">%d</span><span class="s">/</span><span class="si">%s</span><span class="s">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jobid</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">log_type</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">key</span><span class="o">.</span><span class="n">generate_url</span><span class="p">(</span><span class="n">expires_in</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">process_pig_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">query_target</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Start processing pig datasource...&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">pig_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_pig_step</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">query_target</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ProcessException</span><span class="p">(</span>
+                <span class="s">&quot;Can&#39;t initialize pig datasource: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exc</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">clear_output_folder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster_is_exist</span><span class="p">:</span>
+            <span class="n">step_number</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_steps_on_existing_jobflow</span><span class="p">(</span><span class="n">pig_step</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">step_number</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_jobflow_and_run_steps</span><span class="p">(</span>
+                <span class="n">bootstrap_actions</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_bootstrap_actions</span><span class="p">(),</span>
+                <span class="n">pig_step</span><span class="o">=</span><span class="n">pig_step</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Step number is </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">step_number</span><span class="p">)</span>
+
+        <span class="n">previous_state</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">emr_conn</span><span class="o">.</span><span class="n">describe_jobflow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">jobid</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">EmrResponseError</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Getting throttled. Sleeping for 10 secs.&quot;</span><span class="p">)</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">previous_state</span> <span class="o">!=</span> <span class="n">status</span><span class="o">.</span><span class="n">state</span><span class="p">:</span>
+                <span class="n">step_state</span> <span class="o">=</span> <span class="n">status</span><span class="o">.</span><span class="n">steps</span><span class="p">[</span><span class="n">step_number</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">state</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="s">&quot;State of jobflow changed: </span><span class="si">%s</span><span class="s">. Step </span><span class="si">%s</span><span class="s"> state is: </span><span class="si">%s</span><span class="s">&quot;</span><span class="p">,</span>
+                    <span class="n">status</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">step_number</span><span class="p">,</span> <span class="n">step_state</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">status</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="s">&#39;RUNNING&#39;</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_process_running_state</span><span class="p">(</span><span class="n">status</span><span class="p">,</span> <span class="n">step_number</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">status</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="s">&#39;COMPLETED&#39;</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">step_state</span> <span class="o">==</span> <span class="s">&#39;FAILED&#39;</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_fail_jobflow</span><span class="p">(</span><span class="n">step_number</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="n">step_state</span> <span class="o">==</span> <span class="s">&#39;COMPLETED&#39;</span><span class="p">:</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Step is completed&#39;</span><span class="p">)</span>
+                        <span class="k">break</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                            <span class="s">&#39;Unexpected job state for status </span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span>
+                            <span class="n">status</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">step_state</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">status</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="s">&#39;RUNNING&#39;</span><span class="p">:</span>
+                    <span class="k">pass</span>  <span class="c"># processing the task</span>
+                <span class="k">elif</span> <span class="n">status</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="s">&#39;WAITING&#39;</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">step_state</span> <span class="o">==</span> <span class="s">&#39;PENDING&#39;</span><span class="p">:</span>
+                        <span class="c"># we reusing cluster and have waiting status</span>
+                        <span class="c"># of jobflow from previous job</span>
+                        <span class="k">pass</span>
+                    <span class="k">elif</span> <span class="n">step_state</span> <span class="o">==</span> <span class="s">&#39;FAILED&#39;</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_fail_jobflow</span><span class="p">(</span><span class="n">step_number</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="n">step_state</span> <span class="o">==</span> <span class="s">&#39;COMPLETED&#39;</span><span class="p">:</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Step is completed&#39;</span><span class="p">)</span>
+                        <span class="k">break</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                            <span class="s">&#39;Unexpected job state for status </span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span>
+                            <span class="n">status</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">step_state</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">status</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="s">&#39;FAILED&#39;</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_fail_jobflow</span><span class="p">(</span><span class="n">step_number</span><span class="p">)</span>
+
+                <span class="n">previous_state</span> <span class="o">=</span> <span class="n">status</span><span class="o">.</span><span class="n">state</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s">&quot;Pig results stored to: s3://</span><span class="si">%s%s</span><span class="s">&quot;</span> <span class="o">%</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bucket_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">result_path</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">get_result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns running pig script results.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s3_conn</span><span class="o">.</span><span class="n">get_bucket</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bucket_name</span><span class="p">)</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">Key</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+        <span class="kn">import</span> <span class="nn">cStringIO</span>
+        <span class="c"># TODO: Need getting data from all nodes</span>
+        <span class="n">k</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">part-m-00000&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">result_path</span>
+        <span class="n">type_result</span> <span class="o">=</span> <span class="s">&#39;m&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">k</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">type_result</span> <span class="o">=</span> <span class="s">&#39;r&#39;</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">first_result</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">sbuffer</span> <span class="o">=</span> <span class="n">cStringIO</span><span class="o">.</span><span class="n">StringIO</span><span class="p">()</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">Key</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+            <span class="n">k</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">part-</span><span class="si">%s</span><span class="s">-</span><span class="si">%05d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">result_path</span><span class="p">,</span> <span class="n">type_result</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">k</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="k">break</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Getting from s3 file </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">k</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
+            <span class="n">k</span><span class="o">.</span><span class="n">get_contents_to_file</span><span class="p">(</span><span class="n">sbuffer</span><span class="p">)</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">sbuffer</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">sbuffer</span><span class="p">:</span>
+                <span class="n">pig_row</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">first_result</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">import_handler</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> \
+                            <span class="bp">self</span><span class="o">.</span><span class="n">import_handler</span><span class="o">.</span><span class="n">callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                        <span class="n">callback_params</span> <span class="o">=</span> <span class="p">{</span>
+                            <span class="s">&#39;jobflow_id&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">jobid</span><span class="p">,</span>
+                            <span class="s">&#39;pig_row&#39;</span><span class="p">:</span> <span class="n">pig_row</span>
+                        <span class="p">}</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">import_handler</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="o">**</span><span class="n">callback_params</span><span class="p">)</span>
+                    <span class="n">first_result</span> <span class="o">=</span> <span class="bp">True</span>
+                <span class="k">yield</span> <span class="n">pig_row</span>
+            <span class="n">sbuffer</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c"># Creating pig step related methods</span>
+
+    <span class="k">def</span> <span class="nf">get_pig_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">query_target</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns pig step</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Appending pig step.&#39;</span><span class="p">)</span>
+        <span class="n">pig_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_store_query_to_s3</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">query_target</span><span class="p">)</span>
+        <span class="n">pig_args</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-p&#39;</span><span class="p">,</span> <span class="s">&#39;output=</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">result_uri</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sqoop_results_uries</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="n">pig_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;-p&quot;</span><span class="p">)</span>
+            <span class="n">pig_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s">=</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span>
+        <span class="n">pig_step</span> <span class="o">=</span> <span class="n">PigStep</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">pig_file</span><span class="o">=</span><span class="n">pig_file</span><span class="p">,</span>
+            <span class="n">pig_args</span><span class="o">=</span><span class="n">pig_args</span><span class="p">)</span>
+        <span class="n">pig_step</span><span class="o">.</span><span class="n">action_on_failure</span> <span class="o">=</span> <span class="s">&#39;CONTINUE&#39;</span>
+        <span class="k">return</span> <span class="n">pig_step</span>
+
+    <span class="k">def</span> <span class="nf">_store_query_to_s3</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">query_target</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Stores pig sctipt to Amazon S3 and returns uri to it.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">query_target</span><span class="p">:</span>
+            <span class="n">query</span> <span class="o">+=</span> \
+                <span class="s">&quot;</span><span class="se">\n</span><span class="s">STORE </span><span class="si">%s</span><span class="s"> INTO &#39;$output&#39; USING JsonStorage();&quot;</span> <span class="o">%</span> <span class="n">query_target</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s3_conn</span><span class="o">.</span><span class="n">get_bucket</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bucket_name</span><span class="p">)</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">Key</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Store pig script to s3: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">query</span><span class="p">)</span>
+        <span class="n">k</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="s">&#39;cloudml/pig/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s">&#39;_script.pig&#39;</span>
+        <span class="n">k</span><span class="o">.</span><span class="n">set_contents_from_string</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">&#39;s3://</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bucket_name</span><span class="p">,</span> <span class="n">k</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">clear_output_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Deletes results of previous execution scripts on this datasource.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Clearing output folder on Amazon S3&#39;</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s3_conn</span><span class="o">.</span><span class="n">get_bucket</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bucket_name</span><span class="p">)</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">Key</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+        <span class="n">k</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="s">&quot;cloudml/output/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">name</span>
+        <span class="n">k</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+
+    <span class="c"># Run steps on jobflow related methods</span>
+
+    <span class="k">def</span> <span class="nf">_run_steps_on_existing_jobflow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pig_step</span><span class="p">):</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">emr_conn</span><span class="o">.</span><span class="n">describe_jobflow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">jobid</span><span class="p">)</span>
+        <span class="n">step_number</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">status</span><span class="o">.</span><span class="n">steps</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Using existing emr jobflow: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">jobid</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">emr_conn</span><span class="o">.</span><span class="n">add_jobflow_steps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">jobid</span><span class="p">,</span> <span class="p">[</span><span class="n">pig_step</span><span class="p">,</span> <span class="p">])</span>
+        <span class="k">return</span> <span class="n">step_number</span>
+
+    <span class="k">def</span> <span class="nf">_create_jobflow_and_run_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bootstrap_actions</span><span class="p">,</span> <span class="n">pig_step</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Runs hadoop jobflow and saves ID to jobid field.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Running emr jobflow&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">jobid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">emr_conn</span><span class="o">.</span><span class="n">run_jobflow</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s">&#39;Cloudml jobflow&#39;</span><span class="p">,</span>
+            <span class="n">log_uri</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log_uri</span><span class="p">,</span>
+            <span class="n">ami_version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ami_version</span><span class="p">,</span>
+            <span class="n">visible_to_all_users</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+            <span class="n">bootstrap_actions</span><span class="o">=</span><span class="n">bootstrap_actions</span><span class="p">,</span>
+            <span class="n">ec2_keyname</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ec2_keyname</span><span class="p">,</span>
+            <span class="c"># keep_alive=self.keep_alive,</span>
+            <span class="n">num_instances</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_instances</span><span class="p">,</span>
+            <span class="n">master_instance_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">master_instance_type</span><span class="p">,</span>
+            <span class="n">slave_instance_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">slave_instance_type</span><span class="p">,</span>
+            <span class="c"># api_params={&#39;Instances.Ec2SubnetId&#39;:&#39;subnet-3f5bc256&#39;},</span>
+            <span class="n">action_on_failure</span><span class="o">=</span><span class="s">&#39;CONTINUE&#39;</span><span class="p">,</span>
+            <span class="n">steps</span><span class="o">=</span><span class="p">[</span><span class="n">pig_step</span><span class="p">,</span> <span class="p">])</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;New JobFlow id is </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">jobid</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">_get_bootstrap_actions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns bootstrap actions for starting new cluster:</span>
+<span class="sd">            * install ganglia</span>
+<span class="sd">            * configure hadoop</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">bootstrap_actions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">install_ganglia</span> <span class="o">=</span> <span class="n">boto</span><span class="o">.</span><span class="n">emr</span><span class="o">.</span><span class="n">BootstrapAction</span><span class="p">(</span>
+            <span class="s">&#39;Install ganglia&#39;</span><span class="p">,</span>
+            <span class="s">&#39;s3://elasticmapreduce/bootstrap-actions/install-ganglia&#39;</span><span class="p">,</span> <span class="p">[]</span>
+        <span class="p">)</span>
+        <span class="n">bootstrap_actions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">install_ganglia</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hadoop_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hadoop_params</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)</span>
+            <span class="n">config_bootstrapper</span> <span class="o">=</span> <span class="n">boto</span><span class="o">.</span><span class="n">emr</span><span class="o">.</span><span class="n">BootstrapAction</span><span class="p">(</span>
+                <span class="s">&#39;Configure hadoop&#39;</span><span class="p">,</span>
+                <span class="s">&#39;s3://elasticmapreduce/bootstrap-actions/configure-hadoop&#39;</span><span class="p">,</span>
+                <span class="n">params</span>
+            <span class="p">)</span>
+            <span class="n">bootstrap_actions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">config_bootstrapper</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">bootstrap_actions</span>
+
+    <span class="c"># Different jobflow states processing methods.</span>
+
+    <span class="k">def</span> <span class="nf">_process_running_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">step_number</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">status</span><span class="p">,</span> <span class="s">&#39;masterpublicdnsname&#39;</span><span class="p">):</span>
+            <span class="n">masterpublicdnsname</span> <span class="o">=</span> <span class="n">status</span><span class="o">.</span><span class="n">masterpublicdnsname</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">import_handler</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> \
+                    <span class="bp">self</span><span class="o">.</span><span class="n">import_handler</span><span class="o">.</span><span class="n">callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">callback_params</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s">&#39;jobflow_id&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">jobid</span><span class="p">,</span>
+                    <span class="s">&#39;s3_logs_folder&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">s3_logs_folder</span><span class="p">,</span>
+                    <span class="s">&#39;master_dns&#39;</span><span class="p">:</span> <span class="n">masterpublicdnsname</span><span class="p">,</span>
+                    <span class="s">&#39;step_number&#39;</span><span class="p">:</span> <span class="n">step_number</span>
+                <span class="p">}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">import_handler</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="o">**</span><span class="n">callback_params</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Master node dns name: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">masterpublicdnsname</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sd">&#39;&#39;&#39;For access to hadoop web ui please create ssh tunnel:</span>
+<span class="sd">ssh -D localhost:12345 hadoop@%(dns)s -i ~/.ssh/cloudml-control.pem</span>
+<span class="sd">After creating ssh tunnel web ui will be available on localhost:9026 using</span>
+<span class="sd">socks proxy localhost:12345&#39;&#39;&#39;</span> <span class="o">%</span> <span class="p">{</span><span class="s">&#39;dns&#39;</span><span class="p">:</span> <span class="n">masterpublicdnsname</span><span class="p">})</span>
+
+    <span class="k">def</span> <span class="nf">_fail_jobflow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step_number</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&#39;Jobflow failed, shutting down.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_print_logs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log_path</span><span class="p">,</span> <span class="n">step_number</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">ImportHandlerException</span><span class="p">(</span><span class="s">&#39;Emr jobflow </span><span class="si">%s</span><span class="s"> failed&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">jobid</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_print_logs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_path</span><span class="p">,</span> <span class="n">step_number</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Outputs pig script stdout, stderr, controller logs using logging.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Step logs:&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Stdout:&#39;</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_log</span><span class="p">(</span><span class="n">log_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jobid</span><span class="p">,</span> <span class="n">step_number</span><span class="p">))</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Controller:&#39;</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_log</span><span class="p">(</span>
+                <span class="n">log_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jobid</span><span class="p">,</span> <span class="n">step_number</span><span class="p">,</span> <span class="s">&#39;controller&#39;</span><span class="p">))</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Stderr:&#39;</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_log</span><span class="p">(</span>
+                <span class="n">log_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jobid</span><span class="p">,</span> <span class="n">step_number</span><span class="p">,</span> <span class="s">&#39;stderr&#39;</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&#39;Exception occures while loading logs: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">exc</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Logs are unavailable now (updated every 5 mins)&#39;</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;&#39;&#39;For getting stderr log please use command:</span>
+<span class="s">    s3cmd get s3://</span><span class="si">%s%s</span><span class="s">/</span><span class="si">%s</span><span class="s">/steps/</span><span class="si">%d</span><span class="s">/stderr stderr&#39;&#39;&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bucket_name</span><span class="p">,</span> <span class="n">log_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jobid</span><span class="p">,</span> <span class="n">step_number</span><span class="p">))</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;&#39;&#39;For getting stdout log please use command:</span>
+<span class="s">    s3cmd get s3://</span><span class="si">%s%s</span><span class="s">/</span><span class="si">%s</span><span class="s">/steps/</span><span class="si">%d</span><span class="s">/stdout stdout&#39;&#39;&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bucket_name</span><span class="p">,</span> <span class="n">log_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jobid</span><span class="p">,</span> <span class="n">step_number</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_get_log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_uri</span><span class="p">,</span> <span class="n">jobid</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">log_type</span><span class="o">=</span><span class="s">&#39;stdout&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets running pig script logs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s3_conn</span><span class="o">.</span><span class="n">get_bucket</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bucket_name</span><span class="p">)</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">Key</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+        <span class="n">k</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="s">&quot;/</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">/steps/</span><span class="si">%d</span><span class="s">/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">log_uri</span><span class="p">,</span> <span class="n">jobid</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">log_type</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Log uri: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">k</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">k</span><span class="o">.</span><span class="n">get_contents_as_string</span><span class="p">()</span>
+
+
+<span class="k">class</span> <span class="nc">InputDataSource</span><span class="p">(</span><span class="n">BaseDataSource</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s">&#39;input&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="s">&#39;input&#39;</span>
+
+    <span class="k">def</span> <span class="nf">get_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">_get_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">query_target</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ImportHandlerException</span><span class="p">(</span><span class="s">&#39;Cannot parse json: {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">iter</span><span class="p">([</span><span class="n">result</span><span class="p">])</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">DataSource</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">DATASOURCE_DICT</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;db&#39;</span><span class="p">:</span> <span class="n">DbDataSource</span><span class="p">,</span>
+        <span class="s">&#39;pig&#39;</span><span class="p">:</span> <span class="n">PigDataSource</span><span class="p">,</span>
+        <span class="s">&#39;http&#39;</span><span class="p">:</span> <span class="n">HttpDataSource</span><span class="p">,</span>
+        <span class="s">&#39;csv&#39;</span><span class="p">:</span> <span class="n">CsvDataSource</span><span class="p">,</span>
+        <span class="s">&#39;input&#39;</span><span class="p">:</span> <span class="n">InputDataSource</span>
+    <span class="p">}</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">factory</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">tag</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cls</span><span class="o">.</span><span class="n">DATASOURCE_DICT</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ImportHandlerException</span><span class="p">(</span>
+                <span class="s">&#39;{0} datasource type is not supported&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">tag</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">DATASOURCE_DICT</span><span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">tag</span><span class="p">](</span><span class="n">config</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Upwork.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.4</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

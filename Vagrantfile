@@ -79,6 +79,7 @@ Vagrant.configure(2) do |config|
      sudo pip install -U numpy==1.7.1
      sudo pip install scipy==0.12.0
      sudo pip install memory-profiler==0.27
+     sudo pip install Sphinx==1.3.1
      sudo pip install nose coverage moto==0.3.3 mock==1.0.1
      cd /vagrant
      pip install -r ./requirements.txt

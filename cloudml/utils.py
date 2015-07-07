@@ -1,5 +1,6 @@
 # Author: Nikolay Melnik <nmelnik@upwork.com>
 import logging
+import os
 
 
 def process_bool(val=None):
@@ -28,6 +29,7 @@ def determine_data_format(filepath):
     try:
         format = os.path.splitext(filepath)[1][1:]
     except Exception:
+        raise
         logging.warning("Could not determine input data file format."
                         "'json' would be used.")
         return 'json'
