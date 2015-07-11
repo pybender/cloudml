@@ -1,8 +1,8 @@
 .. _import_handlers:
 
-===================================
-Generic Import Handler Format (XML)
-===================================
+==========================
+Import Handler file format
+==========================
 
 CloudML predict uses two different approaches for importing data:
 

@@ -1,32 +1,56 @@
-===============
-Getting started
-===============
+.. _introduction:
 
-CloudML aims to provide a set of tools that allow building a classifier on the
-cloud. It consists of three components:
+=======================================================
+An introduction to building the classifier with CloudML
+=======================================================
+
+
+.. topic:: Section contents
+
+    In this section, we provide a very short example how to
+    learn and evaluate an classifier using CloudML. Also basic concepts and conventions would be introduced.
+
+
+CloudML aims to provide a set of tools that allow building a classifier on the cloud. It consists of three components:
 
 1. Import handler, a utility module that is responsible for feeding the trainer and the predictor with data.
-2. Predictor, that uses a model produced by the trainer to predict the class of incoming requests,
-3. Trainer, which receives data from the import handler and trains a classifier to produce a classification model.
+2. Trainer, which receives data from the import handler and trains a classifier to produce a classification model.
+3. Predictor, that uses a model produced by the trainer to predict the class of incoming requests.
 
+Importing data
+==============
 
-Import data
-===========
+.. _loading_example_dataset:
 
-First we download a dataset from the `UCI Machine Learning Repository <http://archive.ics.uci.edu/ml>`_. 
+Loading an example dataset
+--------------------------
+
+In this example we will use standart `Abalone dataset <https://archive.ics.uci.edu/ml/datasets/Abalone>`_ in CSV format from the `UCI Machine Learning Repository <http://archive.ics.uci.edu/ml>`_.
 
 For example, we can do it using wget command::
 
     $wget http://archive.ics.uci.edu/ml/machine-learning-databases/abalone/abalone.data
 
-But first we have to describe the structure of the dataset, make an .xml *extraction plan* file.
+.. _define_extraction_plan:
+
+Defining extraction plan
+------------------------
+
+But first we have to describe the structure of the dataset, make an :ref:`xml extraction plan file <import_handlers>`.
 
 The extraction plan for a dataset to load from a csv file is as follows:
     .. literalinclude:: _static/extract_csv.xml
         :language: xml
         :lines: 1-17
 
-Full example of extraction plan :download:`extract_csv.xml <_static/extract_csv.xml>`
+.. note::
+
+	Full example of extraction plan could be find here: :download:`extract_csv.xml <_static/extract_csv.xml>`
+
+.. _importing_data:
+
+Importing the dataset
+---------------------
 
 Run import data and store dataset to abalano.json file::
 
@@ -64,25 +88,33 @@ File :download:`abalone.json <_static/abalone.json>` contain json for each row. 
 	{"shucked_weight": 0.0995, "diameter": 0.265, "length": 0.35, "square": 0.0315, "whole_weight": 0.2255, "sex": "M", "rings": 7, "height": 0.09}
 	......
 
-Describe features
-=================
 
-For create new model you should describe model features using json. You can found info about format in :ref:`Feature JSON file format<features>` chapter of this documentaion.
+Creating the model
+==================
 
-Firts we should define classifier:
+Describing features
+-------------------
+
+For create new model you should describe model features json file. You can found info about format in :ref:`Feature JSON file format<features>` chapter of this documentaion.
+
+Firts we should define the classifier:
     .. literalinclude:: _static/features.json
         :language: json
         :lines: 3-6
 
-The feateres is as follows:
+The feateres are as follows:
     .. literalinclude:: _static/features.json
         :language: json
         :lines: 7-39
 
-Full example we can found in :download:`feature.json <_static/features.json>`.
 
-Train model
-===========
+.. note::
+
+	Full example we can found in :download:`feature.json <_static/features.json>`.
+
+
+Training the model
+------------------
 
 Train model using command::
 
@@ -133,8 +165,8 @@ For store trained model to file need specify -o option with file name. For examp
     $trainer.py features.json -i abalone.json -o model.dat
 
 
-Test model
-==========
+Testing the model
+-----------------
 
 For evaluating model we can use part of input dataset. For this we should set percent of data which will be use for test to `-tp` param. For example, if we want to use 20% of dataset for test::
 
@@ -169,8 +201,8 @@ After run this command we will get folowing info::
 	2015-07-03 18:33:47,001 - root
 	                            - INFO - Accuracy: 0.548719176442 
 
-Predict
-=======
+Predicting
+==========
 
 For predict data using existing trained model and store results to csv file::
 

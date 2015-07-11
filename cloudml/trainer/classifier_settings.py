@@ -65,49 +65,56 @@ class Params:
         'default': 'best'}
     min_density = {'name': "min_density", 'type': 'integer'}
     compute_importances = {'name': "compute_importances", 'type': 'boolean'}
+    tol = {'name': "tol", 'type': 'float'}
+    C = {'name': "C", 'type': 'float',
+         'help_text': 'Inverse of regularization strength; must \
+be a positive float. Smaller values specify stronger regularization.'}
+    dual = {'name': "dual", 'type': 'boolean'}
+    fit_intercept = {'name': "fit_intercept", 'type': 'boolean'}
+    epsilon = {'name': 'epsilon', 'type': 'float'}
+    class_weight = {'name': 'class_weight', 'type': 'auto_dict'}
+    intercept_scaling = {'name': "intercept_scaling", 'type': 'float'}
 
 
 CLASSIFIERS = {
     LOGISTIC_REGRESSION: {
         'cls': 'sklearn.linear_model.LogisticRegression',
         'parameters': [
-            {'name': "penalty",
-             'type': 'string',
-             'choices': ['l1', 'l2'],
-             'default': 'l2',
-             'required': True},
-            {'name': "C", 'type': 'float'},
-            {'name': "dual", 'type': 'boolean'},
-            {'name': "fit_intercept", 'type': 'boolean'},
-            {'name': "intercept_scaling", 'type': 'float'},
-            {'name': "class_weight", 'type': 'auto_dict'},
-            {'name': "tol", 'type': 'float'}],
+            {'name': "penalty", 'type': 'string', 'required': True,
+             'choices': ['l1', 'l2'], 'default': 'l2',
+             'help_text': 'Used to specify the norm used in the penalization. \
+The newton-cg and lbfgs solvers support only l2 penalties.'},
+            Params.C, Params.dual, Params.fit_intercept,
+            Params.intercept_scaling, Params.class_weight,
+            {'name': 'max_iter', 'type': 'integer'},
+            {'name': 'solver', 'type': 'string',
+             'choices': ['newton-cg', 'lbfgs', 'liblinear']},
+            {'name': 'multi_class', 'type': 'string',
+             'choices': ['ovr', 'multinomial']},
+            Params.tol, Params.verbose, Params.random_state],
         'defaults': {'penalty': 'l2'}},
     SGD_CLASSIFIER: {
         'cls': 'sklearn.linear_model.SGDClassifier',
         'parameters': (
-            {'name': 'loss',
-             'type': 'string',
+            {'name': 'loss', 'type': 'string',
              'choices': [
                  'hinge', 'log', 'modified_huber', 'squared_hinge',
                  'perceptron', 'squared_loss', 'huber',
                  'epsilon_insensitive', 'squared_epsilon_insensitive']},
-            {'name': 'penalty',
-             'type': 'string',
+            {'name': 'penalty', 'type': 'string',
              'choices': ['l1', 'l2', 'elasticnet']},
             {'name': 'alpha', 'type': 'float'},
             {'name': 'l1_ratio', 'type': 'float'},
-            {'name': 'fit_intercept', 'type': 'boolean'},
+            Params.fit_intercept,
             {'name': 'n_iter', 'type': 'integer'},
             {'name': 'shuffle', 'type': 'boolean'},
-            {'name': 'verbose', 'type': 'integer'},
-            {'name': 'epsilon', 'type': 'float'},
+            Params.verbose, Params.epsilon,
             {'name': 'n_jobs', 'type': 'integer'},
-            {'name': 'random_state', 'type': 'integer'},
+            Params.random_state,
             {'name': 'learning_rate', 'type': 'string'},
             {'name': 'eta0', 'type': 'float'},
             {'name': 'power_t', 'type': 'float'},
-            {'name': 'class_weight', 'type': 'dict'},
+            Params.class_weight,
             {'name': 'warm_start', 'type': 'boolean'},
             {'name': 'rho', 'type': 'string'},
             {'name': 'seed', 'type': 'string'}),
@@ -115,8 +122,7 @@ CLASSIFIERS = {
     SVR: {
         'cls': 'sklearn.svm.SVR',
         'parameters': (
-            {'name': "C", 'type': 'float'},
-            {'name': 'epsilon', 'type': 'float'},
+            Params.C, Params.epsilon,
             {'name': 'kernel',
              'type': 'string',
              'default': 'linear',
@@ -125,7 +131,8 @@ CLASSIFIERS = {
             {'name': 'gamma', 'type': 'float'},
             {'name': 'coef0', 'type': 'float'},
             {'name': 'probability', 'type': 'boolean'},
-            {'name': 'shrinking', 'type': 'boolean'}),
+            {'name': 'shrinking', 'type': 'boolean'},
+            Params.tol, Params.verbose),
         'defaults': {'C': 1.0, 'epsilon': 0.1}},
     DECISION_TREE_CLASSIFIER: {
         'cls': 'sklearn.tree.DecisionTreeClassifier',
@@ -179,7 +186,7 @@ def get_model_type(classifier_type):
     'classification'
     >>> get_model_type('some clf')
     Traceback (most recent call last):
-        ...
+        
     SchemaException: classifier some clf not supported
     """
     if classifier_type in CLASSIFIER_MODELS:

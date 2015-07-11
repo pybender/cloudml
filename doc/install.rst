@@ -15,6 +15,8 @@ There are different ways to get cloudml installed:
     brand-new code.
 
 
+.. _install_official_release:
+
 Installing an official release
 ==============================
 
@@ -22,8 +24,8 @@ Cloudml requires:
 
 - Python (>= 2.6)
  
-Ubuntu installation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Ubuntu 
+------
 
 1. Install system requirements::
 
@@ -47,11 +49,15 @@ To build cloudml from the source package download the source package from http:/
     $ python setup.py install
 
 
-Mac Os installation
-~~~~~~~~~~~~~~~~~~~
+Mac OSX
+-------
+
+Windows
+-------
 
 
 .. _install_development_version:
+
 Install the latest development version
 ======================================
 
@@ -63,7 +69,7 @@ git clone https://github.com/odeskdataproducts/cloudml.git
 Testing
 =======
 
-Testing requires having the `nose`, `coverage`, `moto`, `mock`::
+Testing requires having the `nose`, `coverage`, `moto`, `mock` libraries::
     
     $ pip install nose coverage moto==0.3.3 mock==1.0.1
 

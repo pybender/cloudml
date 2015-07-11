@@ -10,11 +10,13 @@ Contents:
 
    install
    getting_started
-   features
-   import_handlers
-   online_import_handler
    command_line_utils
+   import_handlers
+   features
+   classifiers
+   online_import_handler
    developers_guide
+   glossary
 
 
 .. seealso::
