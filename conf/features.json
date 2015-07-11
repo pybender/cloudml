@@ -4,7 +4,6 @@
     "type": "logistic regression",
     "params": {"penalty": "l2"}
   },
-  "group-by": [ "contractor.dev_is_looking"],
   "feature-types":[
     {
       "name":"str_to_timezone",
@@ -36,7 +35,9 @@
     {
       "name":"tsexams",
       "type": "float",
-      "input_format": "dict"
+      "input-format": "dict",
+      "default": 0.33,
+      "is-required": false
     },
     {
       "name":"employer.op_timezone",
@@ -75,10 +76,9 @@
       "type": "text",
       "transformer":{
         "type":"Tfidf",
-        "params": {
-          "ngram_range_min":1,
-          "ngram_range_max":1,
-          "min_df":10}
+        "params": {"ngram_range_min":1,
+                  "ngram_range_max":1,
+                  "min_df":10}
       }
     },
     {

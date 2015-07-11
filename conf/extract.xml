@@ -1,68 +1,73 @@
-
-
-<plan xmlns:buildings="http://www.example.org/NewXMLSchema">
-
-    <!--Inputs required for this import handler to run -->
-    <inputs>
-        <param name="start" type="date" />
-        <param name="end" type="date" />
-    </inputs>
-    <script>
-    <![CDATA[def always99(a):
-        return 99
-    ]]>
-    </script>
-
-    <datasources>
-        <!--
-            Define data sources to be used. Data sources
-        -->
-        <db name="odw" 
-            host="localhost"
-            dbname="odw"
-            user="postgres"
-            password="postgres"
-            vendor="postgres" />
-        <db name="datasource" 
-            host="localhost"
-            dbname="odw"
-            user="postgres"
-            password="postgres"
-            vendor="postgres" />
-
-
-        <pig name="pig" amazon_token_secret="" amazon_access_token=""/>
-
-    </datasources>
-
-    <import>
-        <entity name="application" datasource="odw">
-            <query target="results">
-                <![CDATA[CREATE TABLE results AS
+<plan>
+  <inputs>
+    <param format="%Y-%m-%d" name="start" type="date"/>
+    <param format="%Y-%m-%d" name="end" type="date"/>
+  </inputs>
+  <datasources>
+    <db dbname="odw" host="localhost" name="odw" password="postgres" user="postgres" vendor="postgres"/>
+  </datasources>
+  <import>
+    <entity datasource="odw" name="application">
+      <query target="results"><![CDATA[CREATE TABLE results AS
   SELECT qi.*, 'class' || (trunc(random() * 2) + 1)::char hire_outcome 
   FROM public.ja_quick_info qi where qi.file_provenance_date >= '#{start}'
   AND qi.file_provenance_date < '#{end}' 
   LIMIT(100);
-  ]]>
-            </query>
-            <!-- "Convert" fields to datasources -->
-            <field name="employer_info" transform="json" column="employer_info"/>
-            <field name="contractor_info" transform="json" column="contractor_info"/>
-            <field name="application_id" type="integer" column="application"/>
-
-            <entity name="employer_info" datasource="employer_info">
-                <field name="employer.op_timezone" jsonpath="$.op_timezone" />
-                <field name="employer.op_country_tz" jsonpath="$.op_country_tz" />
-                <field name="employer.op_tot_jobs_filled" jsonpath="$.op_tot_jobs_filled" />
-                <field name="employer.country" jsonpath="$.op_country" />
-            </entity>
-
-            <entity name="contractor_info" datasource="contractor_info">
-              <field name="contractor.dev_is_looking" jsonpath="$.dev_is_looking" />
-              <field name="contractor.dev_is_looking_week" jsonpath="$.dev_is_looking_week" />
-              <field name="contractor.dev_active_interviews" jsonpath="$.dev_active_interviews" />
-              <field name="contractor.dev_availability" type="integer" jsonpath="$.dev_availability" />
-            </entity>
-        </entity>
-    </import>
+  
+            ]]></query>
+      <field column="employer_info" name="employer_info" transform="json" type="string"/>
+      <field column="contractor_info" name="contractor_info" transform="json" type="string"/>
+      <field column="application" name="application_id" type="integer"/>
+      <field column="hire_outcome" name="hire_outcome" required="true" type="string"/>
+      <field column="opening" name="opening_id" required="true" type="integer"/>
+      <field name="country_pair" type="string">
+        <script><![CDATA["%s,%s" % (contractor.dev_country, employer.country)]]></script>
+      </field>
+      <entity datasource="contractor_info" name="contractor">
+        <field jsonpath="$.dev_is_looking" name="contractor.dev_is_looking" type="string"/>
+        <field jsonpath="$.dev_is_looking_week" name="contractor.dev_is_looking_week" type="string"/>
+        <field jsonpath="$.dev_active_interviews" name="contractor.dev_active_interviews" type="string"/>
+        <field jsonpath="$.dev_availability" name="contractor.dev_availability" type="string"/>
+        <field jsonpath="$.dev_cur_assignments" name="contractor.dev_cur_assignments" type="string"/>
+        <field jsonpath="$.dev_last_worked" name="contractor.dev_last_worked" type="string"/>
+        <field jsonpath="$.dev_recent_fp_jobs" name="contractor.dev_recent_fp_jobs" type="string"/>
+        <field jsonpath="$.dev_total_fp_jobs" name="contractor.dev_total_fp_jobs" type="string"/>
+        <field jsonpath="$.dev_recent_hourly_jobs" name="contractor.dev_recent_hourly_jobs" type="string"/>
+        <field jsonpath="$.dev_total_hourly_jobs" name="contractor.dev_total_hourly_jobs" type="string"/>
+        <field jsonpath="$.dev_recent_hours" name="contractor.dev_recent_hours" type="string"/>
+        <field jsonpath="$.dev_total_hours_rounded" name="contractor.dev_total_hours_rounded" type="string"/>
+        <field jsonpath="$.dev_billed_assignments" name="contractor.dev_billed_assignments" type="string"/>
+        <field jsonpath="$.dev_total_revenue" name="contractor.dev_total_revenue" type="string"/>
+        <field jsonpath="$.dev_tot_feedback" name="contractor.dev_tot_feedback" type="string"/>
+        <field jsonpath="$.dev_tot_feedback_recent" name="contractor.dev_tot_feedback_recent" type="string"/>
+        <field jsonpath="$.assignments[:10].feedback.comment" name="contractor.recent_feedback_comments" type="string"/>
+        <field jsonpath="$.assignments[?(@.feedback.score &lt; '4.00')].feedback.score" name="contractor.negative_feedbacks" type="string"/>
+        <field jsonpath="$.dev_adj_score" name="contractor.dev_adj_score" type="string"/>
+        <field jsonpath="$.dev_adj_score_recent" name="contractor.dev_adj_score_recent" type="string"/>
+        <field jsonpath="$.dev_rank_percentile" name="contractor.dev_rank_percentile" type="string"/>
+        <field jsonpath="$.dev_recent_rank_percentile" name="contractor.dev_recent_rank_percentile" type="string"/>
+        <field jsonpath="$.dev_max_karma" name="contractor.dev_max_karma" type="string"/>
+        <field jsonpath="$.dev_test_passed_count" name="contractor.dev_test_passed_count" type="string"/>
+        <field jsonpath="$.dev_skill_test_passed_count" name="contractor.dev_skill_test_passed_count" type="string"/>
+        <field jsonpath="$.dev_profile_title" name="contractor.dev_profile_title" type="string"/>
+        <field jsonpath="$.dev_blurb" name="contractor.dev_blurb" type="string"/>
+        <field jsonpath="$.dev_bill_rate" name="contractor.dev_bill_rate" type="string"/>
+        <field jsonpath="$.dev_expose_full_name" name="contractor.dev_expose_full_name" type="string"/>
+        <field jsonpath="$.dev_year_exp" name="contractor.dev_year_exp" type="string"/>
+        <field jsonpath="$.dev_portfolio_items_count" name="contractor.dev_portfolio_items_count" type="string"/>
+        <field jsonpath="$.dev_eng_skill" name="contractor.dev_eng_skill" type="string"/>
+        <field jsonpath="$.dev_timezone" name="contractor.dev_timezone" type="string"/>
+        <field jsonpath="$.dev_country" name="contractor.dev_country" type="string"/>
+        <field jsonpath="$.dev_region" name="contractor.dev_region" type="string"/>
+        <field jsonpath="$.dev_is_affiliated" name="ja.is_ic_int" type="string"/>
+        <field jsonpath="$.tsexams" key_path="$.*.ts_name" name="tsexams" type="string" value_path="$.*.ts_score"/>
+      </entity>
+      <entity datasource="employer_info" name="employer">
+        <field jsonpath="$.op_timezone" name="employer.op_timezone" type="string"/>
+        <field jsonpath="$.op_country_tz" name="employer.op_country_tz" type="string"/>
+        <field jsonpath="$.op_tot_jobs_filled" name="employer.op_tot_jobs_filled" type="string"/>
+        <field jsonpath="$.op_country" name="employer.country" type="string"/>
+      </entity>
+    </entity>
+  </import>
 </plan>
