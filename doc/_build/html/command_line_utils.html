@@ -32,8 +32,8 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="None" href="index.html" />
-    <link rel="next" title="Developer’s guide" href="developers_guide.html" />
-    <link rel="prev" title="Online import handlers" href="online_import_handler.html" />
+    <link rel="next" title="Import Handler file format" href="import_handlers.html" />
+    <link rel="prev" title="An introduction to building the classifier with CloudML" href="getting_started.html" />
   
    
        <script type="text/javascript" src="_static/sidebar.js"></script>
@@ -82,14 +82,14 @@
   <!-- rellinks[1:] is an ugly hack to avoid link to module
   index -->
         <div class="rellink">
-        <a href="online_import_handler.html"
+        <a href="getting_started.html"
         accesskey="P">Previous
         <br/>
         <span class="smallrellink">
-        Online import ha...
+        An introduction ...
         </span>
             <span class="hiddenrellink">
-            Online import handlers
+            An introduction to building the classifier with CloudML
             </span>
         </a>
         </div>
@@ -97,14 +97,14 @@
             &nbsp;
             </div>
         <div class="rellink">
-        <a href="developers_guide.html"
+        <a href="import_handlers.html"
         accesskey="N">Next
         <br/>
         <span class="smallrellink">
-        Developer’s guid...
+        Import Handler f...
         </span>
             <span class="hiddenrellink">
-            Developer’s guide
+            Import Handler file format
             </span>
         </a>
         </div>
@@ -121,6 +121,7 @@
 <li><a class="reference internal" href="#importhandler-py">importhandler.py</a></li>
 <li><a class="reference internal" href="#trainer-py">trainer.py</a></li>
 <li><a class="reference internal" href="#predictor-py">predictor.py</a></li>
+<li><a class="reference internal" href="#transformer-py">transformer.py</a></li>
 </ul>
 </li>
 </ul>
@@ -331,6 +332,59 @@
     <td>Path pointing to trained classifier, as saved by trainer.</td>
   </tr>
 </table></div>
+<div class="section" id="transformer-py">
+<h2>transformer.py<a class="headerlink" href="#transformer-py" title="Permalink to this headline">¶</a></h2>
+<p>You can run the train train transfromer using:</p>
+<div class="highlight-python"><div class="highlight"><pre>python transformer.py [-h] [-V] [-d] [-o output]
+                  [-i input-file] [-e extraction-plan-file]
+                  [-I train-param] path
+</pre></div>
+</div>
+<p>The details of the parameters passed to predict.py are the following:</p>
+<table>
+  <tr>
+    <th>Parameter</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td>-h, --help</td>
+    <td>Prints help message</td>
+  </tr>
+  <tr>
+    <td>-V, --version</td>
+    <td>Prints version message</td>
+  </tr>
+  <tr>
+    <td>-d, --debug</td>
+    <td>Adds more log output while running</td>
+  </tr>
+  <tr>
+    <td>-o output, --output output</td>
+    <td>Saves trained transformer and related data to this file.</td>
+  </tr>
+  <tr>
+    <td>-i input-data, --input input-data</td>
+    <td>Read train data from file 'input-data'. Input file may contain
+    multiple JSON objects, each one containing the feature data for each row
+    data.</td>
+  </tr>
+  <tr>
+    <td>-e extraction-plan</td>
+    <td>Use the extraction plan defined in the given path. If -i has been
+    defined, it will be ignored.</td>
+  </tr>
+  <tr>
+    <td>-I key=value</td>
+    <td>Allows user defined parameters. The given parameters will be used to
+    replace parameters in the SQL query. Can have multiple values. Will be
+    used only if flag -e is defined. These values will be used for extracting
+    train data.</td>
+  </tr>
+  <tr>
+    <td>path</td>
+    <td>Path pointing to transformer.json configuration file.</td>
+  </tr>
+</table></div>
 </div>
 
 
@@ -348,11 +402,11 @@
      <div class="rel rellarge">
     
     <div class="buttonPrevious">
-      <a href="online_import_handler.html">Previous
+      <a href="getting_started.html">Previous
       </a>
     </div>
     <div class="buttonNext">
-      <a href="developers_guide.html">Next
+      <a href="import_handlers.html">Next
       </a>
     </div>
     

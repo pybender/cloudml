@@ -14,7 +14,6 @@ Contents:
    import_handlers
    features
    classifiers
-   online_import_handler
    developers_guide
    glossary
 

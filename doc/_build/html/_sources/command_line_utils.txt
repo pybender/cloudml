@@ -220,3 +220,63 @@ The details of the parameters passed to predict.py are the following:
       <td>Path pointing to trained classifier, as saved by trainer.</td>
     </tr>
   </table>
+
+--------------
+transformer.py
+--------------
+
+You can run the train train transfromer using::
+
+  python transformer.py [-h] [-V] [-d] [-o output]
+                    [-i input-file] [-e extraction-plan-file]
+                    [-I train-param] path
+
+The details of the parameters passed to predict.py are the following:
+
+.. raw:: html
+
+
+  <table>
+    <tr>
+      <th>Parameter</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>-h, --help</td>
+      <td>Prints help message</td>
+    </tr>
+    <tr>
+      <td>-V, --version</td>
+      <td>Prints version message</td>
+    </tr>
+    <tr>
+      <td>-d, --debug</td>
+      <td>Adds more log output while running</td>
+    </tr>
+    <tr>
+      <td>-o output, --output output</td>
+      <td>Saves trained transformer and related data to this file.</td>
+    </tr>
+    <tr>
+      <td>-i input-data, --input input-data</td>
+      <td>Read train data from file 'input-data'. Input file may contain
+      multiple JSON objects, each one containing the feature data for each row
+      data.</td>
+    </tr>
+    <tr>
+      <td>-e extraction-plan</td>
+      <td>Use the extraction plan defined in the given path. If -i has been
+      defined, it will be ignored.</td>
+    </tr>
+    <tr>
+      <td>-I key=value</td>
+      <td>Allows user defined parameters. The given parameters will be used to
+      replace parameters in the SQL query. Can have multiple values. Will be
+      used only if flag -e is defined. These values will be used for extracting
+      train data.</td>
+    </tr>
+    <tr>
+      <td>path</td>
+      <td>Path pointing to transformer.json configuration file.</td>
+    </tr>
+  </table>
