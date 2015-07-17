@@ -18,7 +18,7 @@ Clone cloduml repo::
 Create virtual env::
 
     $ virtualenv --no-site-packages ve
-    $ . ve/bin/activate
+    $ source ve/bin/activate
 
 Install numpy and scipy::
 
@@ -40,6 +40,70 @@ Create local config::
 
     $ cp local_config.py.tpl local_config.py
 
+
+------------------
+Bootsrap on MacOS
+------------------
+
+Clone cloduml repo::
+
+	$ git clone https://github.com/odeskdataproducts/cloudml.git
+	$ cd cloudml
+
+Create virtual env::
+
+    $ virtualenv --no-site-packages ve
+    $ source ve/bin/activate
+
+Install numpy and scipy::
+
+    $ export LAPACK=/usr/lib/liblapack.so
+    $ export ATLAS=/usr/lib/libatlas.so
+    $ export BLAS=/usr/lib/libblas.so
+    $ pip install numpy==1.7.1
+    $ pip install scipy==0.12.0
+
+Install memory-profiler::
+
+	$ memory-profiler==0.27
+
+Make sure you are using python version 2.7 and above. If the default python in your mac is an older version 2.6, then do the following::
+
+   $ brew install python 
+   $ mv /usr/bin/python /usr/bin/python.orig
+   $ ln -s /opt/local/bin/python /usr/bin/python
+   $ port select --set python python27 
+
+Make sure you are using pip2.7 or newer. If not, do the following::
+
+    $ cd /usr/local/bin/
+    $ mv pip pip.orig
+    $ ln -s pip2.7 pip
+
+Make sure you are using easy_install version 2.7 and older. Else do the following::
+
+    $ cd /usr/bin/
+    $ mv easy_install easy_install.orig
+    $ ln -s easy_install-2.7 easy_install
+
+Install nltk with easy install::
+
+	$sudo easy_install nltk==3.0.3
+
+Install jsonpath::
+
+    $ Download jsonpath from http://www.ultimate.com/phil/python/download/jsonpath-0.54.tar.gz 
+    $ cd ~/Downloads/jsonpath-0.54
+    $ sudo python setup.py install
+
+Install python requirements::
+
+    $ cd cloudml
+    $ pip install -r ./requirements.txt
+
+Create local config::
+
+    $ cp local_config.py.tpl local_config.py
 
 
 -----------------------
