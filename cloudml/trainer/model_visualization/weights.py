@@ -3,7 +3,7 @@
 import logging
 import numpy
 from operator import itemgetter
-from ..classifier_settings import LOGISTIC_REGRESSION, SVR
+from ..classifier_settings import LOGISTIC_REGRESSION, SVR, SGD_CLASSIFIER
 
 
 class WeightsCalculator(object):
@@ -22,7 +22,8 @@ class WeightsCalculator(object):
 
         if clf_weights_field is None:
             # determine field by clf type
-            if self._trainer.classifier_type in (LOGISTIC_REGRESSION, SVR):
+            if self._trainer.classifier_type in (
+                    LOGISTIC_REGRESSION, SVR, SGD_CLASSIFIER):
                 self.clf_weights_field = 'coef_'
             else:
                 self.clf_weights_field = 'feature_importances_'
@@ -148,7 +149,8 @@ class WeightsCalculator(object):
         gini importance (decision tree classifier) list.
         """
         clf_weights = self._get_clf_weights(clf)
-        if self._trainer.classifier_type in (LOGISTIC_REGRESSION, ):
+        if self._trainer.classifier_type in (
+                LOGISTIC_REGRESSION, SGD_CLASSIFIER):
             return clf_weights[class_index]
         else:
             # TODO: Why???

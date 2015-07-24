@@ -129,6 +129,7 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#feature-transformers">Feature Transformers</a><ul>
+<li><a class="reference internal" href="#pretrained-transformers">Pretrained transformers</a></li>
 <li><a class="reference internal" href="#dictionary">Dictionary</a></li>
 <li><a class="reference internal" href="#count">Count</a></li>
 <li><a class="reference internal" href="#tfidf">Tfidf</a></li>
@@ -282,14 +283,14 @@ keys and values:</p>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt><cite>transformer</cite> :</dt>
+<dt><cite>transformer</cite> <span class="classifier-delimiter">:</span> <span class="classifier">dict, optional</span></dt>
 <dd><p class="first last">Defines a transformer to use for applying to the data of this feature in order to produce multiple features. See <a class="reference internal" href="#feature-transformers"><span>transformers</span></a> for more details.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt><cite>scaler</cite> :</dt>
-<dd><p class="first last">Transformers and scalers, that allow converting features to different formats (i.e. Tfidf for converting a text feature to a matrix of TF-IDF features).
+<dt><cite>scaler</cite> <span class="classifier-delimiter">:</span> <span class="classifier">dict, optional</span></dt>
+<dd><p class="first last">Defines the scaler, that allows standartize features by removing the mean and scaling to unit variance.
 See <a class="reference internal" href="#feature-scalers"><span>scalers</span></a> for more details.</p>
 </dd>
 </dl>
@@ -329,6 +330,13 @@ See <a class="reference internal" href="#feature-scalers"><span>scalers</span></
       </ul>
   </li>
 </ol></div></div>
+<p>If you want to use named feature type, set it&#8217;s name as <cite>type</cite> attribute of the feature:</p>
+<div class="highlight-json"><div class="highlight"><pre>    <span class="p">{</span>
+  <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;tz&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;str_to_timezone&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 <div class="section" id="feature-types-defined-in-cloudml-core">
 <span id="core-feature-types"></span><h3>Feature types defined in CloudML core<a class="headerlink" href="#feature-types-defined-in-cloudml-core" title="Permalink to this headline">¶</a></h3>
 <ul>
@@ -340,7 +348,7 @@ See <a class="reference internal" href="#feature-scalers"><span>scalers</span></
 </li>
 <li><dl class="first docutils">
 <dt><cite>float</cite></dt>
-<dd><p class="first last">Converts each item to a integer. In case the value is null, the trainer checks for parameter named default. If it is set, then its value is used, otherwise 0.0 is used.</p>
+<dd><p class="first last">Converts each item to a float value.</p>
 </dd>
 </dl>
 </li>
@@ -350,7 +358,11 @@ See <a class="reference internal" href="#feature-scalers"><span>scalers</span></
 </dd>
 </dl>
 </li>
-<li><p class="first"><cite>numeric</cite></p>
+<li><dl class="first docutils">
+<dt><cite>numeric</cite></dt>
+<dd><p class="first last">Does same as <cite>float</cite>.</p>
+</dd>
+</dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>date</cite> <span class="classifier-delimiter">:</span> <span class="classifier">params: pattern</span></dt>
@@ -390,7 +402,7 @@ See <a class="reference internal" href="#feature-scalers"><span>scalers</span></
 </li>
 <li><dl class="first docutils">
 <dt><cite>text</cite></dt>
-<dd><p class="first last">text</p>
+<dd><p class="first last">Converts value to string.</p>
 </dd>
 </dl>
 </li>
@@ -529,6 +541,27 @@ For the &#8220;I&#8217;m a machine learning entusiast&#8221; we will have follow
 <span class="o">...</span>
 </pre></div>
 </div>
+<div class="section" id="pretrained-transformers">
+<h4>Pretrained transformers<a class="headerlink" href="#pretrained-transformers" title="Permalink to this headline">¶</a></h4>
+<p>If you want use pretrained transformer for the feature, you need to set <cite>type</cite> key as pretrained transformer name:</p>
+<div class="highlight-json"><div class="highlight"><pre>    <span class="p">{</span>
+  <span class="nt">&quot;transformer&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;job-title-pretrained-transformer&quot;</span><span class="p">,</span>
+  <span class="p">},</span>
+  <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;title&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;is-required&quot;</span><span class="p">:</span> <span class="kc">true</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">For training the transformer separately you need to use <a class="reference internal" href="command_line_utils.html#transformer-py"><span>transformer.py</span></a> command and store transformer file to some folder.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">For training the model don&#8217;t forgot to specify <cite>&#8211;transformer-path</cite> parameter, which should contains path to the folder, where prtrained transformers are saved.</p>
+</div>
 <p>Following transformers are available:</p>
 <ul class="simple">
 <li><a class="reference internal" href="#dictionary-transformer"><span>Dictionary</span></a></li>
@@ -538,6 +571,7 @@ For the &#8220;I&#8217;m a machine learning entusiast&#8221; we will have follow
 <li><a class="reference internal" href="#lsi-transformer"><span>Lsi</span></a></li>
 <li><a class="reference internal" href="#ntile-transformer"><span>Ntile</span></a></li>
 </ul>
+</div>
 <div class="section" id="dictionary">
 <span id="dictionary-transformer"></span><h4>Dictionary<a class="headerlink" href="#dictionary" title="Permalink to this headline">¶</a></h4>
 <p>Transforms lists of key-value</p>

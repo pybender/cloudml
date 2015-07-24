@@ -190,7 +190,6 @@ def autoload_fields_by_row(entity, row, prefix=''):
                 data_type = 'float'
             else:
                 item_dict = getjson(val)
-                print "!!!!!!!!!!!!", key, item_dict
                 if item_dict:
                     entity.fields[key] = Field({
                         'name': key,

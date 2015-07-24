@@ -221,6 +221,8 @@ The details of the parameters passed to predict.py are the following:
     </tr>
   </table>
 
+.. _transformer_py:
+
 --------------
 transformer.py
 --------------

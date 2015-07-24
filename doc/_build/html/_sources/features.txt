@@ -109,10 +109,10 @@ keys and values:
 	A map of parameters that might be required by the type
 * `is-target-variable` : boolean (optional)
   	Can be either true or false. Default value is false. If set to true, then this feature is considered the target variable (or class) for the data
-* `transformer` : 
+* `transformer` : dict, optional
 	Defines a transformer to use for applying to the data of this feature in order to produce multiple features. See :ref:`transformers <feature_transformers>` for more details.
-* `scaler` :
-	Transformers and scalers, that allow converting features to different formats (i.e. Tfidf for converting a text feature to a matrix of TF-IDF features).
+* `scaler` : dict, optional
+	Defines the scaler, that allows standartize features by removing the mean and scaling to unit variance.
 	See :ref:`scalers <feature_scalers>` for more details.
 * `is-required` : boolean (optional)
 	Defines whether this is a required feature or not.Default is true. When processing input data, a check is performed on each input "row" to see if input data for this feature are empty. Data that are null or have length equal to zero (strings, lists, dictionaries, tuples) are considered as empty.
@@ -144,6 +144,16 @@ keys and values:
 	    </ol>
 
 
+If you want to use named feature type, set it's name as `type` attribute of the feature:
+
+.. code-block:: json
+
+	{
+      "name": "tz",
+      "type": "str_to_timezone"
+    }
+
+
 .. _core_feature_types:
 
 Feature types defined in CloudML core
@@ -152,10 +162,11 @@ Feature types defined in CloudML core
 * `int`
 	Converts each item to an integer. In case the value is null, the trainer checks for parameter named default. If it is set, then its value is used, otherwise 0 is used.
 * `float`
-	Converts each item to a integer. In case the value is null, the trainer checks for parameter named default. If it is set, then its value is used, otherwise 0.0 is used.
+	Converts each item to a float value.
 * `boolean`
 	Converts number to boolean. Uses python bool() function. Thus bool(0) = false, bool(null) = false, bool('') = false.
 * `numeric`
+	Does same as `float`.
 * `date` : params: pattern
 	Parses the input value as a date using the pattern defined in parameter 'pattern'. The result is converted to UNIX timestamp.
 * `regex` : params: pattern
@@ -169,7 +180,7 @@ Feature types defined in CloudML core
 * `categorical`
 	Use CountVectorizer preprocessor which implements tokenization and occurrence counting.
 * `text`
-	text
+	Converts value to string.
 
 .. _feature_scalers:
 
@@ -309,6 +320,31 @@ For the "I'm a machine learning entusiast" we will have following values of the 
 	title.python = 0
 	title.programmer = 0
 	...
+
+Pretrained transformers
+~~~~~~~~~~~~~~~~~~~~~~~
+
+If you want use pretrained transformer for the feature, you need to set `type` key as pretrained transformer name:
+
+.. code-block:: json
+
+	{
+      "transformer": {
+        "type": "job-title-pretrained-transformer",
+      },
+      "type": "string",
+      "name": "title",
+      "is-required": true
+    }
+
+.. note::
+
+	For training the transformer separately you need to use :ref:`transformer.py <transformer_py>` command and store transformer file to some folder.
+
+.. note::
+
+	For training the model don't forgot to specify `--transformer-path` parameter, which should contains path to the folder, where prtrained transformers are saved.
+
 
 Following transformers are available:
 

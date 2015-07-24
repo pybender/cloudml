@@ -276,12 +276,14 @@ class Sqoop(object):
     where: string, optional
         an expression that might be passed to the table for
         filtering the rows to import
-    direct: string, optional
+    direct: boolean, optional
         whether to use direct import
-    mappers: string, optional (default=1)
+    mappers: integer, optional (default=1)
         an integer number with the mappers to use for importing
         data. If table is a view or doesn't have a key it should
         be 1.
+    options: string, optional
+        extra options for sqoop import command.
     """
     def __init__(self, config):
         self.datasource_name = config.get('datasource')

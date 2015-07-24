@@ -1,0 +1,53 @@
+{
+  "schema-name": "example",
+  "classifier": {
+    "type": "random forest classifier",
+    "params": {
+      "splitter": "best",
+      "n_jobs": 1,
+      "verbose": 0,
+      "penalty": "l2",
+      "bootstrap": true,
+      "min_samples_leaf": 1,
+      "n_estimators": 10,
+      "min_samples_split": 2,
+      "criterion": "gini",
+      "max_features": "auto"
+    }
+  },
+  "features":[
+    {
+      "name":"sex",
+      "type":"map",
+      "params": {
+        "mappings":{
+          "I": 0,
+          "M": 1,
+          "F": 2
+        }
+      },
+      "is-target-variable":true,
+      "is-required":true
+    },
+    {
+      "name":"square",
+      "type":"float"
+    },
+    {
+      "name":"diameter",
+      "type":"float"
+    },
+    {
+      "name":"whole_weight",
+      "type":"float"
+    },
+    {
+      "name":"shucked_weight",
+      "type":"float"
+    },
+    {
+      "name":"rings",
+      "type":"int"
+    }
+  ]
+}
