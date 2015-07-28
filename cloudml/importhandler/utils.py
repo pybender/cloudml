@@ -199,7 +199,7 @@ def autoload_fields_by_row(entity, row, prefix=''):
                         print "not in"
                         json_entity = Entity(dict(name=key, datasource=key))
                         autoload_fields_by_row(
-                            json_entity, item_dict, prefix='{0}-'.format(key))
+                            json_entity, item_dict, prefix='{0}.'.format(key))
                         entity.nested_entities_field_ds[key] = json_entity
                     continue
 
