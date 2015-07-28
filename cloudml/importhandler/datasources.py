@@ -4,6 +4,7 @@ This module gathers DataSource classes.
 
 # Author: Nikolay Melnik <nmelnik@upwork.com>
 
+import sys
 import logging
 import csv
 import time
@@ -247,6 +248,14 @@ class CsvDataSource(BaseDataSource):
         if 'src' not in attrs:
             raise ImportHandlerException('No source given')
         self.src = attrs['src']
+        try:
+            self.offset = int(attrs.get('offset', 0))
+            self.count = int(attrs.get('count', sys.maxint))
+        except (ValueError, TypeError):
+            raise ImportHandlerException('offset and count should be integers')
+        logging.info('In csv datasource {0} there are '
+                     'offset {1} and count {2}'.format(
+                         self.name, self.offset, self.count))
 
     def _get_iter(self, query=None, query_target=None, params=None):
         def __get_obj(row):
@@ -261,9 +270,17 @@ class CsvDataSource(BaseDataSource):
                 obj[name] = row[idx]
             return obj
 
+        i = 0
         with contextlib.closing(urllib.urlopen(self.src)) as stream:
             reader = csv.reader(stream)
+            # TODO: not is the best way. Refactore
             for row in reader:
+                i += 1
+                if i < self.offset:
+                    continue
+                if i > (self.offset + self.count):
+                    break
+
                 obj = __get_obj(row)
                 for key, value in obj.items():
                     # Try load json field

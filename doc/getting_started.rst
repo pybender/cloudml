@@ -201,11 +201,6 @@ After run this command we will get folowing info::
 	2015-07-03 18:33:47,001 - root
 	                            - INFO - Accuracy: 0.548719176442 
 
-.. note::
-
-	When we trying to use other classifiers, for example Decision Tree classifier or Random Forest Classifier, we got match better accuracy, which is very close to 1.
-	To try play with them simply use :download:`feature.json <_static/decision tree/features.json>` or :download:`feature.json <_static/random forest/features.json>`.
-
 Predicting
 ==========
 
