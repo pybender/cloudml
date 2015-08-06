@@ -72,10 +72,22 @@ Vagrant.configure(2) do |config|
   # documentation for more information about their specific syntax and use.
   config.vm.provision "shell", inline: <<-SHELL
      sudo apt-get update
-     sudo apt-get install -y build-essential git python-pip python-dev libxml2-dev libxslt1-dev liblapack-dev gfortran libpq-dev libevent-dev
+     sudo apt-get install -y build-essential git python-pip python-dev libxml2-dev libxslt1-dev liblapack-dev gfortran libpq-dev libevent-dev rabbitmq-server
+
+     sudo rabbitmqctl add_user cloudml cloudml
+     sudo rabbitmqctl add_vhost cloudml
+     sudo rabbitmqctl set_permissions cloudml cloudml ".*" ".*" ".*"
+
+
+     sudo apt-get install postgresql
+     sudo -u postgres createuser -D -A -P cloudml
+     sudo -u postgres createdb -O cloudml cloudml
+
+
      export LAPACK=/usr/lib/liblapack.so
      export ATLAS=/usr/lib/libatlas.so
      export BLAS=/usr/lib/libblas.so
+     sudo easy_install pip==1.1
      sudo pip install -U numpy==1.7.1
      sudo pip install scipy==0.12.0
      sudo pip install memory-profiler==0.27

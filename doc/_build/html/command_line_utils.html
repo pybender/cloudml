@@ -58,20 +58,13 @@
   </script>
 
   </head>
-  <body role="document">
+  <body>
 
 <div class="header-wrapper">
     <div class="header"></div>
 </div>
 
 
-<!-- Github "fork me" ribbon -->
-<a href="https://github.com/odeskdataproducts/cloudml">
-  <img class="fork-me"
-       style="position: absolute; top: 0; right: 0; border: 0;"
-       src="_static/img/forkme.png"
-       alt="Fork me on GitHub" />
-</a>
 
 <div class="content-wrapper">
     <div class="sphinxsidebar">
@@ -135,7 +128,7 @@
             
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body" role="main">
+          <div class="body">
             
   <div class="section" id="command-line-utils">
 <h1>Command line utils<a class="headerlink" href="#command-line-utils" title="Permalink to this headline">¶</a></h1>
@@ -143,9 +136,8 @@
 <h2>importhandler.py<a class="headerlink" href="#importhandler-py" title="Permalink to this headline">¶</a></h2>
 <p>Running the Import Handler</p>
 <p>You can run the import handler using:</p>
-<div class="highlight-python"><div class="highlight"><pre>python importhandler.py [-h] [-o output] [-d] [-U user-param]
-                        [-V] path
-</pre></div>
+<div class="highlight-python"><pre>python importhandler.py [-h] [-o output] [-d] [-U user-param]
+                        [-V] path</pre>
 </div>
 <p>The details of the parameters passed to importhandler.py are the following:</p>
 <table>
@@ -183,11 +175,10 @@
 <div class="section" id="trainer-py">
 <h2>trainer.py<a class="headerlink" href="#trainer-py" title="Permalink to this headline">¶</a></h2>
 <p>You can run the trainer using:</p>
-<div class="highlight-python"><div class="highlight"><pre>python trainer.py [-h] [-V] [-d] [-o output] [-w weight-file]
+<div class="highlight-python"><pre>python trainer.py [-h] [-V] [-d] [-o output] [-w weight-file]
                   [-i input-file] [-t test-file]
                   [-e extraction-plan-file] [-I train-param]
-                  [-T test-param] [--skip-test] path
-</pre></div>
+                  [-T test-param] [--skip-test] path</pre>
 </div>
 <p>The details of the parameters passed to trainer.py are the following:</p>
 <table>
@@ -270,10 +261,9 @@
 <p>Predictor&#8217;s configuration is performed entirely from the command line.</p>
 <p>Running the predictor</p>
 <p>You can run the predictor using:</p>
-<div class="highlight-python"><div class="highlight"><pre>python predictor.py [-h] [-V] [-d] [-o output] [-m {roc,csv}]
+<div class="highlight-python"><pre>python predictor.py [-h] [-V] [-d] [-o output] [-m {roc,csv}]
                     [-P param] [-i] [-e extraction-plan-file]
-                    [-U eval-param] path
-</pre></div>
+                    [-U eval-param] path</pre>
 </div>
 <p>The details of the parameters passed to predict.py are the following:</p>
 <table>
@@ -335,10 +325,9 @@
 <div class="section" id="transformer-py">
 <span id="id1"></span><h2>transformer.py<a class="headerlink" href="#transformer-py" title="Permalink to this headline">¶</a></h2>
 <p>You can run the train train transfromer using:</p>
-<div class="highlight-python"><div class="highlight"><pre>python transformer.py [-h] [-V] [-d] [-o output]
+<div class="highlight-python"><pre>python transformer.py [-h] [-V] [-d] [-o output]
                   [-i input-file] [-e extraction-plan-file]
-                  [-I train-param] path
-</pre></div>
+                  [-I train-param] path</pre>
 </div>
 <p>The details of the parameters passed to predict.py are the following:</p>
 <table>

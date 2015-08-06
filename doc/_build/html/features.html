@@ -58,20 +58,13 @@
   </script>
 
   </head>
-  <body role="document">
+  <body>
 
 <div class="header-wrapper">
     <div class="header"></div>
 </div>
 
 
-<!-- Github "fork me" ribbon -->
-<a href="https://github.com/odeskdataproducts/cloudml">
-  <img class="fork-me"
-       style="position: absolute; top: 0; right: 0; border: 0;"
-       src="_static/img/forkme.png"
-       alt="Fork me on GitHub" />
-</a>
 
 <div class="content-wrapper">
     <div class="sphinxsidebar">
@@ -153,7 +146,7 @@
             
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body" role="main">
+          <div class="body">
             
   <div class="section" id="feature-json-file-format">
 <span id="features"></span><h1>Feature JSON file format<a class="headerlink" href="#feature-json-file-format" title="Permalink to this headline">¶</a></h1>
@@ -166,14 +159,14 @@
 </ol>
 <p>So there are four top-level elements:</p>
 <ul class="simple">
-<li><a class="reference internal" href="#classifier"><span>classifier</span></a> - defining the configuration of the classifier to use</li>
+<li><a class="reference internal" href="#classifier"><em>classifier</em></a> - defining the configuration of the classifier to use</li>
 <li><cite>schema-name</cite> - a string describing the schema in the document</li>
-<li><a class="reference internal" href="#named-feature-types"><span>feature-types</span></a> - a list of feature type definitions</li>
-<li><a class="reference internal" href="#features-list"><span>features</span></a> - a list of the features that the trainer will read from the data</li>
+<li><a class="reference internal" href="#named-feature-types"><em>feature-types</em></a> - a list of feature type definitions</li>
+<li><a class="reference internal" href="#features-list"><em>features</em></a> - a list of the features that the trainer will read from the data</li>
 </ul>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Full example of the features.json file can found in <a class="reference download internal" href="_downloads/features.json"><code class="xref download docutils literal"><span class="pre">feature.json</span></code></a>.</p>
+<p class="last">Full example of the features.json file can found in <a class="reference download internal" href="_downloads/features.json"><tt class="xref download docutils literal"><span class="pre">feature.json</span></tt></a>.</p>
 </div>
 <div class="section" id="classifier">
 <span id="id1"></span><h2>Classifier<a class="headerlink" href="#classifier" title="Permalink to this headline">¶</a></h2>
@@ -194,20 +187,19 @@
 </ul>
 <p>Currently following types of classifiers could be used:</p>
 <ul class="simple">
-<li><a class="reference internal" href="classifiers.html#classifier-logistic-regression"><span>logistic regression</span></a></li>
-<li><a class="reference internal" href="classifiers.html#classifier-support-vector-regression"><span>support vector regression</span></a></li>
-<li><a class="reference internal" href="classifiers.html#classifier-stochastic-gradient-descent-classifier"><span>stochastic gradient descent classifier</span></a></li>
-<li><a class="reference internal" href="classifiers.html#decision-tree"><span>decision tree classifier</span></a></li>
-<li><a class="reference internal" href="classifiers.html#extra-tree"><span>extra tree classifier</span></a></li>
-<li><a class="reference internal" href="classifiers.html#random-forest"><span>random forest classifier</span></a></li>
-<li><a class="reference internal" href="classifiers.html#gradient-boosting"><span>gradient boosting classifier</span></a></li>
+<li><a class="reference internal" href="classifiers.html#classifier-logistic-regression"><em>logistic regression</em></a></li>
+<li><a class="reference internal" href="classifiers.html#classifier-support-vector-regression"><em>support vector regression</em></a></li>
+<li><a class="reference internal" href="classifiers.html#classifier-stochastic-gradient-descent-classifier"><em>stochastic gradient descent classifier</em></a></li>
+<li><a class="reference internal" href="classifiers.html#decision-tree"><em>decision tree classifier</em></a></li>
+<li><a class="reference internal" href="classifiers.html#extra-tree"><em>extra tree classifier</em></a></li>
+<li><a class="reference internal" href="classifiers.html#random-forest"><em>random forest classifier</em></a></li>
+<li><a class="reference internal" href="classifiers.html#gradient-boosting"><em>gradient boosting classifier</em></a></li>
 </ul>
 <p>Sample classifier defition:</p>
-<div class="highlight-json"><div class="highlight"><pre>&quot;classifier&quot;: {
-         &quot;type&quot;: &quot;logistic regression&quot;,
-         &quot;params&quot;: {&quot;penalty&quot;: &quot;l2&quot;}
-}
-</pre></div>
+<div class="highlight-json"><pre>"classifier": {
+         "type": "logistic regression",
+         "params": {"penalty": "l2"}
+}</pre>
 </div>
 </div>
 <div class="section" id="named-feature-types">
@@ -225,7 +217,7 @@ type.</p>
 </li>
 <li><dl class="first docutils">
 <dt><cite>type</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
-<dd><p class="first last"><a class="reference internal" href="#core-feature-types"><span>feature type</span></a></p>
+<dd><p class="first last"><a class="reference internal" href="#core-feature-types"><em>feature type</em></a></p>
 </dd>
 </dl>
 </li>
@@ -237,19 +229,18 @@ type.</p>
 </li>
 </ul>
 <p>Sample section defition:</p>
-<div class="highlight-json"><div class="highlight"><pre>&quot;feature-types&quot;:[
+<div class="highlight-json"><pre>"feature-types":[
     {
-      &quot;name&quot;:&quot;str_to_timezone&quot;,
-      &quot;type&quot;: &quot;composite&quot;,
-      &quot;params&quot;: {
-        &quot;chain&quot;: [
-          { &quot;type&quot;: &quot;regex&quot;, &quot;params&quot;: { &quot;pattern&quot;: &quot;UTC([-\\+]+\\d\\d).*&quot;  }},
-          { &quot;type&quot;: &quot;int&quot; }
+      "name":"str_to_timezone",
+      "type": "composite",
+      "params": {
+        "chain": [
+          { "type": "regex", "params": { "pattern": "UTC([-\\+]+\\d\\d).*"  }},
+          { "type": "int" }
         ]
       }
     }
-  ]
-</pre></div>
+  ]</pre>
 </div>
 </div>
 <div class="section" id="features-list">
@@ -266,7 +257,7 @@ keys and values:</p>
 </li>
 <li><dl class="first docutils">
 <dt><cite>type</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
-<dd><p class="first last">one of <a class="reference internal" href="#core-feature-types"><span>feature type</span></a> or named feature type</p>
+<dd><p class="first last">one of <a class="reference internal" href="#core-feature-types"><em>feature type</em></a> or named feature type</p>
 </dd>
 </dl>
 </li>
@@ -284,14 +275,14 @@ keys and values:</p>
 </li>
 <li><dl class="first docutils">
 <dt><cite>transformer</cite> <span class="classifier-delimiter">:</span> <span class="classifier">dict, optional</span></dt>
-<dd><p class="first last">Defines a transformer to use for applying to the data of this feature in order to produce multiple features. See <a class="reference internal" href="#feature-transformers"><span>transformers</span></a> for more details.</p>
+<dd><p class="first last">Defines a transformer to use for applying to the data of this feature in order to produce multiple features. See <a class="reference internal" href="#feature-transformers"><em>transformers</em></a> for more details.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>scaler</cite> <span class="classifier-delimiter">:</span> <span class="classifier">dict, optional</span></dt>
 <dd><p class="first last">Defines the scaler, that allows standartize features by removing the mean and scaling to unit variance.
-See <a class="reference internal" href="#feature-scalers"><span>scalers</span></a> for more details.</p>
+See <a class="reference internal" href="#feature-scalers"><em>scalers</em></a> for more details.</p>
 </dd>
 </dl>
 </li>
@@ -441,9 +432,9 @@ See <a class="reference internal" href="#feature-scalers"><span>scalers</span></
 </div>
 <p>Folloving scalers are available:</p>
 <ul class="simple">
-<li><a class="reference internal" href="#standart-scaler"><span>StandartScaler</span></a></li>
-<li><a class="reference internal" href="#min-max-scaler"><span>MinMaxScaler</span></a></li>
-<li><a class="reference internal" href="#no-scaler"><span>NoScaler</span></a></li>
+<li><a class="reference internal" href="#standart-scaler"><em>StandartScaler</em></a></li>
+<li><a class="reference internal" href="#min-max-scaler"><em>MinMaxScaler</em></a></li>
+<li><a class="reference internal" href="#no-scaler"><em>NoScaler</em></a></li>
 </ul>
 <div class="section" id="standartscaler">
 <span id="standart-scaler"></span><h4>StandartScaler<a class="headerlink" href="#standartscaler" title="Permalink to this headline">¶</a></h4>
@@ -556,7 +547,7 @@ For the &#8220;I&#8217;m a machine learning entusiast&#8221; we will have follow
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">For training the transformer separately you need to use <a class="reference internal" href="command_line_utils.html#transformer-py"><span>transformer.py</span></a> command and store transformer file to some folder.</p>
+<p class="last">For training the transformer separately you need to use <a class="reference internal" href="command_line_utils.html#transformer-py"><em>transformer.py</em></a> command and store transformer file to some folder.</p>
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -564,12 +555,12 @@ For the &#8220;I&#8217;m a machine learning entusiast&#8221; we will have follow
 </div>
 <p>Following transformers are available:</p>
 <ul class="simple">
-<li><a class="reference internal" href="#dictionary-transformer"><span>Dictionary</span></a></li>
-<li><a class="reference internal" href="#count-transformer"><span>Count</span></a></li>
-<li><a class="reference internal" href="#tfidf-transformer"><span>Tfidf</span></a></li>
-<li><a class="reference internal" href="#lda-transformer"><span>Lda</span></a></li>
-<li><a class="reference internal" href="#lsi-transformer"><span>Lsi</span></a></li>
-<li><a class="reference internal" href="#ntile-transformer"><span>Ntile</span></a></li>
+<li><a class="reference internal" href="#dictionary-transformer"><em>Dictionary</em></a></li>
+<li><a class="reference internal" href="#count-transformer"><em>Count</em></a></li>
+<li><a class="reference internal" href="#tfidf-transformer"><em>Tfidf</em></a></li>
+<li><a class="reference internal" href="#lda-transformer"><em>Lda</em></a></li>
+<li><a class="reference internal" href="#lsi-transformer"><em>Lsi</em></a></li>
+<li><a class="reference internal" href="#ntile-transformer"><em>Ntile</em></a></li>
 </ul>
 </div>
 <div class="section" id="dictionary">

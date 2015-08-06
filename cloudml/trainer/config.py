@@ -57,6 +57,7 @@ class FeatureModel(object):
             for feature_type in data['feature-types']:
                 self._process_named_feature_type(feature_type)
 
+        self.feature_names = []
         for feature in data['features']:
             self._process_feature(feature)
 
@@ -193,9 +194,15 @@ class FeatureModel(object):
 
         required = feature.get('is-required', True)
         default = feature.get('default', None)
+        name = feature['name']
+        if name in self.feature_names:
+            raise SchemaException(
+                'Duplicated feature with name {0}'.format(name))
+
+        self.feature_names.append(name)
         if required:
-            self.required_feature_names.append(feature['name'])
-        self.features[feature['name']] = {'name': feature['name'],
+            self.required_feature_names.append(name)
+        self.features[feature['name']] = {'name': name,
                                           'type': feature_type,
                                           'input-format': input_format,
                                           'transformer-type': transformer_type,

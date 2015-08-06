@@ -112,22 +112,30 @@ Bootstrap using vagrant
 
 Before diving into cloudml, please `install the latest version of Vagrant <http://docs.vagrantup.com/v2/installation/>`_. And because we'll be using `VirtualBox <http://www.virtualbox.org/>`_ as our provider for the getting started guide, please install that as well.
 
-Clone cloduml repo::
+Clone cloduml repo:
+
+.. code-block:: console
 
 	$ git clone https://github.com/odeskdataproducts/cloudml.git
 
-For boot your Vagrant environment. Run the following::
+For boot your Vagrant environment. Run the following:
+
+.. code-block:: console
 
 	$ cd cloudml
 	$ vagrant up
 
 In 20-30 minutes, this command will finish and you'll have a virtual machine running Ubuntu with installed all dependencies.
 
-For connect to machine run::
+For connect to machine run:
+
+.. code-block:: console
 
 	$ vagrant ssh
 
-For run test please go to `/vagrant` directory::
+For run test please go to `/vagrant` directory:
+
+.. code-block:: console
 
 	$ cd /vagrant
 	$ python setup.py test
@@ -141,7 +149,9 @@ A `vagrant suspend` effectively saves the exact point-in-time state of the machi
 Build docs
 ----------
 
-For build docs please install::
+For build docs please install:
+
+.. code-block:: console
 
     $ sudo pip install Sphinx==1.3.1
 

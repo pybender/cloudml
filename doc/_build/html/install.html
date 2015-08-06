@@ -58,20 +58,13 @@
   </script>
 
   </head>
-  <body role="document">
+  <body>
 
 <div class="header-wrapper">
     <div class="header"></div>
 </div>
 
 
-<!-- Github "fork me" ribbon -->
-<a href="https://github.com/odeskdataproducts/cloudml">
-  <img class="fork-me"
-       style="position: absolute; top: 0; right: 0; border: 0;"
-       src="_static/img/forkme.png"
-       alt="Fork me on GitHub" />
-</a>
 
 <div class="content-wrapper">
     <div class="sphinxsidebar">
@@ -138,18 +131,18 @@
             
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body" role="main">
+          <div class="body">
             
   <div class="section" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
 <p>There are different ways to get cloudml installed:</p>
 <blockquote>
 <div><ul class="simple">
-<li><a class="reference internal" href="#install-official-release"><span>Install an official release</span></a>. This
+<li><a class="reference internal" href="#install-official-release"><em>Install an official release</em></a>. This
 is the best approach for users who want a stable version number
 and aren&#8217;t concerned about running a slightly older version of
 cloudml.</li>
-<li><a class="reference internal" href="#install-development-version"><span>Install the latest development version</span></a>. This is best for users who want the
+<li><a class="reference internal" href="#install-development-version"><em>Install the latest development version</em></a>. This is best for users who want the
 latest-and-greatest features and aren&#8217;t afraid of running
 brand-new code.</li>
 </ul>
@@ -164,28 +157,24 @@ brand-new code.</li>
 <h3>Ubuntu<a class="headerlink" href="#ubuntu" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic">
 <li><p class="first">Install system requirements:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ sudo apt-get install -y build-essential git python-pip python-dev libxml2-dev libxslt1-dev liblapack-dev gfortran libpq-dev libevent-dev
-</pre></div>
+<div class="highlight-python"><pre>$ sudo apt-get install -y build-essential git python-pip python-dev libxml2-dev libxslt1-dev liblapack-dev gfortran libpq-dev libevent-dev</pre>
 </div>
 </li>
 <li><p class="first">Install numpy and scipy:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ export LAPACK=/usr/lib/liblapack.so
+<div class="highlight-python"><pre>$ export LAPACK=/usr/lib/liblapack.so
 $ export ATLAS=/usr/lib/libatlas.so
 $ export BLAS=/usr/lib/libblas.so
 $ pip install numpy==1.7.1
-$ pip install scipy==0.12.0
-</pre></div>
+$ pip install scipy==0.12.0</pre>
 </div>
 </li>
 <li><p class="first">Install cloudml with pip:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ pip install cloudml
-</pre></div>
+<div class="highlight-python"><pre>$ pip install cloudml</pre>
 </div>
 </li>
 </ol>
 <p>To build cloudml from the source package download the source package from <a class="reference external" href="http://pypi.python.org/pypi/cloudml">http://pypi.python.org/pypi/cloudml</a>, unpack the sources into a directory, cd into this directory and run:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ python setup.py install
-</pre></div>
+<div class="highlight-python"><pre>$ python setup.py install</pre>
 </div>
 </div>
 <div class="section" id="mac-osx">
@@ -202,12 +191,10 @@ $ pip install scipy==0.12.0
 <div class="section" id="testing">
 <span id="id1"></span><h2>Testing<a class="headerlink" href="#testing" title="Permalink to this headline">¶</a></h2>
 <p>Testing requires having the <cite>nose</cite>, <cite>coverage</cite>, <cite>moto</cite>, <cite>mock</cite> libraries:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ pip install nose coverage moto==0.3.3 mock==1.0.1
-</pre></div>
+<div class="highlight-python"><pre>$ pip install nose coverage moto==0.3.3 mock==1.0.1</pre>
 </div>
 <p>To start testing cd to a source directory and execute:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ python setup.py test
-</pre></div>
+<div class="highlight-python"><pre>$ python setup.py test</pre>
 </div>
 </div>
 </div>

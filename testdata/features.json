@@ -63,10 +63,6 @@
       "type":"float"
     },
     {
-      "name":"contractor.dev_adj_score_recent",
-      "type":"float"
-    },
-    {
       "name":"contractor.dev_is_looking",
       "type":"boolean"
     },

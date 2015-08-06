@@ -58,20 +58,13 @@
   </script>
 
   </head>
-  <body role="document">
+  <body>
 
 <div class="header-wrapper">
     <div class="header"></div>
 </div>
 
 
-<!-- Github "fork me" ribbon -->
-<a href="https://github.com/odeskdataproducts/cloudml">
-  <img class="fork-me"
-       style="position: absolute; top: 0; right: 0; border: 0;"
-       src="_static/img/forkme.png"
-       alt="Fork me on GitHub" />
-</a>
 
 <div class="content-wrapper">
     <div class="sphinxsidebar">
@@ -138,7 +131,7 @@
             
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body" role="main">
+          <div class="body">
             
   <div class="section" id="supported-classifiers">
 <h1><a class="toc-backref" href="#id5">Supported classifiers</a><a class="headerlink" href="#supported-classifiers" title="Permalink to this headline">¶</a></h1>
@@ -161,11 +154,10 @@
 <span id="classifier-logistic-regression"></span><h2><a class="toc-backref" href="#id6">Logistic Regression</a><a class="headerlink" href="#logistic-regression" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html#sklearn.linear_model.LogisticRegression">Scikit Learn LogisticRegression</a> will be used as the underlying implementation.</p>
 <p>Sample configuration in features.json file:</p>
-<div class="highlight-json"><div class="highlight"><pre>&quot;classifier&quot;: {
-         &quot;type&quot;: &quot;logistic regression&quot;,
-         &quot;params&quot;: {&quot;penalty&quot;: &quot;l2&quot;}
-}
-</pre></div>
+<div class="highlight-json"><pre>"classifier": {
+         "type": "logistic regression",
+         "params": {"penalty": "l2"}
+}</pre>
 </div>
 <p>This classifier has following parameters:</p>
 <ul>
@@ -247,11 +239,10 @@
 <span id="classifier-stochastic-gradient-descent-classifier"></span><h2><a class="toc-backref" href="#id7">Stochastic Gradient Descent Classifier</a><a class="headerlink" href="#stochastic-gradient-descent-classifier" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.SGDClassifier.html#sklearn-linear-model-sgdclassifier">Scikit Learn SGDClassifier</a> will be used as the underlying implementation.</p>
 <p>Sample configuration in features.json file:</p>
-<div class="highlight-json"><div class="highlight"><pre>&quot;classifier&quot;: {
-         &quot;type&quot;: &quot;stochastic gradient descent classifier&quot;,
-         &quot;params&quot;: {&quot;loss&quot;: &quot;log&quot;}
-}
-</pre></div>
+<div class="highlight-json"><pre>"classifier": {
+         "type": "stochastic gradient descent classifier",
+         "params": {"loss": "log"}
+}</pre>
 </div>
 <p>This classifier has following parameters:</p>
 <ul>
@@ -363,11 +354,10 @@
 <span id="classifier-support-vector-regression"></span><h2><a class="toc-backref" href="#id8">Support Vector Regression</a><a class="headerlink" href="#support-vector-regression" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.svm.SVR.html#sklearn-svm-svr">Scikit Learn SVR</a> will be used as the underlying implementation.</p>
 <p>Sample configuration in features.json file:</p>
-<div class="highlight-json"><div class="highlight"><pre>&quot;classifier&quot;: {
-         &quot;type&quot;: &quot;support vector regression&quot;,
-         &quot;params&quot;: {&quot;loss&quot;: &quot;log&quot;}
-}
-</pre></div>
+<div class="highlight-json"><pre>"classifier": {
+         "type": "support vector regression",
+         "params": {"loss": "log"}
+}</pre>
 </div>
 <p>This classifier has following parameters:</p>
 <ul>
@@ -443,11 +433,10 @@
 <span id="id1"></span><h2><a class="toc-backref" href="#id9">Decision Tree</a><a class="headerlink" href="#decision-tree" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html">Scikit Learn Decision Tree Classifier</a> will be used as the underlying implementation.</p>
 <p>Sample configuration in features.json file:</p>
-<div class="highlight-json"><div class="highlight"><pre>&quot;classifier&quot;: {
-         &quot;type&quot;: &quot;decision tree classifier&quot;,
-         &quot;params&quot;: {&quot;loss&quot;: &quot;log&quot;}
-}
-</pre></div>
+<div class="highlight-json"><pre>"classifier": {
+         "type": "decision tree classifier",
+         "params": {"loss": "log"}
+}</pre>
 </div>
 <p>This classifier has following parameters:</p>
 <ul>
@@ -517,11 +506,10 @@
 <span id="id2"></span><h2><a class="toc-backref" href="#id10">Extra Tree</a><a class="headerlink" href="#extra-tree" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.ensemble.ExtraTreesClassifier.html">Scikit Learn ExtraTreesClassifier</a> will be used as the underlying implementation.</p>
 <p>Sample configuration in features.json file:</p>
-<div class="highlight-json"><div class="highlight"><pre>&quot;classifier&quot;: {
-         &quot;type&quot;: &quot;extra trees classifier&quot;,
-         &quot;params&quot;: {&quot;loss&quot;: &quot;log&quot;}
-}
-</pre></div>
+<div class="highlight-json"><pre>"classifier": {
+         "type": "extra trees classifier",
+         "params": {"loss": "log"}
+}</pre>
 </div>
 <p>This classifier has following parameters:</p>
 <ul>
@@ -621,11 +609,10 @@
 <span id="id3"></span><h2><a class="toc-backref" href="#id11">Random Forest</a><a class="headerlink" href="#random-forest" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html">Scikit Learn RandomForestClassifier</a> will be used as the underlying implementation.</p>
 <p>Sample configuration in features.json file:</p>
-<div class="highlight-json"><div class="highlight"><pre>&quot;classifier&quot;: {
-         &quot;type&quot;: &quot;random forest classifier&quot;,
-         &quot;params&quot;: {&quot;loss&quot;: &quot;log&quot;}
-}
-</pre></div>
+<div class="highlight-json"><pre>"classifier": {
+         "type": "random forest classifier",
+         "params": {"loss": "log"}
+}</pre>
 </div>
 <p>This classifier has following parameters:</p>
 <ul>
@@ -725,11 +712,10 @@
 <span id="id4"></span><h2><a class="toc-backref" href="#id12">Gradient Boosting</a><a class="headerlink" href="#gradient-boosting" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html">Scikit Learn GradientBoostingClassifier</a> will be used as the underlying implementation.</p>
 <p>Sample configuration in features.json file:</p>
-<div class="highlight-json"><div class="highlight"><pre>&quot;classifier&quot;: {
-         &quot;type&quot;: &quot;gradient boosting classifier&quot;,
-         &quot;params&quot;: {&quot;loss&quot;: &quot;log&quot;}
-}
-</pre></div>
+<div class="highlight-json"><pre>"classifier": {
+         "type": "gradient boosting classifier",
+         "params": {"loss": "log"}
+}</pre>
 </div>
 <p>This classifier has following parameters:</p>
 <ul>

@@ -618,6 +618,23 @@ Entity with field json datasource:
     </entity>
 
 
+Python Scripts
+~~~~~~~~~~~~~~
+
+There are two variants to pass variables to the python script:
+
+* using template formatting:
+
+.. code-block:: xml
+
+    <field name="uniqueName" script="myFunction(#{id}, '#{name}')" />
+
+* using variables:
+
+.. code-block:: xml
+
+    <field name="uniqueName" script="myFunction(id, name)" />
+
 .. _sqoop:
 
 Sqoop

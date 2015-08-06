@@ -58,20 +58,13 @@
   </script>
 
   </head>
-  <body role="document">
+  <body>
 
 <div class="header-wrapper">
     <div class="header"></div>
 </div>
 
 
-<!-- Github "fork me" ribbon -->
-<a href="https://github.com/odeskdataproducts/cloudml">
-  <img class="fork-me"
-       style="position: absolute; top: 0; right: 0; border: 0;"
-       src="_static/img/forkme.png"
-       alt="Fork me on GitHub" />
-</a>
 
 <div class="content-wrapper">
     <div class="sphinxsidebar">
@@ -136,131 +129,109 @@
             
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body" role="main">
+          <div class="body">
             
   <div class="section" id="developer-s-guide">
 <h1>Developer&#8217;s guide<a class="headerlink" href="#developer-s-guide" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="bootsrap-on-ubuntu">
 <h2>Bootsrap on Ubuntu<a class="headerlink" href="#bootsrap-on-ubuntu" title="Permalink to this headline">¶</a></h2>
 <p>Install system requirements:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ sudo apt-get install -y build-essential git python-pip python-dev libxml2-dev libxslt1-dev liblapack-dev gfortran libpq-dev libevent-dev python-virtualenv
-</pre></div>
+<div class="highlight-python"><pre>$ sudo apt-get install -y build-essential git python-pip python-dev libxml2-dev libxslt1-dev liblapack-dev gfortran libpq-dev libevent-dev python-virtualenv</pre>
 </div>
 <p>Clone cloduml repo:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ git clone https://github.com/odeskdataproducts/cloudml.git
-$ cd cloudml
-</pre></div>
+<div class="highlight-python"><pre>$ git clone https://github.com/odeskdataproducts/cloudml.git
+$ cd cloudml</pre>
 </div>
 <p>Create virtual env:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ virtualenv --no-site-packages ve
-$ source ve/bin/activate
-</pre></div>
+<div class="highlight-python"><pre>$ virtualenv --no-site-packages ve
+$ source ve/bin/activate</pre>
 </div>
 <p>Install numpy and scipy:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ export LAPACK=/usr/lib/liblapack.so
+<div class="highlight-python"><pre>$ export LAPACK=/usr/lib/liblapack.so
 $ export ATLAS=/usr/lib/libatlas.so
 $ export BLAS=/usr/lib/libblas.so
 $ pip install numpy==1.7.1
-$ pip install scipy==0.12.0
-</pre></div>
+$ pip install scipy==0.12.0</pre>
 </div>
 <p>Install memory-profiler:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ memory-profiler==0.27
-</pre></div>
+<div class="highlight-python"><pre>$ memory-profiler==0.27</pre>
 </div>
 <p>Install python requirements:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ pip install -r ./requirements.txt
-</pre></div>
+<div class="highlight-python"><pre>$ pip install -r ./requirements.txt</pre>
 </div>
 <p>Create local config:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ cp local_config.py.tpl local_config.py
-</pre></div>
+<div class="highlight-python"><pre>$ cp local_config.py.tpl local_config.py</pre>
 </div>
 </div>
 <div class="section" id="bootsrap-on-macos">
 <h2>Bootsrap on MacOS<a class="headerlink" href="#bootsrap-on-macos" title="Permalink to this headline">¶</a></h2>
 <p>Clone cloduml repo:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ git clone https://github.com/odeskdataproducts/cloudml.git
-$ cd cloudml
-</pre></div>
+<div class="highlight-python"><pre>$ git clone https://github.com/odeskdataproducts/cloudml.git
+$ cd cloudml</pre>
 </div>
 <p>Create virtual env:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ virtualenv --no-site-packages ve
-$ source ve/bin/activate
-</pre></div>
+<div class="highlight-python"><pre>$ virtualenv --no-site-packages ve
+$ source ve/bin/activate</pre>
 </div>
 <p>Install numpy and scipy:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ export LAPACK=/usr/lib/liblapack.so
+<div class="highlight-python"><pre>$ export LAPACK=/usr/lib/liblapack.so
 $ export ATLAS=/usr/lib/libatlas.so
 $ export BLAS=/usr/lib/libblas.so
 $ pip install numpy==1.7.1
-$ pip install scipy==0.12.0
-</pre></div>
+$ pip install scipy==0.12.0</pre>
 </div>
 <p>Install memory-profiler:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ memory-profiler==0.27
-</pre></div>
+<div class="highlight-python"><pre>$ memory-profiler==0.27</pre>
 </div>
 <p>Make sure you are using python version 2.7 and above. If the default python in your mac is an older version 2.6, then do the following:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ brew install python
+<div class="highlight-python"><pre>$ brew install python
 $ mv /usr/bin/python /usr/bin/python.orig
 $ ln -s /opt/local/bin/python /usr/bin/python
-$ port select --set python python27
-</pre></div>
+$ port select --set python python27</pre>
 </div>
 <p>Make sure you are using pip2.7 or newer. If not, do the following:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ cd /usr/local/bin/
+<div class="highlight-python"><pre>$ cd /usr/local/bin/
 $ mv pip pip.orig
-$ ln -s pip2.7 pip
-</pre></div>
+$ ln -s pip2.7 pip</pre>
 </div>
 <p>Make sure you are using easy_install version 2.7 and older. Else do the following:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ cd /usr/bin/
+<div class="highlight-python"><pre>$ cd /usr/bin/
 $ mv easy_install easy_install.orig
-$ ln -s easy_install-2.7 easy_install
-</pre></div>
+$ ln -s easy_install-2.7 easy_install</pre>
 </div>
 <p>Install nltk with easy install:</p>
-<div class="highlight-python"><div class="highlight"><pre>$sudo easy_install nltk==3.0.3
-</pre></div>
+<div class="highlight-python"><pre>$sudo easy_install nltk==3.0.3</pre>
 </div>
 <p>Install jsonpath:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ Download jsonpath from http://www.ultimate.com/phil/python/download/jsonpath-0.54.tar.gz
+<div class="highlight-python"><pre>$ Download jsonpath from http://www.ultimate.com/phil/python/download/jsonpath-0.54.tar.gz
 $ cd ~/Downloads/jsonpath-0.54
-$ sudo python setup.py install
-</pre></div>
+$ sudo python setup.py install</pre>
 </div>
 <p>Install python requirements:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ cd cloudml
-$ pip install -r ./requirements.txt
-</pre></div>
+<div class="highlight-python"><pre>$ cd cloudml
+$ pip install -r ./requirements.txt</pre>
 </div>
 <p>Create local config:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ cp local_config.py.tpl local_config.py
-</pre></div>
+<div class="highlight-python"><pre>$ cp local_config.py.tpl local_config.py</pre>
 </div>
 </div>
 <div class="section" id="bootstrap-using-vagrant">
 <h2>Bootstrap using vagrant<a class="headerlink" href="#bootstrap-using-vagrant" title="Permalink to this headline">¶</a></h2>
 <p>Before diving into cloudml, please <a class="reference external" href="http://docs.vagrantup.com/v2/installation/">install the latest version of Vagrant</a>. And because we&#8217;ll be using <a class="reference external" href="http://www.virtualbox.org/">VirtualBox</a> as our provider for the getting started guide, please install that as well.</p>
 <p>Clone cloduml repo:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ git clone https://github.com/odeskdataproducts/cloudml.git
-</pre></div>
+<div class="highlight-python"><pre>$ git clone https://github.com/odeskdataproducts/cloudml.git</pre>
 </div>
 <p>For boot your Vagrant environment. Run the following:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ cd cloudml
-$ vagrant up
-</pre></div>
+<div class="highlight-python"><pre>$ cd cloudml
+$ vagrant up</pre>
 </div>
 <p>In 20-30 minutes, this command will finish and you&#8217;ll have a virtual machine running Ubuntu with installed all dependencies.</p>
 <p>For connect to machine run:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ vagrant ssh
-</pre></div>
+<div class="highlight-python"><pre>$ vagrant ssh</pre>
 </div>
 <p>For run test please go to <cite>/vagrant</cite> directory:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ cd /vagrant
-$ python setup.py test
-</pre></div>
+<div class="highlight-python"><pre>$ cd /vagrant
+$ python setup.py test</pre>
 </div>
 <p>When you&#8217;re done fiddling around with the machine, run <cite>vagrant destroy</cite> back on your host machine, and Vagrant will remove all traces of the virtual machine.</p>
 <p>A <cite>vagrant suspend</cite> effectively saves the exact point-in-time state of the machine, so that when you resume it later, it begins running immediately from that point, rather than doing a full boot.</p>
@@ -268,33 +239,27 @@ $ python setup.py test
 <div class="section" id="build-docs">
 <h2>Build docs<a class="headerlink" href="#build-docs" title="Permalink to this headline">¶</a></h2>
 <p>For build docs please install:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ sudo pip install Sphinx==1.3.1
-</pre></div>
+<div class="highlight-python"><pre>$ sudo pip install Sphinx==1.3.1</pre>
 </div>
 <p>Build html doc:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ cd doc
-$ make html
-</pre></div>
+<div class="highlight-python"><pre>$ cd doc
+$ make html</pre>
 </div>
 <p>View doc in ./doc/_build/html directory.</p>
 </div>
 <div class="section" id="run-tests">
 <h2>Run tests<a class="headerlink" href="#run-tests" title="Permalink to this headline">¶</a></h2>
 <p>For run test please install:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ pip install nose coverage moto==0.3.3 mock==1.0.1
-</pre></div>
+<div class="highlight-python"><pre>$ pip install nose coverage moto==0.3.3 mock==1.0.1</pre>
 </div>
 <p>Run all tests:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ python setup.py test
-</pre></div>
+<div class="highlight-python"><pre>$ python setup.py test</pre>
 </div>
 <p>Run tests with coverage:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ python setup.py coverage
-</pre></div>
+<div class="highlight-python"><pre>$ python setup.py coverage</pre>
 </div>
 <p>Run single test:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ nosetests cloudml.tests.trainer_tests:TrainerTestCase.test_features_not_found
-</pre></div>
+<div class="highlight-python"><pre>$ nosetests cloudml.tests.trainer_tests:TrainerTestCase.test_features_not_found</pre>
 </div>
 </div>
 </div>
