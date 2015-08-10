@@ -20,7 +20,10 @@ class OrdinalFeatureTypeInstance(FeatureTypeInstanceBase):
             Feature should containing the 'mappings' in parameters.
         """
         params = self.active_params()
-        return params['mappings'].get(value, None)
+        try:
+            return float(params['mappings'].get(value, None))
+        except:
+            raise ValueError('not numerical value: {0}'.format(value))
 
 
 class OrdinalFeatureType(FeatureTypeBase):
