@@ -58,8 +58,8 @@ class ExtractionPlan(object):
             self.data = objectify.fromstring(config)
         except etree.XMLSyntaxError as e:
             raise ImportHandlerException(
-                "Can't parse import handler file XML: {0}. "
-                "Got exception: {1}".format(config, e)
+                "Valid XML is expected for import handler. "
+                "Parse error: {0}".format(e)
             )
 
         if not self.is_valid():
