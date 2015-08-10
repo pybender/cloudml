@@ -5,6 +5,7 @@ This module contains map feature type processor
 # Author: Nikolay Melnik <nmelnik@upwork.com>
 
 from base import FeatureTypeBase, FeatureTypeInstanceBase
+from cloudml.utils import isfloat, isint
 
 
 class OrdinalFeatureTypeInstance(FeatureTypeInstanceBase):
@@ -21,9 +22,14 @@ class OrdinalFeatureTypeInstance(FeatureTypeInstanceBase):
         """
         params = self.active_params()
         try:
-            return float(params['mappings'].get(value, None))
+            val = params['mappings'].get(value, None)
+            if isint(val):
+                return int(val)
+            elif isfloat(val):
+                return float(val)
+            return val
         except:
-            raise ValueError('not numerical value: {0}'.format(value))
+            return None
 
 
 class OrdinalFeatureType(FeatureTypeBase):
