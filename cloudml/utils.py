@@ -25,6 +25,7 @@ def init_logging(debug):
     logger = logging.getLogger()
     logger.setLevel(logging_level)
 
+
 def determine_data_format(filepath):
     try:
         format = os.path.splitext(filepath)[1][1:]
@@ -38,3 +39,38 @@ def determine_data_format(filepath):
                         "Trying to parse it as 'json'")
         return 'json'
     return format
+
+
+def isfloat(x):
+    """
+    >>> isfloat('1.5')
+    True
+    >>> isfloat('5')
+    True
+    >>> isfloat('5,0')
+    False
+    """
+    try:
+        a = float(x)
+    except:
+        return False
+    else:
+        return True
+
+
+def isint(x):
+    """
+    >>> isint('1.5')
+    False
+    >>> isint('5')
+    True
+    >>> isint('other')
+    False
+    """
+    try:
+        a = float(x)
+        b = int(a)
+    except:
+        return False
+    else:
+        return a == b

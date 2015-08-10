@@ -80,7 +80,7 @@ CLASSIFIERS = {
     LOGISTIC_REGRESSION: {
         'cls': 'sklearn.linear_model.LogisticRegression',
         'parameters': [
-            {'name': "penalty", 'type': 'string', 'required': True,
+            {'name': "penalty", 'type': 'string',
              'choices': ['l1', 'l2'], 'default': 'l2',
              'help_text': 'Used to specify the norm used in the penalization. \
 The newton-cg and lbfgs solvers support only l2 penalties.'},

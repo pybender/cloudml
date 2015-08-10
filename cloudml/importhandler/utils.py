@@ -4,6 +4,7 @@ import json
 import os
 from string import Template
 from datetime import datetime
+from ..utils import isint, isfloat
 
 
 class ParametrizedTemplate(Template):
@@ -125,41 +126,6 @@ def construct_pig_fields(fields_data):
                                        get_pig_type(field))
         is_first = False
     return fields_str
-
-
-def isfloat(x):
-    """
-    >>> isfloat('1.5')
-    True
-    >>> isfloat('5')
-    True
-    >>> isfloat('5,0')
-    False
-    """
-    try:
-        a = float(x)
-    except:
-        return False
-    else:
-        return True
-
-
-def isint(x):
-    """
-    >>> isint('1.5')
-    False
-    >>> isint('5')
-    True
-    >>> isint('other')
-    False
-    """
-    try:
-        a = float(x)
-        b = int(a)
-    except:
-        return False
-    else:
-        return a == b
 
 
 def autoload_fields_by_row(entity, row, prefix=''):
