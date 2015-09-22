@@ -7,15 +7,14 @@ An introduction to building the classifier with CloudML
 
 .. topic:: Section contents
 
-    In this section, we provide a very short example how to
-    learn and evaluate an classifier using CloudML. Also basic concepts and conventions would be introduced.
+    This section presents a brief example for learning, using and evaluating a classifier using CloudML. In addition, basic concepts and conventions are also introduced.
 
 
 CloudML aims to provide a set of tools that allow building a classifier on the cloud. It consists of three components:
 
-1. Import handler, a utility module that is responsible for feeding the trainer and the predictor with data.
-2. Trainer, which receives data from the import handler and trains a classifier to produce a classification model.
-3. Predictor, that uses a model produced by the trainer to predict the class of incoming requests.
+1. Import handler: a utility module which is responsible for feeding the trainer and the predictor with data.
+2. Trainer: which receives data from the import handler and trains a classifier to produce a classification model.
+3. Predictor: which uses a model produced by the trainer in order to predict the class of incoming requests.
 
 Importing data
 ==============
@@ -25,18 +24,20 @@ Importing data
 Loading an example dataset
 --------------------------
 
-In this example we will use standart `Abalone dataset <https://archive.ics.uci.edu/ml/datasets/Abalone>`_ in CSV format from the `UCI Machine Learning Repository <http://archive.ics.uci.edu/ml>`_.
+In this example, a standard `Abalone dataset <https://archive.ics.uci.edu/ml/datasets/Abalone>`_ in CSV format is used from the `UCI Machine Learning Repository <http://archive.ics.uci.edu/ml>`_.
 
-For example, we can do it using wget command::
+For example, this can also be performed by using the wget command:
 
-    $wget http://archive.ics.uci.edu/ml/machine-learning-databases/abalone/abalone.data
+.. code-block:: console
+
+    $ wget http://archive.ics.uci.edu/ml/machine-learning-databases/abalone/abalone.data
 
 .. _define_extraction_plan:
 
 Defining extraction plan
 ------------------------
 
-But first we have to describe the structure of the dataset, make an :ref:`xml extraction plan file <import_handlers>`.
+First, the structure of the dataset must be described by making an :ref:`xml extraction plan file <import_handlers>`.
 
 The extraction plan for a dataset to load from a csv file is as follows:
     .. literalinclude:: _static/extract_csv.xml
@@ -45,16 +46,18 @@ The extraction plan for a dataset to load from a csv file is as follows:
 
 .. note::
 
-	Full example of extraction plan could be find here: :download:`extract_csv.xml <_static/extract_csv.xml>`
+	The complete example of extraction plan can be found here: :download:`extract_csv.xml <_static/extract_csv.xml>`
 
 .. _importing_data:
 
 Importing the dataset
 ---------------------
 
-Run import data and store dataset to abalano.json file::
+Run import data and store dataset to abalano.json file:
 
-	$importhandler.py extract_csv.xml -o abalone.json
+.. code-block:: console
+
+	$ importhandler.py extract_csv.xml -o abalone.json
 
 	2015-07-03 06:30:16,951 - root
 	                            - INFO - User-defined parameters:
@@ -95,9 +98,9 @@ Creating the model
 Describing features
 -------------------
 
-For create new model you should describe model features json file. You can found info about format in :ref:`Feature JSON file format<features>` chapter of this documentaion.
+In order to create a new model, the model features json file must be described. Information on format can be found within the :ref:`Feature JSON file format<features>` chapter contained in this documentaion.
 
-Firts we should define the classifier:
+First, the classifier must be defined:
     .. literalinclude:: _static/features.json
         :language: json
         :lines: 3-6
@@ -110,15 +113,17 @@ The feateres are as follows:
 
 .. note::
 
-	Full example we can found in :download:`feature.json <_static/features.json>`.
+	A full example can found in :download:`feature.json <_static/features.json>`.
 
 
 Training the model
 ------------------
 
-Train model using command::
+Train the model using command:
 
-	trainer.py features.json -i abalone.json
+.. code-block:: console
+
+	$ trainer.py features.json -i abalone.json
 
 Output::
 
@@ -160,19 +165,23 @@ Output::
 	                            - INFO - Training completed...
 
 
-For store trained model to file need specify -o option with file name. For example::
+For storing the trained model to file, -o option with file name must be specified. For example:
 
-    $trainer.py features.json -i abalone.json -o model.dat
+.. code-block:: console
+
+    $ trainer.py features.json -i abalone.json -o model.dat
 
 
 Testing the model
 -----------------
 
-For evaluating model we can use part of input dataset. For this we should set percent of data which will be use for test to `-tp` param. For example, if we want to use 20% of dataset for test::
+In order to evaluate the model, part of input dataset can be used. To undertake this, the percentage of data which will be use for test must be set to `-tp` param. For example, if 20% of dataset is required to be used for testing:
 
-	trainer.py features.json -i abalone.json -tp 20
+.. code-block:: console
 
-After run this command we will get folowing info::
+	$ trainer.py features.json -i abalone.json -tp 20
+
+Following this, running this command will provide the following information::
 
 	......
 
@@ -204,16 +213,18 @@ After run this command we will get folowing info::
 Predicting
 ==========
 
-For predict data using existing trained model and store results to csv file::
+For predicting data using the existing trained model and to store results to a csv file:
 
-    $predictor.py model.dat -i abalone.json -m csv
+.. code-block:: console
 
-Results will be stored to result.csv file. First lines from it::
+    $ predictor.py model.dat -i abalone.json -m csv
+
+Results will be stored to result.csv file. First lines from it are as follows::
 
 	label,0,1,2
 	1,0.28701459000432328,0.40396444257495651,0.30902096742072022
 	0,0.69853735998655109,0.19688865629972377,0.10457398371372523
 
-Label column is a predicted label. Other columns are probabilities for each class.
+Label column is a predicted label while other columns are probabilities for each class.
 
-We can build rest api service for predict using cloudml-predict.
+It is possible to build rest api service for predicting using cloudml-predict.

@@ -1,5 +1,5 @@
 =====================
-Supported classifiers
+Supported Classifiers
 =====================
 
 .. contents:: 
@@ -22,32 +22,32 @@ Sample configuration in features.json file:
    }
 
 
-This classifier has following parameters:
+This classifier has the following parameters:
 
 * `penalty` : string, {l1, l2}
-        Used to specify the norm used in the penalization. The newton-cg andlbfgs solvers support only l2 penalties.
+        Used to specify the norm used in the penalization. The newton-cg andlbfgs solvers only support l2 penalties.
 * `dual` : boolean
-        Dual or primal formulation. Dual formulation is only implemented forl2 penalty with liblinear solver. Prefer dual=False whenn_samples > n_features.
+        Dual or primal formulation. Dual formulation is only implemented for l2 penalty with liblinear solver. Prefer dual=False whenn_samples > n_features.
 * `C` : float, default=1
-        Inverse of regularization strength; must be a positive float.Like in support vector machines, smaller values specify strongerregularization.
+        Inverse of regularization strength; must be a positive float. As in the case of support vector machines, smaller values specify stronger regularization.
 * `fit_intercept` : boolean, default=True
-        Specifies if a constant (a.k.a. bias or intercept) should beadded the decision function.
+        Specifies if a constant (a.k.a. bias or intercept) should be added to the decision function.
 * `intercept_scaling` : float, default=1
-        Useful only if solver is liblinear.when self.fit_intercept is True, instance vector x becomes[x, self.intercept_scaling],i.e. a "synthetic" feature with constant value equals tointercept_scaling is appended to the instance vector.The intercept becomes intercept_scaling * synthetic feature weightNote! the synthetic feature weight is subject to l1/l2 regularizationas all other features.To lessen the effect of regularization on synthetic feature weight(and therefore on the intercept) intercept_scaling has to be increased.
+        Useful only if the solver is liblinear, when self.fit_intercept is True, instance vector x becomes[x, self.intercept_scaling],i.e. a "synthetic" feature with constant value equals to intercept_scaling is appended to the instance vector. The intercept becomes intercept_scaling * synthetic feature weightNote! the synthetic feature weight is subject to l1/l2 regularizationas all other features. To lessen the effect of regularization on synthetic feature weight(and therefore on the intercept) intercept_scaling has to be increased.
 * `class_weight` : 'auto' or a dictionary
-        Over-/undersamples the samples of each class according to the givenweights. If not given, all classes are supposed to have weight one.The 'auto' mode selects weights inversely proportional to classfrequencies in the training set.
+        Over-/undersamples the samples of each class according to the givenweights. If not specified, all classes are assumed to have a weight of one. The 'auto' mode selects weights which are inversely proportional to class frequencies in the training set.
 * `max_iter` : integer
-        Useful only for the newton-cg and lbfgs solvers. Maximum number ofiterations taken for the solvers to converge.
+        Useful only for the newton-cg and lbfgs solvers. Maximum number of iterations taken for the solvers to converge.
 * `random_state` : integer
-        The seed of the pseudo random number generator to use whenshuffling the data.
+        The seed of the pseudo random number generator to use when shuffling the data.
 * `solver` : string, {newton-cg, lbfgs, liblinear}
-        Algorithm to use in the optimization problem.
+        Algorithm for use in the optimization problem.
 * `tol` : float
         Tolerance for stopping criteria.
 * `multi_class` : string, {ovr, multinomial}
-        Multiclass option can be either 'ovr' or 'multinomial'. If the optionchosen is 'ovr', then a binary problem is fit for each label. Elsethe loss minimised is the multinomial loss fit acrossthe entire probability distribution. Works only for the 'lbfgs'solver.
+        Multiclass option can be either 'ovr' or 'multinomial'. If the option chosen is 'ovr', then a binary problem is fit for each label, otherwise the loss minimised is the multinomial loss fitting across the entire probability distribution. Works only for the 'lbfgs'solver.
 * `verbose` : integer
-        For the liblinear and lbfgs solvers set verbose to any positivenumber for verbosity.
+        For the liblinear and lbfgs solvers set verbose to any positive number for verbosity.
 
 
 .. _classifier-stochastic-gradient-descent-classifier:
@@ -184,7 +184,7 @@ This classifier has following parameters:
 * `class_weight` : string
         (default=None)Weights associated with classes in the form``{class_label: weight}``.If not given, all classes are supposed to have weight one. Formulti-output problems, a list of dicts can be provided in the sameorder as the columns of y.The "auto" mode uses the values of y to automatically adjustweights inversely proportional to class frequencies in the input data.For multi-output, the weights of each column of y will be multiplied.Note that these weights will be multiplied with sample_weight (passedthrough the fit method) if sample_weight is specified.
 * `random_state` : integer, default=None
-        If int, random_state is the seed used by the random number generator;If RandomState instance, random_state is the random number generator;If None, the random number generator is the RandomState instance usedby`np.random`.
+        If int, random_state is the seed used by the random number generator; If RandomState instance, random_state is the random number generator;If None, the random number generator is the RandomState instance usedby`np.random`.
 
 .. _extra_tree:
 
@@ -203,38 +203,38 @@ Sample configuration in features.json file:
    }
 
 
-This classifier has following parameters:
+This classifier has the following parameters:
 
 * `n_estimators` : string, default=10
         The number of trees in the forest.
 * `criterion` : string, default="gini"
-        The function to measure the quality of a split. Supported criteria are"gini" for the Gini impurity and "entropy" for the information gain.Note: this parameter is tree-specific.
+        The function to measure the quality of a split. Supported criteria are "gini" for the Gini impurity and "entropy" for the information gain. Note: this parameter is tree-specific.
 * `max_features` : integer, default="auto"
-        The number of features to consider when looking for the best split:- If int, then consider`max_features` features at each split.- If float, then`max_features` is a percentage and`int(max_features * n_features)` features are considered at eachsplit.- If "auto", then`max_features=sqrt(n_features)`.- If "sqrt", then`max_features=sqrt(n_features)`.- If "log2", then`max_features=log2(n_features)`.- If None, then`max_features=n_features`.Note: the search for a split does not stop until at least onevalid partition of the node samples is found, even if it requires toeffectively inspect more than``max_features`` features.Note: this parameter is tree-specific.
+        The number of features to consider when looking for the best split:- If int, then consider `max_features` features at each split.- If float, then `max_features` is a percentage and `int(max_features * n_features)` features are considered at each split. If "auto", then `max_features=sqrt(n_features)`.- If "sqrt", then `max_features=sqrt(n_features)`.- If "log2", then `max_features=log2(n_features)`.- If None, then `max_features=n_features`. Note: the search for a split does not end until, at least, one valid partition of the node samples is found, even if it requires to effectively inspect more than``max_features`` features. Note: this parameter is tree-specific.
 * `max_depth` : string, default=None
-        The maximum depth of the tree. If None, then nodes are expanded untilall leaves are pure or until all leaves contain less thanmin_samples_split samples.Ignored if``max_leaf_nodes`` is not None.Note: this parameter is tree-specific.
+        The maximum depth of the tree. If None, then nodes are expanded until all leaves are pure, or until all leaves contain less than min_samples_split samples. Ignored if``max_leaf_nodes`` is not None.Note: this parameter is tree-specific.
 * `min_samples_split` : string, default=2
-        The minimum number of samples required to split an internal node.Note: this parameter is tree-specific.
+        The minimum number of samples required to split an internal node. Note: this parameter is tree-specific.
 * `min_samples_leaf` : string, default=1
-        The minimum number of samples in newly created leaves.  A split isdiscarded if after the split, one of the leaves would contain less then``min_samples_leaf`` samples.Note: this parameter is tree-specific.
+        The minimum number of samples in newly created leaves.  A split is discarded if after the split, one of the leaves would contain less then``min_samples_leaf`` samples. Note: this parameter is tree-specific.
 * `min_weight_fraction_leaf` : float
-        The minimum weighted fraction of the input samples required to be at aleaf node.Note: this parameter is tree-specific.
+        The minimum weighted fraction of the input samples required to be at a leaf node. Note: this parameter is tree-specific.
 * `max_leaf_nodes` : string, default=None
-        Grow trees with``max_leaf_nodes`` in best-first fashion.Best nodes are defined as relative reduction in impurity.If None then unlimited number of leaf nodes.If not None then``max_depth`` will be ignored.Note: this parameter is tree-specific.
+        Grow trees with``max_leaf_nodes`` in best-first fashion. Best nodes are defined as relative reduction in impurity. If None found then an unlimited number of leaf nodes. If not None then``max_depth`` will be ignored. Note: this parameter is tree-specific.
 * `bootstrap` : string
         Whether bootstrap samples are used when building trees.
 * `oob_score` : boolean
-        Whether to use out-of-bag samples to estimatethe generalization error.
+        Whether to use out-of-bag samples in order to estimate the generalization error.
 * `n_jobs` : string, default=1
-        The number of jobs to run in parallel for both`fit` and`predict`.If -1, then the number of jobs is set to the number of cores.
+        The number of jobs running in parallel for both `fit` and `predict`. If -1, then the number of jobs are set to the number of cores.
 * `random_state` : integer, default=None
-        If int, random_state is the seed used by the random number generator;If RandomState instance, random_state is the random number generator;If None, the random number generator is the RandomState instance usedby`np.random`.
+        If int, random_state is the seed used by the random number generator; If Random State instance, random_state is the random number generator; If None, the random number generator is the Random State instance used by `np.random`.
 * `verbose` : integer
         Controls the verbosity of the tree building process.
 * `warm_start` : boolean
-        When set to``True``, reuse the solution of the previous call to fitand add more estimators to the ensemble, otherwise, just fit a wholenew forest.
+        When set to ``True``, reuse the solution of the previous call to fit and add more estimators to the ensemble, otherwise, simply fit a whole new forest.
 * `class_weight` : string
-        Weights associated with classes in the form``{class_label: weight}``.If not given, all classes are supposed to have weight one. Formulti-output problems, a list of dicts can be provided in the sameorder as the columns of y.The "auto" mode uses the values of y to automatically adjustweights inversely proportional to class frequencies in the input data.The "subsample" mode is the same as "auto" except that weights arecomputed based on the bootstrap sample for every tree grown.For multi-output, the weights of each column of y will be multiplied.Note that these weights will be multiplied with sample_weight (passedthrough the fit method) if sample_weight is specified.
+        Weights associated with classes in the form ``{class_label: weight}``. If not given, all classes are supposed to have weight one. For multi-output problems, a list of dicts can be provided in the same order as of the columns of y. The "auto" mode uses the values of y to automatically adjust weights inversely proportional to class frequencies in the input data. The "subsample" mode is the same as "auto", except that weights are computed based on the bootstrap sample for every tree grown. For multi-output, the weights of each y column will be multiplied. Note that these weights will be multiplied with sample_weight (passedthrough the fit method) if sample_weight is specified.
 
 .. _random_forest:
 
@@ -303,16 +303,16 @@ Sample configuration in features.json file:
    }
 
 
-This classifier has following parameters:
+This classifier has the following parameters:
 
 * `loss` : string, default='deviance'
-        loss function to be optimized. 'deviance' refers todeviance (= logistic regression) for classificationwith probabilistic outputs. For loss 'exponential' gradientboosting recoveres the AdaBoost algorithm.
+        Loss function to be optimized. 'deviance' refers to deviance (= logistic regression) for classification with probabilistic outputs. For loss 'exponential' gradient boosting recovers the AdaBoost algorithm.
 * `learning_rate` : float
-        learning rate shrinks the contribution of each tree by`learning_rate`.There is a trade-off between learning_rate and n_estimators.
+        Learning rate shrinks the contribution of each tree by `learning_rate`. There is a trade-off between learning_rate and n_estimators.
 * `n_estimators` : string, default=100, {int ()}
-        The number of boosting stages to perform. Gradient boostingis fairly robust to over-fitting so a large number usuallyresults in better performance.
+        The number of boosting stages to perform. Gradient boosting is fairly robust to over-fitting, therefore a large number usually results in better performance.
 * `max_depth` : string, default=3
-        maximum depth of the individual regression estimators. The maximumdepth limits the number of nodes in the tree. Tune this parameterfor best performance; the best value depends on the interactionof the input variables.Ignored if``max_leaf_nodes`` is not None.
+        Maximum depth of the individual regression estimators. The maximum depth limits the number of nodes in the tree. Tune this parameter for best performance; the best value depends on the interaction of the input variables. Ignored if``max_leaf_nodes`` is not None.
 * `min_samples_split` : string, default=2
         The minimum number of samples required to split an internal node.
 * `min_samples_leaf` : string, default=1
@@ -320,18 +320,18 @@ This classifier has following parameters:
 * `min_weight_fraction_leaf` : float
         The minimum weighted fraction of the input samples required to be at aleaf node.
 * `subsample` : float, default=1
-        The fraction of samples to be used for fitting the individual baselearners. If smaller than 1.0 this results in Stochastic GradientBoosting.`subsample` interacts with the parameter`n_estimators`.Choosing`subsample < 1.0` leads to a reduction of varianceand an increase in bias.
+        The fraction of samples to be used for fitting the individual base learners. If smaller than 1.0 this results in Stochastic Gradient Boosting.`subsample` interacts with the parameter `n_estimators`.Choosing`subsample < 1.0` leads to a reduction of variance and an increase in bias.
 * `max_features` : integer, default=None
-        The number of features to consider when looking for the best split:- If int, then consider`max_features` features at each split.- If float, then`max_features` is a percentage and`int(max_features * n_features)` features are considered at eachsplit.- If "auto", then`max_features=sqrt(n_features)`.- If "sqrt", then`max_features=sqrt(n_features)`.- If "log2", then`max_features=log2(n_features)`.- If None, then`max_features=n_features`.Choosing`max_features < n_features` leads to a reduction of varianceand an increase in bias.Note: the search for a split does not stop until at least onevalid partition of the node samples is found, even if it requires toeffectively inspect more than``max_features`` features.
+        The number of features to consider when looking for the best split:- If int, then consider `max_features` features at each split.- If float, then `max_features` is a percentage and `int(max_features * n_features)` features are considered at eachsplit.- If "auto", then`max_features=sqrt(n_features)`.- If "sqrt", then`max_features=sqrt(n_features)`.- If "log2", then`max_features=log2(n_features)`.- If None, then`max_features=n_features`. Choosing `max_features < n_features` leads to a reduction of variance and an increase in bias. Note: the search for a split does not end until at least onevalid partition of the node samples is found, even if it requires to effectively inspect more than``max_features`` features.
 * `max_leaf_nodes` : string, default=None
-        Grow trees with``max_leaf_nodes`` in best-first fashion.Best nodes are defined as relative reduction in impurity.If None then unlimited number of leaf nodes.If not None then``max_depth`` will be ignored.
+        Grow trees with``max_leaf_nodes`` in best-first fashion. Best nodes are defined as relative reduction in impurity. If None then unlimited number of leaf nodes. If not None then``max_depth`` will be ignored.
 * `init` : string, default=None
-        An estimator object that is used to compute the initialpredictions.``init`` has to provide``fit`` and``predict``.If None it uses``loss.init_estimator``.
+        An estimator object that is used to compute the initial predictions.``init`` has to provide``fit`` and``predict``. If None, ``loss.init_estimator`` is used.
 * `verbose` : integer
         Enable verbose output. If 1 then it prints progress and performanceonce in a while (the more trees the lower the frequency). If greaterthan 1 then it prints progress and performance for every tree.
 * `warm_start` : boolean
-        When set to``True``, reuse the solution of the previous call to fitand add more estimators to the ensemble, otherwise, just erase theprevious solution.
+        When set to``True``, reuse the solution of the previous call to fit and add further estimators to the ensemble, otherwise, simply erase the previous solution.
 
 .. note::
 
-    For now it's impossible to use Gradient Boosting classifier, because it isn't supports sparse matrix.
+    For the moment, it is not possible to use Gradient Boosting classifier, because it does not support sparse matrix.

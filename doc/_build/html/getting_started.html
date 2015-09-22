@@ -58,7 +58,7 @@
   </script>
 
   </head>
-  <body>
+  <body role="document">
 
 <div class="header-wrapper">
     <div class="header"></div>
@@ -137,33 +137,33 @@
             
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="an-introduction-to-building-the-classifier-with-cloudml">
 <span id="introduction"></span><h1>An introduction to building the classifier with CloudML<a class="headerlink" href="#an-introduction-to-building-the-classifier-with-cloudml" title="Permalink to this headline">¶</a></h1>
 <div class="topic">
 <p class="topic-title first">Section contents</p>
-<p>In this section, we provide a very short example how to
-learn and evaluate an classifier using CloudML. Also basic concepts and conventions would be introduced.</p>
+<p>This section presents a brief example for learning, using and evaluating a classifier using CloudML. In addition, basic concepts and conventions are also introduced.</p>
 </div>
 <p>CloudML aims to provide a set of tools that allow building a classifier on the cloud. It consists of three components:</p>
 <ol class="arabic simple">
-<li>Import handler, a utility module that is responsible for feeding the trainer and the predictor with data.</li>
-<li>Trainer, which receives data from the import handler and trains a classifier to produce a classification model.</li>
-<li>Predictor, that uses a model produced by the trainer to predict the class of incoming requests.</li>
+<li>Import handler: a utility module which is responsible for feeding the trainer and the predictor with data.</li>
+<li>Trainer: which receives data from the import handler and trains a classifier to produce a classification model.</li>
+<li>Predictor: which uses a model produced by the trainer in order to predict the class of incoming requests.</li>
 </ol>
 <div class="section" id="importing-data">
 <h2>Importing data<a class="headerlink" href="#importing-data" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="loading-an-example-dataset">
 <span id="loading-example-dataset"></span><h3>Loading an example dataset<a class="headerlink" href="#loading-an-example-dataset" title="Permalink to this headline">¶</a></h3>
-<p>In this example we will use standart <a class="reference external" href="https://archive.ics.uci.edu/ml/datasets/Abalone">Abalone dataset</a> in CSV format from the <a class="reference external" href="http://archive.ics.uci.edu/ml">UCI Machine Learning Repository</a>.</p>
-<p>For example, we can do it using wget command:</p>
-<div class="highlight-python"><pre>$wget http://archive.ics.uci.edu/ml/machine-learning-databases/abalone/abalone.data</pre>
+<p>In this example, a standard <a class="reference external" href="https://archive.ics.uci.edu/ml/datasets/Abalone">Abalone dataset</a> in CSV format is used from the <a class="reference external" href="http://archive.ics.uci.edu/ml">UCI Machine Learning Repository</a>.</p>
+<p>For example, this can also be performed by using the wget command:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> wget http://archive.ics.uci.edu/ml/machine-learning-databases/abalone/abalone.data
+</pre></div>
 </div>
 </div>
 <div class="section" id="defining-extraction-plan">
 <span id="define-extraction-plan"></span><h3>Defining extraction plan<a class="headerlink" href="#defining-extraction-plan" title="Permalink to this headline">¶</a></h3>
-<p>But first we have to describe the structure of the dataset, make an <a class="reference internal" href="import_handlers.html#import-handlers"><em>xml extraction plan file</em></a>.</p>
+<p>First, the structure of the dataset must be described by making an <a class="reference internal" href="import_handlers.html#import-handlers"><span>xml extraction plan file</span></a>.</p>
 <dl class="docutils">
 <dt>The extraction plan for a dataset to load from a csv file is as follows:</dt>
 <dd><div class="first last highlight-xml"><div class="highlight"><pre><span class="nt">&lt;plan&gt;</span>
@@ -189,40 +189,41 @@ learn and evaluate an classifier using CloudML. Also basic concepts and conventi
 </dl>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Full example of extraction plan could be find here: <a class="reference download internal" href="_downloads/extract_csv.xml"><tt class="xref download docutils literal"><span class="pre">extract_csv.xml</span></tt></a></p>
+<p class="last">The complete example of extraction plan can be found here: <a class="reference download internal" href="_downloads/extract_csv.xml"><code class="xref download docutils literal"><span class="pre">extract_csv.xml</span></code></a></p>
 </div>
 </div>
 <div class="section" id="importing-the-dataset">
 <span id="id1"></span><h3>Importing the dataset<a class="headerlink" href="#importing-the-dataset" title="Permalink to this headline">¶</a></h3>
 <p>Run import data and store dataset to abalano.json file:</p>
-<div class="highlight-python"><pre>$importhandler.py extract_csv.xml -o abalone.json
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> importhandler.py extract_csv.xml -o abalone.json
 
-2015-07-03 06:30:16,951 - root
-                            - INFO - User-defined parameters:
-2015-07-03 06:30:16,952 - root
-                            - DEBUG - Validating schema...
-2015-07-03 06:30:16,953 - root
-                            - DEBUG - No input parameters declared
-2015-07-03 06:30:16,953 - root
-                            - INFO - Validate input parameters.
-2015-07-03 06:30:16,953 - root
-                            - INFO - Storing data to abalone.json...
-2015-07-03 06:30:16,954 - root
-                            - INFO - Processed 0 rows so far
-2015-07-03 06:30:17,019 - root
-                            - INFO - Processed 1000 rows so far
-2015-07-03 06:30:17,083 - root
-                            - INFO - Processed 2000 rows so far
-2015-07-03 06:30:17,148 - root
-                            - INFO - Processed 3000 rows so far
-2015-07-03 06:30:17,211 - root
-                            - INFO - Processed 4000 rows so far
-2015-07-03 06:30:17,222 - root
-                            - INFO - Total 4177 lines
-2015-07-03 06:30:17,223 - root
-                            - INFO - Ignored 0 lines</pre>
+<span class="go">2015-07-03 06:30:16,951 - root</span>
+<span class="go">                            - INFO - User-defined parameters:</span>
+<span class="go">2015-07-03 06:30:16,952 - root</span>
+<span class="go">                            - DEBUG - Validating schema...</span>
+<span class="go">2015-07-03 06:30:16,953 - root</span>
+<span class="go">                            - DEBUG - No input parameters declared</span>
+<span class="go">2015-07-03 06:30:16,953 - root</span>
+<span class="go">                            - INFO - Validate input parameters.</span>
+<span class="go">2015-07-03 06:30:16,953 - root</span>
+<span class="go">                            - INFO - Storing data to abalone.json...</span>
+<span class="go">2015-07-03 06:30:16,954 - root</span>
+<span class="go">                            - INFO - Processed 0 rows so far</span>
+<span class="go">2015-07-03 06:30:17,019 - root</span>
+<span class="go">                            - INFO - Processed 1000 rows so far</span>
+<span class="go">2015-07-03 06:30:17,083 - root</span>
+<span class="go">                            - INFO - Processed 2000 rows so far</span>
+<span class="go">2015-07-03 06:30:17,148 - root</span>
+<span class="go">                            - INFO - Processed 3000 rows so far</span>
+<span class="go">2015-07-03 06:30:17,211 - root</span>
+<span class="go">                            - INFO - Processed 4000 rows so far</span>
+<span class="go">2015-07-03 06:30:17,222 - root</span>
+<span class="go">                            - INFO - Total 4177 lines</span>
+<span class="go">2015-07-03 06:30:17,223 - root</span>
+<span class="go">                            - INFO - Ignored 0 lines</span>
+</pre></div>
 </div>
-<p>File <a class="reference download internal" href="_downloads/abalone.json"><tt class="xref download docutils literal"><span class="pre">abalone.json</span></tt></a> contain json for each row. We should get folowing results:</p>
+<p>File <a class="reference download internal" href="_downloads/abalone.json"><code class="xref download docutils literal"><span class="pre">abalone.json</span></code></a> contain json for each row. We should get folowing results:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="p">{</span><span class="s">&quot;shucked_weight&quot;</span><span class="p">:</span> <span class="mf">0.2245</span><span class="p">,</span> <span class="s">&quot;diameter&quot;</span><span class="p">:</span> <span class="mf">0.365</span><span class="p">,</span> <span class="s">&quot;length&quot;</span><span class="p">:</span> <span class="mf">0.455</span><span class="p">,</span> <span class="s">&quot;square&quot;</span><span class="p">:</span> <span class="mf">0.043225</span><span class="p">,</span> <span class="s">&quot;whole_weight&quot;</span><span class="p">:</span> <span class="mf">0.514</span><span class="p">,</span> <span class="s">&quot;sex&quot;</span><span class="p">:</span> <span class="s">&quot;M&quot;</span><span class="p">,</span> <span class="s">&quot;rings&quot;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span> <span class="s">&quot;height&quot;</span><span class="p">:</span> <span class="mf">0.095</span><span class="p">}</span>
 <span class="p">{</span><span class="s">&quot;shucked_weight&quot;</span><span class="p">:</span> <span class="mf">0.0995</span><span class="p">,</span> <span class="s">&quot;diameter&quot;</span><span class="p">:</span> <span class="mf">0.265</span><span class="p">,</span> <span class="s">&quot;length&quot;</span><span class="p">:</span> <span class="mf">0.35</span><span class="p">,</span> <span class="s">&quot;square&quot;</span><span class="p">:</span> <span class="mf">0.0315</span><span class="p">,</span> <span class="s">&quot;whole_weight&quot;</span><span class="p">:</span> <span class="mf">0.2255</span><span class="p">,</span> <span class="s">&quot;sex&quot;</span><span class="p">:</span> <span class="s">&quot;M&quot;</span><span class="p">,</span> <span class="s">&quot;rings&quot;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span> <span class="s">&quot;height&quot;</span><span class="p">:</span> <span class="mf">0.09</span><span class="p">}</span>
 <span class="o">......</span>
@@ -234,69 +235,70 @@ learn and evaluate an classifier using CloudML. Also basic concepts and conventi
 <h2>Creating the model<a class="headerlink" href="#creating-the-model" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="describing-features">
 <h3>Describing features<a class="headerlink" href="#describing-features" title="Permalink to this headline">¶</a></h3>
-<p>For create new model you should describe model features json file. You can found info about format in <a class="reference internal" href="features.html#features"><em>Feature JSON file format</em></a> chapter of this documentaion.</p>
+<p>In order to create a new model, the model features json file must be described. Information on format can be found within the <a class="reference internal" href="features.html#features"><span>Feature JSON file format</span></a> chapter contained in this documentaion.</p>
 <dl class="docutils">
-<dt>Firts we should define the classifier:</dt>
-<dd><div class="first last highlight-json"><pre>  "classifier": {
-    "type": "logistic regression",
-    "params": {"penalty": "l2"}
+<dt>First, the classifier must be defined:</dt>
+<dd><div class="first last highlight-json"><div class="highlight"><pre>  &quot;classifier&quot;: {
+    &quot;type&quot;: &quot;logistic regression&quot;,
+    &quot;params&quot;: {&quot;penalty&quot;: &quot;l2&quot;}
   },
-</pre>
+</pre></div>
 </div>
 </dd>
 <dt>The feateres are as follows:</dt>
-<dd><div class="first last highlight-json"><pre>  "features":[
+<dd><div class="first last highlight-json"><div class="highlight"><pre>  &quot;features&quot;:[
     {
-      "name":"sex",
-      "type":"map",
-      "params": {
-        "mappings":{
-          "I": 0,
-          "M": 1,
-          "F": 2
+      &quot;name&quot;:&quot;sex&quot;,
+      &quot;type&quot;:&quot;map&quot;,
+      &quot;params&quot;: {
+        &quot;mappings&quot;:{
+          &quot;I&quot;: 0,
+          &quot;M&quot;: 1,
+          &quot;F&quot;: 2
         }
       },
-      "is-target-variable":true,
-      "is-required":true
+      &quot;is-target-variable&quot;:true,
+      &quot;is-required&quot;:true
     },
     {
-      "name":"square",
-      "type":"float"
+      &quot;name&quot;:&quot;square&quot;,
+      &quot;type&quot;:&quot;float&quot;
     },
     {
-      "name":"diameter",
-      "type":"float"
+      &quot;name&quot;:&quot;diameter&quot;,
+      &quot;type&quot;:&quot;float&quot;
     },
     {
-      "name":"whole_weight",
-      "type":"float"
+      &quot;name&quot;:&quot;whole_weight&quot;,
+      &quot;type&quot;:&quot;float&quot;
     },
     {
-      "name":"shucked_weight",
-      "type":"float"
+      &quot;name&quot;:&quot;shucked_weight&quot;,
+      &quot;type&quot;:&quot;float&quot;
     },
     {
-      "name":"rings",
-      "type":"int"
-</pre>
+      &quot;name&quot;:&quot;rings&quot;,
+      &quot;type&quot;:&quot;int&quot;
+</pre></div>
 </div>
 </dd>
 </dl>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Full example we can found in <a class="reference download internal" href="_downloads/features.json"><tt class="xref download docutils literal"><span class="pre">feature.json</span></tt></a>.</p>
+<p class="last">A full example can found in <a class="reference download internal" href="_downloads/features.json"><code class="xref download docutils literal"><span class="pre">feature.json</span></code></a>.</p>
 </div>
 </div>
 <div class="section" id="training-the-model">
 <h3>Training the model<a class="headerlink" href="#training-the-model" title="Permalink to this headline">¶</a></h3>
-<p>Train model using command:</p>
-<div class="highlight-python"><pre>trainer.py features.json -i abalone.json</pre>
+<p>Train the model using command:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> trainer.py features.json -i abalone.json
+</pre></div>
 </div>
 <p>Output:</p>
-<div class="highlight-python"><pre>2015-07-03 18:33:46,317 - root
-                            - INFO - Using "logistic regression"
+<div class="highlight-python"><div class="highlight"><pre>2015-07-03 18:33:46,317 - root
+                            - INFO - Using &quot;logistic regression&quot;
 2015-07-03 18:33:46,318 - root
-                            - WARNING - Could not determine input data file format.'json' would be used.
+                            - WARNING - Could not determine input data file format.&#39;json&#39; would be used.
 2015-07-03 18:33:46,318 - root
                             - INFO - Training the model using input file dataset.
 2015-07-03 18:33:46,527 - root
@@ -328,24 +330,27 @@ learn and evaluate an classifier using CloudML. Also basic concepts and conventi
 2015-07-03 18:33:46,691 - root
                             - INFO - Get weights for label 2
 2015-07-03 18:33:46,721 - root
-                            - INFO - Training completed...</pre>
+                            - INFO - Training completed...
+</pre></div>
 </div>
-<p>For store trained model to file need specify -o option with file name. For example:</p>
-<div class="highlight-python"><pre>$trainer.py features.json -i abalone.json -o model.dat</pre>
+<p>For storing the trained model to file, -o option with file name must be specified. For example:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> trainer.py features.json -i abalone.json -o model.dat
+</pre></div>
 </div>
 </div>
 <div class="section" id="testing-the-model">
 <h3>Testing the model<a class="headerlink" href="#testing-the-model" title="Permalink to this headline">¶</a></h3>
-<p>For evaluating model we can use part of input dataset. For this we should set percent of data which will be use for test to <cite>-tp</cite> param. For example, if we want to use 20% of dataset for test:</p>
-<div class="highlight-python"><pre>trainer.py features.json -i abalone.json -tp 20</pre>
+<p>In order to evaluate the model, part of input dataset can be used. To undertake this, the percentage of data which will be use for test must be set to <cite>-tp</cite> param. For example, if 20% of dataset is required to be used for testing:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> trainer.py features.json -i abalone.json -tp 20
+</pre></div>
 </div>
-<p>After run this command we will get folowing info:</p>
-<div class="highlight-python"><pre>......
+<p>Following this, running this command will provide the following information:</p>
+<div class="highlight-python"><div class="highlight"><pre>......
 
 2015-07-03 18:33:46,921 - root
                             - INFO - Processed 835 lines, ignored 0 lines
 2015-07-03 18:33:46,921 - root
-                            - INFO - Starting test "default" segment
+                            - INFO - Starting test &quot;default&quot; segment
 2015-07-03 18:33:46,921 - root
                             - INFO - Extracting features for segment default ...
 2015-07-03 18:33:46,949 - root
@@ -365,23 +370,25 @@ learn and evaluate an classifier using CloudML. Also basic concepts and conventi
         0.99965157,  1.        ]), array([  7.65110941e-04,   1.53022188e-03,   2.29533282e-03, ...,
          1.00000000e+00,   1.00000000e+00,   1.00000000e+00])]}
 2015-07-03 18:33:47,001 - root
-                            - INFO - Accuracy: 0.548719176442</pre>
+                            - INFO - Accuracy: 0.548719176442
+</pre></div>
 </div>
 </div>
 </div>
 <div class="section" id="predicting">
 <h2>Predicting<a class="headerlink" href="#predicting" title="Permalink to this headline">¶</a></h2>
-<p>For predict data using existing trained model and store results to csv file:</p>
-<div class="highlight-python"><pre>$predictor.py model.dat -i abalone.json -m csv</pre>
+<p>For predicting data using the existing trained model and to store results to a csv file:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> predictor.py model.dat -i abalone.json -m csv
+</pre></div>
 </div>
-<p>Results will be stored to result.csv file. First lines from it:</p>
+<p>Results will be stored to result.csv file. First lines from it are as follows:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">label</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span>
 <span class="mi">1</span><span class="p">,</span><span class="mf">0.28701459000432328</span><span class="p">,</span><span class="mf">0.40396444257495651</span><span class="p">,</span><span class="mf">0.30902096742072022</span>
 <span class="mi">0</span><span class="p">,</span><span class="mf">0.69853735998655109</span><span class="p">,</span><span class="mf">0.19688865629972377</span><span class="p">,</span><span class="mf">0.10457398371372523</span>
 </pre></div>
 </div>
-<p>Label column is a predicted label. Other columns are probabilities for each class.</p>
-<p>We can build rest api service for predict using cloudml-predict.</p>
+<p>Label column is a predicted label while other columns are probabilities for each class.</p>
+<p>It is possible to build rest api service for predicting using cloudml-predict.</p>
 </div>
 </div>
 

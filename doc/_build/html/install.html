@@ -33,7 +33,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="None" href="index.html" />
     <link rel="next" title="An introduction to building the classifier with CloudML" href="getting_started.html" />
-    <link rel="prev" title="Welcome to Cloudml’s documentation!" href="index.html" />
+    <link rel="prev" title="Welcome to CloudML’s Documentation!" href="index.html" />
   
    
        <script type="text/javascript" src="_static/sidebar.js"></script>
@@ -58,7 +58,7 @@
   </script>
 
   </head>
-  <body>
+  <body role="document">
 
 <div class="header-wrapper">
     <div class="header"></div>
@@ -82,7 +82,7 @@
         Welcome to Cloud...
         </span>
             <span class="hiddenrellink">
-            Welcome to Cloudml’s documentation!
+            Welcome to CloudML’s Documentation!
             </span>
         </a>
         </div>
@@ -131,50 +131,53 @@
             
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<p>There are different ways to get cloudml installed:</p>
+<p>There are different methods to install CloudML:</p>
 <blockquote>
 <div><ul class="simple">
-<li><a class="reference internal" href="#install-official-release"><em>Install an official release</em></a>. This
-is the best approach for users who want a stable version number
-and aren&#8217;t concerned about running a slightly older version of
-cloudml.</li>
-<li><a class="reference internal" href="#install-development-version"><em>Install the latest development version</em></a>. This is best for users who want the
-latest-and-greatest features and aren&#8217;t afraid of running
-brand-new code.</li>
+<li><a class="reference internal" href="#install-official-release"><span>Installing an official release</span></a>. This
+is the preferred option for users who require a stable version number
+and are not concerned about running a slightly older version of
+CloudMl.</li>
+<li><a class="reference internal" href="#install-development-version"><span>Installing the latest development version</span></a>. This is the preferred installation option for users who require new and the very latest features, and for those who do not mind running &#8220;brand-new&#8221; code.</li>
 </ul>
 </div></blockquote>
 <div class="section" id="installing-an-official-release">
 <span id="install-official-release"></span><h2>Installing an official release<a class="headerlink" href="#installing-an-official-release" title="Permalink to this headline">¶</a></h2>
-<p>Cloudml requires:</p>
+<p>CloudML requires:</p>
 <ul class="simple">
 <li>Python (&gt;= 2.6)</li>
 </ul>
 <div class="section" id="ubuntu">
 <h3>Ubuntu<a class="headerlink" href="#ubuntu" title="Permalink to this headline">¶</a></h3>
-<ol class="arabic">
-<li><p class="first">Install system requirements:</p>
-<div class="highlight-python"><pre>$ sudo apt-get install -y build-essential git python-pip python-dev libxml2-dev libxslt1-dev liblapack-dev gfortran libpq-dev libevent-dev</pre>
-</div>
-</li>
-<li><p class="first">Install numpy and scipy:</p>
-<div class="highlight-python"><pre>$ export LAPACK=/usr/lib/liblapack.so
-$ export ATLAS=/usr/lib/libatlas.so
-$ export BLAS=/usr/lib/libblas.so
-$ pip install numpy==1.7.1
-$ pip install scipy==0.12.0</pre>
-</div>
-</li>
-<li><p class="first">Install cloudml with pip:</p>
-<div class="highlight-python"><pre>$ pip install cloudml</pre>
-</div>
-</li>
+<ol class="arabic simple">
+<li>Install system requirements:</li>
 </ol>
-<p>To build cloudml from the source package download the source package from <a class="reference external" href="http://pypi.python.org/pypi/cloudml">http://pypi.python.org/pypi/cloudml</a>, unpack the sources into a directory, cd into this directory and run:</p>
-<div class="highlight-python"><pre>$ python setup.py install</pre>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> sudo apt-get install -y build-essential git python-pip python-dev libxml2-dev libxslt1-dev liblapack-dev gfortran libpq-dev libevent-dev
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li>Install numpy and scipy:</li>
+</ol>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> <span class="nb">export </span><span class="nv">LAPACK</span><span class="o">=</span>/usr/lib/liblapack.so
+<span class="gp">$</span> <span class="nb">export </span><span class="nv">ATLAS</span><span class="o">=</span>/usr/lib/libatlas.so
+<span class="gp">$</span> <span class="nb">export </span><span class="nv">BLAS</span><span class="o">=</span>/usr/lib/libblas.so
+<span class="gp">$</span> pip install <span class="nv">numpy</span><span class="o">==</span>1.7.1
+<span class="gp">$</span> pip install <span class="nv">scipy</span><span class="o">==</span>0.12.0
+</pre></div>
+</div>
+<ol class="arabic simple" start="3">
+<li>Install CloudML with pip:</li>
+</ol>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> pip install cloudml
+</pre></div>
+</div>
+<p>In order to build CloudML from the source package, download the source package from <a class="reference external" href="http://pypi.python.org/pypi/cloudml">http://pypi.python.org/pypi/cloudml</a>, unpack the sources into a directory, cd into this directory and run:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> python setup.py install
+</pre></div>
 </div>
 </div>
 <div class="section" id="mac-osx">
@@ -182,19 +185,35 @@ $ pip install scipy==0.12.0</pre>
 </div>
 <div class="section" id="windows">
 <h3>Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h3>
+<p>This instruction assumes that you do not have Python already installed on your machine.</p>
+<ol class="arabic simple">
+<li>Install <a class="reference external" href="http://www.python.org">Python</a>.</li>
+<li>Install <a class="reference external" href="http://www.scipy.org/install.html#individual-packages">NumPy 1.7.1 and SciPy 0.12.0</a>.</li>
+<li>Install <a class="reference external" href="http://www.stickpeople.com/projects/python/win-psycopg/index.2.4.6.html">psycopg2</a>.</li>
+<li>Install <a class="reference external" href="https://pypi.python.org/pypi/nltk">NLTK 2.0.4</a>.</li>
+<li>Install <a class="reference external" href="http://pypi.python.org/pypi/cloudml">cloudml</a>.</li>
+</ol>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Here we suggest to use pre-compiled packages, since it works fine and makes the installation easier.</p>
+</div>
 </div>
 </div>
 <div class="section" id="install-the-latest-development-version">
 <span id="install-development-version"></span><h2>Install the latest development version<a class="headerlink" href="#install-the-latest-development-version" title="Permalink to this headline">¶</a></h2>
-<p>git clone <a class="reference external" href="https://github.com/odeskdataproducts/cloudml.git">https://github.com/odeskdataproducts/cloudml.git</a></p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> git clone https://github.com/odeskdataproducts/cloudml.git
+</pre></div>
+</div>
 </div>
 <div class="section" id="testing">
 <span id="id1"></span><h2>Testing<a class="headerlink" href="#testing" title="Permalink to this headline">¶</a></h2>
-<p>Testing requires having the <cite>nose</cite>, <cite>coverage</cite>, <cite>moto</cite>, <cite>mock</cite> libraries:</p>
-<div class="highlight-python"><pre>$ pip install nose coverage moto==0.3.3 mock==1.0.1</pre>
+<p>Testing requires <cite>nose</cite>, <cite>coverage</cite>, <cite>moto</cite>, <cite>mock</cite> libraries:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> pip install nose coverage <span class="nv">moto</span><span class="o">==</span>0.3.3 <span class="nv">mock</span><span class="o">==</span>1.0.1
+</pre></div>
 </div>
-<p>To start testing cd to a source directory and execute:</p>
-<div class="highlight-python"><pre>$ python setup.py test</pre>
+<p>To start testing, cd to a source directory and execute:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> python setup.py <span class="nb">test</span>
+</pre></div>
 </div>
 </div>
 </div>

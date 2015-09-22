@@ -641,6 +641,8 @@ class Trainer(object):
             labels = self._get_classifier_adjusted_classes(segment)
             target_feature = self._get_target_feature(segment)['name']
             examples_per_label = dict((c, 0) for c in labels if c is not None)
+            for l in examples_per_label.keys():
+                logging.error("%s=%s" % (l, type(l)))
             if segment in self._vect_data:
                 for label in self._vect_data[segment][target_feature]:
                     if label is not None:

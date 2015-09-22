@@ -1,6 +1,6 @@
 .. Cloudml documentation master file, created by
 
-Welcome to Cloudml's documentation!
+Welcome to CloudML's Documentation!
 ===================================
 
 Contents:

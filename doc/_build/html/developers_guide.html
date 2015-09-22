@@ -8,7 +8,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
   
-    <title>Developer’s guide</title>
+    <title>Developer’s Guide</title>
   <!-- htmltitle is before nature.css - we use this hack to load bootstrap first -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="_static/css/bootstrap.min.css" media="screen" />
@@ -33,7 +33,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="None" href="index.html" />
     <link rel="next" title="Glossary" href="glossary.html" />
-    <link rel="prev" title="Supported classifiers" href="classifiers.html" />
+    <link rel="prev" title="Supported Classifiers" href="classifiers.html" />
   
    
        <script type="text/javascript" src="_static/sidebar.js"></script>
@@ -58,7 +58,7 @@
   </script>
 
   </head>
-  <body>
+  <body role="document">
 
 <div class="header-wrapper">
     <div class="header"></div>
@@ -79,10 +79,10 @@
         accesskey="P">Previous
         <br/>
         <span class="smallrellink">
-        Supported classi...
+        Supported Classi...
         </span>
             <span class="hiddenrellink">
-            Supported classifiers
+            Supported Classifiers
             </span>
         </a>
         </div>
@@ -110,7 +110,7 @@
       <p class="doc-version">This documentation is for Cloudml <strong>version 2.0</strong> &mdash; <a href="http://scikit-learn.org/stable/support.html#documentation-resources">Other versions</a></p> -->
 <!--     <p class="citing">If you use the software, please consider <a href="about.html#citing-scikit-learn">citing scikit-learn</a>.</p> -->
     <ul>
-<li><a class="reference internal" href="#">Developer&#8217;s guide</a><ul>
+<li><a class="reference internal" href="#">Developer&#8217;s Guide</a><ul>
 <li><a class="reference internal" href="#bootsrap-on-ubuntu">Bootsrap on Ubuntu</a></li>
 <li><a class="reference internal" href="#bootsrap-on-macos">Bootsrap on MacOS</a></li>
 <li><a class="reference internal" href="#bootstrap-using-vagrant">Bootstrap using vagrant</a></li>
@@ -129,137 +129,165 @@
             
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="developer-s-guide">
-<h1>Developer&#8217;s guide<a class="headerlink" href="#developer-s-guide" title="Permalink to this headline">¶</a></h1>
+<h1>Developer&#8217;s Guide<a class="headerlink" href="#developer-s-guide" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="bootsrap-on-ubuntu">
 <h2>Bootsrap on Ubuntu<a class="headerlink" href="#bootsrap-on-ubuntu" title="Permalink to this headline">¶</a></h2>
 <p>Install system requirements:</p>
-<div class="highlight-python"><pre>$ sudo apt-get install -y build-essential git python-pip python-dev libxml2-dev libxslt1-dev liblapack-dev gfortran libpq-dev libevent-dev python-virtualenv</pre>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> sudo apt-get install -y build-essential git python-pip python-dev libxml2-dev libxslt1-dev liblapack-dev gfortran libpq-dev libevent-dev python-virtualenv
+</pre></div>
 </div>
-<p>Clone cloduml repo:</p>
-<div class="highlight-python"><pre>$ git clone https://github.com/odeskdataproducts/cloudml.git
-$ cd cloudml</pre>
+<p>Clone ClowdML repo:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> git clone https://github.com/odeskdataproducts/cloudml.git
+<span class="gp">$</span> <span class="nb">cd </span>cloudml
+</pre></div>
 </div>
 <p>Create virtual env:</p>
-<div class="highlight-python"><pre>$ virtualenv --no-site-packages ve
-$ source ve/bin/activate</pre>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> virtualenv --no-site-packages ve
+<span class="gp">$</span> <span class="nb">source </span>ve/bin/activate
+</pre></div>
 </div>
 <p>Install numpy and scipy:</p>
-<div class="highlight-python"><pre>$ export LAPACK=/usr/lib/liblapack.so
-$ export ATLAS=/usr/lib/libatlas.so
-$ export BLAS=/usr/lib/libblas.so
-$ pip install numpy==1.7.1
-$ pip install scipy==0.12.0</pre>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> <span class="nb">export </span><span class="nv">LAPACK</span><span class="o">=</span>/usr/lib/liblapack.so
+<span class="gp">$</span> <span class="nb">export </span><span class="nv">ATLAS</span><span class="o">=</span>/usr/lib/libatlas.so
+<span class="gp">$</span> <span class="nb">export </span><span class="nv">BLAS</span><span class="o">=</span>/usr/lib/libblas.so
+<span class="gp">$</span> pip install <span class="nv">numpy</span><span class="o">==</span>1.7.1
+<span class="gp">$</span> pip install <span class="nv">scipy</span><span class="o">==</span>0.12.0
+</pre></div>
 </div>
 <p>Install memory-profiler:</p>
-<div class="highlight-python"><pre>$ memory-profiler==0.27</pre>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> memory-profiler<span class="o">==</span>0.27
+</pre></div>
 </div>
 <p>Install python requirements:</p>
-<div class="highlight-python"><pre>$ pip install -r ./requirements.txt</pre>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> pip install -r ./requirements.txt
+</pre></div>
 </div>
 <p>Create local config:</p>
-<div class="highlight-python"><pre>$ cp local_config.py.tpl local_config.py</pre>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> cp local_config.py.tpl local_config.py
+</pre></div>
 </div>
 </div>
 <div class="section" id="bootsrap-on-macos">
 <h2>Bootsrap on MacOS<a class="headerlink" href="#bootsrap-on-macos" title="Permalink to this headline">¶</a></h2>
 <p>Clone cloduml repo:</p>
-<div class="highlight-python"><pre>$ git clone https://github.com/odeskdataproducts/cloudml.git
-$ cd cloudml</pre>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> git clone https://github.com/odeskdataproducts/cloudml.git
+<span class="gp">$</span> <span class="nb">cd </span>cloudml
+</pre></div>
 </div>
 <p>Create virtual env:</p>
-<div class="highlight-python"><pre>$ virtualenv --no-site-packages ve
-$ source ve/bin/activate</pre>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> virtualenv --no-site-packages ve
+<span class="gp">$</span> <span class="nb">source </span>ve/bin/activate
+</pre></div>
 </div>
 <p>Install numpy and scipy:</p>
-<div class="highlight-python"><pre>$ export LAPACK=/usr/lib/liblapack.so
-$ export ATLAS=/usr/lib/libatlas.so
-$ export BLAS=/usr/lib/libblas.so
-$ pip install numpy==1.7.1
-$ pip install scipy==0.12.0</pre>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> <span class="nb">export </span><span class="nv">LAPACK</span><span class="o">=</span>/usr/lib/liblapack.so
+<span class="gp">$</span> <span class="nb">export </span><span class="nv">ATLAS</span><span class="o">=</span>/usr/lib/libatlas.so
+<span class="gp">$</span> <span class="nb">export </span><span class="nv">BLAS</span><span class="o">=</span>/usr/lib/libblas.so
+<span class="gp">$</span> pip install <span class="nv">numpy</span><span class="o">==</span>1.7.1
+<span class="gp">$</span> pip install <span class="nv">scipy</span><span class="o">==</span>0.12.0
+</pre></div>
 </div>
 <p>Install memory-profiler:</p>
-<div class="highlight-python"><pre>$ memory-profiler==0.27</pre>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> memory-profiler<span class="o">==</span>0.27
+</pre></div>
 </div>
-<p>Make sure you are using python version 2.7 and above. If the default python in your mac is an older version 2.6, then do the following:</p>
-<div class="highlight-python"><pre>$ brew install python
-$ mv /usr/bin/python /usr/bin/python.orig
-$ ln -s /opt/local/bin/python /usr/bin/python
-$ port select --set python python27</pre>
+<p>Ensure python version 2.7 or above is being used. By default, if python installed on the Mac is an older version 2.6, then follow this procedure:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> brew install python
+<span class="gp">$</span> mv /usr/bin/python /usr/bin/python.orig
+<span class="gp">$</span> ln -s /opt/local/bin/python /usr/bin/python
+<span class="gp">$</span> port <span class="k">select</span> --set python python27
+</pre></div>
 </div>
-<p>Make sure you are using pip2.7 or newer. If not, do the following:</p>
-<div class="highlight-python"><pre>$ cd /usr/local/bin/
-$ mv pip pip.orig
-$ ln -s pip2.7 pip</pre>
+<p>Ensure that pip2.7 or newer is being used. If not, undertaken the following steps:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> <span class="nb">cd</span> /usr/local/bin/
+<span class="gp">$</span> mv pip pip.orig
+<span class="gp">$</span> ln -s pip2.7 pip
+</pre></div>
 </div>
-<p>Make sure you are using easy_install version 2.7 and older. Else do the following:</p>
-<div class="highlight-python"><pre>$ cd /usr/bin/
-$ mv easy_install easy_install.orig
-$ ln -s easy_install-2.7 easy_install</pre>
+<p>Ensure that easy_install version 2.7 and older is being used. If not, undertake the following steps:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> <span class="nb">cd</span> /usr/bin/
+<span class="gp">$</span> mv easy_install easy_install.orig
+<span class="gp">$</span> ln -s easy_install-2.7 easy_install
+</pre></div>
 </div>
 <p>Install nltk with easy install:</p>
-<div class="highlight-python"><pre>$sudo easy_install nltk==3.0.3</pre>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span>sudo easy_install <span class="nv">nltk</span><span class="o">==</span>3.0.3
+</pre></div>
 </div>
 <p>Install jsonpath:</p>
-<div class="highlight-python"><pre>$ Download jsonpath from http://www.ultimate.com/phil/python/download/jsonpath-0.54.tar.gz
-$ cd ~/Downloads/jsonpath-0.54
-$ sudo python setup.py install</pre>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> Download jsonpath from http://www.ultimate.com/phil/python/download/jsonpath-0.54.tar.gz
+<span class="gp">$</span> <span class="nb">cd</span> ~/Downloads/jsonpath-0.54
+<span class="gp">$</span> sudo python setup.py install
+</pre></div>
 </div>
 <p>Install python requirements:</p>
-<div class="highlight-python"><pre>$ cd cloudml
-$ pip install -r ./requirements.txt</pre>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> <span class="nb">cd </span>cloudml
+<span class="gp">$</span> pip install -r ./requirements.txt
+</pre></div>
 </div>
 <p>Create local config:</p>
-<div class="highlight-python"><pre>$ cp local_config.py.tpl local_config.py</pre>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> cp local_config.py.tpl local_config.py
+</pre></div>
 </div>
 </div>
 <div class="section" id="bootstrap-using-vagrant">
 <h2>Bootstrap using vagrant<a class="headerlink" href="#bootstrap-using-vagrant" title="Permalink to this headline">¶</a></h2>
-<p>Before diving into cloudml, please <a class="reference external" href="http://docs.vagrantup.com/v2/installation/">install the latest version of Vagrant</a>. And because we&#8217;ll be using <a class="reference external" href="http://www.virtualbox.org/">VirtualBox</a> as our provider for the getting started guide, please install that as well.</p>
+<p>Before using CloudML, kindly <a class="reference external" href="http://docs.vagrantup.com/v2/installation/">install the latest version of Vagrant</a>. Since <a class="reference external" href="http://www.virtualbox.org/">VirtualBox</a> will be used as the provider for the obtaining the start guide, kindly install the same.</p>
 <p>Clone cloduml repo:</p>
-<div class="highlight-python"><pre>$ git clone https://github.com/odeskdataproducts/cloudml.git</pre>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> git clone https://github.com/odeskdataproducts/cloudml.git
+</pre></div>
 </div>
-<p>For boot your Vagrant environment. Run the following:</p>
-<div class="highlight-python"><pre>$ cd cloudml
-$ vagrant up</pre>
+<p>For booting the Vagrant environment. Run the following:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> <span class="nb">cd </span>cloudml
+<span class="gp">$</span> vagrant up
+</pre></div>
 </div>
-<p>In 20-30 minutes, this command will finish and you&#8217;ll have a virtual machine running Ubuntu with installed all dependencies.</p>
-<p>For connect to machine run:</p>
-<div class="highlight-python"><pre>$ vagrant ssh</pre>
+<p>In approximately 20-30 minutes time, this command will complete running and a virtual machine running Ubuntu with all installed dependencies will be available.</p>
+<p>For connecting to the machine run the following:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> vagrant ssh
+</pre></div>
 </div>
-<p>For run test please go to <cite>/vagrant</cite> directory:</p>
-<div class="highlight-python"><pre>$ cd /vagrant
-$ python setup.py test</pre>
+<p>For running a test, kindly go to <cite>/vagrant</cite> directory:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> <span class="nb">cd</span> /vagrant
+<span class="gp">$</span> python setup.py <span class="nb">test</span>
+</pre></div>
 </div>
-<p>When you&#8217;re done fiddling around with the machine, run <cite>vagrant destroy</cite> back on your host machine, and Vagrant will remove all traces of the virtual machine.</p>
-<p>A <cite>vagrant suspend</cite> effectively saves the exact point-in-time state of the machine, so that when you resume it later, it begins running immediately from that point, rather than doing a full boot.</p>
+<p>Once finished with tweaking the machine, run <cite>vagrant destroy</cite> back on the host machine, and Vagrant will remove all traces of the virtual machine.</p>
+<p>Effectively, a <cite>vagrant suspend</cite> saves the state of the machine in &#8216;real time&#8217; or &#8216;as-it-is&#8217;, so that once it is resumed later, it begins running from that suspended point, instead of undertaking a full boot.</p>
 </div>
 <div class="section" id="build-docs">
 <h2>Build docs<a class="headerlink" href="#build-docs" title="Permalink to this headline">¶</a></h2>
-<p>For build docs please install:</p>
-<div class="highlight-python"><pre>$ sudo pip install Sphinx==1.3.1</pre>
+<p>For build docs, kindly install:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> sudo pip install <span class="nv">Sphinx</span><span class="o">==</span>1.3.1
+</pre></div>
 </div>
 <p>Build html doc:</p>
-<div class="highlight-python"><pre>$ cd doc
-$ make html</pre>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> <span class="nb">cd </span>doc
+<span class="gp">$</span> make html
+</pre></div>
 </div>
 <p>View doc in ./doc/_build/html directory.</p>
 </div>
 <div class="section" id="run-tests">
 <h2>Run tests<a class="headerlink" href="#run-tests" title="Permalink to this headline">¶</a></h2>
-<p>For run test please install:</p>
-<div class="highlight-python"><pre>$ pip install nose coverage moto==0.3.3 mock==1.0.1</pre>
+<p>For undertaking a test run, kindly install:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ pip install nose coverage moto==0.3.3 mock==1.0.1
+</pre></div>
 </div>
 <p>Run all tests:</p>
-<div class="highlight-python"><pre>$ python setup.py test</pre>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> python setup.py <span class="nb">test</span>
+</pre></div>
 </div>
 <p>Run tests with coverage:</p>
-<div class="highlight-python"><pre>$ python setup.py coverage</pre>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> python setup.py coverage
+</pre></div>
 </div>
 <p>Run single test:</p>
-<div class="highlight-python"><pre>$ nosetests cloudml.tests.trainer_tests:TrainerTestCase.test_features_not_found</pre>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> nosetests cloudml.tests.trainer_tests:TrainerTestCase.test_features_not_found
+</pre></div>
 </div>
 </div>
 </div>

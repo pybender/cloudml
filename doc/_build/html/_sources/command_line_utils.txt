@@ -8,12 +8,12 @@ importhandler.py
 
 Running the Import Handler
 
-You can run the import handler using::
+The import handler can be run using::
 
   python importhandler.py [-h] [-o output] [-d] [-U user-param]
                           [-V] path
 
-The details of the parameters passed to importhandler.py are the following:
+The details of the parameters passed to importhandler.py are as follows:
 
 .. raw:: html
 
@@ -32,7 +32,7 @@ The details of the parameters passed to importhandler.py are the following:
     </tr>
     <tr>
       <td>-d, --debug</td>
-      <td>Adds more log output while running</td>
+      <td>Adds additional log output while running</td>
     </tr>
     <tr>
       <td>-o output, --output output</td>
@@ -55,14 +55,14 @@ The details of the parameters passed to importhandler.py are the following:
 trainer.py
 ----------
 
-You can run the trainer using::
+The trainer can be run using::
 
   python trainer.py [-h] [-V] [-d] [-o output] [-w weight-file]
                     [-i input-file] [-t test-file]
                     [-e extraction-plan-file] [-I train-param]
                     [-T test-param] [--skip-test] path
 
-The details of the parameters passed to trainer.py are the following:
+The details of the parameters passed to trainer.py are as follows:
 
 
 .. raw:: html
@@ -82,7 +82,7 @@ The details of the parameters passed to trainer.py are the following:
     </tr>
     <tr>
       <td>-d, --debug</td>
-      <td>Adds more log output while running</td>
+      <td>Adds additional log output while running</td>
     </tr>
     <tr>
       <td>-o output, --output output</td>
@@ -91,8 +91,8 @@ The details of the parameters passed to trainer.py are the following:
     <tr>
       <td>-w weight-file, --weights weight-file</td>
       <td>Stores feature weights to the specified file as JSON objects. The
-      weights are stored in two lists, one for positive weights (in descending
-      order), and one for the negative weights (in ascending order). In case a
+      weights are stored within two lists, one for positive weights (in descending
+      order), and one for the negative weights (in ascending order). In case, a
       feature results from a "parent" feature (i.e. when using Tfidf, count
       etc.), the name used is in the form <parent feature>.<value>.
       </td>
@@ -100,13 +100,13 @@ The details of the parameters passed to trainer.py are the following:
     <tr>
       <td>-i input-data, --input input-data</td>
       <td>Read train data from file 'input-data'. Input file may contain
-      multiple JSON objects, each one containing the feature data for each row
+      multiple JSON objects, each containing the feature data for each row
       data.</td>
     </tr>
     <tr>
       <td>-t test-data, --test test-data</td>
       <td>Read test data from file 'test data'. Input file may contain multiple
-      JSON objects, each one containing the feature data for each row
+      JSON objects, each containing the feature data for each row
       data.</td>
     </tr>
     <tr>
@@ -137,30 +137,28 @@ The details of the parameters passed to trainer.py are the following:
 
 .. note::
   
-  If you want to use csv as input format. Your csv file need have .csv extension.
+  If one is required to use csv as the input format, the csv file will be required to have a .csv extension.
 
 ------------
 predictor.py
 ------------
 
-The predictor loads a trained classifier and its configuration, and attempts to classify incoming data. Different types of input data should be allowed, including:
-* file containing multiple JSON objects and
+The predictor loads a trained classifier, its configuration, and attempts to classify incoming data. Different types of input data should be allowed, including:
+* file containing multiple JSON objects; and,
 * import handler extraction plan (see Import Handler below).
 
-Predictor also provides functionality for evaluating current trained classifier, allowing definition of evaluation function to use.
+Predictor also provides functionality for evaluating current trained classifier, allowing definition of evaluation function to be used.
 
 Predictor's configuration is performed entirely from the command line.
 
-Running the predictor
-
-You can run the predictor using::
+The predictor can be run using::
 
   python predictor.py [-h] [-V] [-d] [-o output] [-m {roc,csv}]
                       [-P param] [-i] [-e extraction-plan-file]
                       [-U eval-param] path
 
 
-The details of the parameters passed to predict.py are the following:
+The details of the parameters passed to predict.py are as follows:
 
 .. raw:: html
 
@@ -179,7 +177,7 @@ The details of the parameters passed to predict.py are the following:
     </tr>
     <tr>
       <td>-d, --debug</td>
-      <td>Adds more log output while running</td>
+      <td>Adds additional log output while running</td>
     </tr>
     <tr>
       <td>-o output, --output output</td>
@@ -202,7 +200,7 @@ The details of the parameters passed to predict.py are the following:
     <tr>
       <td>-i input-data, --input input-data</td>
       <td>Read train data from file 'input-data'. Input file may contain
-      multiple JSON objects, each one containing the feature data for each row data.</td>
+      multiple JSON objects, each containing the feature data for each row data.</td>
     </tr>
     <tr>
       <td>-e extraction-plan</td>
@@ -227,13 +225,13 @@ The details of the parameters passed to predict.py are the following:
 transformer.py
 --------------
 
-You can run the train train transfromer using::
+The train transfromer can be run using::
 
   python transformer.py [-h] [-V] [-d] [-o output]
                     [-i input-file] [-e extraction-plan-file]
                     [-I train-param] path
 
-The details of the parameters passed to predict.py are the following:
+The details of the parameters passed to predict.py are as follows:
 
 .. raw:: html
 
@@ -253,7 +251,7 @@ The details of the parameters passed to predict.py are the following:
     </tr>
     <tr>
       <td>-d, --debug</td>
-      <td>Adds more log output while running</td>
+      <td>Adds additional log output while running</td>
     </tr>
     <tr>
       <td>-o output, --output output</td>
@@ -262,7 +260,7 @@ The details of the parameters passed to predict.py are the following:
     <tr>
       <td>-i input-data, --input input-data</td>
       <td>Read train data from file 'input-data'. Input file may contain
-      multiple JSON objects, each one containing the feature data for each row
+      multiple JSON objects, each containing the feature data for each row
       data.</td>
     </tr>
     <tr>

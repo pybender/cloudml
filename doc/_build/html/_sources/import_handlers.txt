@@ -7,25 +7,25 @@ Import Handler file format
 .. contents:: 
    :depth: 3
 
-There are two different approaches for importing data:
+There are two different methods for importing data:
 
-* **Import Handler** is used for importing data from different datasources while training and testing the model. Now CSV files, HTTP with JSON or XML data, database and some others datasources are supported.
+* **Import Handler** is used for importing data from different data sources while training and testing the model. Now, CSV files, HTTP with JSON or XML data, database and some others data sources are also supported.
 * **Online Import Handler** is used for importing data and feeding them to a trained classifier in order to get result.
 
-Both handlers may need to perform some transforming logic on their
-import in order to produce the final results.
+Both handlers may be required to perform logic transforming processes on the
+import, in order to produce the final results.
 
-Although both handlers prepare data for the same classification model, their formats are a bit different.
+Although both handlers prepare data for the same classification model, their formats vary.
 
 Top level element
 =================
 
-Top level element is `<plan>`. There's no attributes expected for this element. Plan may contain the following elements:
-
-- :ref:`script <script>` (any)
-- :ref:`inputs <inputs>` (one or zero)
-- :ref:`datasources <datasources>` (exactly one)
-- :ref:`import <import>` (exactly one)
+The Top level element is `<plan>`. There are no attributes expected for this element. Plan may contain the following elements:
+ 
+- :ref:`script <script>` (any).
+- :ref:`inputs <inputs>` (one or zero).
+- :ref:`datasources <datasources>` (exactly one).
+- :ref:`import <import>` (exactly one).
 - :ref:`predict <predict>` (should be present for Online Import Handler).
 
 .. _script:
@@ -35,8 +35,8 @@ Script
 
 A `script` element is used to define python functions that can be
 used to transform data. Code inside the script tag will be added
-whenever a python function is call. It is a good idea to wrap
-scripts in <![CDATA[ ...]]> elements.
+whenever a python function is called. Wrapping
+scripts in <![CDATA[ ...]]> elements is recommend.
 
 Example:
 
@@ -50,7 +50,7 @@ Example:
     </script>
 
 It is also possible to reference external Python files. This can be
-done to ease development. Scripts should be expected in the same
+undertaken to ease development. Scripts should be expected in the same
 directory as the XML file.
 
 Example:
@@ -61,7 +61,7 @@ Example:
 
 .. note::
 
-    Scripts from external python files functionality is not implemented yet.
+    Functionality for scripts from external python files has not been implemented yet.
 
 .. _inputs:
 
@@ -75,15 +75,15 @@ Each param may have one of the following attributes:
 - `name` : string
     the name of the parameter.
 - `type` : {integer, boolean, string, float, date}, optional
-    the type of the input parameter. If ommited, it should be considered string.
+    the type of the input parameter. If omitted, it should be considered a string.
 - `format` : string, optional
     formating instructions for the parameter (i.e. date format etc).
 - `regex` : regular expression string, optional
-    a regular expression that can be used to validate input parameter value
+    a regular expression that can be used to validate input parameter values.
 
 .. note::
 
-    Format could be applied only to the date input parameter using python's `strptime` method. More details about format string could be found in 
+    Format can be applied only to the date input parameter using python's `strptime` method. Further details on format string can be found in 
     `python documetation <https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior>`_
 
 Example:
@@ -106,7 +106,7 @@ Example:
 Datasources
 ===========
 
-Data is fed to the system using various datasources. The `<datasources>` part of the handler contains the connection details.
+Data is fed to the system using various data sources. The `<datasources>` part of the handler contains the connection details.
 
 Datasources may be:
 
@@ -116,9 +116,7 @@ Datasources may be:
 - :ref:`Hadoop with Pig <pig_datasource>`
 - :ref:`Input params <input_datasource>`
 
-Datasources are identified by their unique names and can be accessed by
-at any point in the file. Each datasource is using a different tag to
-configure it.
+Datasources are identified by their unique names and can be accessed at any point in the file. Each datasource uses a different tag for configuration.
 
 .. _db_datasource:
 
@@ -126,30 +124,30 @@ Database connections
 --------------------
 
 Database connections can be defined either by directly inserting the
-connection details or by referencing a named connection. In both cases,
+connection details, or by referencing a named connection. In both cases,
 the element used is `<db>`.
 
-Here are the possible attributes:
+The following are possible attributes:
 
 - `name` : string
-    a unique name for this datasource
+    a unique name for this datasource.
 - `name-ref` : string, optional
-    a reference to the named connection (not supported now)
+    a reference to the named connection (not currently supported).
 - `host` : string
-    the name of host to connect to
+    the name of host to connect to.
 - `dbname` : string, optional
-    the database name
+    the database name.
 - `user` : string, optional
-    the username to use for connecting to the database
+    the username to use for connecting to the database.
 - `password` : string, optional
-    the password to use for connecting to the database
+    the password to use for connecting to the database.
 - `port` : int, optional
-    the port number to connect to at the server host
+    the port number to connect to at the server host.
 - `vendor` : string, {postgres}
-    the DB's vendor. Only `postgres` vendor is supported now.
+    the DB's vendor. Only `postgres` vendor is currently supported.
 
 
-Note that name is required in both cases. For named connections, only name-ref should be also present. When defining the DB connection details in handler's file, host, dbname and vendor should be present.
+Note that name is required in both cases. For named connections, only name-ref should be present. When defining the DB connection details in handler's file, host, dbname and vendor should be present.
 
 Examples:
 
@@ -164,23 +162,23 @@ Examples:
 CSV files
 ---------
 
-CSV file can be used for importing data from local files. It is possible
-to reuse headers from CSV file, or define aliases for the column names
+A CSV file can be used for importing data from local files. It is possible
+to reuse headers from CSV files, or define aliases for the column names
 in the import handler.
 
 The related tag is `csv`, and the possible attributes are:
 
 - `name` : string
-    a unique name for this datasource
+    a unique name for this data source.
 - `src` : string
-    the path to the CSV file
+    the path to the CSV file.
 
 Header information can be defined by adding child `<header>` elements
-to the `<csv>` element. Each `<header>` element must contain exactly
+to the `<csv>` element. Each `<header>` element must exactly contain
 two fields:
 
 - `name` : string
-    the name of the column
+    the name of the column.
 - `index` : integer
     the column's index (columns are zero-indexed).
 
@@ -201,8 +199,8 @@ Examples:
 
 .. note::
     
-    When importing data, if CSV file doesn't contains column with index specified in <header> tag, user will get `ImportHandlerException`.
-    For example we will get this exception in `csvDataSource2` datasource (declared up in the document) if `stats.csv` file has six columns.
+    When importing data, if the CSV file does not contain a column with the index specified in <header> tag, users will receive a `ImportHandlerException`.
+    For example, this exception in `csvDataSource2` datasource (declared up in the document) will be received if the `stats.csv` file has six columns.
 
 .. _http_datasource:
 
@@ -212,19 +210,19 @@ HTTP
 HTTP requests are used for importing JSON data from remote HTTP
 services.
 
-The tag used for defining them is `<http>`, and the possible attributes are:
+The tag used for defining them is `<http>`, and the possible attributes are as follows:
 
 - `name` : string
-    a unique name for this datasource
+    a unique name for this datasource.
 - `method` : {GET, POST, PUT, DELETE}, default=GET
-    the HTTP method to use
+    the HTTP method to use.
 - `url` : string
-    the base URL to use
+    the base URL to use.
 
 
 When using this datasource with RESTful services, try to define the base
-URL. If you need to query for specific entities, you can define query
-parameters later during the import phase:
+URL. If specific entities need to be queried, the query
+parameters can be defined at a later stage during the import phase:
 
 .. code-block:: xml
 
@@ -245,7 +243,7 @@ parameters later during the import phase:
         </import>
     </plan>
 
-In this case, when importing data, system will query http://service.com:11000/jar/1.json url (User sets user paramer `opening_id` as 1, when running importhandler.py command).
+In this case, when importing data, the system will query http://service.com:11000/jar/1.json url (User sets user paramer `opening_id` as 1, when running importhandler.py command).
 
 .. _pig_datasource:
 
@@ -253,32 +251,32 @@ Pig
 ---
 
 Pig is a tool for analyzing large data sets based on Hadoop. Pig Latin
-is the language that allows querying and/or transforming the data. A Pig
+is the language which allows querying and/or transformation of the data. A Pig
 datasource is a connection to a remote Hadoop/Pig cluster. It is defined
-using `<pig>` tag. Possible attributes are:
+using `<pig>` tag. Possible attributes are as follows:
 
 - `name` : string
-    a unique name for this datasource
+    A unique name for this data source.
 - `jobid` : string, optional
-    define job flow id, if you want to use existing cluster
+    Define job flow id, if one is required to use the existing cluster.
 - `amazon_access_token` : string
-    by default use cloudml-control api keys
+    By default use cloudml-control api keys.
 - `amazon_token_secret` : string
-    by default use cloudml-control api keys
+    By default use cloudml-control api keys.
 - `ami_version` : string, optional
     Amazon Machine Image (AMI) version to use for instances.
     `Supported ami and pig versions <http://docs.aws.amazon.com/ElasticMapReduce/latest/DeveloperGuide/Pig_SupportedVersions.html>`_.
 - `bucket_name` : string, optional
     Amazon S3 bucket name for saving results, logs, etc.
 - `ec2_keyname` : string, optional
-    EC2 key used for the start instances, by default use cloudml-control keypair
+    EC2 key used for the start instances, by default use cloudml-control keypair.
 - `keep_alive` : boolean, optional
-    Denotes whether the cluster should stay alive upon completion
+    Denotes whether or not the cluster should stay alive upon completion.
 - `hadoop_params` : string, optional
-    You can use this attribute to specify cluster-wide Hadoop settings. If it attribute isn't setted, *s3://elasticmapreduce/bootstrap-actions/configure-hadoop* script would not be runned.
+    This attribute can be used to specify cluster-wide Hadoop settings. If it attribute isn't setted, *s3://elasticmapreduce/bootstrap-actions/configure-hadoop* script will not run.
     `More details in Configure Hadoop Bootstrap Action block <http://docs.aws.amazon.com/ElasticMapReduce/latest/DeveloperGuide/emr-plan-bootstrap.html>`_.
 - `num_instances` : integer, optional
-    Number of instances in the Hadoop cluster
+    Number of instances in the Hadoop cluster.
 - `master_instance_type` : string, optional
     EC2 instance type of the master node.
     `List of Amazon EC2 Instance types <http://aws.amazon.com/ec2/instance-types/>`_.
@@ -295,18 +293,18 @@ Example:
 Pig query
 ~~~~~~~~~
 
-Query tag of the entity with a pig datasource could have following attributes:
+Query tag of the entity with a pig datasource could have the following attributes:
 
 - `target` : string optional
-    name of target dataset wich will be stored.
+    Name of target dataset that will be stored.
 - `autoload_sqoop_dataset` : string, optional
-    when it's true, sqoop dataset will be auto loaded in the pig script (without defining loading statement in script). Require to define `sqoop_dataset_name` attr.
+    When it is true, sqoop dataset will be auto loaded in the pig script (without defining loading statement in script). Required to define `sqoop_dataset_name` attr.
 - `sqoop_dataset_name` : string, optional
-    variable name that would be used in the pig script for sqoop results, when `autoload_sqoop_dataset` setted.
+    Variable name that would be used in the pig script for sqoop results, when `autoload_sqoop_dataset` is set.
 
-There are two ways for store pig results:
+There are two methods for storing pig results:
 
-* You need to specify target attribute in the <query> tag of the entity with pig datasource. In this case results would be stored as JsonStorage:
+* The target attribute must be specified in the <query> tag of the entity with pig data source. In this case, results would be stored as JsonStorage:
 
 .. code-block:: sql
 
@@ -317,7 +315,7 @@ There are two ways for store pig results:
         ]]>
     </query>
 
-*  we should use '$output' parameter as output dir. For example:
+*  '$output' parameter as output dir should be used. For example:
 
 .. code-block:: sql
 
@@ -333,11 +331,10 @@ There are two ways for store pig results:
 Input
 -----
 
-.. note:: Input datasource using only in online import handlers.
+.. note:: Input data source only using online import handlers.
 
-If you need use Post data you should specify inpurt params 
-and after that you will have access to them using ``input``
-datasource with query ``any``. For example:
+If Post data is required to be used, input params need to be specified. Following this, access will be granted to them by using ``input``
+datasource with the query ``any``. For example:
 
 .. code-block:: xml
 
@@ -356,7 +353,7 @@ datasource with query ``any``. For example:
         </import>          
     </plan>
 
-Another one example with processing json input parameter:
+Another example with processing json input parameter is as follows:
 
 .. code-block:: xml
 
@@ -379,40 +376,40 @@ Another one example with processing json input parameter:
 Import
 ======
 
-After defining the datasources, the import handler need to define how to
-translate data from each datasource input. This is done within the
+Once the data sources have been defined, the import handler is required to be defined in relation to how 
+data from each data source input will be translated. This is undertaken within the
 `<import>` element. In order to be able to understand how the mapping
-is done, we need to introduce the concept of entity.
+is undertaken, the concept of entity needs to be introduced.
 
-An entity models data coming from various datasources. I.e. an entity
-might describe the data coming from a database table or view. Each
+An entity model's data is derived from various data sources. i.e. an entity
+may describe the data being derived from a database table or view. Each
 entity is associated with a datasource and (possibly) some query
 parameters. For example, a database entity might use a SQL query, while
 an HTTP entity might add some path and query parameters to the
-datasource's URL. An entity describes multiple entity "instances". I.e.
+data source's URL. An entity describes multiple entity "instances". i.e.
 if an entity describes a database table, an entity "instance" describes
 a row in the database.
 
 An entity is defined using the `<entity>` tag. The possible attributes
-of the element are the following:
+of the element are as follows:
 
 - `name` : string
-    a unique name to identify the entity
+    a unique name to identify the entity.
 - `datasource` : string
-    the datasource to use for importing data
+    the datasource to use for importing data.
 - `query` : string, optional
     a string that provides instructions on how to query a datasource (i.e. a SQL query or a path template). Queries can be also defined as child elements (to be discussed later).
 - `autoload_fields` : boolean, optional
-    when setted we could not define fields. They would be loaded from the pig results. 
+    when set, fields are unable to be defined. These loaded from the pig results. 
   
 .. note::
 
-    `autoload_fields` works only with `pig` datasource for now.
+    `autoload_fields` works only with `pig` data sources currently.
 
 .. note::
 
-    If `autoload_fields` setted, declared entity fields would be ovverrided with automaticaly created fields by parsing the result data row. If you declare the field, which isn't present in the row,
-    it would not deleted.
+    If `autoload_fields` are set, declared entity fields would be overridden with automaticaly created fields by parsing the result data row. If the field is declared, that is not present in the row,
+    it would not be deleted.
 
 Examples:
 
@@ -434,10 +431,10 @@ Queries
 
 The first possible child of a `<entity>` is a query. This can be used
 to improve readability of the XML file and replace the query attribute
-of the entity. It is also useful if the query doesn't return data, but
+of the entity. It is also useful if the query does not return data, but
 actually triggers data calculation. Examples of such cases include
-running a set of SQL queries that create tables or executing a Pig
-script. In this case, attribute `target` needs to be defined inside
+running a set of SQL queries that create tables or execute a Pig
+script. In this case, attribute `target` is required to be defined inside
 the `<query>` tag. The value of this attribute provides details on
 where to look for the actual data.
 
@@ -468,7 +465,7 @@ Examples:
     </entity>
 
 
-Query strings depend on the datasource:
+Query strings depend on the data source:
 
 - :ref:`Database connections <db_datasource>`  requires SQL queries.
 - :ref:`CSV datasources <csv_datasource>` do not support queries.
@@ -476,31 +473,31 @@ Query strings depend on the datasource:
 - :ref:`Hadoop with Pig datasource <pig_datasource>` - requires pig script.
 - :ref:`Input params <input_datasource>` 
 
-It is possible to use variables in queries using the notation `#{variable}`. This will be replaced either by an input parameter with name equal to the variable.
+It is possible to use variables in queries using the notation `#{variable}`. This will be replaced by an input parameter with the name equal to the variable.
 
 
 Fields
 ------
 
-Fields are used to define how to extract data from each entity
+Fields are used to define how data is extracted from each entity
 "instance". They are defined using the `<field>` tag, and can define
 the following attributes:
 
 - `name` : string
-    a unique name for the field
+    a unique name for the field.
 - `column` : string
-    if entity is using a DB or CSV datasource, it will use data from this column
+    if entity is using a DB or CSV data source, it will use data from this column.
 - `jsonpath` : string
-    if entity is a JSON datasource, or field type is json, it will use this jsonpath to extract data
-    `More details about JsonPath strings <http://goessner.net/articles/JsonPath/>`_.
+    if entity is a JSON datasource, or field type is json, it will use this jsonpath to extract data.
+    `More details on JsonPath strings <http://goessner.net/articles/JsonPath/>`_.
 - `type` : {integer, boolean, string, float, json}, optional, default=string
-    If defined, the value will be converted to the given type. If it's not possible, then the resulting value will be null.
+    If defined, the value will be converted to the given type. If it is not possible, then the resulting value will be null.
 - `regex` : string, optional
-    applies the given regular expression and assigns the first match to the value
+    applies the given regular expression and assigns the first match to the value.
 - `split` : string, optional
-    splits the value to an array of values using the provided regular expression
+    splits the value to an array of values using the provided regular expression.
 - `dateFormat` : string, optional
-    transforms value to a date using the given date/time format
+    transforms value to a date using the given date/time format.
 - `join` : string, optional
     concatenates values using the defined separator. Used together with `jsonpath` only.
 - `delimiter` : string, optional
@@ -508,23 +505,23 @@ the following attributes:
 - `template` : string, optional
     used to define a template for strings. May use variables.
 - `script` : string, optional
-    call the python script defined in this element and assign the result to this field. May use any of the built-in functions or any one defined in a `Script` element. Variables can also be used in script elements. Also could be defined as inner <script> tag.
+    call the python script defined in this element and assign the result to this field. May use any of the built-in functions or any one defined in a `Script` element. Variables can also be used in script elements. Could also be defined as inner <script> tag.
 - `transform` : {'json', 'csv'}, optional
-    transforms this field to a datasource. For example, it can be used to parse JSON or CSV data stored in a DB column. Its values can be either `json` or `csv`.
+    transforms this field to a datasource. For example, it can be used to parse JSON or CSV data stored in a DB column. It's values can either be `json` or `csv`.
 - `headers` : list, optional
-    used only if `transform="csv"`. Defines the header names for each item in the CSV field. Not implemented now
+    used only if `transform="csv"`. Defines the header names for each item in the CSV field. Not currently implemented.
 - `required` : {'true', 'false'}, optional, default=false
-    whether this field is required to have a value or not.
+    whether or not this field is required to have a value.
 - `multipart` : {'true', 'false'}, optional
-    if the results of `jsonpath` is complex/multipart value or simple value, Used only with `jsonpath`
+    if the results of `jsonpath` are complex/multipart value or simple value, Used only with `jsonpath`
 - `key_path` : string, optional
     a JSON path expression for identifying the keys of a map. Used together with `value_path`
-    `More details about JsonPath strings <http://goessner.net/articles/JsonPath/>`_.
+    `More details on JsonPath strings <http://goessner.net/articles/JsonPath/>`_.
 - `value_path` : string, optional
     a JSON path expression for identifying the values of a map. Used together with `key_path`.
   
 .. note::
-    You can not use name for field 'opening' if you want to have also fields as 'opening.title'.
+    It is not possible to use the name for field 'opening' if fields as 'opening.title' is also required. 
 
 Examples:
 
@@ -647,21 +644,21 @@ contain the following attributes:
 - `target` : string, required
     the target file to save imported data on HDFS.
 - `datasource` : string, required
-    a reference to the DB datasource to use for importing the data
+    a reference to the DB datasource to use for importing the data.
 - `table` : string, required
     the name of the table to import its data.
 - `where` : string, optional
-    an expression that might be passed to the table for filtering the rows to import
+    an expression that might be passed to the table for filtering the rows to be imported.
 - `direct` : boolean, optional
     whether to use direct import (see `Sqoop documentation <https://sqoop.apache.org/docs/1.4.4/SqoopUserGuide.html#_importing_views_in_direct_mode>`_ on --direct for more details)
 - `mappers` : integer, optional
-    an integer number with the mappers to use for importing data. If table is a view or doesn't have a key it should be 1. Default value is 1.
+    an integer number with the mappers to use for importing data. If table is a view or does not have a key, it should be 1. Default value is 1.
 - `options` : string, optional
     Extra options for sqoop import command.
 
-If the sqoop tag contains body, then it should be valid SQL statements.
+If the sqoop tag contains body, then it should be a valid SQL statement.
 These statements will be executed on the database before the Sqoop
-import. This feature is particularly useful if you want to run:
+import. This feature is particularly useful if the following needs to be run:
 
 .. code-block:: xml
 
@@ -678,7 +675,7 @@ import. This feature is particularly useful if you want to run:
         <sqoop target="dataset" table="dataset" datasource="sqoop_db_datasource" />
 
         <!-- Query inside sqoop tag needs to be executed on the DB before running the sqoop command -->
-        <!-- We should also allow multiple sqoop tags in case we require more than one imports -->
+        <!-- Multiple sqoop tags should be allowed, in case more than one imports are reqyuired -->
         <sqoop target="new_data" table="temp_table" datasource="sqoop_db_datasource" direct="true" mappers="1">
         <![CDATA[
             CREATE TEMP TABLE target_openings AS SELECT * FROM openings WHERE creation_time BETWEEN #{start} AND #{end};
@@ -689,7 +686,7 @@ import. This feature is particularly useful if you want to run:
         <field ... />
     </entity>
 
-For loading sqoop results in the pig script we should define:
+In order to load sqoop results in the pig script, the following must be defined:
 
 .. code-block:: xml
 
@@ -719,7 +716,7 @@ For loading sqoop results in the pig script we should define:
     <entity/>
 
 
-Also we can auto load sqoop results, for example:
+In addition, sqoop results can also auto load, for example:
 
 .. code-block:: xml
 
@@ -735,7 +732,7 @@ Also we can auto load sqoop results, for example:
         <query/>
     <entity/>
 
-When `autoload_sqoop_dataset` setted CloudML will automatically add sqoop results definition on the top of the pig script. For example:
+When `autoload_sqoop_dataset` set CloudML will automatically add sqoop results definition on the top of the pig script. For example:
 
 .. code-block:: txt
 
@@ -751,20 +748,20 @@ When `autoload_sqoop_dataset` setted CloudML will automatically add sqoop result
 Nested entities
 ---------------
 
-It might be possible that not all data required might originate from one
-entity, or it might be possible to gather data from more than one
-datasources. For example, consider the following use case::
+It is possible that, not all data required will originate from one
+entity, also, it may be possible to gather data from more than one
+data source. For example, consider the following use case::
 
     A really important feature is application ranking.
     In order to rank the application, data regarding the application,
     the employer, the job opening and the contractor are required.
-    However, these data may come from different HTTP URLs.
+    However, this data may be derived from different HTTP URLs.
 
 
-A solution to this problem is to use nested entities. A nested entity is a normal entity, with the benefit that it can use data from it's parent entity to formulate the query. A nested entity may result in two ways:
+A solution for this problem is to use nested entities. A nested entity is a normal entity, with the benefit that it is able to use data from it's parent entity to formulate the query. A nested entity may result in two ways:
 
-- querying a 'global' datasource (i.e. querying a different table in DB, calling a different HTTP service)
-- converting one of the parent entity's field to a new entity (i.e. parsing the data of a DB column as a JSON document). In this case, the field acts as a datasource.
+- querying a 'global' datasource (i.e. querying a different table in DB, calling a different HTTP service).
+- converting one of the parent entity's field to a new entity (i.e. parsing the data of a DB column as a JSON document). In this case, the field acts as a data source.
 
 A nested entity is defined inside another `<entity>` and follows exactly the same syntax. However, it might also use the values of parent entity as variables, in addition to the input parameter values.
 
@@ -787,10 +784,10 @@ Example:
 
 The second option is to convert one of the parent entity's fields to a
 new entity. This is useful if a field in the parent entity contains CSV
-or JSON data. To do this, two things need to be done:
+or JSON data. In order to undertake this, two things need to be done:
 
-- Define property 'transform' in parent entity field, using the appropriate type. This creates a datasource accessible from all child entities. The datasource's name is the field's name, while the datasource type depends on the the value of the transform entity
-- In the new entity, define as datasource name the name of the parent entity's field.
+- Define property 'transform' in the parent entity field, using the appropriate type. This creates a datasource accessible from all child entities. The data source's name is the field's name, while the data source type depends on the the value of the transform entity.
+- In the new entity, define the name of the parent entity's field as the data source name. 
 
 Example:
 
@@ -821,28 +818,27 @@ Example:
 Predict
 =======
 
-The last part of the data import handler describes which models to
-invoke and how to formulate the response. While the old import handler
-was used with a single model, the new version should allow to use
-multiple binary classifier models, provided that they expect the same
-input vector.
+The final part of the data import handler describes which models to
+invoke and how the response is formulated. While the old import handler
+was used with a single model, the new version should allow
+multiple binary classifier models use, provided that the same
+input vector are expected.
 
-Response format is defined inside `<predict>` tag. Predict tag needs
-to have the following sub-elements:
+Response format is defined inside `<predict>` tag. Predict tag is required to needs have the following sub-elements:
 
-- `<model>` - defines parameters for using a model with the data from the `<import>` part of the handler
-- `<result>` - defines how to formulate the response
+- `<model>` - defines parameters for using a model with the data from the `<import>` part of the handler.
+- `<result>` - defines how to formulate the response.
 
 Model
 -----
 
 In order to calculate the result of a prediction, one or more models
 need to be invoked together with the data from the import handler. Each
-model invocation is defined using a `<model>` tag. A model tag may
+model invocation is defined using a `<model>` tag. A model tag could
 have the following attributes:
 
 - `name` : string, required
-    a name to uniquely identify the results of this model
+    a name to uniquely identify the results of this model.
 - `value` : string, optional
     holds the name of the model to use.
 - `script` : string, optional
@@ -850,9 +846,9 @@ have the following attributes:
 
 .. note::
 
-    Either value or script attribute need to be defined. Declaring none on both should raise an error.
+    Either the value or the script attribute need to be defined. Failure to do this will result in an error.
 
-In addition, you could define some additional child elements:
+Also, additional child elements could be defined:
 
 * positive_label
 * weight
@@ -860,7 +856,7 @@ In addition, you could define some additional child elements:
 positive_label
 ~~~~~~~~~~~~~~
 
-Allows overriding which label to use as positive label. If not defined, true is considered as positive label. Example:
+Allows overriding which label to use as positive label. If not defined, true is considered as a positive label. Example:
 
 .. code-block:: xml
 
@@ -871,9 +867,9 @@ Allows overriding which label to use as positive label. If not defined, true is 
 A positive_label tag may have the following attributes:
 
 * `value` : string
-    holds the value of the model positive label
+    holds the value of the model positive label.
 * `script` : string
-    calls python code to decide the value of the model positive label
+    calls python code to decide the value of the model positive label.
 
 weight
 ~~~~~~
@@ -881,11 +877,11 @@ weight
 A positive_label tag may have the following attributes:
 
 * `value` : string
-    holds the weight
+    holds the weight.
 * `script` : string
-    calls python code to decide the weight
+    calls python code to decide the weight.
 * `label` : string
-    a label of data to apply the weight
+    a label of data to apply the weight.
 
 
 .. code-block:: xml
@@ -903,19 +899,19 @@ A positive_label tag may have the following attributes:
 Result
 ------
 
-Defines what to we need to render in results.
+Defines the method to render results.
 
-At may include two sub-elements:
+It could include two sub-elements:
 
 * `label`
 * `probability`
 
-Label defines .... todo ... and contains following attributes:
+Label defines .... todo ... and contains the following attributes:
 
 * `model` : string, optional
 * `script` : string, optional
 
-Probability defines ... todo ... and contains following attributes:
+Probability defines ... todo ... and contains the following attributes:
 
 * `label` : string, optional
 * `model` : string, optional

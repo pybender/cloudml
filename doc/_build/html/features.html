@@ -32,7 +32,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="None" href="index.html" />
-    <link rel="next" title="Supported classifiers" href="classifiers.html" />
+    <link rel="next" title="Supported Classifiers" href="classifiers.html" />
     <link rel="prev" title="Import Handler file format" href="import_handlers.html" />
   
    
@@ -58,7 +58,7 @@
   </script>
 
   </head>
-  <body>
+  <body role="document">
 
 <div class="header-wrapper">
     <div class="header"></div>
@@ -94,10 +94,10 @@
         accesskey="N">Next
         <br/>
         <span class="smallrellink">
-        Supported classi...
+        Supported Classi...
         </span>
             <span class="hiddenrellink">
-            Supported classifiers
+            Supported Classifiers
             </span>
         </a>
         </div>
@@ -116,19 +116,19 @@
 <li><a class="reference internal" href="#features-list">Features</a><ul>
 <li><a class="reference internal" href="#feature-types-defined-in-cloudml-core">Feature types defined in CloudML core</a></li>
 <li><a class="reference internal" href="#feature-scalers">Feature Scalers</a><ul>
-<li><a class="reference internal" href="#standartscaler">StandartScaler</a></li>
+<li><a class="reference internal" href="#standardscaler">StandardScaler</a></li>
 <li><a class="reference internal" href="#minmaxscaler">MinMaxScaler</a></li>
 <li><a class="reference internal" href="#noscaler">NoScaler</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#feature-transformers">Feature Transformers</a><ul>
-<li><a class="reference internal" href="#pretrained-transformers">Pretrained transformers</a></li>
+<li><a class="reference internal" href="#pre-trained-transformers">Pre-trained transformers</a></li>
 <li><a class="reference internal" href="#dictionary">Dictionary</a></li>
 <li><a class="reference internal" href="#count">Count</a></li>
-<li><a class="reference internal" href="#tfidf">Tfidf</a></li>
-<li><a class="reference internal" href="#lda">Lda</a></li>
-<li><a class="reference internal" href="#lsi">Lsi</a></li>
-<li><a class="reference internal" href="#ntile">Ntile</a></li>
+<li><a class="reference internal" href="#tf-idt">TF-IDT</a></li>
+<li><a class="reference internal" href="#lda">LDA</a></li>
+<li><a class="reference internal" href="#lsi">LSI</a></li>
+<li><a class="reference internal" href="#ntile">NTILE</a></li>
 </ul>
 </li>
 </ul>
@@ -146,35 +146,35 @@
             
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="feature-json-file-format">
 <span id="features"></span><h1>Feature JSON file format<a class="headerlink" href="#feature-json-file-format" title="Permalink to this headline">¶</a></h1>
-<p>Features.json file includes information like:</p>
+<p>Features.json file includes information such as:</p>
 <ol class="arabic simple">
 <li>Name of the schema.</li>
 <li>The classifier&#8217;s configuration.</li>
-<li>List of the features (with their name, type and other processing instructions).</li>
-<li>Generic feature types, in case more than one feature share the same feature type.</li>
+<li>List of the features (with the name, type and other relevant processing instructions).</li>
+<li>Generic feature types, in the event that more than one feature share the same feature type.</li>
 </ol>
-<p>So there are four top-level elements:</p>
+<p>There are four top-level elements:</p>
 <ul class="simple">
-<li><a class="reference internal" href="#classifier"><em>classifier</em></a> - defining the configuration of the classifier to use</li>
-<li><cite>schema-name</cite> - a string describing the schema in the document</li>
-<li><a class="reference internal" href="#named-feature-types"><em>feature-types</em></a> - a list of feature type definitions</li>
-<li><a class="reference internal" href="#features-list"><em>features</em></a> - a list of the features that the trainer will read from the data</li>
+<li><a class="reference internal" href="#classifier"><span>classifier</span></a> - defining the configuration of the classifier to use.</li>
+<li><cite>schema-name</cite> - a string describing the schema in the document.</li>
+<li><a class="reference internal" href="#named-feature-types"><span>feature-types</span></a> - a list of feature type definitions.</li>
+<li><a class="reference internal" href="#features-list"><span>features</span></a> - a list of features that the trainer will read from the data.</li>
 </ul>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Full example of the features.json file can found in <a class="reference download internal" href="_downloads/features.json"><tt class="xref download docutils literal"><span class="pre">feature.json</span></tt></a>.</p>
+<p class="last">A full example of the features.json file can found in <a class="reference download internal" href="_downloads/features.json"><code class="xref download docutils literal"><span class="pre">feature.json</span></code></a>.</p>
 </div>
 <div class="section" id="classifier">
 <span id="id1"></span><h2>Classifier<a class="headerlink" href="#classifier" title="Permalink to this headline">¶</a></h2>
-<p>The first section of features.json is used to define the configuration of the classifier to use. The available options are the following:</p>
+<p>The first section of features.json defines the configuration of the classifier to use. The available options are as follows:</p>
 <ul>
 <li><dl class="first docutils">
 <dt><cite>type</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
-<dd><p class="first last">Defines the Scikit-learn classifier class, that would be used for creating the model.</p>
+<dd><p class="first last">Defines the Scikit-learn classifier class, which would be used to create the model.</p>
 </dd>
 </dl>
 </li>
@@ -185,27 +185,28 @@
 </dl>
 </li>
 </ul>
-<p>Currently following types of classifiers could be used:</p>
+<p>Currently, the following types of classifiers can be used:</p>
 <ul class="simple">
-<li><a class="reference internal" href="classifiers.html#classifier-logistic-regression"><em>logistic regression</em></a></li>
-<li><a class="reference internal" href="classifiers.html#classifier-support-vector-regression"><em>support vector regression</em></a></li>
-<li><a class="reference internal" href="classifiers.html#classifier-stochastic-gradient-descent-classifier"><em>stochastic gradient descent classifier</em></a></li>
-<li><a class="reference internal" href="classifiers.html#decision-tree"><em>decision tree classifier</em></a></li>
-<li><a class="reference internal" href="classifiers.html#extra-tree"><em>extra tree classifier</em></a></li>
-<li><a class="reference internal" href="classifiers.html#random-forest"><em>random forest classifier</em></a></li>
-<li><a class="reference internal" href="classifiers.html#gradient-boosting"><em>gradient boosting classifier</em></a></li>
+<li><a class="reference internal" href="classifiers.html#classifier-logistic-regression"><span>logistic regression</span></a></li>
+<li><a class="reference internal" href="classifiers.html#classifier-support-vector-regression"><span>support vector regression</span></a></li>
+<li><a class="reference internal" href="classifiers.html#classifier-stochastic-gradient-descent-classifier"><span>stochastic gradient descent classifier</span></a></li>
+<li><a class="reference internal" href="classifiers.html#decision-tree"><span>decision tree classifier</span></a></li>
+<li><a class="reference internal" href="classifiers.html#extra-tree"><span>extra tree classifier</span></a></li>
+<li><a class="reference internal" href="classifiers.html#random-forest"><span>random forest classifier</span></a></li>
+<li><a class="reference internal" href="classifiers.html#gradient-boosting"><span>gradient boosting classifier</span></a></li>
 </ul>
 <p>Sample classifier defition:</p>
-<div class="highlight-json"><pre>"classifier": {
-         "type": "logistic regression",
-         "params": {"penalty": "l2"}
-}</pre>
+<div class="highlight-json"><div class="highlight"><pre>&quot;classifier&quot;: {
+         &quot;type&quot;: &quot;logistic regression&quot;,
+         &quot;params&quot;: {&quot;penalty&quot;: &quot;l2&quot;}
+}
+</pre></div>
 </div>
 </div>
 <div class="section" id="named-feature-types">
 <span id="id2"></span><h2>Named feature types<a class="headerlink" href="#named-feature-types" title="Permalink to this headline">¶</a></h2>
-<p>This is user-specific feature types.</p>
-<p>Feature type definitions is a list of JSON objects. Each JSON object might
+<p>These are user-specific feature types.</p>
+<p>Feature type definitions are a list of JSON objects. Each JSON object might
 have the following keys and values:</p>
 <ul>
 <li><dl class="first docutils">
@@ -217,7 +218,7 @@ type.</p>
 </li>
 <li><dl class="first docutils">
 <dt><cite>type</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
-<dd><p class="first last"><a class="reference internal" href="#core-feature-types"><em>feature type</em></a></p>
+<dd><p class="first last"><a class="reference internal" href="#core-feature-types"><span>feature type</span></a></p>
 </dd>
 </dl>
 </li>
@@ -229,81 +230,82 @@ type.</p>
 </li>
 </ul>
 <p>Sample section defition:</p>
-<div class="highlight-json"><pre>"feature-types":[
+<div class="highlight-json"><div class="highlight"><pre>&quot;feature-types&quot;:[
     {
-      "name":"str_to_timezone",
-      "type": "composite",
-      "params": {
-        "chain": [
-          { "type": "regex", "params": { "pattern": "UTC([-\\+]+\\d\\d).*"  }},
-          { "type": "int" }
+      &quot;name&quot;:&quot;str_to_timezone&quot;,
+      &quot;type&quot;: &quot;composite&quot;,
+      &quot;params&quot;: {
+        &quot;chain&quot;: [
+          { &quot;type&quot;: &quot;regex&quot;, &quot;params&quot;: { &quot;pattern&quot;: &quot;UTC([-\\+]+\\d\\d).*&quot;  }},
+          { &quot;type&quot;: &quot;int&quot; }
         ]
       }
     }
-  ]</pre>
+  ]
+</pre></div>
 </div>
 </div>
 <div class="section" id="features-list">
 <span id="id3"></span><h2>Features<a class="headerlink" href="#features-list" title="Permalink to this headline">¶</a></h2>
 <p>Features are the actual source for the trainer. A feature plan may contain at
-least one feature. The definition of each feature might include the following
+least one feature. The definition of each feature may include the following
 keys and values:</p>
 <ul>
 <li><dl class="first docutils">
 <dt><cite>name</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
-<dd><p class="first last">name of the feature</p>
+<dd><p class="first last">Name of the feature.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>type</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
-<dd><p class="first last">one of <a class="reference internal" href="#core-feature-types"><em>feature type</em></a> or named feature type</p>
+<dd><p class="first last">One of <a class="reference internal" href="#core-feature-types"><span>feature type</span></a> or named feature type.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>params</cite> <span class="classifier-delimiter">:</span> <span class="classifier">dict (optional)</span></dt>
-<dd><p class="first last">A map of parameters that might be required by the type</p>
+<dd><p class="first last">A map of parameters that might be required by the type.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>is-target-variable</cite> <span class="classifier-delimiter">:</span> <span class="classifier">boolean (optional)</span></dt>
-<dd><p class="first last">Can be either true or false. Default value is false. If set to true, then this feature is considered the target variable (or class) for the data</p>
+<dd><p class="first last">Can be either true or false. Default value is false. If set to true, then this feature is considered the target variable (or class) for the data.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>transformer</cite> <span class="classifier-delimiter">:</span> <span class="classifier">dict, optional</span></dt>
-<dd><p class="first last">Defines a transformer to use for applying to the data of this feature in order to produce multiple features. See <a class="reference internal" href="#feature-transformers"><em>transformers</em></a> for more details.</p>
+<dd><p class="first last">Defines a transformer to use for applying to the data of this feature, in order to produce multiple features. See <a class="reference internal" href="#feature-transformers"><span>transformers</span></a> for more details.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>scaler</cite> <span class="classifier-delimiter">:</span> <span class="classifier">dict, optional</span></dt>
-<dd><p class="first last">Defines the scaler, that allows standartize features by removing the mean and scaling to unit variance.
-See <a class="reference internal" href="#feature-scalers"><em>scalers</em></a> for more details.</p>
+<dd><p class="first last">Defines the scaler, which allows standardized features by removing the mean and scaling to unit variance.
+See <a class="reference internal" href="#feature-scalers"><span>scalers</span></a> for more details.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>is-required</cite> <span class="classifier-delimiter">:</span> <span class="classifier">boolean (optional)</span></dt>
-<dd><p class="first last">Defines whether this is a required feature or not.Default is true. When processing input data, a check is performed on each input &#8220;row&#8221; to see if input data for this feature are empty. Data that are null or have length equal to zero (strings, lists, dictionaries, tuples) are considered as empty.</p>
+<dd><p class="first last">Defines whether or not this is a required feature. Default is true. When processing input data, a check is performed on each input &#8220;row&#8221; in order to verify if input data for the feature is empty. Data which is null or has a length equal to zero (strings, lists, dictionaries, tuples) is considered to be empty.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>default</cite> <span class="classifier-delimiter">:</span> <span class="classifier">same to feature.type (optional)</span></dt>
-<dd><p class="first last">Defines a default value to use if value read is null or empty</p>
+<dd><p class="first last">Defines a default value to use if the value read is null or empty.</p>
 </dd>
 </dl>
 </li>
 </ul>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<div class="last">Data that are null or have length equal to zero (strings, lists, dictionaries, tuples) are considered as empty. In this case, the trainer will try to find a default value using the following priority:
+<div class="last">Data which is null or has length equal to zero (strings, lists, dictionaries, tuples) is considered to be empty. In this case, the trainer will attempt to find a default value using the following priority:
 <ol>
-  <li>If a default value has been defined on the feature model, it will be used</li>
+  <li>If a default value has been defined on the feature model, it will be used</li>.
   <li>If a transformer is defined, then the following values will be used as defaults:
     <ul>
       <li>Dictionary - empty dictionary - {}</li>
@@ -321,7 +323,7 @@ See <a class="reference internal" href="#feature-scalers"><em>scalers</em></a> f
       </ul>
   </li>
 </ol></div></div>
-<p>If you want to use named feature type, set it&#8217;s name as <cite>type</cite> attribute of the feature:</p>
+<p>If a named feature type need to be used, the name as a <cite>type</cite> attribute of the feature must be set:</p>
 <div class="highlight-json"><div class="highlight"><pre>    <span class="p">{</span>
   <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;tz&quot;</span><span class="p">,</span>
   <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;str_to_timezone&quot;</span>
@@ -339,7 +341,7 @@ See <a class="reference internal" href="#feature-scalers"><em>scalers</em></a> f
 </li>
 <li><dl class="first docutils">
 <dt><cite>float</cite></dt>
-<dd><p class="first last">Converts each item to a float value.</p>
+<dd><p class="first last">Converts each item into a float value.</p>
 </dd>
 </dl>
 </li>
@@ -351,13 +353,13 @@ See <a class="reference internal" href="#feature-scalers"><em>scalers</em></a> f
 </li>
 <li><dl class="first docutils">
 <dt><cite>numeric</cite></dt>
-<dd><p class="first last">Does same as <cite>float</cite>.</p>
+<dd><p class="first last">Does the same as <cite>float</cite>.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>date</cite> <span class="classifier-delimiter">:</span> <span class="classifier">params: pattern</span></dt>
-<dd><p class="first last">Parses the input value as a date using the pattern defined in parameter &#8216;pattern&#8217;. The result is converted to UNIX timestamp.</p>
+<dd><p class="first last">Parses the input value as a date using the pattern defined in parameter &#8216;pattern&#8217;. The result is converted to a UNIX timestamp.</p>
 </dd>
 </dl>
 </li>
@@ -375,7 +377,7 @@ See <a class="reference internal" href="#feature-scalers"><em>scalers</em></a> f
 </li>
 <li><dl class="first docutils">
 <dt><cite>composite</cite> <span class="classifier-delimiter">:</span> <span class="classifier">params: chain</span></dt>
-<dd><p class="first last">Allows applying multiple types to input data. Parameter chain defines a list of types, which are applied sequentially to the input value. For example, first type can be a regular expression, while second a mapping.</p>
+<dd><p class="first last">Allows applying multiple types to input data. Parameter chain defines a list of types, which are applied sequentially to the input value. For example, the first type can be a regular expression, while second, a mapping.</p>
 </dd>
 </dl>
 </li>
@@ -393,7 +395,7 @@ See <a class="reference internal" href="#feature-scalers"><em>scalers</em></a> f
 </li>
 <li><dl class="first docutils">
 <dt><cite>text</cite></dt>
-<dd><p class="first last">Converts value to string.</p>
+<dd><p class="first last">Converts value to a string.</p>
 </dd>
 </dl>
 </li>
@@ -401,8 +403,8 @@ See <a class="reference internal" href="#feature-scalers"><em>scalers</em></a> f
 </div>
 <div class="section" id="feature-scalers">
 <span id="id4"></span><h3>Feature Scalers<a class="headerlink" href="#feature-scalers" title="Permalink to this headline">¶</a></h3>
-<p>Scalers allow standartize features by removing the mean and scaling to unit variance.</p>
-<p>In following example we standartize age of the contractor (which is a bit little: about 18-100 years) to the range [0, 1]:</p>
+<p>Scalers allow standardized features by removing the mean and scaling to unit variance.</p>
+<p>In the following example, the age of the contractor is standardized (which is relatively little: about 18-100 years) to the range [0, 1]:</p>
 <div class="highlight-json"><div class="highlight"><pre>    <span class="p">{</span>
   <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;contractor.age&quot;</span><span class="p">,</span>
   <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;int&quot;</span><span class="p">,</span>
@@ -416,7 +418,7 @@ See <a class="reference internal" href="#feature-scalers"><em>scalers</em></a> f
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>And in this one code block we scaling count of working hours, which could be really big to the [0, 1] range.</p>
+<p>Similarly, in the following one code block, scaling count of working hours is undertaken which could be extremely big in the [0, 1] range.</p>
 <div class="highlight-json"><div class="highlight"><pre><span class="p">{</span>
   <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;contractor.worked_hours_count&quot;</span><span class="p">,</span>
   <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;int&quot;</span><span class="p">,</span>
@@ -430,21 +432,21 @@ See <a class="reference internal" href="#feature-scalers"><em>scalers</em></a> f
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>Folloving scalers are available:</p>
+<p>Following scalers are available:</p>
 <ul class="simple">
-<li><a class="reference internal" href="#standart-scaler"><em>StandartScaler</em></a></li>
-<li><a class="reference internal" href="#min-max-scaler"><em>MinMaxScaler</em></a></li>
-<li><a class="reference internal" href="#no-scaler"><em>NoScaler</em></a></li>
+<li><a class="reference internal" href="#standard-scaler"><span>StandardScaler</span></a></li>
+<li><a class="reference internal" href="#min-max-scaler"><span>MinMaxScaler</span></a></li>
+<li><a class="reference internal" href="#no-scaler"><span>NoScaler</span></a></li>
 </ul>
-<div class="section" id="standartscaler">
-<span id="standart-scaler"></span><h4>StandartScaler<a class="headerlink" href="#standartscaler" title="Permalink to this headline">¶</a></h4>
-<p>Standardize features by removing the mean and scaling to unit variance
-Centering and scaling happen independently on each feature by computing the relevant statistics on the samples in the training set. Mean and standard deviation are then stored to be used on later data using the transform method.</p>
-<p>You could define following parameters:</p>
+<div class="section" id="standardscaler">
+<span id="standard-scaler"></span><h4>StandardScaler<a class="headerlink" href="#standardscaler" title="Permalink to this headline">¶</a></h4>
+<p>Standardize features by removing the mean and scaling to unit variance.
+Centering and scaling occur independently on each feature by computing the relevant statistics on the samples in the training set. Mean and standard deviation are then stored, in order to later be used on data using the transform method.</p>
+<p>The following parameters could be defined:</p>
 <ul>
 <li><dl class="first docutils">
 <dt><cite>with_mean</cite> <span class="classifier-delimiter">:</span> <span class="classifier">boolean, True by default</span></dt>
-<dd><p class="first last">If True, center the data before scaling. This does not work (and will raise an exception) when attempted on sparse matrices, because centering them entails building a dense matrix which in common use cases is likely to be too large to fit in memory.</p>
+<dd><p class="first last">If True, center the data before scaling. This does not work (and will raise an exception) when attempted on sparse matrices, because centering them entails building a dense matrix which in common use cases is likely to be too large to fit in the memory.</p>
 </dd>
 </dl>
 </li>
@@ -456,18 +458,18 @@ Centering and scaling happen independently on each feature by computing the rele
 </li>
 <li><dl class="first docutils">
 <dt><cite>copy</cite> <span class="classifier-delimiter">:</span> <span class="classifier">boolean, optional, default True</span></dt>
-<dd><p class="first last">If False, try to avoid a copy and do inplace scaling instead. This is not guaranteed to always work inplace; e.g. if the data is not a NumPy array or scipy.sparse CSR matrix, a copy may still be returned.</p>
+<dd><p class="first last">If False, attempt to avoid a copy and instead, undertake inplace scaling. This is not always guaranteed to work; e.g. if the data is not a NumPy array or scipy.sparse CSR matrix, a copy may still be returned.</p>
 </dd>
 </dl>
 </li>
 </ul>
-<p>Underlying implementation is <a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html">scikit-learn&#8217;s StandartScaler</a></p>
+<p>Underlying implementation is <a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html">scikit-learn&#8217;s StandardScaler</a></p>
 </div>
 <div class="section" id="minmaxscaler">
 <span id="min-max-scaler"></span><h4>MinMaxScaler<a class="headerlink" href="#minmaxscaler" title="Permalink to this headline">¶</a></h4>
 <p>Standardizes features by scaling each feature to a given range.
-This estimator scales and translates each feature individually such that it is in the given range on the training set, i.e. between zero and one.</p>
-<p>You could define following parameters:</p>
+This estimator scales and translates each feature individually, such that, it is within the given range on the training set, i.e. between zero and one.</p>
+<p>The following parameters could be defined:</p>
 <ul>
 <li><dl class="first docutils">
 <dt><cite>feature_range_min</cite> <span class="classifier-delimiter">:</span> <span class="classifier">integer, default=0</span></dt>
@@ -483,7 +485,7 @@ This estimator scales and translates each feature individually such that it is i
 </li>
 <li><dl class="first docutils">
 <dt><cite>copy</cite> <span class="classifier-delimiter">:</span> <span class="classifier">boolean, optional, default True</span></dt>
-<dd><p class="first last">Set to False to perform inplace row normalization and avoid a copy (if the input is already a numpy array).</p>
+<dd><p class="first last">Set to False in order to perform inplace row normalization and avoid a copy (if the input is already a numpy array).</p>
 </dd>
 </dl>
 </li>
@@ -492,7 +494,7 @@ This estimator scales and translates each feature individually such that it is i
 </div>
 <div class="section" id="noscaler">
 <span id="no-scaler"></span><h4>NoScaler<a class="headerlink" href="#noscaler" title="Permalink to this headline">¶</a></h4>
-<p>By default for most feature types we applying <cite>MinMaxScaler</cite> to the feature. So if you don&#8217;t want to apply scaling, you need to use <cite>NoScaler</cite>:</p>
+<p>For most feature types, by deafult, <cite>MinMaxScaler</cite> is applied to the feature, therefore if scaling does not need to be applied, <cite>NoScaler</cite> will need to be applied:</p>
 <div class="highlight-json"><div class="highlight"><pre><span class="p">{</span>
   <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;feature_without_scaling&quot;</span><span class="p">,</span>
   <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;int&quot;</span><span class="p">,</span>
@@ -506,9 +508,9 @@ This estimator scales and translates each feature individually such that it is i
 </div>
 <div class="section" id="feature-transformers">
 <span id="id5"></span><h3>Feature Transformers<a class="headerlink" href="#feature-transformers" title="Permalink to this headline">¶</a></h3>
-<p>Transformers allow creating multiple features from a single one. Each feature might have only one transformer. You can define a transformer by specifying key &#8220;name&#8221; and any of the appropriate parameters for the transformer.</p>
-<p>For example we have a contrator page title data. It&#8217;s some text like
-&#8220;I&#8217;m a machine learning entusiast&#8221; in the one record, &#8220;Python programmer&#8221; in the other, etc:</p>
+<p>Transformers allow creating multiple features from a single features. Each feature might have only one transformer. A transformer can be defined by specifying key &#8220;name&#8221; and appropriate parameters for the transformer.</p>
+<p>For example, in relation to contractor page title data, text such as the following exists:
+&#8220;I&#8217;m a machine learning enthusiast&#8221; in one record, while &#8220;Python programmer&#8221; in the other, and so on:</p>
 <div class="highlight-json"><div class="highlight"><pre><span class="p">{</span>
   <span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="s2">&quot;title&quot;</span><span class="p">,</span>
   <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span>
@@ -522,8 +524,8 @@ This estimator scales and translates each feature individually such that it is i
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>But for using this field in the model, we need to convert (encode) this to numeric values. In this case after applying the transformer we will have a list of features: one for each word, that often was used in title field of the records.
-For the &#8220;I&#8217;m a machine learning entusiast&#8221; we will have following values of the features:</p>
+<p>However, in order to use this field in the model, it first requires conversion (encoding) to to numeric values. In this case, after applying the transformer, a list of features will be obtained: one for each word, which was often used in the title field of the records.
+For &#8220;I&#8217;m a machine learning enthusiast&#8221;, the following feature values will be applicable:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">title</span><span class="o">.</span><span class="n">machine</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="n">title</span><span class="o">.</span><span class="n">learning</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="n">title</span><span class="o">.</span><span class="n">entusiast</span> <span class="o">=</span> <span class="mi">1</span>
@@ -532,9 +534,9 @@ For the &#8220;I&#8217;m a machine learning entusiast&#8221; we will have follow
 <span class="o">...</span>
 </pre></div>
 </div>
-<div class="section" id="pretrained-transformers">
-<h4>Pretrained transformers<a class="headerlink" href="#pretrained-transformers" title="Permalink to this headline">¶</a></h4>
-<p>If you want use pretrained transformer for the feature, you need to set <cite>type</cite> key as pretrained transformer name:</p>
+<div class="section" id="pre-trained-transformers">
+<h4>Pre-trained transformers<a class="headerlink" href="#pre-trained-transformers" title="Permalink to this headline">¶</a></h4>
+<p>If the pre-trained transformer feature need to be used,`type` key as pre-trained transformer name must be set:</p>
 <div class="highlight-json"><div class="highlight"><pre>    <span class="p">{</span>
   <span class="nt">&quot;transformer&quot;</span><span class="p">:</span> <span class="p">{</span>
     <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;job-title-pretrained-transformer&quot;</span><span class="p">,</span>
@@ -547,26 +549,26 @@ For the &#8220;I&#8217;m a machine learning entusiast&#8221; we will have follow
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">For training the transformer separately you need to use <a class="reference internal" href="command_line_utils.html#transformer-py"><em>transformer.py</em></a> command and store transformer file to some folder.</p>
+<p class="last">In order to train the transformer separately, <a class="reference internal" href="command_line_utils.html#transformer-py"><span>transformer.py</span></a> command must be used and the transformer file must be saved to a folder.</p>
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">For training the model don&#8217;t forgot to specify <cite>&#8211;transformer-path</cite> parameter, which should contains path to the folder, where prtrained transformers are saved.</p>
+<p class="last">To train the model, it is important to specify the <cite>&#8211;transformer-path</cite> parameter. This should contain the path to the folder, where pre-trained transformers are saved.</p>
 </div>
-<p>Following transformers are available:</p>
+<p>The following transformers are available:</p>
 <ul class="simple">
-<li><a class="reference internal" href="#dictionary-transformer"><em>Dictionary</em></a></li>
-<li><a class="reference internal" href="#count-transformer"><em>Count</em></a></li>
-<li><a class="reference internal" href="#tfidf-transformer"><em>Tfidf</em></a></li>
-<li><a class="reference internal" href="#lda-transformer"><em>Lda</em></a></li>
-<li><a class="reference internal" href="#lsi-transformer"><em>Lsi</em></a></li>
-<li><a class="reference internal" href="#ntile-transformer"><em>Ntile</em></a></li>
+<li><a class="reference internal" href="#dictionary-transformer"><span>Dictionary</span></a></li>
+<li><a class="reference internal" href="#count-transformer"><span>Count</span></a></li>
+<li><a class="reference internal" href="#tfidf-transformer"><span>Tfidf</span></a></li>
+<li><a class="reference internal" href="#lda-transformer"><span>Lda</span></a></li>
+<li><a class="reference internal" href="#lsi-transformer"><span>Lsi</span></a></li>
+<li><a class="reference internal" href="#ntile-transformer"><span>Ntile</span></a></li>
 </ul>
 </div>
 <div class="section" id="dictionary">
 <span id="dictionary-transformer"></span><h4>Dictionary<a class="headerlink" href="#dictionary" title="Permalink to this headline">¶</a></h4>
-<p>Transforms lists of key-value</p>
-<p>You could define following parameters:</p>
+<p>Transforms lists of key-value.</p>
+<p>The following parameters could be defined:</p>
 <ul class="simple">
 <li><cite>separator</cite></li>
 <li><cite>sparse</cite></li>
@@ -576,7 +578,7 @@ For the &#8220;I&#8217;m a machine learning entusiast&#8221; we will have follow
 <div class="section" id="count">
 <span id="count-transformer"></span><h4>Count<a class="headerlink" href="#count" title="Permalink to this headline">¶</a></h4>
 <p>Converts text documents to a collection of string tokens and their counts.</p>
-<p>You could define following parameters:</p>
+<p>The following parameters could be defined:</p>
 <ul class="simple">
 <li><cite>charset</cite></li>
 <li><cite>charset_error</cite></li>
@@ -595,10 +597,10 @@ For the &#8220;I&#8217;m a machine learning entusiast&#8221; we will have follow
 </ul>
 <p>Underlying implementation is <a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html">scikit-learn&#8217;s CountVectorizer</a></p>
 </div>
-<div class="section" id="tfidf">
-<span id="tfidf-transformer"></span><h4>Tfidf<a class="headerlink" href="#tfidf" title="Permalink to this headline">¶</a></h4>
-<p>Transforms text documents to TF-IDF features</p>
-<p>You could define following parameters:</p>
+<div class="section" id="tf-idt">
+<span id="tfidf-transformer"></span><h4>TF-IDT<a class="headerlink" href="#tf-idt" title="Permalink to this headline">¶</a></h4>
+<p>Transforms text documents to TF-IDF features.</p>
+<p>The following parameters could be defined:</p>
 <ul class="simple">
 <li><cite>charset</cite></li>
 <li><cite>charset_error</cite></li>
@@ -618,9 +620,9 @@ For the &#8220;I&#8217;m a machine learning entusiast&#8221; we will have follow
 <p>Underlying implementation is <a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html">scikit-learn&#8217;s TfidfVectorizer</a></p>
 </div>
 <div class="section" id="lda">
-<span id="lda-transformer"></span><h4>Lda<a class="headerlink" href="#lda" title="Permalink to this headline">¶</a></h4>
+<span id="lda-transformer"></span><h4>LDA<a class="headerlink" href="#lda" title="Permalink to this headline">¶</a></h4>
 <p>Latent dirichlet allocation (LDA) is a widely-used generative model to extract atent topics from a collection of documents. Each document is modeled as a distribution over a set of topics, and each topic is modeled as a distribution over a set of keywords. The LdaModel from gensim is used as the LDA implementation.</p>
-<p>You could define following parameters:</p>
+<p>The following parameters could be defined:</p>
 <ul class="simple">
 <li><cite>num_topics</cite></li>
 <li><cite>alpha</cite></li>
@@ -631,9 +633,9 @@ For the &#8220;I&#8217;m a machine learning entusiast&#8221; we will have follow
 <p>Underlying implementation is <a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.LdaVectorizer.html">scikit-learn&#8217;s LdaVectorizer</a></p>
 </div>
 <div class="section" id="lsi">
-<span id="lsi-transformer"></span><h4>Lsi<a class="headerlink" href="#lsi" title="Permalink to this headline">¶</a></h4>
-<p>Latent semantic analysis/indexing (LSA/LSI) is a widely-used technique to analyze documents and find the unerlying meaning or concepts of those documents. LSA assumes that words that are close in meaning will occur in similar pieces of text. A matrix containing word counts per document is constructed from a corpus of documents and a linear algebra technique called singular value decomposition (SVD) is used to reduce the number of words while preserving the similarity structure among documents. The LsiModel from gensim is used as the LSI implementation.</p>
-<p>You could define following parameters:</p>
+<span id="lsi-transformer"></span><h4>LSI<a class="headerlink" href="#lsi" title="Permalink to this headline">¶</a></h4>
+<p>Latent semantic analysis/indexing (LSA/LSI) is a widely-used technique to analyze documents and find the underlying meaning or concepts of those documents. LSA assumes words which are similar in meaning will occur in similar pieces of text. A matrix containing word counts per document is constructed from a corpus of documents and a linear algebra technique called singular value decomposition (SVD) is used to reduce the number of words while preserving the similarity structure among documents. The LsiModel from gensim is used as the LSI implementation.</p>
+<p>The following parameters could be defined:</p>
 <ul class="simple">
 <li><cite>num_topics</cite></li>
 <li><cite>id2word</cite></li>
@@ -645,9 +647,9 @@ For the &#8220;I&#8217;m a machine learning entusiast&#8221; we will have follow
 <p>Underlying implementation is <a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.LsiVectorizer.html">scikit-learn&#8217;s LsiVectorizer</a></p>
 </div>
 <div class="section" id="ntile">
-<span id="ntile-transformer"></span><h4>Ntile<a class="headerlink" href="#ntile" title="Permalink to this headline">¶</a></h4>
-<p>NTILE is an analytic function. It divides an ordered data set into a number of buckets indicated by expr and assigns the appropriate bucket number to each row. The buckets are numbered 1 through expr.</p>
-<p>You could define following parameters:</p>
+<span id="ntile-transformer"></span><h4>NTILE<a class="headerlink" href="#ntile" title="Permalink to this headline">¶</a></h4>
+<p>NTILE is an analytic function. It divides an ordered dataset into a number of buckets, indicated by expr and assigns the appropriate bucket number to each row. The buckets are numbered 1 through expr.</p>
+<p>The following parameters could be defined:</p>
 <ul class="simple">
 <li><cite>number_tile</cite> : integer</li>
 </ul>

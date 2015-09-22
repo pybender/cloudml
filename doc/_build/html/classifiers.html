@@ -8,7 +8,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
   
-    <title>Supported classifiers</title>
+    <title>Supported Classifiers</title>
   <!-- htmltitle is before nature.css - we use this hack to load bootstrap first -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="_static/css/bootstrap.min.css" media="screen" />
@@ -32,7 +32,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="None" href="index.html" />
-    <link rel="next" title="Developer’s guide" href="developers_guide.html" />
+    <link rel="next" title="Developer’s Guide" href="developers_guide.html" />
     <link rel="prev" title="Feature JSON file format" href="features.html" />
   
    
@@ -58,7 +58,7 @@
   </script>
 
   </head>
-  <body>
+  <body role="document">
 
 <div class="header-wrapper">
     <div class="header"></div>
@@ -94,10 +94,10 @@
         accesskey="N">Next
         <br/>
         <span class="smallrellink">
-        Developer’s guid...
+        Developer’s Guid...
         </span>
             <span class="hiddenrellink">
-            Developer’s guide
+            Developer’s Guide
             </span>
         </a>
         </div>
@@ -110,7 +110,7 @@
       <p class="doc-version">This documentation is for Cloudml <strong>version 2.0</strong> &mdash; <a href="http://scikit-learn.org/stable/support.html#documentation-resources">Other versions</a></p> -->
 <!--     <p class="citing">If you use the software, please consider <a href="about.html#citing-scikit-learn">citing scikit-learn</a>.</p> -->
     <ul>
-<li><a class="reference internal" href="#">Supported classifiers</a><ul>
+<li><a class="reference internal" href="#">Supported Classifiers</a><ul>
 <li><a class="reference internal" href="#logistic-regression">Logistic Regression</a></li>
 <li><a class="reference internal" href="#stochastic-gradient-descent-classifier">Stochastic Gradient Descent Classifier</a></li>
 <li><a class="reference internal" href="#support-vector-regression">Support Vector Regression</a></li>
@@ -131,14 +131,14 @@
             
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="supported-classifiers">
-<h1><a class="toc-backref" href="#id5">Supported classifiers</a><a class="headerlink" href="#supported-classifiers" title="Permalink to this headline">¶</a></h1>
+<h1><a class="toc-backref" href="#id5">Supported Classifiers</a><a class="headerlink" href="#supported-classifiers" title="Permalink to this headline">¶</a></h1>
 <div class="contents topic" id="contents">
 <p class="topic-title first">Contents</p>
 <ul class="simple">
-<li><a class="reference internal" href="#supported-classifiers" id="id5">Supported classifiers</a><ul>
+<li><a class="reference internal" href="#supported-classifiers" id="id5">Supported Classifiers</a><ul>
 <li><a class="reference internal" href="#logistic-regression" id="id6">Logistic Regression</a></li>
 <li><a class="reference internal" href="#stochastic-gradient-descent-classifier" id="id7">Stochastic Gradient Descent Classifier</a></li>
 <li><a class="reference internal" href="#support-vector-regression" id="id8">Support Vector Regression</a></li>
@@ -154,64 +154,65 @@
 <span id="classifier-logistic-regression"></span><h2><a class="toc-backref" href="#id6">Logistic Regression</a><a class="headerlink" href="#logistic-regression" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html#sklearn.linear_model.LogisticRegression">Scikit Learn LogisticRegression</a> will be used as the underlying implementation.</p>
 <p>Sample configuration in features.json file:</p>
-<div class="highlight-json"><pre>"classifier": {
-         "type": "logistic regression",
-         "params": {"penalty": "l2"}
-}</pre>
+<div class="highlight-json"><div class="highlight"><pre>&quot;classifier&quot;: {
+         &quot;type&quot;: &quot;logistic regression&quot;,
+         &quot;params&quot;: {&quot;penalty&quot;: &quot;l2&quot;}
+}
+</pre></div>
 </div>
-<p>This classifier has following parameters:</p>
+<p>This classifier has the following parameters:</p>
 <ul>
 <li><dl class="first docutils">
 <dt><cite>penalty</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string, {l1, l2}</span></dt>
-<dd><p class="first last">Used to specify the norm used in the penalization. The newton-cg andlbfgs solvers support only l2 penalties.</p>
+<dd><p class="first last">Used to specify the norm used in the penalization. The newton-cg andlbfgs solvers only support l2 penalties.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>dual</cite> <span class="classifier-delimiter">:</span> <span class="classifier">boolean</span></dt>
-<dd><p class="first last">Dual or primal formulation. Dual formulation is only implemented forl2 penalty with liblinear solver. Prefer dual=False whenn_samples &gt; n_features.</p>
+<dd><p class="first last">Dual or primal formulation. Dual formulation is only implemented for l2 penalty with liblinear solver. Prefer dual=False whenn_samples &gt; n_features.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>C</cite> <span class="classifier-delimiter">:</span> <span class="classifier">float, default=1</span></dt>
-<dd><p class="first last">Inverse of regularization strength; must be a positive float.Like in support vector machines, smaller values specify strongerregularization.</p>
+<dd><p class="first last">Inverse of regularization strength; must be a positive float. As in the case of support vector machines, smaller values specify stronger regularization.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>fit_intercept</cite> <span class="classifier-delimiter">:</span> <span class="classifier">boolean, default=True</span></dt>
-<dd><p class="first last">Specifies if a constant (a.k.a. bias or intercept) should beadded the decision function.</p>
+<dd><p class="first last">Specifies if a constant (a.k.a. bias or intercept) should be added to the decision function.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>intercept_scaling</cite> <span class="classifier-delimiter">:</span> <span class="classifier">float, default=1</span></dt>
-<dd><p class="first last">Useful only if solver is liblinear.when self.fit_intercept is True, instance vector x becomes[x, self.intercept_scaling],i.e. a &#8220;synthetic&#8221; feature with constant value equals tointercept_scaling is appended to the instance vector.The intercept becomes intercept_scaling * synthetic feature weightNote! the synthetic feature weight is subject to l1/l2 regularizationas all other features.To lessen the effect of regularization on synthetic feature weight(and therefore on the intercept) intercept_scaling has to be increased.</p>
+<dd><p class="first last">Useful only if the solver is liblinear, when self.fit_intercept is True, instance vector x becomes[x, self.intercept_scaling],i.e. a &#8220;synthetic&#8221; feature with constant value equals to intercept_scaling is appended to the instance vector. The intercept becomes intercept_scaling * synthetic feature weightNote! the synthetic feature weight is subject to l1/l2 regularizationas all other features. To lessen the effect of regularization on synthetic feature weight(and therefore on the intercept) intercept_scaling has to be increased.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>class_weight</cite> <span class="classifier-delimiter">:</span> <span class="classifier">&#8216;auto&#8217; or a dictionary</span></dt>
-<dd><p class="first last">Over-/undersamples the samples of each class according to the givenweights. If not given, all classes are supposed to have weight one.The &#8216;auto&#8217; mode selects weights inversely proportional to classfrequencies in the training set.</p>
+<dd><p class="first last">Over-/undersamples the samples of each class according to the givenweights. If not specified, all classes are assumed to have a weight of one. The &#8216;auto&#8217; mode selects weights which are inversely proportional to class frequencies in the training set.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>max_iter</cite> <span class="classifier-delimiter">:</span> <span class="classifier">integer</span></dt>
-<dd><p class="first last">Useful only for the newton-cg and lbfgs solvers. Maximum number ofiterations taken for the solvers to converge.</p>
+<dd><p class="first last">Useful only for the newton-cg and lbfgs solvers. Maximum number of iterations taken for the solvers to converge.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>random_state</cite> <span class="classifier-delimiter">:</span> <span class="classifier">integer</span></dt>
-<dd><p class="first last">The seed of the pseudo random number generator to use whenshuffling the data.</p>
+<dd><p class="first last">The seed of the pseudo random number generator to use when shuffling the data.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>solver</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string, {newton-cg, lbfgs, liblinear}</span></dt>
-<dd><p class="first last">Algorithm to use in the optimization problem.</p>
+<dd><p class="first last">Algorithm for use in the optimization problem.</p>
 </dd>
 </dl>
 </li>
@@ -223,13 +224,13 @@
 </li>
 <li><dl class="first docutils">
 <dt><cite>multi_class</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string, {ovr, multinomial}</span></dt>
-<dd><p class="first last">Multiclass option can be either &#8216;ovr&#8217; or &#8216;multinomial&#8217;. If the optionchosen is &#8216;ovr&#8217;, then a binary problem is fit for each label. Elsethe loss minimised is the multinomial loss fit acrossthe entire probability distribution. Works only for the &#8216;lbfgs&#8217;solver.</p>
+<dd><p class="first last">Multiclass option can be either &#8216;ovr&#8217; or &#8216;multinomial&#8217;. If the option chosen is &#8216;ovr&#8217;, then a binary problem is fit for each label, otherwise the loss minimised is the multinomial loss fitting across the entire probability distribution. Works only for the &#8216;lbfgs&#8217;solver.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>verbose</cite> <span class="classifier-delimiter">:</span> <span class="classifier">integer</span></dt>
-<dd><p class="first last">For the liblinear and lbfgs solvers set verbose to any positivenumber for verbosity.</p>
+<dd><p class="first last">For the liblinear and lbfgs solvers set verbose to any positive number for verbosity.</p>
 </dd>
 </dl>
 </li>
@@ -239,10 +240,11 @@
 <span id="classifier-stochastic-gradient-descent-classifier"></span><h2><a class="toc-backref" href="#id7">Stochastic Gradient Descent Classifier</a><a class="headerlink" href="#stochastic-gradient-descent-classifier" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.SGDClassifier.html#sklearn-linear-model-sgdclassifier">Scikit Learn SGDClassifier</a> will be used as the underlying implementation.</p>
 <p>Sample configuration in features.json file:</p>
-<div class="highlight-json"><pre>"classifier": {
-         "type": "stochastic gradient descent classifier",
-         "params": {"loss": "log"}
-}</pre>
+<div class="highlight-json"><div class="highlight"><pre>&quot;classifier&quot;: {
+         &quot;type&quot;: &quot;stochastic gradient descent classifier&quot;,
+         &quot;params&quot;: {&quot;loss&quot;: &quot;log&quot;}
+}
+</pre></div>
 </div>
 <p>This classifier has following parameters:</p>
 <ul>
@@ -354,10 +356,11 @@
 <span id="classifier-support-vector-regression"></span><h2><a class="toc-backref" href="#id8">Support Vector Regression</a><a class="headerlink" href="#support-vector-regression" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.svm.SVR.html#sklearn-svm-svr">Scikit Learn SVR</a> will be used as the underlying implementation.</p>
 <p>Sample configuration in features.json file:</p>
-<div class="highlight-json"><pre>"classifier": {
-         "type": "support vector regression",
-         "params": {"loss": "log"}
-}</pre>
+<div class="highlight-json"><div class="highlight"><pre>&quot;classifier&quot;: {
+         &quot;type&quot;: &quot;support vector regression&quot;,
+         &quot;params&quot;: {&quot;loss&quot;: &quot;log&quot;}
+}
+</pre></div>
 </div>
 <p>This classifier has following parameters:</p>
 <ul>
@@ -433,10 +436,11 @@
 <span id="id1"></span><h2><a class="toc-backref" href="#id9">Decision Tree</a><a class="headerlink" href="#decision-tree" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html">Scikit Learn Decision Tree Classifier</a> will be used as the underlying implementation.</p>
 <p>Sample configuration in features.json file:</p>
-<div class="highlight-json"><pre>"classifier": {
-         "type": "decision tree classifier",
-         "params": {"loss": "log"}
-}</pre>
+<div class="highlight-json"><div class="highlight"><pre>&quot;classifier&quot;: {
+         &quot;type&quot;: &quot;decision tree classifier&quot;,
+         &quot;params&quot;: {&quot;loss&quot;: &quot;log&quot;}
+}
+</pre></div>
 </div>
 <p>This classifier has following parameters:</p>
 <ul>
@@ -496,7 +500,7 @@
 </li>
 <li><dl class="first docutils">
 <dt><cite>random_state</cite> <span class="classifier-delimiter">:</span> <span class="classifier">integer, default=None</span></dt>
-<dd><p class="first last">If int, random_state is the seed used by the random number generator;If RandomState instance, random_state is the random number generator;If None, the random number generator is the RandomState instance usedby`np.random`.</p>
+<dd><p class="first last">If int, random_state is the seed used by the random number generator; If RandomState instance, random_state is the random number generator;If None, the random number generator is the RandomState instance usedby`np.random`.</p>
 </dd>
 </dl>
 </li>
@@ -506,12 +510,13 @@
 <span id="id2"></span><h2><a class="toc-backref" href="#id10">Extra Tree</a><a class="headerlink" href="#extra-tree" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.ensemble.ExtraTreesClassifier.html">Scikit Learn ExtraTreesClassifier</a> will be used as the underlying implementation.</p>
 <p>Sample configuration in features.json file:</p>
-<div class="highlight-json"><pre>"classifier": {
-         "type": "extra trees classifier",
-         "params": {"loss": "log"}
-}</pre>
+<div class="highlight-json"><div class="highlight"><pre>&quot;classifier&quot;: {
+         &quot;type&quot;: &quot;extra trees classifier&quot;,
+         &quot;params&quot;: {&quot;loss&quot;: &quot;log&quot;}
+}
+</pre></div>
 </div>
-<p>This classifier has following parameters:</p>
+<p>This classifier has the following parameters:</p>
 <ul>
 <li><dl class="first docutils">
 <dt><cite>n_estimators</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string, default=10</span></dt>
@@ -521,43 +526,43 @@
 </li>
 <li><dl class="first docutils">
 <dt><cite>criterion</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string, default=&#8221;gini&#8221;</span></dt>
-<dd><p class="first last">The function to measure the quality of a split. Supported criteria are&#8221;gini&#8221; for the Gini impurity and &#8220;entropy&#8221; for the information gain.Note: this parameter is tree-specific.</p>
+<dd><p class="first last">The function to measure the quality of a split. Supported criteria are &#8220;gini&#8221; for the Gini impurity and &#8220;entropy&#8221; for the information gain. Note: this parameter is tree-specific.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>max_features</cite> <span class="classifier-delimiter">:</span> <span class="classifier">integer, default=&#8221;auto&#8221;</span></dt>
-<dd><p class="first last">The number of features to consider when looking for the best split:- If int, then consider`max_features` features at each split.- If float, then`max_features` is a percentage and`int(max_features * n_features)` features are considered at eachsplit.- If &#8220;auto&#8221;, then`max_features=sqrt(n_features)`.- If &#8220;sqrt&#8221;, then`max_features=sqrt(n_features)`.- If &#8220;log2&#8221;, then`max_features=log2(n_features)`.- If None, then`max_features=n_features`.Note: the search for a split does not stop until at least onevalid partition of the node samples is found, even if it requires toeffectively inspect more than``max_features`` features.Note: this parameter is tree-specific.</p>
+<dd><p class="first last">The number of features to consider when looking for the best split:- If int, then consider <cite>max_features</cite> features at each split.- If float, then <cite>max_features</cite> is a percentage and <cite>int(max_features * n_features)</cite> features are considered at each split. If &#8220;auto&#8221;, then <cite>max_features=sqrt(n_features)</cite>.- If &#8220;sqrt&#8221;, then <cite>max_features=sqrt(n_features)</cite>.- If &#8220;log2&#8221;, then <cite>max_features=log2(n_features)</cite>.- If None, then <cite>max_features=n_features</cite>. Note: the search for a split does not end until, at least, one valid partition of the node samples is found, even if it requires to effectively inspect more than``max_features`` features. Note: this parameter is tree-specific.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>max_depth</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string, default=None</span></dt>
-<dd><p class="first last">The maximum depth of the tree. If None, then nodes are expanded untilall leaves are pure or until all leaves contain less thanmin_samples_split samples.Ignored if``max_leaf_nodes`` is not None.Note: this parameter is tree-specific.</p>
+<dd><p class="first last">The maximum depth of the tree. If None, then nodes are expanded until all leaves are pure, or until all leaves contain less than min_samples_split samples. Ignored if``max_leaf_nodes`` is not None.Note: this parameter is tree-specific.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>min_samples_split</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string, default=2</span></dt>
-<dd><p class="first last">The minimum number of samples required to split an internal node.Note: this parameter is tree-specific.</p>
+<dd><p class="first last">The minimum number of samples required to split an internal node. Note: this parameter is tree-specific.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>min_samples_leaf</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string, default=1</span></dt>
-<dd><p class="first last">The minimum number of samples in newly created leaves.  A split isdiscarded if after the split, one of the leaves would contain less then``min_samples_leaf`` samples.Note: this parameter is tree-specific.</p>
+<dd><p class="first last">The minimum number of samples in newly created leaves.  A split is discarded if after the split, one of the leaves would contain less then``min_samples_leaf`` samples. Note: this parameter is tree-specific.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>min_weight_fraction_leaf</cite> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
-<dd><p class="first last">The minimum weighted fraction of the input samples required to be at aleaf node.Note: this parameter is tree-specific.</p>
+<dd><p class="first last">The minimum weighted fraction of the input samples required to be at a leaf node. Note: this parameter is tree-specific.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>max_leaf_nodes</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string, default=None</span></dt>
-<dd><p class="first last">Grow trees with``max_leaf_nodes`` in best-first fashion.Best nodes are defined as relative reduction in impurity.If None then unlimited number of leaf nodes.If not None then``max_depth`` will be ignored.Note: this parameter is tree-specific.</p>
+<dd><p class="first last">Grow trees with``max_leaf_nodes`` in best-first fashion. Best nodes are defined as relative reduction in impurity. If None found then an unlimited number of leaf nodes. If not None then``max_depth`` will be ignored. Note: this parameter is tree-specific.</p>
 </dd>
 </dl>
 </li>
@@ -569,19 +574,19 @@
 </li>
 <li><dl class="first docutils">
 <dt><cite>oob_score</cite> <span class="classifier-delimiter">:</span> <span class="classifier">boolean</span></dt>
-<dd><p class="first last">Whether to use out-of-bag samples to estimatethe generalization error.</p>
+<dd><p class="first last">Whether to use out-of-bag samples in order to estimate the generalization error.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>n_jobs</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string, default=1</span></dt>
-<dd><p class="first last">The number of jobs to run in parallel for both`fit` and`predict`.If -1, then the number of jobs is set to the number of cores.</p>
+<dd><p class="first last">The number of jobs running in parallel for both <cite>fit</cite> and <cite>predict</cite>. If -1, then the number of jobs are set to the number of cores.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>random_state</cite> <span class="classifier-delimiter">:</span> <span class="classifier">integer, default=None</span></dt>
-<dd><p class="first last">If int, random_state is the seed used by the random number generator;If RandomState instance, random_state is the random number generator;If None, the random number generator is the RandomState instance usedby`np.random`.</p>
+<dd><p class="first last">If int, random_state is the seed used by the random number generator; If Random State instance, random_state is the random number generator; If None, the random number generator is the Random State instance used by <cite>np.random</cite>.</p>
 </dd>
 </dl>
 </li>
@@ -593,13 +598,13 @@
 </li>
 <li><dl class="first docutils">
 <dt><cite>warm_start</cite> <span class="classifier-delimiter">:</span> <span class="classifier">boolean</span></dt>
-<dd><p class="first last">When set to``True``, reuse the solution of the previous call to fitand add more estimators to the ensemble, otherwise, just fit a wholenew forest.</p>
+<dd><p class="first last">When set to <code class="docutils literal"><span class="pre">True</span></code>, reuse the solution of the previous call to fit and add more estimators to the ensemble, otherwise, simply fit a whole new forest.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>class_weight</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
-<dd><p class="first last">Weights associated with classes in the form``{class_label: weight}``.If not given, all classes are supposed to have weight one. Formulti-output problems, a list of dicts can be provided in the sameorder as the columns of y.The &#8220;auto&#8221; mode uses the values of y to automatically adjustweights inversely proportional to class frequencies in the input data.The &#8220;subsample&#8221; mode is the same as &#8220;auto&#8221; except that weights arecomputed based on the bootstrap sample for every tree grown.For multi-output, the weights of each column of y will be multiplied.Note that these weights will be multiplied with sample_weight (passedthrough the fit method) if sample_weight is specified.</p>
+<dd><p class="first last">Weights associated with classes in the form <code class="docutils literal"><span class="pre">{class_label:</span> <span class="pre">weight}</span></code>. If not given, all classes are supposed to have weight one. For multi-output problems, a list of dicts can be provided in the same order as of the columns of y. The &#8220;auto&#8221; mode uses the values of y to automatically adjust weights inversely proportional to class frequencies in the input data. The &#8220;subsample&#8221; mode is the same as &#8220;auto&#8221;, except that weights are computed based on the bootstrap sample for every tree grown. For multi-output, the weights of each y column will be multiplied. Note that these weights will be multiplied with sample_weight (passedthrough the fit method) if sample_weight is specified.</p>
 </dd>
 </dl>
 </li>
@@ -609,10 +614,11 @@
 <span id="id3"></span><h2><a class="toc-backref" href="#id11">Random Forest</a><a class="headerlink" href="#random-forest" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html">Scikit Learn RandomForestClassifier</a> will be used as the underlying implementation.</p>
 <p>Sample configuration in features.json file:</p>
-<div class="highlight-json"><pre>"classifier": {
-         "type": "random forest classifier",
-         "params": {"loss": "log"}
-}</pre>
+<div class="highlight-json"><div class="highlight"><pre>&quot;classifier&quot;: {
+         &quot;type&quot;: &quot;random forest classifier&quot;,
+         &quot;params&quot;: {&quot;loss&quot;: &quot;log&quot;}
+}
+</pre></div>
 </div>
 <p>This classifier has following parameters:</p>
 <ul>
@@ -712,34 +718,35 @@
 <span id="id4"></span><h2><a class="toc-backref" href="#id12">Gradient Boosting</a><a class="headerlink" href="#gradient-boosting" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html">Scikit Learn GradientBoostingClassifier</a> will be used as the underlying implementation.</p>
 <p>Sample configuration in features.json file:</p>
-<div class="highlight-json"><pre>"classifier": {
-         "type": "gradient boosting classifier",
-         "params": {"loss": "log"}
-}</pre>
+<div class="highlight-json"><div class="highlight"><pre>&quot;classifier&quot;: {
+         &quot;type&quot;: &quot;gradient boosting classifier&quot;,
+         &quot;params&quot;: {&quot;loss&quot;: &quot;log&quot;}
+}
+</pre></div>
 </div>
-<p>This classifier has following parameters:</p>
+<p>This classifier has the following parameters:</p>
 <ul>
 <li><dl class="first docutils">
 <dt><cite>loss</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string, default=&#8217;deviance&#8217;</span></dt>
-<dd><p class="first last">loss function to be optimized. &#8216;deviance&#8217; refers todeviance (= logistic regression) for classificationwith probabilistic outputs. For loss &#8216;exponential&#8217; gradientboosting recoveres the AdaBoost algorithm.</p>
+<dd><p class="first last">Loss function to be optimized. &#8216;deviance&#8217; refers to deviance (= logistic regression) for classification with probabilistic outputs. For loss &#8216;exponential&#8217; gradient boosting recovers the AdaBoost algorithm.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>learning_rate</cite> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
-<dd><p class="first last">learning rate shrinks the contribution of each tree by`learning_rate`.There is a trade-off between learning_rate and n_estimators.</p>
+<dd><p class="first last">Learning rate shrinks the contribution of each tree by <cite>learning_rate</cite>. There is a trade-off between learning_rate and n_estimators.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>n_estimators</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string, default=100, {int ()}</span></dt>
-<dd><p class="first last">The number of boosting stages to perform. Gradient boostingis fairly robust to over-fitting so a large number usuallyresults in better performance.</p>
+<dd><p class="first last">The number of boosting stages to perform. Gradient boosting is fairly robust to over-fitting, therefore a large number usually results in better performance.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>max_depth</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string, default=3</span></dt>
-<dd><p class="first last">maximum depth of the individual regression estimators. The maximumdepth limits the number of nodes in the tree. Tune this parameterfor best performance; the best value depends on the interactionof the input variables.Ignored if``max_leaf_nodes`` is not None.</p>
+<dd><p class="first last">Maximum depth of the individual regression estimators. The maximum depth limits the number of nodes in the tree. Tune this parameter for best performance; the best value depends on the interaction of the input variables. Ignored if``max_leaf_nodes`` is not None.</p>
 </dd>
 </dl>
 </li>
@@ -763,25 +770,25 @@
 </li>
 <li><dl class="first docutils">
 <dt><cite>subsample</cite> <span class="classifier-delimiter">:</span> <span class="classifier">float, default=1</span></dt>
-<dd><p class="first last">The fraction of samples to be used for fitting the individual baselearners. If smaller than 1.0 this results in Stochastic GradientBoosting.`subsample` interacts with the parameter`n_estimators`.Choosing`subsample &lt; 1.0` leads to a reduction of varianceand an increase in bias.</p>
+<dd><p class="first last">The fraction of samples to be used for fitting the individual base learners. If smaller than 1.0 this results in Stochastic Gradient Boosting.`subsample` interacts with the parameter <cite>n_estimators</cite>.Choosing`subsample &lt; 1.0` leads to a reduction of variance and an increase in bias.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>max_features</cite> <span class="classifier-delimiter">:</span> <span class="classifier">integer, default=None</span></dt>
-<dd><p class="first last">The number of features to consider when looking for the best split:- If int, then consider`max_features` features at each split.- If float, then`max_features` is a percentage and`int(max_features * n_features)` features are considered at eachsplit.- If &#8220;auto&#8221;, then`max_features=sqrt(n_features)`.- If &#8220;sqrt&#8221;, then`max_features=sqrt(n_features)`.- If &#8220;log2&#8221;, then`max_features=log2(n_features)`.- If None, then`max_features=n_features`.Choosing`max_features &lt; n_features` leads to a reduction of varianceand an increase in bias.Note: the search for a split does not stop until at least onevalid partition of the node samples is found, even if it requires toeffectively inspect more than``max_features`` features.</p>
+<dd><p class="first last">The number of features to consider when looking for the best split:- If int, then consider <cite>max_features</cite> features at each split.- If float, then <cite>max_features</cite> is a percentage and <cite>int(max_features * n_features)</cite> features are considered at eachsplit.- If &#8220;auto&#8221;, then`max_features=sqrt(n_features)`.- If &#8220;sqrt&#8221;, then`max_features=sqrt(n_features)`.- If &#8220;log2&#8221;, then`max_features=log2(n_features)`.- If None, then`max_features=n_features`. Choosing <cite>max_features &lt; n_features</cite> leads to a reduction of variance and an increase in bias. Note: the search for a split does not end until at least onevalid partition of the node samples is found, even if it requires to effectively inspect more than``max_features`` features.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>max_leaf_nodes</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string, default=None</span></dt>
-<dd><p class="first last">Grow trees with``max_leaf_nodes`` in best-first fashion.Best nodes are defined as relative reduction in impurity.If None then unlimited number of leaf nodes.If not None then``max_depth`` will be ignored.</p>
+<dd><p class="first last">Grow trees with``max_leaf_nodes`` in best-first fashion. Best nodes are defined as relative reduction in impurity. If None then unlimited number of leaf nodes. If not None then``max_depth`` will be ignored.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>init</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string, default=None</span></dt>
-<dd><p class="first last">An estimator object that is used to compute the initialpredictions.``init`` has to provide``fit`` and``predict``.If None it uses``loss.init_estimator``.</p>
+<dd><p class="first last">An estimator object that is used to compute the initial predictions.``init`` has to provide``fit`` and``predict``. If None, <code class="docutils literal"><span class="pre">loss.init_estimator</span></code> is used.</p>
 </dd>
 </dl>
 </li>
@@ -793,14 +800,14 @@
 </li>
 <li><dl class="first docutils">
 <dt><cite>warm_start</cite> <span class="classifier-delimiter">:</span> <span class="classifier">boolean</span></dt>
-<dd><p class="first last">When set to``True``, reuse the solution of the previous call to fitand add more estimators to the ensemble, otherwise, just erase theprevious solution.</p>
+<dd><p class="first last">When set to``True``, reuse the solution of the previous call to fit and add further estimators to the ensemble, otherwise, simply erase the previous solution.</p>
 </dd>
 </dl>
 </li>
 </ul>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">For now it&#8217;s impossible to use Gradient Boosting classifier, because it isn&#8217;t supports sparse matrix.</p>
+<p class="last">For the moment, it is not possible to use Gradient Boosting classifier, because it does not support sparse matrix.</p>
 </div>
 </div>
 </div>

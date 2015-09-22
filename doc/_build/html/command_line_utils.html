@@ -58,7 +58,7 @@
   </script>
 
   </head>
-  <body>
+  <body role="document">
 
 <div class="header-wrapper">
     <div class="header"></div>
@@ -128,18 +128,19 @@
             
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="command-line-utils">
 <h1>Command line utils<a class="headerlink" href="#command-line-utils" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="importhandler-py">
 <h2>importhandler.py<a class="headerlink" href="#importhandler-py" title="Permalink to this headline">¶</a></h2>
 <p>Running the Import Handler</p>
-<p>You can run the import handler using:</p>
-<div class="highlight-python"><pre>python importhandler.py [-h] [-o output] [-d] [-U user-param]
-                        [-V] path</pre>
+<p>The import handler can be run using:</p>
+<div class="highlight-python"><div class="highlight"><pre>python importhandler.py [-h] [-o output] [-d] [-U user-param]
+                        [-V] path
+</pre></div>
 </div>
-<p>The details of the parameters passed to importhandler.py are the following:</p>
+<p>The details of the parameters passed to importhandler.py are as follows:</p>
 <table>
   <tr>
     <th>Parameter</th>
@@ -155,7 +156,7 @@
   </tr>
   <tr>
     <td>-d, --debug</td>
-    <td>Adds more log output while running</td>
+    <td>Adds additional log output while running</td>
   </tr>
   <tr>
     <td>-o output, --output output</td>
@@ -174,13 +175,14 @@
 </table></div>
 <div class="section" id="trainer-py">
 <h2>trainer.py<a class="headerlink" href="#trainer-py" title="Permalink to this headline">¶</a></h2>
-<p>You can run the trainer using:</p>
-<div class="highlight-python"><pre>python trainer.py [-h] [-V] [-d] [-o output] [-w weight-file]
+<p>The trainer can be run using:</p>
+<div class="highlight-python"><div class="highlight"><pre>python trainer.py [-h] [-V] [-d] [-o output] [-w weight-file]
                   [-i input-file] [-t test-file]
                   [-e extraction-plan-file] [-I train-param]
-                  [-T test-param] [--skip-test] path</pre>
+                  [-T test-param] [--skip-test] path
+</pre></div>
 </div>
-<p>The details of the parameters passed to trainer.py are the following:</p>
+<p>The details of the parameters passed to trainer.py are as follows:</p>
 <table>
   <tr>
     <th>Parameter</th>
@@ -196,7 +198,7 @@
   </tr>
   <tr>
     <td>-d, --debug</td>
-    <td>Adds more log output while running</td>
+    <td>Adds additional log output while running</td>
   </tr>
   <tr>
     <td>-o output, --output output</td>
@@ -205,8 +207,8 @@
   <tr>
     <td>-w weight-file, --weights weight-file</td>
     <td>Stores feature weights to the specified file as JSON objects. The
-    weights are stored in two lists, one for positive weights (in descending
-    order), and one for the negative weights (in ascending order). In case a
+    weights are stored within two lists, one for positive weights (in descending
+    order), and one for the negative weights (in ascending order). In case, a
     feature results from a "parent" feature (i.e. when using Tfidf, count
     etc.), the name used is in the form <parent feature>.<value>.
     </td>
@@ -214,13 +216,13 @@
   <tr>
     <td>-i input-data, --input input-data</td>
     <td>Read train data from file 'input-data'. Input file may contain
-    multiple JSON objects, each one containing the feature data for each row
+    multiple JSON objects, each containing the feature data for each row
     data.</td>
   </tr>
   <tr>
     <td>-t test-data, --test test-data</td>
     <td>Read test data from file 'test data'. Input file may contain multiple
-    JSON objects, each one containing the feature data for each row
+    JSON objects, each containing the feature data for each row
     data.</td>
   </tr>
   <tr>
@@ -249,23 +251,23 @@
   </tr>
 </table><div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">If you want to use csv as input format. Your csv file need have .csv extension.</p>
+<p class="last">If one is required to use csv as the input format, the csv file will be required to have a .csv extension.</p>
 </div>
 </div>
 <div class="section" id="predictor-py">
 <h2>predictor.py<a class="headerlink" href="#predictor-py" title="Permalink to this headline">¶</a></h2>
-<p>The predictor loads a trained classifier and its configuration, and attempts to classify incoming data. Different types of input data should be allowed, including:
-* file containing multiple JSON objects and
+<p>The predictor loads a trained classifier, its configuration, and attempts to classify incoming data. Different types of input data should be allowed, including:
+* file containing multiple JSON objects; and,
 * import handler extraction plan (see Import Handler below).</p>
-<p>Predictor also provides functionality for evaluating current trained classifier, allowing definition of evaluation function to use.</p>
+<p>Predictor also provides functionality for evaluating current trained classifier, allowing definition of evaluation function to be used.</p>
 <p>Predictor&#8217;s configuration is performed entirely from the command line.</p>
-<p>Running the predictor</p>
-<p>You can run the predictor using:</p>
-<div class="highlight-python"><pre>python predictor.py [-h] [-V] [-d] [-o output] [-m {roc,csv}]
+<p>The predictor can be run using:</p>
+<div class="highlight-python"><div class="highlight"><pre>python predictor.py [-h] [-V] [-d] [-o output] [-m {roc,csv}]
                     [-P param] [-i] [-e extraction-plan-file]
-                    [-U eval-param] path</pre>
+                    [-U eval-param] path
+</pre></div>
 </div>
-<p>The details of the parameters passed to predict.py are the following:</p>
+<p>The details of the parameters passed to predict.py are as follows:</p>
 <table>
   <tr>
     <th>Parameter</th>
@@ -281,7 +283,7 @@
   </tr>
   <tr>
     <td>-d, --debug</td>
-    <td>Adds more log output while running</td>
+    <td>Adds additional log output while running</td>
   </tr>
   <tr>
     <td>-o output, --output output</td>
@@ -304,7 +306,7 @@
   <tr>
     <td>-i input-data, --input input-data</td>
     <td>Read train data from file 'input-data'. Input file may contain
-    multiple JSON objects, each one containing the feature data for each row data.</td>
+    multiple JSON objects, each containing the feature data for each row data.</td>
   </tr>
   <tr>
     <td>-e extraction-plan</td>
@@ -324,12 +326,13 @@
 </table></div>
 <div class="section" id="transformer-py">
 <span id="id1"></span><h2>transformer.py<a class="headerlink" href="#transformer-py" title="Permalink to this headline">¶</a></h2>
-<p>You can run the train train transfromer using:</p>
-<div class="highlight-python"><pre>python transformer.py [-h] [-V] [-d] [-o output]
+<p>The train transfromer can be run using:</p>
+<div class="highlight-python"><div class="highlight"><pre>python transformer.py [-h] [-V] [-d] [-o output]
                   [-i input-file] [-e extraction-plan-file]
-                  [-I train-param] path</pre>
+                  [-I train-param] path
+</pre></div>
 </div>
-<p>The details of the parameters passed to predict.py are the following:</p>
+<p>The details of the parameters passed to predict.py are as follows:</p>
 <table>
   <tr>
     <th>Parameter</th>
@@ -345,7 +348,7 @@
   </tr>
   <tr>
     <td>-d, --debug</td>
-    <td>Adds more log output while running</td>
+    <td>Adds additional log output while running</td>
   </tr>
   <tr>
     <td>-o output, --output output</td>
@@ -354,7 +357,7 @@
   <tr>
     <td>-i input-data, --input input-data</td>
     <td>Read train data from file 'input-data'. Input file may contain
-    multiple JSON objects, each one containing the feature data for each row
+    multiple JSON objects, each containing the feature data for each row
     data.</td>
   </tr>
   <tr>
