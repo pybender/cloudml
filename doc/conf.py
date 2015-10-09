@@ -20,7 +20,7 @@ import shlex
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('sphinxext'))
-sys.path.insert(0, '/home/atmel/workspace/cloudml/')
+#sys.path.insert(0, '/home/atmel/workspace/cloudml/')
 
 from github_link import make_linkcode_resolve
 # -- General configuration ------------------------------------------------
