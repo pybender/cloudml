@@ -34,6 +34,9 @@ class CompositeFeatureType(FeatureTypeBase):
                                               'define property "chain"')
         # For each item in chain, check that it is a valid feature type.
         ft_instances = []
+        if not isinstance(params['chain'], (list, tuple)):
+            raise InvalidFeatureTypeException('Composite feature types should '
+                                              'define a list of individual feature types') 
         for item in params['chain']:
             if 'type' not in item:
                 raise InvalidFeatureTypeException('Type not set on individual '

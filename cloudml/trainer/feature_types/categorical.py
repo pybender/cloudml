@@ -37,7 +37,7 @@ class CategoricalFeatureType(FeatureTypeBase):
         token_pattern = u'(?u)\b\w\w+\b'
         if params is not None:
             split_pattern = params.get('split_pattern', None)
-            min_df = int(params.get('min_df', 0))
+            min_df = int(params.get('min_df', 0) or 0)
             set_params = set(params)
         if split_pattern:
             tokenizer = tokenizer_dec(tokenizer_func, split_pattern)
