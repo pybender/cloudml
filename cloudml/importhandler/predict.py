@@ -23,18 +23,6 @@ class PredictModel(object):
                 'Either value or script attribute need to be defined'
                 ' for predict model {0}'.format(self.name))
 
-        pos_label_config = config.xpath('positive_label')
-        label_count = len(pos_label_config)
-        if label_count == 0:
-            self.has_positive_label = False
-        elif label_count == 1:
-            self.has_positive_label = True
-            self.positive_label = PositiveLabel(pos_label_config[0])
-        else:
-            raise ImportHandlerException(
-                'Predict model {0} has more than one positive label'
-                ' defined'.format(self.name))
-
         self.weights = []
         for weight in config.xpath('weight'):
             self.weights.append(Weight(weight))
@@ -42,18 +30,6 @@ class PredictModel(object):
     def __repr__(self):
         return 'Model "{0!s}": "{1!s}"'.format(self.name,
                                                self.value or self.script)
-
-
-class PositiveLabel(object):
-    """
-    Allows overriding which label to use as positive label.
-    """
-    def __init__(self, config):
-        self.value = config.get('value') or 'true'
-        self.script = config.get('script')
-
-    def __repr__(self):
-        return self.value
 
 
 class Weight(object):

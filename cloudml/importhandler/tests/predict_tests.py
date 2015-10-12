@@ -17,7 +17,6 @@ class TestPredict(unittest.TestCase):
           <model name="rank" value="BestMatch.v31">
           </model>
           <model name="autohide" value="BestMatch.v31">
-              <positive_label value="false" />
               <weight label="true" value="1.23543"/>
               <weight label="false" value="1.0"/>
           </model>
@@ -42,18 +41,6 @@ class TestPredict(unittest.TestCase):
     INVALID_MODEL_TAG = objectify.fromstring("""
         <predict>
           <model name="rank" />
-          <result>
-              <label model="rank" />
-              <probability model="rank" label="true" />
-          </result>
-    </predict>
-    """)
-    FEW_POS_LABELS = objectify.fromstring("""
-    <predict>
-          <model name="rank" value="BestMatch.v31">
-              <positive_label value="false" />
-              <positive_label value="true" />
-          </model>
           <result>
               <label model="rank" />
               <probability model="rank" label="true" />
@@ -85,7 +72,3 @@ class TestPredict(unittest.TestCase):
                                      "Invalid predict model weight: 1;23543."
                                      "Should be a float value."):
             Predict(self.INVALID_WEIGTH)
-        with self.assertRaisesRegexp(ImportHandlerException,
-                                     "Predict model rank has more than one "
-                                     "positive label defined"):
-            Predict(self.FEW_POS_LABELS)
