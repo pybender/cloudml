@@ -4,7 +4,7 @@ import unittest
 from mock import patch, ANY
 
 from transformer import *
-from cloudml.test_utils import db_row_iter_mock, get_iterator
+from test_utils import db_row_iter_mock, get_iterator
 
 
 class ImportHandlerTestCase(unittest.TestCase):

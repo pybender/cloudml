@@ -21,7 +21,9 @@ Top level element
 =================
 
 The Top level element is `<plan>`. There are no attributes expected for this element. Plan may contain the following elements:
- 
+
+- author (one or zero).
+- version (one or zero).
 - :ref:`script <script>` (any).
 - :ref:`inputs <inputs>` (one or zero).
 - :ref:`datasources <datasources>` (exactly one).

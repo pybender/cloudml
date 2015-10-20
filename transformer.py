@@ -10,7 +10,6 @@ import os
 import sys
 import logging
 import cPickle as pickle
-import cloudml.colorer
 
 from cloudml.importhandler.importhandler import ImportHandlerException, \
     ExtractionPlan, ImportHandler

@@ -106,6 +106,32 @@
   <xs:element name="plan">
     <xs:complexType>
       <xs:sequence>
+        <xs:element name="author" minOccurs="0" maxOccurs="1">
+            <xs:annotation>
+                <xs:documentation>
+                    Used to define author of import handler
+                </xs:documentation>
+            </xs:annotation>
+            <xs:complexType>
+                <xs:simpleContent>
+                    <xs:extension base="xs:string">
+                    </xs:extension>
+                </xs:simpleContent>
+            </xs:complexType>
+        </xs:element>
+        <xs:element name="version" minOccurs="0" maxOccurs="1">
+            <xs:annotation>
+                <xs:documentation>
+                    Used to define version of import handler
+                </xs:documentation>
+            </xs:annotation>
+            <xs:complexType>
+                <xs:simpleContent>
+                    <xs:extension base="xs:string">
+                    </xs:extension>
+                </xs:simpleContent>
+            </xs:complexType>
+        </xs:element>
 
         <xs:element name="inputs" minOccurs="0" maxOccurs="1">
             <xs:annotation>

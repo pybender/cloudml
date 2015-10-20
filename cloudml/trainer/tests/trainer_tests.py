@@ -19,7 +19,7 @@ from jsonpath import jsonpath
 from cloudml.trainer.store import store_trainer, load_trainer
 from cloudml.trainer.streamutils import streamingiterload
 from cloudml.trainer.exceptions import EmptyDataException
-from cloudml.test_utils import get_iterator
+from cloudml.tests.test_utils import get_iterator
 
 TARGET = 'target'
 FORMATS = ['csv', 'json']

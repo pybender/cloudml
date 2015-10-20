@@ -1,4 +1,6 @@
 <plan>
+  <author>Nikolay</author>
+  <version>1.0</version>
   <inputs>
     <param format="%Y-%m-%d" name="start" type="date"/>
     <param format="%Y-%m-%d" name="end" type="date"/>

@@ -10,7 +10,6 @@ Model trainer command line utility.
 import os
 import sys
 import logging
-import cloudml.colorer
 
 from cloudml.trainer.config import FeatureModel, SchemaException
 from cloudml.trainer import __version__

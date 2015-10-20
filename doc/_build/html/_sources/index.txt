@@ -21,6 +21,7 @@ Contents:
 .. seealso::
 
    * `Github repository <https://github.com/odeskdataproducts/cloudml>`_
+   * Authors: Panagiotis Papadimitriou <papadimitriou@upwork.com>, Ioannis Foukarakis <ifoukarakis@cloud.upwork.com>
    * Developers: Panagiotis Papadimitriou <papadimitriou@upwork.com>, Ioannis Foukarakis <ifoukarakis@cloud.upwork.com>, Nikolay Melnik <nmelnik@cloud.upwork.com>, Nader Soliman <nsoliman@cloud.upwork.com>
 
 

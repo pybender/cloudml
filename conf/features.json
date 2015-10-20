@@ -1,5 +1,7 @@
 {
   "schema-name": "bestmatch",
+  "author": "Nikolay Melnik",
+  "version": "1.0",
   "classifier": {
     "type": "logistic regression",
     "params": {"penalty": "l2"}

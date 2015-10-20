@@ -2,6 +2,8 @@
 import logging
 import os
 
+import coloredlogs
+
 
 def process_bool(val=None):
     if val is None:
@@ -24,6 +26,7 @@ def init_logging(debug):
                         level=logging_level)
     logger = logging.getLogger()
     logger.setLevel(logging_level)
+    coloredlogs.install(level=logging.DEBUG)
 
 
 def determine_data_format(filepath):
@@ -52,7 +55,7 @@ def isfloat(x):
     """
     try:
         a = float(x)
-    except:
+    except ValueError:
         return False
     else:
         return True
@@ -70,7 +73,7 @@ def isint(x):
     try:
         a = float(x)
         b = int(a)
-    except:
+    except ValueError:
         return False
     else:
         return a == b

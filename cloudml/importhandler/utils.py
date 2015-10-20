@@ -57,7 +57,9 @@ def process_date(value, format):
     return datetime.strptime(value, format)
 
 DIR = os.path.dirname(__file__)
-with open(os.path.join(DIR, 'pig_template.txt')) as fp:
+with open(os.path.join(DIR,
+          'templates',
+          'pig_template.txt')) as fp:
     PIG_TEMPLATE = fp.read()
 
 SCHEMA_INFO_FIELDS = [

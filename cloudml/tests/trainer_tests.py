@@ -4,7 +4,7 @@ import unittest
 from mock import patch, ANY
 
 from trainer import *
-from cloudml.test_utils import db_row_iter_mock
+from test_utils import db_row_iter_mock
 
 
 class TrainerTestCase(unittest.TestCase):

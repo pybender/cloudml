@@ -18,7 +18,6 @@ def parse_requirements(requirements):
         dependency_links = []
         for l in f:
             if not l.strip('\n') or l.startswith('#'):
-                print 'c'
                 continue
             if l.startswith('-'):
                 dependency_links.append(l.strip('\n').replace('-e ', ''))

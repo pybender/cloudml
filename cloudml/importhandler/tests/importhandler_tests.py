@@ -18,7 +18,7 @@ from cloudml.importhandler.importhandler import ExtractionPlan, \
     ImportHandlerException, ImportHandler
 from cloudml.importhandler.predict import Predict
 from constants import ROW, PARAMS
-from cloudml.test_utils import db_row_iter_mock
+from cloudml.tests.test_utils import db_row_iter_mock
 
 BASEDIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), '../../../testdata'))
