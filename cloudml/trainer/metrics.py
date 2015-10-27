@@ -36,6 +36,7 @@ class BaseMetrics(object):
                        empty_labels, segment='default'):
         self._labels += labels
         self._empty_labels = empty_labels
+        logging.info('Classes set: %s' % classes)
         if self._classes_set and not classes == self._classes_set:
             raise ValueError(
                 'Classes was set before to %s, now it is being set with %s, '
