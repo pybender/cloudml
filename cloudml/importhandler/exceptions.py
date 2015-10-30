@@ -22,3 +22,10 @@ class ImportHandlerException(Exception):
         # Call the base class constructor with the parameters it needs
         Exception.__init__(self, message)
         self.Errors = Errors
+
+
+class LocalScriptNotFoundException(Exception):
+    def __init__(self, message, Errors=None):
+        # Call the base class constructor with the parameters it needs
+        Exception.__init__(self, message)
+        self.Errors = Errors
