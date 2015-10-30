@@ -22,9 +22,9 @@ class Script(object):
     Manages script entity in XML Import Handler
     """
     def __init__(self, config):
-        self.text = config.text
+        self.text = config.get("text", '')
         self.src = None
-        if "src" in config.attrib:
+        if "src" in config.attrib and config.attrib["src"] != '':
             self.src = config.attrib["src"]
 
     def _process_amazon_file(self):
