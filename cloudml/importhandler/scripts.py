@@ -22,10 +22,13 @@ class Script(object):
     Manages script entity in XML Import Handler
     """
     def __init__(self, config):
-        self.text = config.get("text", '')
+        self.text = config.text
+
         self.src = None
-        if "src" in config.attrib and config.attrib["src"] != '':
+        if "src" in config.attrib:
             self.src = config.attrib["src"]
+
+        self.out_string = ''
 
     def _process_amazon_file(self):
         try:
@@ -37,7 +40,8 @@ class Script(object):
             b = s3_conn.get_bucket(BUCKET_NAME)
             key = Key(b)
             key.key = self.src
-            return key.get_contents_as_string()
+            res = key.get_contents_as_string()
+            self.out_string = res if res else ''
         except Exception as exc:
             raise ImportHandlerException("Error accessing file '{0}' on Amazon"
                                          ": {1}".format(self.src, exc.message))
@@ -47,27 +51,28 @@ class Script(object):
         if os.path.isfile(self.src):
             with open(self.src, 'r') as fp:
                 fs = fp.read()
+                self.out_string = fs if fs else ''
                 fp.close()
-            return fs
         else:
             raise LocalScriptNotFoundException("Local file '{0}' not "
                                                "found".format(self.src))
 
     def get_script_str(self):
         try:
-            if self.src is not None:
-                return self._process_local_file()
-            else:
-                return self.text
+            if self.src:
+                self._process_local_file()
+            elif self.text:
+                self.out_string = self.text
         except LocalScriptNotFoundException as e:
             try:
-                return self._process_amazon_file()
+                self._process_amazon_file()
             except Exception as exc:
                 raise ImportHandlerException("{0}. Searching on Amazon: {1}"
                                              " ".format(e.message, exc.message))
         except Exception as ex:
             raise ImportHandlerException("Error while accessing script '{0}':"
                                          "{1}".format(self.src, ex.message))
+        return self.out_string
 
 
 class ScriptManager(object):
@@ -83,7 +88,9 @@ class ScriptManager(object):
         Adds python methods to the script manager.
         """
         try:
-            eval(compile(script, "<str>", "exec"), self.context, self.context)
+            if script:
+                eval(compile(script, "<str>", "exec"), self.context,
+                     self.context)
         except Exception,  exc:
             raise ImportHandlerException(
                 "Exception occurs while adding python script: {0}. {1}".format(

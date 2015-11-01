@@ -6,8 +6,11 @@ Unittests for python scripts manager class.
 
 import unittest
 
-from cloudml.importhandler.scripts import ScriptManager, prepare_context
-from cloudml.importhandler.exceptions import ImportHandlerException
+from cloudml.importhandler.scripts import ScriptManager, prepare_context, Script
+from cloudml.importhandler.exceptions import ImportHandlerException, \
+    LocalScriptNotFoundException
+from lxml import objectify
+import os
 
 
 class ScriptManagerTest(unittest.TestCase):
@@ -59,3 +62,93 @@ def stripSpecial(value):
             '#{value} + #{data.result.x}[0]', 3,
             local_vars={'data.result.x': (5, 1)})
         self.assertEquals(res, 8)
+
+
+class ScriptTest(unittest.TestCase):
+    BASE_DIR = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), '../../../testdata'))
+    EMPTY_SRC = objectify.fromstring(
+        """<script src="" />"""
+    )
+    EMPTY_ALL = objectify.fromstring(
+        """<script />"""
+    )
+    TEXT = objectify.fromstring(
+        """<script><![CDATA[1+1]]></script>"""
+    )
+    LOCAL_SCRIPT_CORRECT = objectify.fromstring(
+        """<script src="%s" />""" % os.path.join(BASE_DIR, "local_script.py")
+    )
+    LOCAL_SCRIPT_INCORRECT = objectify.fromstring(
+        """<script src="%s" />""" % os.path.join(BASE_DIR, "local_script1.py")
+    )
+    PRIORITY_SCRIPT = objectify.fromstring(
+        """<script src="%s"><![CDATA[2+2]]></script>""" %
+        os.path.join(BASE_DIR, "local_script.py")
+    )
+    AMAZON_CORRECT = objectify.fromstring(
+        """<script src="amazon_script.py" />"""
+    )
+    AMAZON_INCORRECT = objectify.fromstring(
+        """<script src="amazon_script1.py" />"""
+    )
+
+    def setUp(self):
+        #create amazon file
+        from boto import connect_s3
+        from boto.s3.key import Key
+        from config import AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET,\
+            BUCKET_NAME
+        s3_conn = connect_s3(AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET)
+        b = s3_conn.get_bucket(BUCKET_NAME)
+        self.key = Key(b)
+        self.key.key = "amazon_script.py"
+        self.key.set_contents_from_string("3+5")
+
+    def test_empty_values(self):
+        script = Script(self.EMPTY_SRC)
+        self.assertEqual('', script.get_script_str())
+        self.assertEqual('', script.src)
+        self.assertEqual(None, script.text)
+
+        script = Script(self.EMPTY_ALL)
+        self.assertEqual('', script.get_script_str())
+        self.assertEqual(None, script.src)
+        self.assertEqual(None, script.text)
+
+    def test_text_exists(self):
+        script = Script(self.TEXT)
+        self.assertEqual('1+1', script.get_script_str())
+        self.assertEqual(None, script.src)
+        self.assertEqual('1+1', script.text)
+
+    def test_local_file(self):
+        script = Script(self.LOCAL_SCRIPT_INCORRECT)
+        self.assertRaises(LocalScriptNotFoundException,
+                          script._process_local_file)
+        self.assertRaises(ImportHandlerException, script.get_script_str)
+        script = Script(self.LOCAL_SCRIPT_CORRECT)
+        self.assertEqual('def always99(a):\n    return 99',
+                         script.get_script_str())
+        self.assertEqual(os.path.join(self.BASE_DIR, "local_script.py"),
+                         script.src)
+        self.assertEqual(None, script.text)
+
+        script = Script(self.PRIORITY_SCRIPT)
+        self.assertEqual('def always99(a):\n    return 99',
+                         script.get_script_str())
+        self.assertEqual(os.path.join(self.BASE_DIR, "local_script.py"),
+                         script.src)
+        self.assertEqual('2+2', script.text)
+
+    def test_amazon_file(self):
+        script = Script(self.AMAZON_INCORRECT)
+        self.assertRaises(ImportHandlerException, script.get_script_str)
+        script = Script(self.AMAZON_CORRECT)
+        self.assertEqual(None, script.text)
+        self.assertEqual("amazon_script.py", script.src)
+        self.assertEqual('3+5', script.get_script_str())
+
+    def tearDown(self):
+        self.key.delete()
+
