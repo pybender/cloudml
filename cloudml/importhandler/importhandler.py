@@ -73,6 +73,7 @@ class ExtractionPlan(object):
         self.datasources = {}
         self.load_datasources(self.data)
 
+        self.scripts = []
         self.script_manager = ScriptManager()
         self.load_scripts(self.data)
 
@@ -120,6 +121,7 @@ class ExtractionPlan(object):
         """
         for script in config.xpath("script"):
             s = Script(script)
+            self.scripts.append(s)
             self.script_manager.add_python(s.get_script_str())
 
     # Schema Validation specific methods

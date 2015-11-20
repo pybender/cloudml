@@ -23,11 +23,7 @@ class Script(object):
     """
     def __init__(self, config):
         self.text = config.text
-
-        self.src = None
-        if "src" in config.attrib:
-            self.src = config.attrib["src"]
-
+        self.src = config.attrib.get("src", None)
         self.out_string = ''
 
     def _process_amazon_file(self):
@@ -41,7 +37,7 @@ class Script(object):
             key = Key(b)
             key.key = self.src
             res = key.get_contents_as_string()
-            self.out_string = res if res else ''
+            self.out_string = res or ''
         except Exception as exc:
             raise ImportHandlerException("Error accessing file '{0}' on Amazon"
                                          ": {1}".format(self.src, exc.message))
@@ -51,27 +47,30 @@ class Script(object):
         if os.path.isfile(self.src):
             with open(self.src, 'r') as fp:
                 fs = fp.read()
-                self.out_string = fs if fs else ''
+                self.out_string = fs or ''
                 fp.close()
         else:
             raise LocalScriptNotFoundException("Local file '{0}' not "
                                                "found".format(self.src))
 
     def get_script_str(self):
-        try:
-            if self.src:
-                self._process_local_file()
-            elif self.text:
-                self.out_string = self.text
-        except LocalScriptNotFoundException as e:
+        if self.src:
             try:
-                self._process_amazon_file()
-            except Exception as exc:
-                raise ImportHandlerException("{0}. Searching on Amazon: {1}"
-                                             " ".format(e.message, exc.message))
-        except Exception as ex:
-            raise ImportHandlerException("Error while accessing script '{0}':"
-                                         "{1}".format(self.src, ex.message))
+                self._process_local_file()
+            except LocalScriptNotFoundException as e:
+                try:
+                    self._process_amazon_file()
+                except Exception as exc:
+                    raise ImportHandlerException("{0}. Searching on Amazon: {1}"
+                                                 " ".format(e.message,
+                                                            exc.message))
+            except Exception as ex:
+                raise ImportHandlerException("Error while accessing script "
+                                             "'{0}': {1}".format(self.src,
+                                                                 ex.message))
+        elif self.text:
+            self.out_string = self.text
+
         return self.out_string
 
 
