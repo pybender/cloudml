@@ -12,8 +12,11 @@ from cloudml.importhandler.exceptions import ImportHandlerException, \
 from lxml import objectify
 import os
 from moto import mock_s3
-from mock import patch, Mock, MagicMock
-import boto
+from mock import patch
+from boto import connect_s3
+from boto.s3.key import Key
+from config import AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET,\
+    BUCKET_NAME
 
 
 class ScriptManagerTest(unittest.TestCase):
@@ -96,18 +99,8 @@ class ScriptTest(unittest.TestCase):
         """<script src="amazon_script1.py" />"""
     )
 
-    @mock_s3
     def setUp(self):
-        #create amazon file
-        from boto import connect_s3
-        from boto.s3.key import Key
-        from config import AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET,\
-            BUCKET_NAME
-        s3_conn = connect_s3(AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET)
-        self.b = s3_conn.create_bucket(BUCKET_NAME)
-        self.key = Key(self.b)
-        self.key.key = "amazon_script.py"
-        self.key.set_contents_from_string("3+5")
+        super(ScriptTest, self).setUp()
 
     def test_empty_values(self):
         script = Script(self.EMPTY_SRC)
@@ -147,17 +140,30 @@ class ScriptTest(unittest.TestCase):
 
     @mock_s3
     def test_incorrect_amazon_file(self):
+        s3_conn = connect_s3(AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET)
+        self.b = s3_conn.create_bucket(BUCKET_NAME)
+        self.key = Key(self.b)
+        self.key.key = "amazon_script.py"
+        self.key.set_contents_from_string("3+5")
+
         script = Script(self.AMAZON_INCORRECT)
         self.assertRaises(ImportHandlerException, script.get_script_str)
 
-    @patch('boto.s3.key.Key.get_contents_as_string')
-    def test_correct_amazon_file(self, get_contents_mock):
-        get_contents_mock.return_value = '3+5'
-        script = Script(self.AMAZON_CORRECT)
-        self.assertEqual(None, script.text)
-        self.assertEqual("amazon_script.py", script.src)
-        get_contents_mock.assert_called_once()
-        script.get_script_str()
-        self.assertEqual("3+5", script.get_script_str())
+    @mock_s3
+    def test_correct_amazon_file(self):
+        #create amazon file
+        s3_conn = connect_s3(AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET)
+        self.b = s3_conn.create_bucket(BUCKET_NAME)
+        self.key = Key(self.b)
+        self.key.key = "amazon_script.py"
+        self.key.set_contents_from_string("3+5")
+
+        with patch('boto.s3.key.Key.get_contents_as_string',
+                   return_value='3+5'):
+            script = Script(self.AMAZON_CORRECT)
+            self.assertEqual(None, script.text)
+            self.assertEqual("amazon_script.py", script.src)
+            script.get_script_str()
+            self.assertEqual("3+5", script.get_script_str())
 
 
