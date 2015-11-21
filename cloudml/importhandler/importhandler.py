@@ -24,7 +24,7 @@ from inputs import Input
 from entities import Entity, EntityProcessor
 from utils import iterchildren
 from exceptions import ImportHandlerException, ProcessException
-from scripts import ScriptManager
+from scripts import ScriptManager, Script
 from predict import Predict
 
 
@@ -73,6 +73,7 @@ class ExtractionPlan(object):
         self.datasources = {}
         self.load_datasources(self.data)
 
+        self.scripts = []
         self.script_manager = ScriptManager()
         self.load_scripts(self.data)
 
@@ -119,8 +120,9 @@ class ExtractionPlan(object):
         Loads and executes javascript from import handler configuration.
         """
         for script in config.xpath("script"):
-            if script.text:
-                self.script_manager.add_python(script.text)
+            s = Script(script)
+            self.scripts.append(s)
+            self.script_manager.add_python(s.get_script_str())
 
     # Schema Validation specific methods
 

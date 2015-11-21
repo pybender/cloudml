@@ -186,6 +186,9 @@ class ImportHandlerTest(unittest.TestCase):
                                     BASEDIR,
                                     'extractorxml',
                                     'train-import-handler.xml'))
+        self._plan_for_script = ExtractionPlan(
+            os.path.join(BASEDIR, 'extractorxml',
+                         'train-import-handler-script-file.xml'))
 
     @patch('cloudml.importhandler.datasources.DbDataSource._get_iter',
            return_value=db_iter_mock())
@@ -232,6 +235,18 @@ experienced person")
             mock_db.call_args_list[1][0][0],
             "SELECT title FROM applications where id==%s;" %
             ROW['application'])
+
+
+    @patch('cloudml.importhandler.datasources.DbDataSource._get_iter',
+           return_value=db_iter_mock())
+    def test_imports_script_src(self, mock_db):
+        #Check js functions calls work from <script src=""/>
+        self._extractor_script = ImportHandler(self._plan_for_script, PARAMS)
+        row = self._extractor_script.next()
+        self.assertTrue(mock_db.called)
+        self.assertEqual(row['test_script'], 99)
+        self.assertEqual(row['test_script_tag'], 99)
+
 
     @patch('cloudml.importhandler.datasources.DbDataSource._get_iter',
            return_value=db_iter_mock())

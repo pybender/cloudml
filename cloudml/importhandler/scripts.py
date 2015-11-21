@@ -11,10 +11,67 @@ from utils import ParametrizedTemplate
 # Context:
 from processors import composite_string, composite_python, \
     composite_readability, process_key_value
-from exceptions import ImportHandlerException
+from exceptions import ImportHandlerException, LocalScriptNotFoundException
 
 
-__all__ = ['ScriptManager']
+__all__ = ['ScriptManager', 'Script']
+
+
+class Script(object):
+    """
+    Manages script entity in XML Import Handler
+    """
+    def __init__(self, config):
+        self.text = config.text
+        self.src = config.attrib.get("src", None)
+        self.out_string = ''
+
+    def _process_amazon_file(self):
+        try:
+            from boto import connect_s3
+            from boto.s3.key import Key
+            from config import AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET,\
+                BUCKET_NAME
+            s3_conn = connect_s3(AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET)
+            b = s3_conn.get_bucket(BUCKET_NAME)
+            key = Key(b)
+            key.key = self.src
+            res = key.get_contents_as_string()
+            self.out_string = res or ''
+        except Exception as exc:
+            raise ImportHandlerException("Error accessing file '{0}' on Amazon"
+                                         ": {1}".format(self.src, exc.message))
+
+    def _process_local_file(self):
+        import os.path
+        if os.path.isfile(self.src):
+            with open(self.src, 'r') as fp:
+                fs = fp.read()
+                self.out_string = fs or ''
+                fp.close()
+        else:
+            raise LocalScriptNotFoundException("Local file '{0}' not "
+                                               "found".format(self.src))
+
+    def get_script_str(self):
+        if self.src:
+            try:
+                self._process_local_file()
+            except LocalScriptNotFoundException as e:
+                try:
+                    self._process_amazon_file()
+                except Exception as exc:
+                    raise ImportHandlerException("{0}. Searching on Amazon: {1}"
+                                                 " ".format(e.message,
+                                                            exc.message))
+            except Exception as ex:
+                raise ImportHandlerException("Error while accessing script "
+                                             "'{0}': {1}".format(self.src,
+                                                                 ex.message))
+        elif self.text:
+            self.out_string = self.text
+
+        return self.out_string
 
 
 class ScriptManager(object):
@@ -30,7 +87,9 @@ class ScriptManager(object):
         Adds python methods to the script manager.
         """
         try:
-            eval(compile(script, "<str>", "exec"), self.context, self.context)
+            if script:
+                eval(compile(script, "<str>", "exec"), self.context,
+                     self.context)
         except Exception,  exc:
             raise ImportHandlerException(
                 "Exception occurs while adding python script: {0}. {1}".format(
