@@ -142,9 +142,6 @@ class ScriptTest(unittest.TestCase):
     def test_incorrect_amazon_file(self):
         s3_conn = connect_s3(AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET)
         self.b = s3_conn.create_bucket(BUCKET_NAME)
-        self.key = Key(self.b)
-        self.key.key = "amazon_script.py"
-        self.key.set_contents_from_string("3+5")
 
         script = Script(self.AMAZON_INCORRECT)
         self.assertRaises(ImportHandlerException, script.get_script_str)
