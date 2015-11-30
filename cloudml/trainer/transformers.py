@@ -152,7 +152,7 @@ class Params:
     # {'name': "tokenizer", 'type': 'callable'},
     ngram_range_min = {'name': "ngram_range_min", 'type': 'integer'}
     ngram_range_max = {'name': "ngram_range_max", 'type': 'integer'}
-    # {'name': "stop_words", 'type': 'string_list_none'}, # TODO
+    stop_words =  {'name': "stop_words", 'type': 'string_list_none'} # TODO
     lowercase = {'name': "lowercase", 'type': 'boolean', 'default': True}
     token_pattern = {'name': "token_pattern", 'type': 'string'}
     max_df = {'name': "max_df", 'type': 'float_or_int'}
@@ -207,7 +207,7 @@ TRANSFORMERS = {
         'class': TfidfVectorizer,
         'parameters': Params.COUNT_PARAMS + [
             Params.norm, Params.use_idf, Params.smooth_idf,
-            Params.sublinear_tf],
+            Params.sublinear_tf, Params.stop_words],
         'default': '',
         'defaults': {}
     },

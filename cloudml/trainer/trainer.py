@@ -20,6 +20,7 @@ from collections import defaultdict
 from time import gmtime, strftime
 from operator import itemgetter
 from memory_profiler import memory_usage
+from sklearn.preprocessing import Imputer
 
 from feature_types import FEATURE_TYPE_DEFAULTS
 from transformers import TRANSFORMERS, SuppressTransformer
@@ -587,11 +588,16 @@ class Trainer(object):
             transformed_data = feature['transformer'].transform(data)
             feature['transformer'].num_features = transformed_data.shape[1]
             return transformed_data
-        elif feature.get('scaler', None) is not None:
-            return feature['scaler'].fit_transform(
-                self._to_column(data).toarray())
         else:
-            return self._to_column(data)
+            feature['imputer'] = Imputer(missing_values='NaN', strategy='median', axis=0)
+            data = feature['imputer'].fit_transform(self._to_column(data).toarray())
+            if data.shape[1] < 1:
+                raise EmptyDataException("All values of feature %s are null" % (feature['name'], )) 
+
+        if feature.get('scaler', None) is not None:
+            return feature['scaler'].fit_transform(data)
+        else:
+            return data
 
     def _test_prepare_feature(self, feature, data):
         """
@@ -616,10 +622,17 @@ class Trainer(object):
                 return None
             else:
                 return feature['transformer'].transform(data)
-        elif feature.get('scaler', None) is not None:
-            return feature['scaler'].transform(self._to_column(data).toarray())
         else:
-            return self._to_column(data)
+            data = self._to_column(data).toarray()
+            if feature['imputer'] is not None:
+                data = feature['imputer'].transform(data)
+                if data.shape[1] < 1:
+                    raise EmptyDataException("All values of feature %s are null" % (feature['name'], )) 
+
+        if feature.get('scaler', None) is not None:
+            return feature['scaler'].transform(data)
+        else:
+            return data
 
     def _to_column(self, x):
         return numpy.transpose(
@@ -690,7 +703,6 @@ class Trainer(object):
                                              % (feature_name, e))
             else:
                 result[feature_name] = item
-
         return result
 
     def _find_default(self, value, feature):

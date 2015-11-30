@@ -27,6 +27,8 @@ class PrimitiveFeatureTypeInstance(FeatureTypeInstanceBase):
 
     def transform(self, value):
         default = PROCESSOR_MAP[self.python_type]()
+        import numpy as np
+        default = np.nan
         params = self.active_params()
         if params is not None:
             default = params.get('default', default)
