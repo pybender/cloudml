@@ -624,7 +624,8 @@ class Trainer(object):
                 return feature['transformer'].transform(data)
         else:
             data = self._to_column(data).toarray()
-            if feature['imputer'] is not None:
+            if 'imputer' in feature and \
+                feature['imputer'] is not None:
                 data = feature['imputer'].transform(data)
                 if data.shape[1] < 1:
                     raise EmptyDataException("All values of feature %s are null" % (feature['name'], )) 
