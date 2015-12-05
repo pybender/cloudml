@@ -590,9 +590,12 @@ class Trainer(object):
             return transformed_data
         else:
             feature['imputer'] = Imputer(missing_values='NaN', strategy='median', axis=0)
+            count = len(data)
             data = feature['imputer'].fit_transform(self._to_column(data).toarray())
             if data.shape[1] < 1:
-                raise EmptyDataException("All values of feature %s are null" % (feature['name'], )) 
+                data = [feature['type'].default] * count
+                data = self._to_column(data).toarray()
+                logging.warning("All values of feature %s are null" % (feature['name'], )) 
 
         if feature.get('scaler', None) is not None:
             return feature['scaler'].fit_transform(data)
@@ -624,11 +627,22 @@ class Trainer(object):
                 return feature['transformer'].transform(data)
         else:
             data = self._to_column(data).toarray()
+            count = len(data)
             if 'imputer' in feature and \
                 feature['imputer'] is not None:
                 data = feature['imputer'].transform(data)
-                if data.shape[1] < 1:
-                    raise EmptyDataException("All values of feature %s are null" % (feature['name'], )) 
+            else:
+                feature['imputer'] = Imputer(missing_values='NaN', strategy='median', axis=0)
+                data = feature['imputer'].fit_transform(data)
+            if data.shape[1] < 1:
+                from feature_types.primitive_types import PROCESSOR_MAP
+                default = 0
+                if hasattr(feature['type'], 'python_type'):
+                    default = PROCESSOR_MAP[feature['type'].python_type]()
+                data = [default] * count
+                data = self._to_column(data).toarray()
+                logging.warning("All values of feature %s are null" % (feature['name'], ))
+
 
         if feature.get('scaler', None) is not None:
             return feature['scaler'].transform(data)
@@ -682,6 +696,8 @@ class Trainer(object):
         for feature_name, feature in self._feature_model.features.iteritems():
             ft = feature.get('type', None)
             item = row_data.get(feature_name, None)
+            if (item is None or item == '') and self._feature_model.target_variable == feature_name:
+                raise ItemParseException('Target feature is null')
             if feature.get('required', True):
                 item = self._find_default(item, feature)
             input_format = feature.get('input-format', 'plain')

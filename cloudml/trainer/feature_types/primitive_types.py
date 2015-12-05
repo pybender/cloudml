@@ -24,9 +24,9 @@ class PrimitiveFeatureTypeInstance(FeatureTypeInstanceBase):
         python_type = kwargs.pop('python_type')
         super(PrimitiveFeatureTypeInstance, self).__init__(*args, **kwargs)
         self.python_type = python_type
+        self.default = PROCESSOR_MAP[self.python_type]()
 
     def transform(self, value):
-        default = PROCESSOR_MAP[self.python_type]()
         import numpy as np
         default = np.nan
         params = self.active_params()

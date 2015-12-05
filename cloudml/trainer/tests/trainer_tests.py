@@ -86,7 +86,7 @@ class TrainerSegmentTestCase(BaseTrainerTestCase):
     def test_get_nonzero_vectorized_data(self):
         self._train()
         vect_data = self._trainer.get_nonzero_vectorized_data()
-        self.assertEquals(vect_data[''][u'contractor.dev_is_looking'], 1.0)
+        self.assertEquals(vect_data[''][u'contractor.dev_adj_score_recent'], 1.0)
 
     def test_get_vectorized_data(self):
         self._train()
@@ -163,9 +163,9 @@ class TrainerSegmentTestCase(BaseTrainerTestCase):
             #    weights[segment][0])
             # self.assertListEqual(self._trainer._feature_weights[segment][0],
             #    weights[segment][0])
-        expected = {'feature_weight': 0.17299634058481614,
+        expected = {'feature_weight': 0.19563459457810858,
                     'name': u'contractor->skills->microsoft-word',
-                    'weight': 0.17299634058481614}
+                    'weight': 0.19563459457810858}
         self.assertFloatEqual(
             expected['feature_weight'],
             self._trainer.get_weights('USA')[1]['positive'][0]['feature_weight']
@@ -275,6 +275,7 @@ class LogisticRegressionTrainerTestCase(BaseTrainerTestCase):
             self._load_data(fmt)
             self.assertEquals(
                 type(self._trainer.classifier), LogisticRegression)
+            print self._trainer.classifier.classes_.tolist()
             self.assertEquals(
                 self._trainer._classifier[DEFAULT_SEGMENT].coef_.shape,
                 (1, 19))
@@ -487,7 +488,7 @@ class LogisticRegressionTrainerTestCase(BaseTrainerTestCase):
             transform = self._trainer.transform(self._data)
             self.assertEqual(1, len(transform))
             self.assertEqual(
-                transform[DEFAULT_SEGMENT]['Y'], [1, 0, 0, 1, 0, 1])
+                transform[DEFAULT_SEGMENT]['Y'], [1, 0, 1, 0, 1])
             self.assertTrue('X' in transform[DEFAULT_SEGMENT])
             self.assertTrue(transform[DEFAULT_SEGMENT]['X'].shape[0], 6)
 
@@ -673,9 +674,9 @@ class LinearSVRTestCase(BaseTrainerTestCase):
         weights = vis['weights']
         self.assertTrue(weights)
         w = weights['default']['positive'][0]
-        self.assertEquals(w['name'], 'contractor->skills->article-writing1')
-        self.assertFloatEqual(w['feature_weight'], 0.028949994360129603)
-        self.assertFloatEqual(w['weight'], 0.17369996616077762)
+        self.assertEquals(w['name'], u'contractor->skills->microsoft-word')
+        self.assertFloatEqual(w['feature_weight'], 0.019903856547956178)
+        self.assertFloatEqual(w['weight'], 0.049759641369890445)
 
     def test_test(self):
         from cloudml.trainer.metrics import RegressionModelMetrics
@@ -684,10 +685,10 @@ class LinearSVRTestCase(BaseTrainerTestCase):
         self.assertIsInstance(metrics, RegressionModelMetrics)
 
         self.assertFloatEqual(
-            metrics.explained_variance_score, 0.95981716030733577)
-        self.assertFloatEqual(metrics.mean_absolute_error, 0.10022799623585577)
-        self.assertFloatEqual(metrics.mean_squared_error,  0.010045709923166066)
-        self.assertFloatEqual(metrics.r2_score, 0.95981716030733577)
+            metrics.explained_variance_score, 0.95987382954092304)
+        self.assertFloatEqual(metrics.mean_absolute_error, 0.10015075257744899)
+        self.assertFloatEqual(metrics.mean_squared_error,  0.010030280715664325)
+        self.assertFloatEqual(metrics.r2_score, 0.95820716368473202)
 
 
 class PolySVRTestCase(BaseTrainerTestCase):
@@ -712,10 +713,10 @@ class PolySVRTestCase(BaseTrainerTestCase):
         self.assertIsInstance(metrics, RegressionModelMetrics)
 
         self.assertFloatEqual(
-            metrics.explained_variance_score, 0.54846098419678913)
-        self.assertFloatEqual(metrics.mean_absolute_error, 0.22709828516285002)
-        self.assertFloatEqual(metrics.mean_squared_error,  0.12740248170650412)
-        self.assertFloatEqual(metrics.r2_score, 0.49039007317398353)
+            metrics.explained_variance_score, 0.44692958439628583)
+        self.assertFloatEqual(metrics.mean_absolute_error, 0.24808252972759073)
+        self.assertFloatEqual(metrics.mean_squared_error,  0.14911762146334478)
+        self.assertFloatEqual(metrics.r2_score, 0.37867657723606352)
 
 
 class DecisionTreeClfTestCase(BaseTrainerTestCase):
@@ -736,9 +737,9 @@ class DecisionTreeClfTestCase(BaseTrainerTestCase):
         weights = vis['weights']
         self.assertTrue(weights)
         w = weights[1]['positive'][0]
-        self.assertEquals(w['name'], 'contractor->skills->article-writing')
-        self.assertFloatEqual(w['feature_weight'], 0.16666666666666666)
-        self.assertFloatEqual(w['weight'], 0.5)
+        self.assertEquals(w['name'], 'contractor->dev_title->engineer')
+        self.assertFloatEqual(w['feature_weight'], 0.50609621254893444)
+        self.assertFloatEqual(w['weight'], 1.0)
 
     def test_test(self):
         from cloudml.trainer.metrics import ClassificationModelMetrics
