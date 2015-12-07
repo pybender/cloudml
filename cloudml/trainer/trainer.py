@@ -296,7 +296,7 @@ class Trainer(object):
         ordered_true_labels = []
         self.predict_data = {}
 
-        self._prepare_data(iterator, callback, ignore_error)
+        self._prepare_data(iterator, callback, ignore_error, is_predict=True)
         logging.info('Processed %d lines, ignored %s lines'
                      % (self._count, self._ignored))
         if self._ignored == self._count:
@@ -465,7 +465,7 @@ class Trainer(object):
     # utility methods
 
     def _prepare_data(self, iterator, callback=None,
-                      ignore_error=True, save_raw=False):
+                      ignore_error=True, save_raw=False, is_predict=False):
         """
         Iterates over input data and stores them by column, ignoring lines
         with required properties missing.
@@ -484,7 +484,7 @@ class Trainer(object):
         for row in iterator:
             self._count += 1
             try:
-                data = self._apply_feature_types(row)
+                data = self._apply_feature_types(row, is_predict)
                 if self.with_segmentation:
                     segment = self._get_segment_name(data)
                 else:
@@ -684,7 +684,7 @@ class Trainer(object):
                 empty_labels[segment].append(label)
         return empty_labels
 
-    def _apply_feature_types(self, row_data):
+    def _apply_feature_types(self, row_data, is_predict=False):
         """
         Apply the transformation dictated by feature type instance (if any).
 
@@ -696,7 +696,9 @@ class Trainer(object):
         for feature_name, feature in self._feature_model.features.iteritems():
             ft = feature.get('type', None)
             item = row_data.get(feature_name, None)
-            if (item is None or item == '') and self._feature_model.target_variable == feature_name:
+            if (item is None or item == '') and \
+                self._feature_model.target_variable == feature_name and \
+                not is_predict:
                 raise ItemParseException('Target feature is null')
             if feature.get('required', True):
                 item = self._find_default(item, feature)
