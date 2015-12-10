@@ -304,7 +304,7 @@ class Trainer(object):
             return {'error': 'all records was ignored'}
         else:
             for segment in self._vect_data:
-                if segment in (None, numpy.nan):
+                if segment in (None, numpy.nan, 'nan'):
                     logging.warning("Group by value is Null,"
                                     " records will be ignored")
                     continue
