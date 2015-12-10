@@ -304,6 +304,10 @@ class Trainer(object):
             return {'error': 'all records was ignored'}
         else:
             for segment in self._vect_data:
+                if segment in (None, numpy.nan):
+                    logging.warning("Group by value is Null,"
+                                    " records will be ignored")
+                    continue
                 vectorized_data = []
                 # Get X and y
                 logging.info('Extracting features...')
@@ -589,13 +593,16 @@ class Trainer(object):
             feature['transformer'].num_features = transformed_data.shape[1]
             return transformed_data
         else:
-            feature['imputer'] = Imputer(missing_values='NaN', strategy='median', axis=0)
+            feature['imputer'] = Imputer(missing_values='NaN',
+                                         strategy='median', axis=0)
             count = len(data)
-            data = feature['imputer'].fit_transform(self._to_column(data).toarray())
+            data = feature['imputer'].fit_transform(
+                self._to_column(data).toarray())
             if data.shape[1] < 1:
                 data = [feature['type'].default] * count
                 data = self._to_column(data).toarray()
-                logging.warning("All values of feature %s are null" % (feature['name'], )) 
+                logging.warning("All values of feature %s are null"
+                                % (feature['name']))
 
         if feature.get('scaler', None) is not None:
             return feature['scaler'].fit_transform(data)
