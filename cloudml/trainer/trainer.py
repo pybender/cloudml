@@ -304,10 +304,6 @@ class Trainer(object):
             return {'error': 'all records was ignored'}
         else:
             for segment in self._vect_data:
-                if segment in (None, numpy.nan, 'nan'):
-                    logging.warning("Group by value is Null,"
-                                    " records will be ignored")
-                    continue
                 vectorized_data = []
                 # Get X and y
                 logging.info('Extracting features...')
@@ -491,6 +487,11 @@ class Trainer(object):
                 data = self._apply_feature_types(row, is_predict)
                 if self.with_segmentation:
                     segment = self._get_segment_name(data)
+
+                    if segment in (None, numpy.nan, 'nan'):
+                        logging.warning("Group by value is Null,"
+                                    " records will be ignored")
+                        raise ItemParseException("Group by value is Null")
                 else:
                     segment = DEFAULT_SEGMENT
 
