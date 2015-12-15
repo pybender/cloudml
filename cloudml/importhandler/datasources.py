@@ -612,6 +612,8 @@ class PigDataSource(BaseDataSource):
             slave_instance_type=self.slave_instance_type,
             # api_params={'Instances.Ec2SubnetId':'subnet-3f5bc256'},
             action_on_failure='CONTINUE',
+            job_flow_role='EMR_DefaultRole',
+            service_role='EMR_DefaultRole',
             steps=[pig_step, ])
         logging.info('New JobFlow id is %s' % self.jobid)
         return 1
