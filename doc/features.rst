@@ -75,7 +75,7 @@ have the following keys and values:
 	A map of parameters that might be required by the type.
 
 
-Sample section defition:
+Sample section definition:
 
 .. code-block:: json
 
@@ -397,7 +397,7 @@ Underlying implementation is `scikit-learn's CountVectorizer <http://scikit-lear
 
 .. _tfidf_transformer:
 
-TF-IDT
+TF-IDF
 ~~~~~~~~~~
 
 Transforms text documents to TF-IDF features.
