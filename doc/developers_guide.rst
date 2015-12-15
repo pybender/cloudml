@@ -148,7 +148,7 @@ Bootstrap using vagrant
 
 Before using CloudML, kindly `install the latest version of Vagrant <http://docs.vagrantup.com/v2/installation/>`_. Since `VirtualBox <http://www.virtualbox.org/>`_ will be used as the provider for the obtaining the start guide, kindly install the same.
 
-Clone cloudml repo:
+Clone CloudML repo:
 
 .. code-block:: console
 
