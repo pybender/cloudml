@@ -141,7 +141,7 @@ The newton-cg and lbfgs solvers support only l2 penalties.'},
             Params.max_features, Params.max_depth,
             Params.min_samples_split, Params.min_samples_leaf,
             Params.max_leaf_nodes, Params.random_state,
-            Params.min_density, Params.compute_importances,
+            Params.min_density,
             Params.class_weight
         ]},
     # GRADIENT_BOOSTING_CLASSIFIER: {
