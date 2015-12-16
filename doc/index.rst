@@ -1,4 +1,4 @@
-.. Cloudml documentation master file, created by
+.. CloudML documentation master file, created by
 
 Welcome to CloudML's Documentation!
 ===================================

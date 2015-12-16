@@ -3,7 +3,7 @@ Developer's Guide
 =================
 
 ------------------
-Bootsrap on Ubuntu
+Bootstrap on Ubuntu
 ------------------
 
 Install system requirements:
@@ -12,7 +12,7 @@ Install system requirements:
 
 	$ sudo apt-get install -y build-essential git python-pip python-dev libxml2-dev libxslt1-dev liblapack-dev gfortran libpq-dev libevent-dev python-virtualenv
 
-Clone ClowdML repo:
+Clone CloudML repo:
 
 .. code-block:: console
 
@@ -56,10 +56,10 @@ Create local config:
 
 
 ------------------
-Bootsrap on MacOS
+Bootstrap on MacOS
 ------------------
 
-Clone cloduml repo:
+Clone CloudML repo:
 
 .. code-block:: console
 
@@ -118,7 +118,7 @@ Install nltk with easy install:
 
 .. code-block:: console
 
-	$sudo easy_install nltk==3.0.3
+	$ sudo easy_install nltk==3.0.3
 
 Install jsonpath:
 
@@ -148,7 +148,7 @@ Bootstrap using vagrant
 
 Before using CloudML, kindly `install the latest version of Vagrant <http://docs.vagrantup.com/v2/installation/>`_. Since `VirtualBox <http://www.virtualbox.org/>`_ will be used as the provider for the obtaining the start guide, kindly install the same.
 
-Clone cloduml repo:
+Clone CloudML repo:
 
 .. code-block:: console
 
