@@ -205,7 +205,7 @@ class SVRWeightsCalculator(WeightsCalculator):
 
         self.fill_weights(clf_weights, true_data, segment, label=self.LABEL)
         self.determine_feature_names(features, segment, label=self.LABEL)
-        #self._calculated_segments.append(segment)
+        # self._calculated_segments.append(segment)
 
     def fill_weights(self, weights, true_data, segment, label):
         true_data.data = numpy.absolute(true_data.data)

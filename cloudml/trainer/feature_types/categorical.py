@@ -51,6 +51,7 @@ class CategoricalFeatureType(FeatureTypeBase):
                              self.default_params,
                              preprocessor=preprocessor)
 
+
 def tokenizer_func(x, split_pattern):
     return re.split(split_pattern, x)
 

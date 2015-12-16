@@ -28,9 +28,9 @@ class PigXMLPlanTest(unittest.TestCase):
     PIG_DS = 'cloudml.importhandler.datasources.PigDataSource'
 
     def setUp(self):
-        self._plan = ExtractionPlan(os.path.join(BASEDIR,
-                                    'extractorxml',
-                                    'pig-train-import-handler.xml'))
+        self._plan = ExtractionPlan(os.path.join(
+            BASEDIR, 'extractorxml',
+            'pig-train-import-handler.xml'))
 
     @mock_s3
     @mock_emr
@@ -236,17 +236,15 @@ experienced person")
             "SELECT title FROM applications where id==%s;" %
             ROW['application'])
 
-
     @patch('cloudml.importhandler.datasources.DbDataSource._get_iter',
            return_value=db_iter_mock())
     def test_imports_script_src(self, mock_db):
-        #Check js functions calls work from <script src=""/>
+        # Checking js functions calls work from <script src=""/>
         self._extractor_script = ImportHandler(self._plan_for_script, PARAMS)
         row = self._extractor_script.next()
         self.assertTrue(mock_db.called)
         self.assertEqual(row['test_script'], 99)
         self.assertEqual(row['test_script_tag'], 99)
-
 
     @patch('cloudml.importhandler.datasources.DbDataSource._get_iter',
            return_value=db_iter_mock())

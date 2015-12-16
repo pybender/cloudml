@@ -4,7 +4,8 @@
 
 import unittest
 
-from cloudml.trainer.transformers import get_transformer, ScalerDecorator, Ntile
+from cloudml.trainer.transformers import get_transformer, ScalerDecorator, \
+    Ntile
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 

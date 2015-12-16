@@ -6,7 +6,8 @@ Unittests for python scripts manager class.
 
 import unittest
 
-from cloudml.importhandler.scripts import ScriptManager, prepare_context, Script
+from cloudml.importhandler.scripts import ScriptManager, prepare_context, \
+    Script
 from cloudml.importhandler.exceptions import ImportHandlerException, \
     LocalScriptNotFoundException
 from lxml import objectify
@@ -148,7 +149,7 @@ class ScriptTest(unittest.TestCase):
 
     @mock_s3
     def test_correct_amazon_file(self):
-        #create amazon file
+        # Creating the amazon file
         s3_conn = connect_s3(AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET)
         self.b = s3_conn.create_bucket(BUCKET_NAME)
         self.key = Key(self.b)
@@ -162,5 +163,3 @@ class ScriptTest(unittest.TestCase):
             self.assertEqual("amazon_script.py", script.src)
             script.get_script_str()
             self.assertEqual("3+5", script.get_script_str())
-
-

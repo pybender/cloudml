@@ -61,9 +61,9 @@ class Script(object):
                 try:
                     self._process_amazon_file()
                 except Exception as exc:
-                    raise ImportHandlerException("{0}. Searching on Amazon: {1}"
-                                                 " ".format(e.message,
-                                                            exc.message))
+                    raise ImportHandlerException(
+                        "{0}. Searching on Amazon: {1} ".format(
+                            e.message, exc.message))
             except Exception as ex:
                 raise ImportHandlerException("Error while accessing script "
                                              "'{0}': {1}".format(self.src,

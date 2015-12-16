@@ -489,8 +489,9 @@ class Trainer(object):
                     segment = self._get_segment_name(data)
 
                     if segment in (None, numpy.nan, 'nan'):
-                        logging.warning("Group by value is Null,"
-                                    " records will be ignored")
+                        logging.warning(
+                            "Group by value is Null,"
+                            " records will be ignored")
                         raise ItemParseException("Group by value is Null")
                 else:
                     segment = DEFAULT_SEGMENT
@@ -637,10 +638,12 @@ class Trainer(object):
             data = self._to_column(data).toarray()
             count = len(data)
             if 'imputer' in feature and \
-                feature['imputer'] is not None:
+                    feature['imputer'] is not None:
                 data = feature['imputer'].transform(data)
             else:
-                feature['imputer'] = Imputer(missing_values='NaN', strategy='median', axis=0)
+                feature['imputer'] = Imputer(
+                    missing_values='NaN',
+                    strategy='median', axis=0)
                 data = feature['imputer'].fit_transform(data)
             if data.shape[1] < 1:
                 from feature_types.primitive_types import PROCESSOR_MAP
@@ -649,8 +652,8 @@ class Trainer(object):
                     default = PROCESSOR_MAP[feature['type'].python_type]()
                 data = [default] * count
                 data = self._to_column(data).toarray()
-                logging.warning("All values of feature %s are null" % (feature['name'], ))
-
+                logging.warning(
+                    "All values of feature %s are null" % feature['name'])
 
         if feature.get('scaler', None) is not None:
             return feature['scaler'].transform(data)
@@ -706,7 +709,7 @@ class Trainer(object):
             item = row_data.get(feature_name, None)
             if (item is None or item == '') and \
                 self._feature_model.target_variable == feature_name and \
-                not is_predict:
+                    not is_predict:
                 raise ItemParseException('Target feature is null')
             if feature.get('required', True):
                 item = self._find_default(item, feature)
@@ -882,7 +885,8 @@ def _adjust_classifier_class(feature, str_value):
 
     Returns the feature value at the data point with correct data type
     """
-    from cloudml.trainer.feature_types.ordinal import OrdinalFeatureTypeInstance
+    from cloudml.trainer.feature_types.ordinal import \
+        OrdinalFeatureTypeInstance
     assert isinstance(str_value, basestring), \
         'str_value should be string it is of type %s' % (type(str_value))
 

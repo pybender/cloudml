@@ -85,7 +85,7 @@ Run import data and store dataset to abalano.json file:
 	                            - INFO - Ignored 0 lines
 
 
-File :download:`abalone.json <_static/abalone.json>` contain json for each row. We should get folowing results::
+File :download:`abalone.json <_static/abalone.json>` contain json for each row. We should get following results::
 
 	{"shucked_weight": 0.2245, "diameter": 0.365, "length": 0.455, "square": 0.043225, "whole_weight": 0.514, "sex": "M", "rings": 15, "height": 0.095}
 	{"shucked_weight": 0.0995, "diameter": 0.265, "length": 0.35, "square": 0.0315, "whole_weight": 0.2255, "sex": "M", "rings": 7, "height": 0.09}
@@ -98,7 +98,7 @@ Creating the model
 Describing features
 -------------------
 
-In order to create a new model, the model features json file must be described. Information on format can be found within the :ref:`Feature JSON file format<features>` chapter contained in this documentaion.
+In order to create a new model, the model features json file must be described. Information on format can be found within the :ref:`Feature JSON file format<features>` chapter contained in this documentation.
 
 First, the classifier must be defined:
     .. literalinclude:: _static/features.json

@@ -31,7 +31,7 @@ Classifier
 The first section of features.json defines the configuration of the classifier to use. The available options are as follows:
 
 * `type` : string
-	Defines the Scikit-learn classifier class, which would be used to create the model.
+	Defines the `Scikit-learn <http://scikit-learn.org/>`_ classifier class, which would be used to create the model.
 * `params` : dict
 	Classifier specific parameters.
 
@@ -178,7 +178,7 @@ Feature types defined in CloudML core
 * `categorical_label`
 	A categorical label feature is a feature that can take on one of a limited, and usually fixed, number of possible values.
 * `categorical`
-	Use CountVectorizer preprocessor which implements tokenization and occurrence counting.
+	Use `scikit-learn's CountVectorizer <http://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html>`_ preprocessor which implements tokenization and occurrence counting.
 * `text`
 	Converts value to a string.
 
