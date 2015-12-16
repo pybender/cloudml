@@ -42,13 +42,15 @@
       "type": "float",
       "input-format": "dict"
     },
-    {"name": "contractor.skills",
-     "type": "categorical",
-     "params": {"split_pattern": "\\s*,\\s*"}
+    {
+      "name": "contractor.skills",
+      "type": "categorical",
+      "params": {"split_pattern": "\\s*,\\s*"}
     },
-    {"name":"contractor.dev_scores",
-    "type":"float",
-    "input-format": "dict"
+    {
+      "name":"contractor.dev_scores",
+      "type":"float",
+      "input-format": "dict"
     }
   ]
 }

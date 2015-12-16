@@ -9,11 +9,11 @@
       "is-target-variable": true,
       "type": "map",
       "params": {
-          "mappings": {
-              "class2": 2,
-              "class3": 3,
-              "class1": 1
-          }
+        "mappings": {
+          "class2": 2,
+          "class3": 3,
+          "class1": 1
+        }
       },
       "is-required": true,
       "name": "hire_outcome"
@@ -49,13 +49,15 @@
       "type": "float",
       "input-format": "dict"
     },
-    {"name": "contractor.skills",
-     "type": "categorical",
-     "params": {"split_pattern": "\\s*,\\s*"}
+    {
+      "name": "contractor.skills",
+      "type": "categorical",
+      "params": {"split_pattern": "\\s*,\\s*"}
     },
-    {"name":"contractor.dev_scores",
-    "type":"float",
-    "input-format": "dict"
+    {
+      "name":"contractor.dev_scores",
+      "type":"float",
+      "input-format": "dict"
     }
   ]
 }

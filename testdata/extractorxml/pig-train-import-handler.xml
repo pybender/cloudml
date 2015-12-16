@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<plan xmlns:buildings="http://www.example.org/NewXMLSchema">
+<plan>
 
     <!--Inputs required for this import handler to run -->
     <inputs>
@@ -14,19 +14,6 @@
     </script>
 
     <datasources>
-        <!--
-            Define data sources to be used. Data sources
-
-            
-            amazon_access_token="AKIAJ3WMYTNKB77YZ5KQ" amazon_token_secret="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"
-              j-15YTSYHJ1PJSO
-              
-            cloudml
-            amazon_access_token="AKIAJYNNIPFWF2ABW42Q"
-            amazon_token_secret="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"
-
-            amazon_access_token="AKIAJUMIEMJTS4RHPR2A" amazon_token_secret="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"
-        -->
         <db name="sqoop_db_datasource" 
             host="localhost"
             dbname="odw"

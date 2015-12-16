@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<plan xmlns:buildings="http://www.example.org/NewXMLSchema">
+<plan>
 
     <!--Inputs required for this import handler to run -->
     <inputs>

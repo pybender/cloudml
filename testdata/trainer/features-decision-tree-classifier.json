@@ -37,7 +37,8 @@
         "params": {
           "ngram_range_min":1,
           "ngram_range_max":1,
-          "min_df":3}
+          "min_df":3
+        }
       }
     },
     {
@@ -45,13 +46,15 @@
       "type": "float",
       "input-format": "dict"
     },
-    {"name": "contractor.skills",
-     "type": "categorical",
-     "params": {"split_pattern": "\\s*,\\s*"}
+    {
+      "name": "contractor.skills",
+      "type": "categorical",
+      "params": {"split_pattern": "\\s*,\\s*"}
     },
-    {"name":"contractor.dev_scores",
-    "type":"float",
-    "input-format": "dict"
+    {
+      "name":"contractor.dev_scores",
+      "type":"float",
+      "input-format": "dict"
     }
   ]
 }

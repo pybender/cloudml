@@ -11,8 +11,8 @@
       "is-target-variable":true
     }],
     "feature-types":[
-    {
-      "name":"str_to_timezone"
-    }
-  ]
+      {
+        "name":"str_to_timezone"
+      }
+    ]
 }
