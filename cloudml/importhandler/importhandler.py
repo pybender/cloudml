@@ -150,14 +150,18 @@ class ExtractionPlan(object):
             'xs:complexType/xs:sequence/xs:element', namespaces=namespaces
         )
         for d in datasources:
-            params = conf[d.attrib['name']]
+            params = []
             for a in d.xpath('xs:complexType/xs:attribute[@name != "name"]',
                              namespaces=namespaces):
                 params.append({
                     'name': a.attrib['name'],
-                    'type': str(a.attrib.get('type')).replace('xs:', ''),
+                    'type': str(a.attrib.get('type') or 'string')
+                    .replace('xs:', ''),
                     'required': a.attrib.get('use') == 'required'
                 })
+            conf[d.attrib['name']] = {'type': d.attrib['name'],
+                                      'parameters': params}
+
         return dict(conf)
 
     def _validate_schema(self):

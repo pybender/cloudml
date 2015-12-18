@@ -27,11 +27,11 @@ class Script(object):
         self.out_string = ''
 
     def _process_amazon_file(self):
+        from boto import connect_s3
+        from boto.s3.key import Key
+        from config import AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET,\
+            BUCKET_NAME
         try:
-            from boto import connect_s3
-            from boto.s3.key import Key
-            from config import AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET,\
-                BUCKET_NAME
             s3_conn = connect_s3(AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET)
             b = s3_conn.get_bucket(BUCKET_NAME)
             key = Key(b)
