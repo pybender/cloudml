@@ -49,6 +49,7 @@ class ChainedException(Exception):
         i = 0
         while hasattr(current, 'chain') and current.chain is not None \
                 and i < 20:
+            trace += '\n Caused by: {}\n'.format(current.chain.message)
             if current.chain._traceback:
                 trace += current.chain._traceback
             current = current.chain
