@@ -40,7 +40,8 @@ class Script(object):
             self.out_string = res or ''
         except Exception as exc:
             raise ImportHandlerException("Error accessing file '{0}' on Amazon"
-                                         ": {1}".format(self.src, exc.message))
+                                         ": {1}".format(self.src, exc.message),
+                                         exc)
 
     def _process_local_file(self):
         import os.path
@@ -63,11 +64,12 @@ class Script(object):
                 except Exception as exc:
                     raise ImportHandlerException(
                         "{0}. Searching on Amazon: {1} ".format(
-                            e.message, exc.message))
+                            e.message, exc.message), exc)
             except Exception as ex:
                 raise ImportHandlerException("Error while accessing script "
                                              "'{0}': {1}".format(self.src,
-                                                                 ex.message))
+                                                                 ex.message),
+                                             ex)
         elif self.text:
             self.out_string = self.text
 
@@ -93,7 +95,7 @@ class ScriptManager(object):
         except Exception,  exc:
             raise ImportHandlerException(
                 "Exception occurs while adding python script: {0}. {1}".format(
-                    script[:250], exc))
+                    script[:250], exc), exc)
 
     def execute_function(self, script, value,
                          row_data=None, local_vars={}):
@@ -124,7 +126,7 @@ class ScriptManager(object):
         except Exception,  exc:
             raise ImportHandlerException(
                 "Exception occurs while executing script: {0}. {1}".format(
-                    text[:100], exc))
+                    text[:100], exc), exc)
 
     def _exec(self, text, row_data=None):
         row_data = row_data or {}
@@ -138,7 +140,7 @@ class ScriptManager(object):
         except Exception,  exc:
             raise ImportHandlerException(
                 "Exception occurs while executing script: {0}. {1}".format(
-                    text[:100], exc))
+                    text[:100], exc), exc)
 
 
 def prepare_context(data):

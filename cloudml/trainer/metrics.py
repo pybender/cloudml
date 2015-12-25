@@ -13,7 +13,7 @@ from scipy.sparse import hstack, csc_matrix
 import sklearn.metrics as sk_metrics
 
 from classifier_settings import TYPE_CLASSIFICATION, TYPE_REGRESSION
-
+from exceptions import TrainerValueError
 
 __all__ = ['Metrics']
 
@@ -38,7 +38,7 @@ class BaseMetrics(object):
         self._empty_labels = empty_labels
         logging.info('Classes set: %s' % classes)
         if self._classes_set and not classes == self._classes_set:
-            raise ValueError(
+            raise TrainerValueError(
                 'Classes was set before to %s, now it is being set with %s, '
                 'which should be equal' % (self._classes_set, classes))
         self._classes_set = classes
@@ -53,7 +53,7 @@ class BaseMetrics(object):
         else:
             try:
                 true_data = hstack(vectorized_data)
-            except ValueError:
+            except (ValueError, TrainerValueError):
                 true_data = numpy.hstack(vectorized_data)
         try:
             self._true_data[segment] = true_data.tocsr()
@@ -298,7 +298,7 @@ class RegressionModelMetrics(BaseMetrics):
         else:
             try:
                 true_data = hstack(vectorized_data)
-            except ValueError:
+            except (ValueError, TrainerValueError):
                 true_data = numpy.hstack(vectorized_data)
         try:
             self._true_data[segment] = true_data.tocsr()

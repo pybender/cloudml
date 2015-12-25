@@ -3,6 +3,7 @@ import logging
 import os
 
 import coloredlogs
+from cloudml import ChainedException
 
 
 def process_bool(val=None):
@@ -28,12 +29,11 @@ def init_logging(debug):
     logger.setLevel(logging_level)
     coloredlogs.install(level=logging.DEBUG)
 
-
 def determine_data_format(filepath):
     try:
         format = os.path.splitext(filepath)[1][1:]
-    except Exception:
-        raise
+    except Exception as e:
+        raise ChainedException(e.message, e)
         logging.warning("Could not determine input data file format."
                         "'json' would be used.")
         return 'json'

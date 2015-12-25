@@ -31,16 +31,20 @@ class FeatureModel(object):
     """
     def __init__(self, config, is_file=True):
         try:
+            __traceback_info__ = "Load model features from JSON config"
             if is_file:
+                __traceback_info__ = 'Load model features from file "%s"' \
+                                     % config
                 with open(config, 'r') as fp:
                     data = json.load(fp)
             else:
                 data = json.loads(config)
         except ValueError as e:
-            raise SchemaException(message='%s %s ' % (config, e))
+            raise SchemaException(message='%s %s ' % (config, e), chain=e)
 
         if 'schema-name' not in data:
-            raise SchemaException(message="schema-name is missing")
+            raise SchemaException(message="schema-name is missing in model "
+                                          "features config")
 
         self.schema_name = data['schema-name']
         self.classifier = {}

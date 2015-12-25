@@ -29,9 +29,9 @@ def process_key_value(key_path, value_path, value):  # pragma: no cover
     try:
         values = map(float, jsonpath(value, value_path))
     except ValueError as e:
-        raise ProcessException(e)
+        raise ProcessException(e.message, e)
     except TypeError as e:
-        raise ProcessException(e)
+        raise ProcessException(e.message, e)
     if keys is not False and values is not False:
         result = dict(zip(keys, values))
     else:
@@ -48,17 +48,17 @@ def composite_python(expression_value, value, row_data):  # pragma: no cover
     res = composite_string(expression_value, value, row_data)
     try:
         return eval(res)
-    except Exception:
+    except Exception as e:
         logging.exception(
             'Expression template %s, expression %s' % (expression_value, res))
-        raise
+        raise ProcessException(e.message, e)
 
 
 def composite_readability(expression_value, value,
                           r_type, row_data):  # pragma: no cover
     res = composite_string(expression_value, value, row_data)
     if r_type not in READABILITY_METHODS:
-        raise Exception('Readability_type "%s" is not defined' % r_type)
+        raise ProcessException('Readability_type "%s" is not defined' % r_type)
     r_func = READABILITY_METHODS[r_type]
     readability = Readability(res)
     return getattr(readability, r_func)()

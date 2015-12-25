@@ -59,7 +59,7 @@ class ExtractionPlan(object):
         except etree.XMLSyntaxError as e:
             raise ImportHandlerException(
                 "Valid XML is expected for import handler. "
-                "Parse error: {0}".format(e)
+                "Parse error: {0}".format(e), e
             )
 
         if not self.is_valid():

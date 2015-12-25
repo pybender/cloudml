@@ -56,7 +56,7 @@ class BaseDataSource(object):
             for some datasources it's a name of the entity where results
             would be stored.
         """
-        raise Exception('Not implemented')
+        raise ImportHandlerException('Not implemented')
 
     def get_params(self):
         return dict([
@@ -206,12 +206,12 @@ class HttpDataSource(BaseDataSource):
             resp = requests.request(self.method, url, stream=True)
         except ConnectionError as exc:
             raise ImportHandlerException(
-                'Cannot reach url: {}'.format(str(exc)))
+                'Cannot reach url: {}'.format(str(exc)), exc)
         try:
             result = resp.json()
         except Exception as exc:
             raise ImportHandlerException(
-                'Cannot parse json: {}'.format(str(exc)))
+                'Cannot parse json: {}'.format(str(exc)), exc)
         if isinstance(result, dict):
             return iter([resp.json()])
         return iter(resp.json())
@@ -251,8 +251,9 @@ class CsvDataSource(BaseDataSource):
         try:
             self.offset = int(attrs.get('offset', 0))
             self.count = int(attrs.get('count', sys.maxint))
-        except (ValueError, TypeError):
-            raise ImportHandlerException('offset and count should be integers')
+        except (ValueError, TypeError) as e:
+            raise ImportHandlerException('offset and count should be integers',
+                                         e)
         logging.info('In csv datasource {0} there are '
                      'offset {1} and count {2}'.format(
                          self.name, self.offset, self.count))
@@ -436,7 +437,7 @@ class PigDataSource(BaseDataSource):
             pig_step = self.get_pig_step(query, query_target)
         except Exception, exc:
             raise ProcessException(
-                "Can't initialize pig datasource: {0}".format(exc))
+                "Can't initialize pig datasource: {0}".format(exc), exc)
 
         self.clear_output_folder(self.name)
 
@@ -717,7 +718,7 @@ class InputDataSource(BaseDataSource):
             result = json.loads(query)
         except Exception as exc:
             raise ImportHandlerException('Cannot parse json: {}'.format(
-                str(exc)))
+                str(exc)), exc)
         if isinstance(result, dict):
             return iter([result])
         return iter(result)

@@ -38,7 +38,8 @@ class TrainerStorage(object):
             else:
                 storage = pickle.load(storage)
         except (pickle.UnpicklingError, AttributeError), exc:
-            raise InvalidTrainerFile("Could not unpickle trainer - %s" % exc)
+            raise InvalidTrainerFile("Could not unpickle trainer - %s" % exc,
+                                     exc)
         trainer = Trainer(storage._feature_model)
         if hasattr(storage, "_features"):
             trainer.set_classifier(storage._classifier)

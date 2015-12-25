@@ -31,7 +31,7 @@ from exceptions import EmptyDataException, SchemaException
 from metrics import ClassificationModelMetrics, RegressionModelMetrics
 from model_visualization import TrainedModelVisualizator
 from exceptions import ItemParseException, InvalidTrainerFile, \
-    TransformerNotFound
+    TransformerNotFound, TrainerValueError, EmptyDataException
 from classifier_settings import TYPE_CLASSIFICATION, TYPE_REGRESSION
 
 DEFAULT_SEGMENT = 'default'
@@ -160,7 +160,8 @@ class Trainer(object):
 
         if percent:
             if percent < 0 or percent > 100:
-                raise ValueError("percent parameter should be from 0 to 100")
+                raise TrainerValueError("percent parameter should be from 0 "
+                                        "to 100")
 
             self._count = self._count - int(self._count * percent / 100)
             for segment in self._vect_data:
@@ -411,7 +412,8 @@ class Trainer(object):
 
     def vect_data2csv(self, file_name):
         if not self.intermediate_data[self.TRAIN_VECT_DATA]:
-            raise ValueError("Execute train with store_vect_data parameter")
+            raise TrainerValueError("Execute train with store_vect_data "
+                                    "parameter")
 
         few_segments = len(self.intermediate_data[self.TRAIN_VECT_DATA]) > 1
         for segment, data in \
@@ -519,7 +521,7 @@ class Trainer(object):
                 if ignore_error:
                     self._ignored += 1
                 else:
-                    raise e
+                    raise ItemParseException(e.message, e)
         return segments
 
     def _get_segments_info(self):
@@ -580,7 +582,7 @@ class Trainer(object):
                 if feature['transformer-type'] in ('Lda', 'Lsi'):
                     feature['transformer'].num_features = \
                         transformed_data.shape[1]
-            except ValueError as e:
+            except (ValueError, TrainerValueError) as e:
                 logging.warn('Feature %s will be ignored due to '
                              'transformation error: %s.' %
                              (feature['name'], str(e)))
@@ -730,7 +732,7 @@ class Trainer(object):
                     logging.warn('Error processing feature %s: %s'
                                  % (feature_name, e))
                     raise ItemParseException('Error processing feature %s: %s'
-                                             % (feature_name, e))
+                                             % (feature_name, e), e)
             else:
                 result[feature_name] = item
         return result
@@ -766,7 +768,7 @@ class Trainer(object):
          `_vect_data`
         """
         if self._vect_data is None or self._vect_data == {}:
-            raise Exception('trainer._vect_data was not prepared')
+            raise EmptyDataException('trainer._vect_data was not prepared')
         return self._vect_data[segment][self._feature_model.target_variable]
 
     def _get_classifier_adjusted_classes(self, segment):
@@ -795,7 +797,7 @@ class Trainer(object):
         :return: sparse matrix of tranformed data
         """
         if self._vect_data is None or self._vect_data == {}:
-            raise Exception('trainer._vect_data was not prepared')
+            raise EmptyDataException('trainer._vect_data was not prepared')
 
         vectorized_data = []
         for feature_name, feature in self.features[segment].iteritems():

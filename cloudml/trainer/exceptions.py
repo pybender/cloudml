@@ -1,10 +1,12 @@
 # Authors: Ioannis Foukarakis <ifoukarakis@upwork.com>
 #          Nikolay Melnik <nmelnik@upwork.com>
 
+from cloudml import ChainedException
 
-class BaseException(Exception):
-    def __init__(self, message, Errors=None):
-        super(BaseException, self).__init__(message)
+
+class BaseException(ChainedException):
+    def __init__(self, message, chain=None, Errors=None):
+        super(BaseException, self).__init__(message, chain)
         self.Errors = Errors
 
 
@@ -35,4 +37,8 @@ class TransformerNotFound(BaseException):
 
 
 class EmptyDataException(BaseException):
+    pass
+
+
+class TrainerValueError(BaseException):
     pass
