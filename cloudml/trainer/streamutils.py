@@ -62,7 +62,7 @@ def jsoniterload(stream):
                 yield obj
         except Exception, ex:
             raise TrainerValueError('Failed to read next line from the input '
-                                'stream. Error: %s' % ex, ex)
+                                    'stream. Error: %s' % ex, ex)
 
 
 SOURCE_FORMATS = {

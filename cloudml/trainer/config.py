@@ -30,8 +30,8 @@ class FeatureModel(object):
         whether needed to load file or plain configuration string passed.
     """
     def __init__(self, config, is_file=True):
+        __traceback_info__ = "Load model features from JSON config"
         try:
-            __traceback_info__ = "Load model features from JSON config"
             if is_file:
                 __traceback_info__ = 'Load model features from file "%s"' \
                                      % config
@@ -158,6 +158,7 @@ class FeatureModel(object):
         feature: dict
             a dictionary containing the configuration of the feature
         '''
+
         if 'name' not in feature:
             raise SchemaException(
                 'Features should have a name: {0}'.format(feature))
@@ -167,6 +168,7 @@ class FeatureModel(object):
                 'Feature {0} should have a type: {1}'.format(
                     feature['name'], feature))
 
+        __traceback_info__ = "Processing Feature '%s'" % feature['name']
         # Check if feature has a type definition
         feature_type = None
         if 'type' in feature:
