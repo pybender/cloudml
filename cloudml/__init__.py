@@ -12,9 +12,7 @@ def traceback_info():
             report = format_exception(t, v, tb, with_filenames=True)
             lines = []
             for line in report:
-                line = line.replace('- __traceback_info__:', '**INFO**:')
-                lines.append(line.replace(
-                    'Traceback (most recent call last):', ''))
+                lines.append(line.replace('- __traceback_info__:', '**INFO**:'))
             return '\n'.join(lines)
         return ''
     finally:
@@ -46,11 +44,13 @@ class ChainedException(Exception):
         """
         trace = self._traceback
         current = self
+        # index to prevent deep recursion
         i = 0
         while hasattr(current, 'chain') and current.chain is not None \
                 and i < 20:
-            trace += '\n Caused by: {}\n'.format(current.chain.message)
-            if current.chain._traceback:
+            trace += '\n CAUSED BY: \n{}\n'.format(current.chain.message)
+            if isinstance(current.chain, ChainedException) and \
+                    current.chain._traceback:
                 trace += current.chain._traceback
             current = current.chain
             i += 1
