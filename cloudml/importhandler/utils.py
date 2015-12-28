@@ -7,7 +7,6 @@ from datetime import datetime
 from ..utils import isint, isfloat
 from exceptions import ProcessException
 
-
 class ParametrizedTemplate(Template):
     delimiter = '#'
     idpattern = r'[a-z][_a-z0-9]*(\.[a-z][_a-z0-9]*)*'
@@ -43,8 +42,8 @@ def convert_single_or_list(value, process_fn):
             return [process_fn(item) for item in value]
         else:
             return process_fn(value)
-    except ValueError as e:
-        raise ProcessException(e.message, e)
+    except ValueError:
+        raise
 
 
 def process_primitive(strategy):
