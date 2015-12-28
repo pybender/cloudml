@@ -42,6 +42,11 @@ class FeatureModel(object):
         except ValueError as e:
             raise SchemaException(message='%s %s ' % (config, e), chain=e)
 
+        if not isinstance(data, dict):
+            raise SchemaException(message="Parsed JSON data is of type %s. "
+                                          "Dictionary is expected." %
+                                          type(data))
+
         if 'schema-name' not in data:
             raise SchemaException(message="schema-name is missing in model "
                                           "features config")
@@ -60,6 +65,9 @@ class FeatureModel(object):
         if 'feature-types' in data:
             for feature_type in data['feature-types']:
                 self._process_named_feature_type(feature_type)
+
+        if 'features' not in data:
+            raise SchemaException('Features are missing in config')
 
         self.feature_names = []
         for feature in data['features']:
