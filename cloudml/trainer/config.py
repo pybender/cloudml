@@ -39,7 +39,7 @@ class FeatureModel(object):
         except ValueError as e:
             raise SchemaException(message='%s %s ' % (config, e))
 
-        if type(data) is not dict:
+        if not isinstance(data, dict):
             raise SchemaException(message="Parsed JSON data is of type %s. "
                                           "Dictionary is expected." %
                                           type(data))
