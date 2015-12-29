@@ -4,6 +4,7 @@ from ..classifier_settings import *
 from weights import WeightsCalculator, SVRWeightsCalculator
 from cloudml.trainer.exceptions import TrainerValueError
 
+
 class BaseTrainedModelVisualizator(object):
     WEIGHTS_CLS = WeightsCalculator
 

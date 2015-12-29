@@ -6,6 +6,7 @@ from operator import itemgetter
 from ..classifier_settings import LOGISTIC_REGRESSION, SVR, SGD_CLASSIFIER
 from cloudml.trainer.exceptions import TrainerValueError
 
+
 class WeightsCalculator(object):
     def __init__(self, trainer, clf_weights_field=None):
         # self.weight = {
@@ -127,7 +128,8 @@ class WeightsCalculator(object):
         """
         if segment not in self.weights:
             raise TrainerValueError("Feature weights for {1!s} segment wasn't "
-                                    "filled: {0}".format(self.weights, segment))
+                                    "filled: {0}".format(self.weights,
+                                                         segment))
 
         if signed:
             result = {}

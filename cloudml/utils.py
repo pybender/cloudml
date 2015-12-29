@@ -29,6 +29,7 @@ def init_logging(debug):
     logger.setLevel(logging_level)
     coloredlogs.install(level=logging.DEBUG)
 
+
 def determine_data_format(filepath):
     try:
         format = os.path.splitext(filepath)[1][1:]

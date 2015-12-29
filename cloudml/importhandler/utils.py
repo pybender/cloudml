@@ -7,6 +7,7 @@ from datetime import datetime
 from ..utils import isint, isfloat
 from exceptions import ProcessException
 
+
 class ParametrizedTemplate(Template):
     delimiter = '#'
     idpattern = r'[a-z][_a-z0-9]*(\.[a-z][_a-z0-9]*)*'

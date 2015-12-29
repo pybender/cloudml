@@ -844,7 +844,8 @@ class Trainer(object):
                                     transformer, 'get_feature_names'):
                                 index = 0
                                 item = item.todense().tolist()
-                                for subfeature in transformer.get_feature_names():
+                                for subfeature in \
+                                        transformer.get_feature_names():
                                     if item[0][index]:
                                         vectorized_data[feature_name][subfeature] = item[0][index]
                                     index += 1
@@ -852,10 +853,10 @@ class Trainer(object):
                                     preprocessor, 'get_feature_names'):
                                 index = 0
                                 item = item.todense().tolist()
-                                for subfeature in preprocessor.get_feature_names():
+                                for subfeature in \
+                                        preprocessor.get_feature_names():
                                     if item[0][index]:
-                                        vectorized_data[feature_name][subfeature] = \
-                                            item[0][index]
+                                        vectorized_data[feature_name][subfeature] = item[0][index]
                                     index += 1
                             if not vectorized_data[feature_name].items():
                                 vectorized_data.pop(feature_name)

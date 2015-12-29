@@ -12,7 +12,8 @@ def traceback_info():
             report = format_exception(t, v, tb, with_filenames=True)
             lines = []
             for line in report:
-                lines.append(line.replace('- __traceback_info__:', '**INFO**:'))
+                lines.append(line.replace('- __traceback_info__:',
+                                          '**INFO**:'))
             return '\n'.join(lines)
         return ''
     finally:

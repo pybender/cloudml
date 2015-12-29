@@ -8,6 +8,7 @@ import json
 import csv
 from cloudml.trainer.exceptions import TrainerValueError
 
+
 class JsonStreamReader(object):
     sbuffer = ''
 
