@@ -270,7 +270,7 @@ class Trainer(object):
         return self.metrics
 
     def predict(self, iterator, callback=None, ignore_error=True,
-                store_vect_data=False):
+                store_vect_data=False, callback_store_data=None):
         """
         Attempts to predict the class of each of the data in the given
         iterator. Returns the predicted values, the target feature value (if
@@ -310,7 +310,8 @@ class Trainer(object):
                 true_labels[segment] = \
                     self._get_target_variable_labels(segment)
                 vectorized_data = self._get_vectorized_data(
-                    segment, self._test_prepare_feature)
+                    segment, self._test_prepare_feature,
+                    callback_store_data)
                 logging.info('Evaluating model...')
                 if len(vectorized_data) == 1:
                     predict_data = numpy.array(vectorized_data[0])
@@ -787,7 +788,8 @@ class Trainer(object):
         """
         return self.features[segment][self._feature_model.target_variable]
 
-    def _get_vectorized_data(self, segment, fn_prepare_feature):
+    def _get_vectorized_data(self, segment, fn_prepare_feature,
+         callback_store_data=None):
         """
         applies transforms to features values in `_vect_data`
         :param segment:
@@ -807,6 +809,8 @@ class Trainer(object):
                 if item is not None:
                     # Convert item to csc_matrix, since hstack fails
                     # with arrays
+                    if callback_store_data is not None:
+                        callback_store_data(segment, feature_name, item)
                     vectorized_data.append(scipy.sparse.csc_matrix(item))
         return vectorized_data
 
