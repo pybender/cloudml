@@ -61,7 +61,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Cloudml'
-copyright = u'2015, Upwork'
+copyright = u'2013-2016, Upwork'
 author = u'Niolay Melnik'
 
 # The version info for the project you're documenting, acts as replacement for

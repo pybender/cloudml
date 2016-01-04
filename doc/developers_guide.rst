@@ -46,7 +46,7 @@ Install python requirements:
 
 .. code-block:: console
 
-    $ pip install -r ./requirements.txt
+    $ pip install --allow-unverified jsonpath -r requirements.txt
 
 Create local config:
 
@@ -133,7 +133,7 @@ Install python requirements:
 .. code-block:: console
 
     $ cd cloudml
-    $ pip install -r ./requirements.txt
+    $ pip install --allow-unverified jsonpath -r requirements.txt
 
 Create local config:
 
