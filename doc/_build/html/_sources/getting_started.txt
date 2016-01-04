@@ -227,4 +227,4 @@ Results will be stored to result.csv file. First lines from it are as follows::
 
 Label column is a predicted label while other columns are probabilities for each class.
 
-It is possible to build rest api service for predicting using cloudml-predict.
+It is possible to build rest api service for predicting using CloudML-Predict.

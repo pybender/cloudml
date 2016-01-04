@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Cloudml documentation build configuration file, created by
+# CloudML documentation build configuration file, created by
 # sphinx-quickstart on Sat May 30 16:35:12 2015.
 #
 # This file is execfile()d with the current directory set to its
@@ -60,9 +60,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Cloudml'
+project = u'CloudML'
 copyright = u'2013-2016, Upwork'
-author = u'Niolay Melnik'
+author = u'Panagiotis Papadimitriou, Nikolay Melnik, Ioannis Foukarakis'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -220,7 +220,7 @@ html_static_path = ['_static']
 #html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'Cloudmldoc'
+htmlhelp_basename = 'CloudML_doc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -242,8 +242,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  (master_doc, 'Cloudml.tex', u'Cloudml Documentation',
-   u'Niolay Melnik', 'manual'),
+  (master_doc, 'Cloudml.tex', u'CloudML Documentation',
+   u'Nikolay Melnik', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -272,7 +272,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'cloudml', u'Cloudml Documentation',
+    (master_doc, 'CloudML', u'CloudML Documentation',
      [author], 1)
 ]
 
@@ -286,8 +286,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  (master_doc, 'Cloudml', u'Cloudml Documentation',
-   author, 'Cloudml', 'One line description of project.',
+  (master_doc, 'CloudML', u'CloudML Documentation',
+   author, 'CloudML', 'One line description of project.',
    'Miscellaneous'),
 ]
 
@@ -304,7 +304,7 @@ texinfo_documents = [
 #texinfo_no_detailmenu = False
 
 # The following is used by sphinx.ext.linkcode to provide links to github
-linkcode_resolve = make_linkcode_resolve('cloudml',
+linkcode_resolve = make_linkcode_resolve('CloudML',
                                          u'https://github.com/odeskdataproduct'
                                          's/cloudml/tree/master/{revision}/'
                                          '{package}/{path}#L{lineno}')
