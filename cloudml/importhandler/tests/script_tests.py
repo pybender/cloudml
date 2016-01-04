@@ -16,7 +16,7 @@ from moto import mock_s3
 from mock import patch
 from boto import connect_s3
 from boto.s3.key import Key
-from config import AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET,\
+from config import AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET, \
     BUCKET_NAME
 
 

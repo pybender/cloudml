@@ -1,14 +1,14 @@
 # Authors: Nikolay Melnik <nmelnik@upwork.com>
 
-from copy import deepcopy
 import numpy
+from copy import deepcopy
 from scipy.sparse import csc_matrix
-
-from utils import copy_expected, float_or_int, parse_parameters
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.feature_extraction.text import LdaVectorizer, LsiVectorizer
 from sklearn.preprocessing import StandardScaler
+
+from utils import copy_expected, parse_parameters
 
 
 class Ntile(object):
@@ -49,7 +49,7 @@ class Ntile(object):
                 previous = self.ranges[n]
             if X[i] != n + 1:
                 X[i] = n + 1
-        import numpy
+
         import scipy.sparse
         return numpy.transpose(
             scipy.sparse.csc_matrix([0.0 if item is None else float(item)

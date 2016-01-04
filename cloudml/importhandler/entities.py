@@ -445,8 +445,8 @@ order by ordinal_position;""".format(sqoop_import.table,
                                     SCHEMA_INFO_FIELDS)}
                                    for opt in iterator]
                 except Exception, exc:
-                    return ValueError("Can't execute the query: {0}."
-                                      "Error: {1}".format(sql, exc))
+                    raise ValueError("Can't execute the query: {0}."
+                                     "Error: {1}".format(sql, exc))
 
                 fields_str = construct_pig_fields(fields_data)
                 load_dataset_script = PIG_TEMPLATE.format(

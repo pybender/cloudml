@@ -1,9 +1,9 @@
 # Author: Nikolay Melnik <nmelnik@upwork.com>
 import os
 import unittest
-from mock import patch, ANY
+from mock import patch
 
-from importhandler import *
+from importhandler import INVALID_EXTRACTION_PLAN, main, DONE
 from test_utils import db_row_iter_mock
 
 

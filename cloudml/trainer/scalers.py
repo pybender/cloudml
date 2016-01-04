@@ -16,7 +16,7 @@ class NoScaler(StandardScaler):
         return X
 
     def inverse_transform(self, X, copy=None):
-        return Xd
+        return X
 
 
 DEFAULT_SCALER = "MinMaxScaler"

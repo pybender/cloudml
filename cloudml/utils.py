@@ -1,4 +1,7 @@
+""" Uitility methods for processing data """
+
 # Author: Nikolay Melnik <nmelnik@upwork.com>
+
 import logging
 import os
 
@@ -31,20 +34,19 @@ def init_logging(debug):
 
 def determine_data_format(filepath):
     try:
-        format = os.path.splitext(filepath)[1][1:]
-    except Exception:
-        raise
+        file_format = os.path.splitext(filepath)[1][1:]
+    except:
         logging.warning("Could not determine input data file format."
                         "'json' would be used.")
         return 'json'
-    if format not in ('json', 'csv'):
+    if file_format not in ('json', 'csv'):
         logging.warning("Input data file format is invalid {0}. "
-                        "Trying to parse it as 'json'")
+                        "Trying to parse it as 'json'".format(file_format))
         return 'json'
-    return format
+    return file_format
 
 
-def isfloat(x):
+def isfloat(value):
     """
     >>> isfloat('1.5')
     True
@@ -54,14 +56,14 @@ def isfloat(x):
     False
     """
     try:
-        a = float(x)
+        float(value)
     except:
         return False
     else:
         return True
 
 
-def isint(x):
+def isint(value):
     """
     >>> isint('1.5')
     False
@@ -71,9 +73,9 @@ def isint(x):
     False
     """
     try:
-        a = float(x)
-        b = int(a)
+        float_value = float(value)
+        int_value = int(float_value)
     except:
         return False
     else:
-        return a == b
+        return float_value == int_value

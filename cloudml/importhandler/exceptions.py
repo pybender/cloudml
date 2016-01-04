@@ -10,22 +10,22 @@ class ProcessException(Exception):
     Exception to be raised in case there's a problem processing a feature.
 
     """
-    def __init__(self, message, column=None, Errors=None):
+    def __init__(self, message, column=None, errors=None):
         # Call the base class constructor with the parameters it needs
         Exception.__init__(self, message)
         self._column = column
-        self.Errors = Errors
+        self.errors = errors
 
 
 class ImportHandlerException(Exception):
-    def __init__(self, message, Errors=None):
+    def __init__(self, message, errors=None):
         # Call the base class constructor with the parameters it needs
         Exception.__init__(self, message)
-        self.Errors = Errors
+        self.errors = errors
 
 
 class LocalScriptNotFoundException(Exception):
-    def __init__(self, message, Errors=None):
+    def __init__(self, message, errors=None):
         # Call the base class constructor with the parameters it needs
         Exception.__init__(self, message)
-        self.Errors = Errors
+        self.errors = errors

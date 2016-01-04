@@ -1,6 +1,6 @@
 # Author: Nikolay Melnik <nmelnik@upwork.com>
 
-from base import FeatureTypeBase, FeatureTypeInstanceBase,\
+from base import FeatureTypeBase, FeatureTypeInstanceBase, \
     InvalidFeatureTypeException
 
 

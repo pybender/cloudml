@@ -1,10 +1,12 @@
 # Author: Nikolay Melnik <nmelnik@upwork.com>
 import os
 import unittest
-from mock import patch, ANY
+from mock import patch
 
-from transformer import *
-from test_utils import db_row_iter_mock, get_iterator
+from transformer import main, PARAMETERS_REQUIRED, \
+    INVALID_TRANSOFMER_CONFIG, INVALID_EXTRACTION_PLAN, \
+    DONE
+from test_utils import db_row_iter_mock
 
 
 class ImportHandlerTestCase(unittest.TestCase):

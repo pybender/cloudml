@@ -1,16 +1,12 @@
 # Authors: Ioannis Foukarakis <ifoukarakis@upwork.com>
 #          Nikolay Melnik <nmelnik@upwork.com>
 
-from mock import MagicMock, patch
+from mock import MagicMock
 import numpy
 import json
 import unittest
 import os
 import logging
-from StringIO import StringIO
-from cloudml.trainer.feature_types import PrimitiveFeatureTypeInstance
-from sklearn.preprocessing import MinMaxScaler
-
 
 from cloudml.trainer.config import FeatureModel
 from cloudml.trainer.trainer import Trainer, DEFAULT_SEGMENT, \
@@ -18,7 +14,6 @@ from cloudml.trainer.trainer import Trainer, DEFAULT_SEGMENT, \
 from jsonpath import jsonpath
 from cloudml.trainer.store import store_trainer, load_trainer
 from cloudml.trainer.streamutils import streamingiterload
-from cloudml.trainer.exceptions import EmptyDataException
 from cloudml.tests.test_utils import get_iterator
 
 TARGET = 'target'
@@ -417,7 +412,7 @@ class LogisticRegressionTrainerTestCase(BaseTrainerTestCase):
             #
             weights = self._trainer.get_weights()
             self.assertEqual(1, len(weights.keys()))
-            for clazz, clazz_weights in weights.iteritems():
+            for clazz_weights in weights.values():
                 self.assertTrue('positive' in clazz_weights)
                 self.assertTrue('negative' in clazz_weights)
                 self.assertIsInstance(clazz_weights['positive'], list)

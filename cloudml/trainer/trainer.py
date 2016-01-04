@@ -14,25 +14,19 @@ import numpy
 import csv
 import scipy.sparse
 import platform
-
 from copy import deepcopy
 from collections import defaultdict
 from time import gmtime, strftime
-from operator import itemgetter
 from memory_profiler import memory_usage
 from sklearn.preprocessing import Imputer
 
 from feature_types import FEATURE_TYPE_DEFAULTS
+from classifier_settings import TYPE_CLASSIFICATION
 from transformers import TRANSFORMERS, SuppressTransformer
-from utils import is_empty
-
-from config import FeatureModel
-from exceptions import EmptyDataException, SchemaException
-from metrics import ClassificationModelMetrics, RegressionModelMetrics
 from model_visualization import TrainedModelVisualizator
-from exceptions import ItemParseException, InvalidTrainerFile, \
+from exceptions import ItemParseException, EmptyDataException, \
     TransformerNotFound
-from classifier_settings import TYPE_CLASSIFICATION, TYPE_REGRESSION
+from utils import is_empty
 
 DEFAULT_SEGMENT = 'default'
 
@@ -152,11 +146,11 @@ class Trainer(object):
             raise EmptyDataException("No rows found in the iterator")
 
         if self.with_segmentation:
-            logging.info(
-                'Group by: %s' % ",".join(self.feature_model.group_by))
+            logging.info('Group by: %s',
+                         ",".join(self.feature_model.group_by))
             logging.info('Segments:')
             for segment, records in self._segments.iteritems():
-                logging.info("'%s' - %d records" % (segment, records))
+                logging.info("'%s' - %d records", segment, records)
 
         if percent:
             if percent < 0 or percent > 100:
@@ -166,11 +160,11 @@ class Trainer(object):
             for segment in self._vect_data:
                 for item in self._vect_data[segment]:
                     item = item[:self._count]
-        logging.info('Processed %d lines, ignored %s lines'
-                     % (self._count, self._ignored))
+        logging.info('Processed %d lines, ignored %s lines',
+                     self._count, self._ignored)
         log_memory_usage("Memory usage")
         for segment in self._vect_data:
-            logging.debug('Starting train "%s" segment' % segment)
+            logging.debug('Starting train "%s" segment', segment)
             self._train_segment(segment, store_vect_data)
 
     def _train_segment(self, segment, store_vect_data=False):
@@ -188,7 +182,7 @@ class Trainer(object):
         vectorized_data = None
         log_memory_usage("Memory usage (vectorized data cleared)")
 
-        logging.info('Number of features: %s' % (true_data.shape[1], ))
+        logging.info('Number of features: %s', true_data.shape[1])
         if segment != DEFAULT_SEGMENT:
             self._classifier[segment] = \
                 deepcopy(self._classifier[DEFAULT_SEGMENT])
@@ -253,17 +247,16 @@ class Trainer(object):
         else:
             self._test_empty_labels = []
 
-        count = self._count
         if percent:
             self._count = int(self._count * percent / 100)
             for segment in self._vect_data:
                 for item in self._vect_data[segment]:
                     item = item[:self._count]
-        logging.info('Processed %d lines, ignored %s lines'
-                     % (self._count, self._ignored))
+        logging.info('Processed %d lines, ignored %s lines',
+                     self._count, self._ignored)
 
         for segment in self._vect_data:
-            logging.info('Starting test "%s" segment' % segment)
+            logging.info('Starting test "%s" segment', segment)
             self._evaluate_segment(segment)
         self.metrics.log_metrics()
 
@@ -297,8 +290,8 @@ class Trainer(object):
         self.predict_data = {}
 
         self._prepare_data(iterator, callback, ignore_error, is_predict=True)
-        logging.info('Processed %d lines, ignored %s lines'
-                     % (self._count, self._ignored))
+        logging.info('Processed %d lines, ignored %s lines',
+                     self._count, self._ignored)
         if self._ignored == self._count:
             logging.info("Don't have valid records")
             return {'error': 'all records was ignored'}
@@ -368,7 +361,7 @@ class Trainer(object):
         if train_iterator:
             self._segments = self._prepare_data(train_iterator)
         for segment in self._vect_data:
-            logging.info('Starting search params for "%s" segment' % segment)
+            logging.info('Starting search params for "%s" segment', segment)
             self.features[segment] = deepcopy(self._feature_model.features)
             labels = self._get_target_variable_labels(segment)
             vectorized_data = \
@@ -515,8 +508,7 @@ class Trainer(object):
                 if callback is not None:
                     callback(row)
             except ItemParseException, e:
-                logging.debug('Ignoring item #%d: %s'
-                              % (self._count, e))
+                logging.debug('Ignoring item #%d: %s', self._count, e)
                 if ignore_error:
                     self._ignored += 1
                 else:
@@ -567,7 +559,7 @@ class Trainer(object):
         :param data: a list of the data for extracted for the given feature.
         :return: feature data with transformation applied
         """
-        logging.info('Preparing feature %s for train' % (feature['name'], ))
+        logging.info('Preparing feature %s for train', feature['name'])
         input_format = feature.get('input-format', None)
         if input_format == 'list':
             data = map(lambda x: " ".join(x) if isinstance(x, list)
@@ -583,8 +575,8 @@ class Trainer(object):
                         transformed_data.shape[1]
             except ValueError as e:
                 logging.warn('Feature %s will be ignored due to '
-                             'transformation error: %s.' %
-                             (feature['name'], str(e)))
+                             'transformation error: %s.',
+                             feature['name'], e)
                 transformed_data = None
                 feature['tranformer'] = SuppressTransformer()
             return transformed_data
@@ -622,7 +614,7 @@ class Trainer(object):
         :param data: a list of the data for extracted for the given feature.
         :return: feature data with transformation applied
         """
-        logging.debug('Preparing feature %s for test' % (feature['name'], ))
+        logging.debug('Preparing feature %s for test', feature['name'])
         input_format = feature.get('input-format', None)
         if input_format == 'list':
             data = map(lambda x: " ".join(x)
@@ -654,7 +646,7 @@ class Trainer(object):
                 data = [default] * count
                 data = self._to_column(data).toarray()
                 logging.warning(
-                    "All values of feature %s are null" % feature['name'])
+                    "All values of feature %s are null", feature['name'])
 
         if feature.get('scaler', None) is not None:
             return feature['scaler'].transform(data)
@@ -728,10 +720,10 @@ class Trainer(object):
                     elif input_format == 'list':
                         result[feature_name] = map(ft.transform, item)
                 except Exception as e:
-                    logging.warn('Error processing feature %s: %s'
-                                 % (feature_name, e))
-                    raise ItemParseException('Error processing feature %s: %s'
-                                             % (feature_name, e))
+                    logging.warn('Error processing feature %s: %s',
+                                 feature_name, e)
+                    raise ItemParseException('Error processing feature %s: %s',
+                                             feature_name, e)
             else:
                 result[feature_name] = item
         return result

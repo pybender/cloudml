@@ -7,11 +7,9 @@ feature types processing.
 
 import re
 from functools import update_wrapper
-
 from sklearn.feature_extraction.text import CountVectorizer
 
-from base import FeatureTypeBase, FeatureTypeInstanceBase, \
-    InvalidFeatureTypeException
+from base import FeatureTypeBase, FeatureTypeInstanceBase
 
 
 class CategoricalFeatureTypeInstance(FeatureTypeInstanceBase):
@@ -61,7 +59,7 @@ class tokenizer_dec(object):
         self.func = func
         self.split_pattern = split_pattern
         try:
-            functools.update_wrapper(self, func)
+            update_wrapper(self, func)
         except:
             pass
 

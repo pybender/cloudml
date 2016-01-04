@@ -13,7 +13,6 @@ import os
 import logging
 import json
 import gzip
-import datetime
 from lxml import etree
 from lxml import objectify
 from decimal import Decimal

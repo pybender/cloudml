@@ -2,7 +2,7 @@
 #          Nikolay Melnik <nmelnik@upwork.com>
 
 import unittest
-from cloudml.trainer.feature_types import FEATURE_TYPE_FACTORIES,\
+from cloudml.trainer.feature_types import FEATURE_TYPE_FACTORIES, \
     InvalidFeatureTypeException, RegexFeatureTypeInstance
 
 

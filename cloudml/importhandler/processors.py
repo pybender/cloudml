@@ -5,10 +5,6 @@ Methods that would be avaiable in python scripts.
 # Author: Nikolay Melnik <nmelnik@upwork.com>
 
 import sys
-import json
-import re
-import math
-import datetime
 import logging
 from jsonpath import jsonpath
 from sklearn.feature_extraction.readability import Readability

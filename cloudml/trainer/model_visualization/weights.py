@@ -38,10 +38,10 @@ class WeightsCalculator(object):
         self.weights[segment] = {}  # weights by the class_label
         features = self._trainer.get_features(segment)
 
-        logging.info('Calculate feature weights for %s segment' % segment)
+        logging.info('Calculate feature weights for %s segment', segment)
         clf = self._trainer.get_classifier(segment)
         if clf.classes_ is None:
-            logging.warning('There are no classes in the segment %s' % segment)
+            logging.warning('There are no classes in the segment %s', segment)
             return
 
         clf_weights = self._get_clf_weights(clf)
@@ -58,7 +58,7 @@ class WeightsCalculator(object):
         from ..trainer import _adjust_classifier_class
         for class_index, label in enumeration:
             label = _adjust_classifier_class(target_feature, label)
-            logging.info('Get weights for label %s' % label)
+            logging.info('Get weights for label %s', label)
             self.weights[segment][label] = []
 
             # filling weights
