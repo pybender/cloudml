@@ -789,7 +789,7 @@ class Trainer(object):
         return self.features[segment][self._feature_model.target_variable]
 
     def _get_vectorized_data(self, segment, fn_prepare_feature,
-         callback_store_data=None):
+                             callback_store_data=None):
         """
         applies transforms to features values in `_vect_data`
         :param segment:
@@ -846,7 +846,8 @@ class Trainer(object):
                                     transformer, 'get_feature_names'):
                                 index = 0
                                 item = item.todense().tolist()
-                                for subfeature in transformer.get_feature_names():
+                                for subfeature in \
+                                        transformer.get_feature_names():
                                     if item[0][index]:
                                         vectorized_data[feature_name][subfeature] = item[0][index]
                                     index += 1
@@ -854,7 +855,8 @@ class Trainer(object):
                                     preprocessor, 'get_feature_names'):
                                 index = 0
                                 item = item.todense().tolist()
-                                for subfeature in preprocessor.get_feature_names():
+                                for subfeature in \
+                                        preprocessor.get_feature_names():
                                     if item[0][index]:
                                         vectorized_data[feature_name][subfeature] = \
                                             item[0][index]

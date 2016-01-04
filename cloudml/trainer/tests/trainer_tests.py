@@ -86,7 +86,8 @@ class TrainerSegmentTestCase(BaseTrainerTestCase):
     def test_get_nonzero_vectorized_data(self):
         self._train()
         vect_data = self._trainer.get_nonzero_vectorized_data()
-        self.assertEquals(vect_data[''][u'contractor.dev_adj_score_recent'], 1.0)
+        val = vect_data[''][u'contractor.dev_adj_score_recent']
+        self.assertEquals(val, 1.0)
 
     def test_get_vectorized_data(self):
         self._train()
@@ -166,13 +167,14 @@ class TrainerSegmentTestCase(BaseTrainerTestCase):
         expected = {'feature_weight': 0.19563459457810858,
                     'name': u'contractor->skills->microsoft-word',
                     'weight': 0.19563459457810858}
+        USA_weights = self._trainer.get_weights('USA')
         self.assertFloatEqual(
             expected['feature_weight'],
-            self._trainer.get_weights('USA')[1]['positive'][0]['feature_weight']
+            USA_weights[1]['positive'][0]['feature_weight']
         )
         self.assertFloatEqual(
             expected['weight'],
-            self._trainer.get_weights('USA')[1]['positive'][0]['weight']
+            USA_weights[1]['positive'][0]['weight']
         )
         self.assertEqual(
             expected['name'],
@@ -687,7 +689,8 @@ class LinearSVRTestCase(BaseTrainerTestCase):
         self.assertFloatEqual(
             metrics.explained_variance_score, 0.95987382954092304)
         self.assertFloatEqual(metrics.mean_absolute_error, 0.10015075257744899)
-        self.assertFloatEqual(metrics.mean_squared_error,  0.010030280715664325)
+        self.assertFloatEqual(
+            metrics.mean_squared_error,  0.010030280715664325)
         self.assertFloatEqual(metrics.r2_score, 0.95820716368473202)
 
 
