@@ -172,7 +172,11 @@
     <td>path</td>
     <td>Path pointing to the file containing the extraction plan.</td>
   </tr>
-</table></div>
+</table><p>Example:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> python importhandler.py extract_csv.xml -o abalone.json -U <span class="nv">start</span><span class="o">=</span>2012-03-04 -U <span class="nv">end</span><span class="o">=</span>2012-03-05
+</pre></div>
+</div>
+</div>
 <div class="section" id="trainer-py">
 <h2>trainer.py<a class="headerlink" href="#trainer-py" title="Permalink to this headline">¶</a></h2>
 <p>The trainer can be run using:</p>
@@ -252,6 +256,10 @@
 </table><div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">If one is required to use csv as the input format, the csv file will be required to have a .csv extension.</p>
+</div>
+<p>Example:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> python trainer.py features.json -i abalone.json -o model.dat
+</pre></div>
 </div>
 </div>
 <div class="section" id="predictor-py">

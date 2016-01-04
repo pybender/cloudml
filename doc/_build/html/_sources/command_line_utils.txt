@@ -51,6 +51,12 @@ The details of the parameters passed to importhandler.py are as follows:
   </table>
 
 
+Example:
+
+.. code-block:: console
+
+    $ python importhandler.py extract_csv.xml -o abalone.json -U start=2012-03-04 -U end=2012-03-05
+
 ----------
 trainer.py
 ----------
@@ -138,6 +144,13 @@ The details of the parameters passed to trainer.py are as follows:
 .. note::
   
   If one is required to use csv as the input format, the csv file will be required to have a .csv extension.
+
+
+Example:
+
+.. code-block:: console
+
+    $ python trainer.py features.json -i abalone.json -o model.dat
 
 ------------
 predictor.py
