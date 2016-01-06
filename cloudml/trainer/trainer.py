@@ -720,10 +720,9 @@ class Trainer(object):
                     elif input_format == 'list':
                         result[feature_name] = map(ft.transform, item)
                 except Exception as e:
-                    logging.warn('Error processing feature %s: %s',
-                                 feature_name, e)
-                    raise ItemParseException('Error processing feature %s: %s',
-                                             feature_name, e)
+                    raise ItemParseException(
+                        'Error processing feature %s: %s' %
+                        (feature_name, e))
             else:
                 result[feature_name] = item
         return result

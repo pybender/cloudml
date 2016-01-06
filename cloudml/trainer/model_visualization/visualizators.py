@@ -3,7 +3,7 @@
 from ..classifier_settings import LOGISTIC_REGRESSION, SVR, \
     SGD_CLASSIFIER, DECISION_TREE_CLASSIFIER, \
     GRADIENT_BOOSTING_CLASSIFIER, EXTRA_TREES_CLASSIFIER, \
-    RANDOM_FOREST_CLASSIFIER
+    RANDOM_FOREST_CLASSIFIER, RANDOM_FOREST_REGRESSOR
 from weights import WeightsCalculator, SVRWeightsCalculator
 
 
@@ -123,6 +123,17 @@ class RandomForestTrainingVisualizer(ExtraTreesTrainingVisualizer):
     pass
 
 
+class RandomForestRegressorTV(BaseTrainedModelVisualizator):
+    def generate(self, segment, true_data):
+        pass
+
+    def get_visualization(self, segment):
+        res = {
+            'classifier_type': self._trainer.classifier_type,
+        }
+        return res
+
+
 class Visualizator(object):
     TRAINING_VISUALIZER_DICT = {
         LOGISTIC_REGRESSION: LRTrainingVisualizer,
@@ -131,7 +142,8 @@ class Visualizator(object):
         DECISION_TREE_CLASSIFIER: DecisionTreeTrainingVisualizer,
         GRADIENT_BOOSTING_CLASSIFIER: GBTrainingVisualizer,
         EXTRA_TREES_CLASSIFIER: ExtraTreesTrainingVisualizer,
-        RANDOM_FOREST_CLASSIFIER: RandomForestTrainingVisualizer
+        RANDOM_FOREST_CLASSIFIER: RandomForestTrainingVisualizer,
+        RANDOM_FOREST_REGRESSOR: RandomForestRegressorTV
     }
 
     @classmethod
