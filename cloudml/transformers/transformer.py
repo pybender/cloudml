@@ -72,13 +72,16 @@ class Transformer(object):
                         'type': feature_type,
                         'transformer-type': transformer_type,
                         'transformer': transformer}
+        self.voc_size = None
 
     def train(self, iterator):
         logging.info('Start train transformer "%s"' % self.name)
         self._prepare_data(iterator)
-        self.feature['transformer'].fit(self._vect_data)
-        self.voc_size = len(self.feature['transformer'].vocabulary_)
-        logging.info('Vocabulary size: %d' % self.voc_size)
+        transformer = self.feature['transformer']
+        transformer.fit(self._vect_data)
+        if hasattr(transformer, 'vocabulary_'):
+            self.voc_size = len(transformer.vocabulary_)
+            logging.info('Vocabulary size: %d' % self.voc_size)
         logging.info('Train completed')
 
     def transform(self, data):

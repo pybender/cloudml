@@ -111,10 +111,22 @@
 <!--     <p class="citing">If you use the software, please consider <a href="about.html#citing-scikit-learn">citing scikit-learn</a>.</p> -->
     <ul>
 <li><a class="reference internal" href="#">Command line utils</a><ul>
-<li><a class="reference internal" href="#importhandler-py">importhandler.py</a></li>
-<li><a class="reference internal" href="#trainer-py">trainer.py</a></li>
-<li><a class="reference internal" href="#predictor-py">predictor.py</a></li>
-<li><a class="reference internal" href="#transformer-py">transformer.py</a></li>
+<li><a class="reference internal" href="#importhandler-py">importhandler.py</a><ul>
+<li><a class="reference internal" href="#example">Example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#trainer-py">trainer.py</a><ul>
+<li><a class="reference internal" href="#id1">Example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#predictor-py">predictor.py</a><ul>
+<li><a class="reference internal" href="#id2">Example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#transformer-py">transformer.py</a><ul>
+<li><a class="reference internal" href="#id4">Example</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -132,6 +144,8 @@
             
   <div class="section" id="command-line-utils">
 <h1>Command line utils<a class="headerlink" href="#command-line-utils" title="Permalink to this headline">¶</a></h1>
+<p>Describes the command line utilities provided by CloudML.</p>
+<p>In examples of calls used the standard <a class="reference external" href="https://archive.ics.uci.edu/ml/datasets/Abalone">Abalone dataset</a> from the <a class="reference external" href="http://archive.ics.uci.edu/ml">UCI Machine Learning Repository</a>.</p>
 <div class="section" id="importhandler-py">
 <h2>importhandler.py<a class="headerlink" href="#importhandler-py" title="Permalink to this headline">¶</a></h2>
 <p>Running the Import Handler</p>
@@ -141,125 +155,216 @@
 </pre></div>
 </div>
 <p>The details of the parameters passed to importhandler.py are as follows:</p>
-<table>
-  <tr>
-    <th>Parameter</th>
-    <th>Description</th>
-  </tr>
-  <tr>
-    <td>-h, --help</td>
-    <td>Prints help message</td>
-  </tr>
-  <tr>
-    <td>-V, --version</td>
-    <td>Prints version message</td>
-  </tr>
-  <tr>
-    <td>-d, --debug</td>
-    <td>Adds additional log output while running</td>
-  </tr>
-  <tr>
-    <td>-o output, --output output</td>
-    <td>Saves extracted data to file output as multiple JSON objects (one
-    object per row).</td>
-  </tr>
-  <tr>
-    <td>-U key=value</td>
-    <td>Allows user defined parameters. The given parameters will be used to
-    replace parameters in the SQL query. Can have multiple values.</td>
-  </tr>
-  <tr>
-    <td>path</td>
-    <td>Path pointing to the file containing the extraction plan.</td>
-  </tr>
-</table><p>Example:</p>
-<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> python importhandler.py extract_csv.xml -o abalone.json -U <span class="nv">start</span><span class="o">=</span>2012-03-04 -U <span class="nv">end</span><span class="o">=</span>2012-03-05
+<table border="1" class="docutils">
+<colgroup>
+<col width="41%" />
+<col width="59%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>-h, &#8211;help</td>
+<td>Prints help message</td>
+</tr>
+<tr class="row-odd"><td>-V, &#8211;version</td>
+<td>Prints version message.</td>
+</tr>
+<tr class="row-even"><td>-d, &#8211;debug</td>
+<td>Adds additional log
+output while running</td>
+</tr>
+<tr class="row-odd"><td>-o output
+&#8211;output output</td>
+<td>Saves extracted data to
+file output as multiple
+JSON objects (one
+object per row).</td>
+</tr>
+<tr class="row-even"><td>-U key=value</td>
+<td>Allows user defined
+parameters. The given
+parameters will be used
+to replace parameters
+in the SQL query. Can
+have multiple values.</td>
+</tr>
+<tr class="row-odd"><td>path</td>
+<td>Path pointing to the
+file containing the
+extraction plan.</td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="example">
+<h3>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h3>
+<p>Download <a class="reference download internal" href="_downloads/extract-train.xml"><code class="xref download docutils literal"><span class="pre">extract-train.xml</span></code></a> a sample of the import handler file, which would be used for training the model.</p>
+<p>Create the dataset to be used for training the model:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> python importhandler.py extract-train.xml -o train-dataset.json
 </pre></div>
+</div>
+<p>Download <a class="reference download internal" href="_downloads/extract-test.xml"><code class="xref download docutils literal"><span class="pre">extract-test.xml</span></code></a> a sample of the import handler file, which would be used for evaluating the model.</p>
+<p>Create the dataset to be used for evaluating the model:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> python importhandler.py extract-test.xml -o <span class="nb">test</span>-dataset.json
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">More information about building the import handlers could be found in <a class="reference internal" href="getting_started.html#loading-example-dataset"><span>Getting Started</span></a> topic.</p>
+</div>
 </div>
 </div>
 <div class="section" id="trainer-py">
 <h2>trainer.py<a class="headerlink" href="#trainer-py" title="Permalink to this headline">¶</a></h2>
 <p>The trainer can be run using:</p>
 <div class="highlight-python"><div class="highlight"><pre>python trainer.py [-h] [-V] [-d] [-o output] [-w weight-file]
-                  [-i input-file] [-t test-file]
-                  [-e extraction-plan-file] [-I train-param]
-                  [-T test-param] [--skip-test] path
+                  [-s store-vect-file] [-v store-train-vect-file]
+                  [-i input-file] [-t test-file] [-tp test-percent]
+                  [-e extraction-plan-file] [-I train-param] [-T test-param]
+                  [--skip-test] [--transformer-path transformer_path]
+                  path
 </pre></div>
 </div>
 <p>The details of the parameters passed to trainer.py are as follows:</p>
-<table>
-  <tr>
-    <th>Parameter</th>
-    <th>Description</th>
-  </tr>
-  <tr>
-    <td>-h, --help</td>
-    <td>Prints help message</td>
-  </tr>
-  <tr>
-    <td>-V, --version</td>
-    <td>Prints version message</td>
-  </tr>
-  <tr>
-    <td>-d, --debug</td>
-    <td>Adds additional log output while running</td>
-  </tr>
-  <tr>
-    <td>-o output, --output output</td>
-    <td>Saves trained model and related data to this file.</td>
-  </tr>
-  <tr>
-    <td>-w weight-file, --weights weight-file</td>
-    <td>Stores feature weights to the specified file as JSON objects. The
-    weights are stored within two lists, one for positive weights (in descending
-    order), and one for the negative weights (in ascending order). In case, a
-    feature results from a "parent" feature (i.e. when using Tfidf, count
-    etc.), the name used is in the form <parent feature>.<value>.
-    </td>
-  </tr>
-  <tr>
-    <td>-i input-data, --input input-data</td>
-    <td>Read train data from file 'input-data'. Input file may contain
-    multiple JSON objects, each containing the feature data for each row
-    data.</td>
-  </tr>
-  <tr>
-    <td>-t test-data, --test test-data</td>
-    <td>Read test data from file 'test data'. Input file may contain multiple
-    JSON objects, each containing the feature data for each row
-    data.</td>
-  </tr>
-  <tr>
-    <td>-e extraction-plan</td>
-    <td>Use the extraction plan defined in the given path. If -i has been
-    defined, it will be ignored.</td>
-  </tr>
-  <tr>
-    <td>-I key=value</td>
-    <td>Allows user defined parameters. The given parameters will be used to
-    replace parameters in the SQL query. Can have multiple values. Will be
-    used only if flag -e is defined. These values will be used for extracting
-    train data.</td>
-  </tr>
-  <tr>
-    <td>-T key=value</td>
-    <td>Same as -I, but used for extracting test data.</td>
-  </tr>
-  <tr>
-    <td>--skip-test</td>
-    <td>Skips testing phase.</td>
-  </tr>
-  <tr>
-    <td>path</td>
-    <td>Path pointing to features.json configuration file.</td>
-  </tr>
-</table><div class="admonition note">
+<table border="1" class="docutils">
+<colgroup>
+<col width="43%" />
+<col width="57%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>-h, &#8211;help</td>
+<td>Prints help message</td>
+</tr>
+<tr class="row-odd"><td>-V, &#8211;version</td>
+<td>Prints version message.</td>
+</tr>
+<tr class="row-even"><td>-d, &#8211;debug</td>
+<td>Adds additional log
+output while running</td>
+</tr>
+<tr class="row-odd"><td>-o output
+&#8211;output output</td>
+<td>Saves trained model and
+related data to this
+file.</td>
+</tr>
+<tr class="row-even"><td>-w file
+&#8211;weights file</td>
+<td>Stores feature weights
+to the specified file
+as JSON objects. The
+weights are stored
+within two lists, one
+for positive weights
+(in descending order),
+and one for the
+negative weights (in
+ascending order).
+In case, a feature
+results from a &#8220;parent&#8221;
+feature (i.e. when
+using Tfidf, count
+etc.), the name used is
+in the form
+&lt;parent feature&gt;.&lt;value&gt;.</td>
+</tr>
+<tr class="row-odd"><td>-s test-vect-file</td>
+<td>Store test vectorized
+data to given file.</td>
+</tr>
+<tr class="row-even"><td>-v train-vect-file</td>
+<td>Store train vectorized
+data to given file.</td>
+</tr>
+<tr class="row-odd"><td>-i input-data
+&#8211;input input-data</td>
+<td>Read train data from file
+&#8216;input-data&#8217;. Input file
+may contain multiple JSON
+objects, each containing
+the feature data for each
+row data.</td>
+</tr>
+<tr class="row-even"><td>-t test-data
+&#8211;test test-data</td>
+<td>Read test data from file
+&#8216;test data&#8217;. Input file
+may contain multiple JSON
+objects, each containing
+the feature data for each
+row data.</td>
+</tr>
+<tr class="row-odd"><td>-tp test-percent</td>
+<td><p class="first">Specify what percentage of
+the training data would be
+used for testing and this
+part of the data would be
+excluded from the training
+set and considered only in</p>
+<blockquote class="last">
+<div>the testing phase.</div></blockquote>
+</td>
+</tr>
+<tr class="row-even"><td>-e extraction-plan</td>
+<td>Use the extraction plan
+defined in the given path.
+If -i has been defined,
+it will be ignored.</td>
+</tr>
+<tr class="row-odd"><td>-I key=value</td>
+<td>Allows user defined
+parameters. The given
+parameters will be used to
+replace parameters in the
+SQL query. Can have
+multiple values. Will be
+used only if flag -e is
+defined. These values will
+be used for extracting
+train data.</td>
+</tr>
+<tr class="row-even"><td>-T key=value</td>
+<td>Same as -I, but used for
+extracting test data.</td>
+</tr>
+<tr class="row-odd"><td>&#8211;skip-test</td>
+<td>Skips testing phase.</td>
+</tr>
+<tr class="row-even"><td>&#8211;transformer-path
+transformer_path</td>
+<td>Path to the folder with
+pretrained transformers.</td>
+</tr>
+<tr class="row-odd"><td>path</td>
+<td>Path pointing to
+features.json file the
+configuration file.</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">If one is required to use csv as the input format, the csv file will be required to have a .csv extension.</p>
 </div>
-<p>Example:</p>
-<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> python trainer.py features.json -i abalone.json -o model.dat
+<div class="section" id="id1">
+<h3>Example<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p>Download <a class="reference download internal" href="_downloads/features.json"><code class="xref download docutils literal"><span class="pre">feature.json</span></code></a> file, that describes all model fields and the <a class="reference internal" href="classifiers.html#supported-classifiers"><span>classifier</span></a> to be used.</p>
+<p>Create the model and evaluate it using previously created train-dataset.json and test-dataset.json:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> python trainer.py ./doc/_static/command<span class="se">\ </span>line/features.json -i ./train-dataset.json -o model.dat -t ./test-dataset.json
 </pre></div>
+</div>
+<p>The <cite>model.dat</cite> will be created with pickled trained model.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">More information about create the model could be found in <a class="reference internal" href="getting_started.html#createing-the-model"><span>Getting Started</span></a> topic.</p>
+</div>
 </div>
 </div>
 <div class="section" id="predictor-py">
@@ -276,64 +381,96 @@
 </pre></div>
 </div>
 <p>The details of the parameters passed to predict.py are as follows:</p>
-<table>
-  <tr>
-    <th>Parameter</th>
-    <th>Description</th>
-  </tr>
-  <tr>
-    <td>-h, --help</td>
-    <td>Prints help message</td>
-  </tr>
-  <tr>
-    <td>-V, --version</td>
-    <td>Prints version message</td>
-  </tr>
-  <tr>
-    <td>-d, --debug</td>
-    <td>Adds additional log output while running</td>
-  </tr>
-  <tr>
-    <td>-o output, --output output</td>
-    <td>Saves each row result and data to this file as a JSON object.</td>
-  </tr>
-  <tr>
-    <td>-m method, --method method</td>
-    <td>Process the results using the given methods. Current methods
-    supported are:
-    <ul>
-      <li>roc - Area under the ROC curve.</li>
-      <li>csv - Dump results as CSV. </li>
-    </ul>
-    </td>
-  </tr>
-  <tr>
-    <td>-P key=value</td>
-    <td>Allows passing parameters to evaluation method defined using -m.</td>
-  </tr>
-  <tr>
-    <td>-i input-data, --input input-data</td>
-    <td>Read train data from file 'input-data'. Input file may contain
-    multiple JSON objects, each containing the feature data for each row data.</td>
-  </tr>
-  <tr>
-    <td>-e extraction-plan</td>
-    <td>Use the extraction plan defined in the given path. If -i has been
-    defined, it will be ignored.</td>
-  </tr>
-  <tr>
-   <td>-U key=value</td>
-    <td>Allows user defined parameters for the extraction plan. The given
-    parameters will be used to replace parameters in the SQL query. Can have
-    multiple values.</td>
-  </tr>
-  <tr>
-    <td>path</td>
-    <td>Path pointing to trained classifier, as saved by trainer.</td>
-  </tr>
-</table></div>
+<table border="1" class="docutils">
+<colgroup>
+<col width="43%" />
+<col width="57%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>-h, &#8211;help</td>
+<td>Prints help message.</td>
+</tr>
+<tr class="row-odd"><td>-V, &#8211;version</td>
+<td>Prints version message.</td>
+</tr>
+<tr class="row-even"><td>-d, &#8211;debug</td>
+<td>Adds additional log
+output while running</td>
+</tr>
+<tr class="row-odd"><td>-o output
+&#8211;output output</td>
+<td>Saves each row result and
+data to this file as a
+JSON object.</td>
+</tr>
+<tr class="row-even"><td>-m method
+&#8211;method method</td>
+<td><p class="first">Process the results using
+the given methods.
+Supported methods:</p>
+<blockquote class="last">
+<div><ul class="simple">
+<li>roc - Area under the
+ROC curve.</li>
+<li>csv - Dump results as
+CSV.</li>
+</ul>
+</div></blockquote>
+</td>
+</tr>
+<tr class="row-odd"><td>-P key=value</td>
+<td>Allows passing parameters
+to evaluation method
+defined using -m.</td>
+</tr>
+<tr class="row-even"><td>-i input-data
+&#8211;input input-data</td>
+<td>Read the data from file
+&#8216;input-data&#8217;. Input file
+may contain multiple JSON
+objects, each containing
+the feature data for each
+row data.</td>
+</tr>
+<tr class="row-odd"><td>-e extraction-plan</td>
+<td>Use the extraction plan
+defined in the given path.
+If -i has been defined,
+it will be ignored.</td>
+</tr>
+<tr class="row-even"><td>-U key=value</td>
+<td>Allows user defined
+parameters for the
+extraction plan. The given
+parameters will be used to
+replace parameters in the
+SQL query. Can have
+multiple values.</td>
+</tr>
+<tr class="row-odd"><td>path</td>
+<td>Path pointing to trained
+classifier, as saved by
+trainer.</td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="id2">
+<h3>Example<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<p>Download <a class="reference download internal" href="_downloads/data.json"><code class="xref download docutils literal"><span class="pre">data.json</span></code></a> with a data for making prediction.</p>
+<p>Predict the target variable using data from <cite>data.json</cite> file:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> python predictor.py -i data.json -m csv model.dat
+</pre></div>
+</div>
+<p>The <cite>results.csv</cite> file would be created with probabilities for each value of the target variable.</p>
+</div>
+</div>
 <div class="section" id="transformer-py">
-<span id="id1"></span><h2>transformer.py<a class="headerlink" href="#transformer-py" title="Permalink to this headline">¶</a></h2>
+<span id="id3"></span><h2>transformer.py<a class="headerlink" href="#transformer-py" title="Permalink to this headline">¶</a></h2>
 <p>The train transfromer can be run using:</p>
 <div class="highlight-python"><div class="highlight"><pre>python transformer.py [-h] [-V] [-d] [-o output]
                   [-i input-file] [-e extraction-plan-file]
@@ -341,50 +478,83 @@
 </pre></div>
 </div>
 <p>The details of the parameters passed to predict.py are as follows:</p>
-<table>
-  <tr>
-    <th>Parameter</th>
-    <th>Description</th>
-  </tr>
-  <tr>
-    <td>-h, --help</td>
-    <td>Prints help message</td>
-  </tr>
-  <tr>
-    <td>-V, --version</td>
-    <td>Prints version message</td>
-  </tr>
-  <tr>
-    <td>-d, --debug</td>
-    <td>Adds additional log output while running</td>
-  </tr>
-  <tr>
-    <td>-o output, --output output</td>
-    <td>Saves trained transformer and related data to this file.</td>
-  </tr>
-  <tr>
-    <td>-i input-data, --input input-data</td>
-    <td>Read train data from file 'input-data'. Input file may contain
-    multiple JSON objects, each containing the feature data for each row
-    data.</td>
-  </tr>
-  <tr>
-    <td>-e extraction-plan</td>
-    <td>Use the extraction plan defined in the given path. If -i has been
-    defined, it will be ignored.</td>
-  </tr>
-  <tr>
-    <td>-I key=value</td>
-    <td>Allows user defined parameters. The given parameters will be used to
-    replace parameters in the SQL query. Can have multiple values. Will be
-    used only if flag -e is defined. These values will be used for extracting
-    train data.</td>
-  </tr>
-  <tr>
-    <td>path</td>
-    <td>Path pointing to transformer.json configuration file.</td>
-  </tr>
-</table></div>
+<table border="1" class="docutils">
+<colgroup>
+<col width="43%" />
+<col width="57%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>-h, &#8211;help</td>
+<td>Prints help message.</td>
+</tr>
+<tr class="row-odd"><td>-V, &#8211;version</td>
+<td>Prints version message.</td>
+</tr>
+<tr class="row-even"><td>-d, &#8211;debug</td>
+<td>Adds additional log
+output while running</td>
+</tr>
+<tr class="row-odd"><td>-o output
+&#8211;output output</td>
+<td>Saves trained transformer
+and  related data to this
+file.</td>
+</tr>
+<tr class="row-even"><td>-i input-data
+&#8211;input input-data</td>
+<td>Read train data from file
+&#8216;input-data&#8217;. Input file
+may contain multiple JSON
+objects, each containing
+the feature data for each
+row data.</td>
+</tr>
+<tr class="row-odd"><td>-e extraction-plan</td>
+<td>Use the extraction plan
+defined in the given path.
+If -i has been defined,
+it will be ignored.</td>
+</tr>
+<tr class="row-even"><td>-I key=value</td>
+<td>Allows user defined
+parameters. The given
+parameters will be used to
+replace parameters in the
+SQL query. Can have
+multiple values. Will be
+used only if flag -e is
+defined. These values will
+be used for extracting
+train data.</td>
+</tr>
+<tr class="row-odd"><td>path</td>
+<td>Path pointing to
+transformer.json file the
+configuration file.</td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="id4">
+<h3>Example<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<p>Download <code class="xref download docutils literal"><span class="pre">transformer.json</span></code> with the feature transformer specification.</p>
+<p>Train the transformer using previously created <cite>train-dataset.json</cite>:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> python transformer.py -i train-dataset.json -o transformers/rings-transformer.dat transformer.json
+</pre></div>
+</div>
+<p>The <cite>rings-transformer.dat</cite> will be created with pickled transformer class.</p>
+<p>To try the pretrained transformer in action download <a class="reference download internal" href="_downloads/features-with-pretrained-transformer.json"><code class="xref download docutils literal"><span class="pre">features-with-pretrained-transformer.json</span></code></a> file, that describes all model fields and the <a class="reference internal" href="classifiers.html#supported-classifiers"><span>classifier</span></a> to be used. The feature <cite>transformed-rings</cite> use pretrained transformer <cite>rings-transformer</cite>.</p>
+<p>Train the model:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> python trainer.py features.json -i ./train-dataset.json -o new-model.dat -t ./test-dataset.json --transformer-path ./
+</pre></div>
+</div>
+<p>The <cite>new-model.dat</cite> will be created with pickled trained model.</p>
+</div>
+</div>
 </div>
 
 

@@ -92,6 +92,8 @@ File :download:`abalone.json <_static/abalone.json>` contain json for each row. 
 	......
 
 
+.. _createing-the-model:
+
 Creating the model
 ==================
 
@@ -105,7 +107,7 @@ First, the classifier must be defined:
         :language: json
         :lines: 3-6
 
-The feateres are as follows:
+The features are as follows:
     .. literalinclude:: _static/features.json
         :language: json
         :lines: 7-39
