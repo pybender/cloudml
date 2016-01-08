@@ -13,7 +13,7 @@ To define the model it needed to create the model specification. It's a json-for
 
 .. note::
 
-	In the documentation this file is named as `features.json`, but it could be used any name with `json` extention.
+	In the documentation the file is named as `features.json`, but it could be used any name with `json` extention.
 
 There are four top-level elements:
 
