@@ -1,4 +1,4 @@
-# Author: Nikolay Melnik <nmelnik@upwork.com>
+# Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 from base import FeatureTypeBase, FeatureTypeInstanceBase, \
     InvalidFeatureTypeException

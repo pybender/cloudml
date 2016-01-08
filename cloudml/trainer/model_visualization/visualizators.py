@@ -1,4 +1,4 @@
-# Author: Nikolay Melnik <nmelnik@upwork.com>
+# Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 from ..classifier_settings import LOGISTIC_REGRESSION, SVR, \
     SGD_CLASSIFIER, DECISION_TREE_CLASSIFIER, \

@@ -2,7 +2,7 @@
 Unittests for processing user input data classes.
 """
 
-# Author: Nikolay Melnik <nmelnik@upwork.com>
+# Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 import os
 import unittest

@@ -2,7 +2,7 @@
 Methods that would be avaiable in python scripts.
 """
 
-# Author: Nikolay Melnik <nmelnik@upwork.com>
+# Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 import sys
 import json

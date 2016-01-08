@@ -3,7 +3,7 @@ This module holds classes and utils to calculate evaluation model
 metrics.
 """
 
-# Author: Nikolay Melnik <nmelnik@upwork.com>
+# Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 import logging
 from collections import OrderedDict

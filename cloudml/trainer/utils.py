@@ -2,8 +2,8 @@
 This module gathers utility functions to for model training, evaluation, etc.
 """
 
-# Authors: Ioannis Foukarakis <ifoukarakis@upwork.com>
-#          Nikolay Melnik <nmelnik@upwork.com>
+# Authors: Ioannis Foukarakis <ifoukarakis@cloud.upwork.com>
+#          Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 
 def copy_expected(source_params, expected):

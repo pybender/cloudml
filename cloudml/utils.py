@@ -1,6 +1,6 @@
 """ Uitility methods for processing data """
 
-# Author: Nikolay Melnik <nmelnik@upwork.com>
+# Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 import logging
 import os

@@ -3,8 +3,8 @@ This module holds classes and utils to parse model configuration
 from features.json file.
 """
 
-# Authors: Ioannis Foukarakis <ifoukarakis@upwork.com>
-#          Nikolay Melnik <nmelnik@upwork.com>
+# Authors: Ioannis Foukarakis <ifoukarakis@cloud.upwork.com>
+#          Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 import json
 import importlib

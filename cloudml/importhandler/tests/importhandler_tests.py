@@ -2,7 +2,7 @@
 Unittests for ExtractionPlan and ImportHandler classes.
 """
 
-# Author: Nikolay Melnik <nmelnik@upwork.com>
+# Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 import os
 import csv

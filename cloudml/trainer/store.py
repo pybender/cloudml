@@ -2,8 +2,8 @@
 This module gathers utilities for pickling the model.
 """
 
-# Authors: Ioannis Foukarakis <ifoukarakis@upwork.com>
-#          Nikolay Melnik <nmelnik@upwork.com>
+# Authors: Ioannis Foukarakis <ifoukarakis@cloud.upwork.com>
+#          Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 import cPickle as pickle
 

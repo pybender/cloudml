@@ -1,4 +1,4 @@
-# Authors: Nikolay Melnik <nmelnik@upwork.com>
+# Authors: Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 import numpy
 from copy import deepcopy

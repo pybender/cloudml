@@ -3,8 +3,8 @@ This module is a generic place used to hold helper functions
 connect and query with databases.
 """
 
-# Authors: Ioannis Foukarakis <ifoukarakis@upwork.com>
-#          Nikolay Melnik <nmelnik@upwork.com>
+# Authors: Ioannis Foukarakis <ifoukarakis@cloud.upwork.com>
+#          Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 import psycopg2
 import psycopg2.extras

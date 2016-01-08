@@ -7,7 +7,7 @@ to extraction plan.
 It defines classes ExtractionPlan and ImportHandler
 """
 
-# Author: Nikolay Melnik <nmelnik@upwork.com>
+# Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 import os
 import logging

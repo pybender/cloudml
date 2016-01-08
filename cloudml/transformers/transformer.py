@@ -3,7 +3,7 @@ Module gathers classes and methods for implementing pretrained
 transformers.
 """
 
-# Author: Nikolay Melnik <nmelnik@upwork.com>
+# Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 import logging
 import json

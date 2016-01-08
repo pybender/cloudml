@@ -1,10 +1,10 @@
-# Author: Nikolay Melnik <nmelnik@upwork.com>
+# Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 import os
 import unittest
 from mock import patch
 
 from transformer import main, PARAMETERS_REQUIRED, \
-    INVALID_TRANSOFMER_CONFIG, INVALID_EXTRACTION_PLAN, \
+    INVALID_TRANSFORMER_CONFIG, INVALID_EXTRACTION_PLAN, \
     DONE
 from test_utils import db_row_iter_mock
 
@@ -45,7 +45,7 @@ class ImportHandlerTestCase(unittest.TestCase):
         res = main(argv=[
             'testdata/transformers/empty_name.json',
             '-i', 'testdata/transformers/train.data.json'])
-        self.assertEquals(res, INVALID_TRANSOFMER_CONFIG)
+        self.assertEquals(res, INVALID_TRANSFORMER_CONFIG)
 
     @patch('importhandler.logging')
     def test_wrong_ih(self, logging_mock):

@@ -2,7 +2,7 @@
 This module gathers all primitive feature types processors.
 """
 
-# Author: Nikolay Melnik <nmelnik@upwork.com>
+# Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 from sklearn.feature_extraction import DictVectorizer
 

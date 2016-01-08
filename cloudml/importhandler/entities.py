@@ -2,14 +2,12 @@
 Classes to process XML Import Handler import section.
 """
 
-# Author: Nikolay Melnik <nmelnik@upwork.com>
+# Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 from collections import OrderedDict
-import json
 import logging
 from datetime import datetime
 import re
-import math
 from jsonpath import jsonpath
 
 from exceptions import ProcessException, ImportHandlerException

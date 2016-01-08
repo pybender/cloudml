@@ -2,7 +2,7 @@
 This module gathers classifiers description.
 """
 
-# Author: Nikolay Melnik <nmelnik@upwork.com>
+# Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 # TODO: Maybe this settings should be moved to another place,
 # for example xml file.
 

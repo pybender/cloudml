@@ -3,7 +3,7 @@ This module gather classes and utils for categorical and categorical_label
 feature types processing.
 """
 
-# Author: Nikolay Melnik <nmelnik@upwork.com>
+# Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 import re
 from functools import update_wrapper

@@ -2,7 +2,7 @@
 Unittests for python scripts manager class.
 """
 
-# Author: Nikolay Melnik <nmelnik@upwork.com>
+# Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 import unittest
 

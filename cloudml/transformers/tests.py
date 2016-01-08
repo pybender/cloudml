@@ -2,7 +2,7 @@
 Unittests for pretrained transformers.
 """
 
-# Author: Nikolay Melnik <nmelnik@upwork.com>
+# Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 import unittest
 from mock import MagicMock, patch

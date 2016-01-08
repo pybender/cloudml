@@ -2,7 +2,7 @@
 Json stream loading utilities.
 """
 
-# Author: Ioannis Foukarakis <ifoukarakis@upwork.com>
+# Author: Ioannis Foukarakis <ifoukarakis@cloud.upwork.com>
 
 import json
 import csv

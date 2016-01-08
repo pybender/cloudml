@@ -5,21 +5,20 @@ The predictor loads a trained classifier and its configuration, and attempts to
 classify incoming data.
 """
 
-# Authors: Ioannis Foukarakis <ifoukarakis@upwork.com>
-#          Nikolay Melnik <nmelnik@upwork.com>
+# Authors: Ioannis Foukarakis <ifoukarakis@cloud.upwork.com>
+#          Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 import logging
 import os
 import sys
 import csv
-import numpy as np
 import sklearn.metrics as metrics
 
 from cloudml.importhandler.importhandler import ImportHandlerException, \
     ExtractionPlan, ImportHandler
 from cloudml.trainer.streamutils import streamingiterload
 from cloudml.trainer.store import load_trainer
-from cloudml.trainer.trainer import list_to_dict, Trainer
+from cloudml.trainer.trainer import list_to_dict
 from cloudml.trainer.exceptions import InvalidTrainerFile
 from cloudml.utils import init_logging, determine_data_format
 
@@ -31,13 +30,10 @@ PARAMETERS_REQUIRED = 3
 
 
 def roc(iterator, trainer, params):
-    from cloudml.utils import process_bool
     result = trainer.predict(iterator, store_vect_data=True)
 
     # TODO: multiclass support
     probs = [p[1] for p in result['probs']]
-    # result['probs'] isn't scipy array, so this indexing isn't supported
-    # probs = result['probs'][:, np.where(result['classes'] == True)]
 
     fpr, tpr, thresholds = metrics.roc_curve(result['true_labels'], probs)
     roc_auc = metrics.auc(fpr, tpr)
@@ -136,7 +132,6 @@ def create_parser():
     """ Setups argument parser """
     from argparse import ArgumentParser, RawDescriptionHelpFormatter
     from cloudml.trainer import __version__
-    program_name = os.path.basename(sys.argv[0])
     program_version = 'v%s' % __version__
     program_version_message = '%%(prog)s %s ' % (program_version, )
     program_shortdesc = __import__('__main__').__doc__
@@ -188,4 +183,4 @@ if __name__ == '__main__':
     try:
         sys.exit(main())
     except KeyboardInterrupt:
-        logging.warn('keybord interrupt')
+        logging.warn('keyboard interrupt')

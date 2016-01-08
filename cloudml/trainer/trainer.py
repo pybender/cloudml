@@ -3,9 +3,9 @@ This module gathers cloudml classes and methods for training
 and evaluating the model.
 """
 
-# Authors: Ioannis Foukarakis <ifoukarakis@upwork.com>
+# Authors: Ioannis Foukarakis <ifoukarakis@cloud.upwork.com>
 #          Panagiotis Papadimitriou <papadimitriou@upwork.com>
-#          Nikolay Melnik <nmelnik@upwork.com>
+#          Nikolay Melnik <nmelnik@cloud.upwork.com>
 #          Nader Soliman <nsoliman@cloud.upwork.com>
 
 import json
