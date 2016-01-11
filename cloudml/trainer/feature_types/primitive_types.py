@@ -45,8 +45,8 @@ class PrimitiveFeatureTypeBase(FeatureTypeBase):
     instance = PrimitiveFeatureTypeInstance
 
     def get_instance(self, params, input_format=None):
-        # raise InvalidFeatureTypeException(
-        #    'Just to check exceptions chaining')
+        raise InvalidFeatureTypeException(
+           'Just to check exceptions chaining')
         set_params = set()
         preprocessor = None
         if input_format == 'dict':

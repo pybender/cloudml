@@ -22,7 +22,7 @@ from cloudml.trainer.store import load_trainer
 from cloudml.trainer.trainer import list_to_dict, Trainer
 from cloudml.trainer.exceptions import InvalidTrainerFile
 from cloudml.utils import init_logging, determine_data_format
-
+from cloudml import print_exception
 
 DONE = 0
 INVALID_EXTRACTION_PLAN = 1
@@ -89,6 +89,7 @@ def main(argv=None):
             trainer = load_trainer(fp)
     except InvalidTrainerFile, exc:
         logging.warn('Invalid trainer file: {0!s}'.format(exc))
+        print_exception(exc)
         return INVALID_TRAINER
 
     iterator = None

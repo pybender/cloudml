@@ -38,8 +38,10 @@ def main(argv=None):
     try:
         plan = ExtractionPlan(args.path)
         extractor = ImportHandler(plan, context)
-    except ImportHandlerException, e:
+    except Exception as e:
+        from cloudml import print_exception
         logging.warn('Invalid extraction plan: {}'.format(e.message))
+        print_exception(e)
         return INVALID_EXTRACTION_PLAN
 
     if args.output is not None:
