@@ -40,5 +40,5 @@ class EmptyDataException(BaseException):
     pass
 
 
-class TrainerValueError(BaseException):
+class StreamReadError(BaseException):
     pass

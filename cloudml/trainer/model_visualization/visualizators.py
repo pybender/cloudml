@@ -2,7 +2,6 @@
 
 from ..classifier_settings import *
 from weights import WeightsCalculator, SVRWeightsCalculator
-from cloudml.trainer.exceptions import TrainerValueError
 
 
 class BaseTrainedModelVisualizator(object):
@@ -49,9 +48,8 @@ class SVRTrainingVisualizer(BaseTrainedModelVisualizator):
         if self.kernel == 'linear':
             return super(SVRTrainingVisualizer, self).get_weights(segment)
         else:
-            raise TrainerValueError("Storing weights are unavailable: coef_ "
-                                    "is only available when using a linear "
-                                    "kernel")
+            raise ValueError("Storing weights are unavailable: coef_ is only "
+                             "available when using a linear kernel")
 
     def get_visualization(self, segment):
         res = {

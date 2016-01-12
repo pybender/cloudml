@@ -4,7 +4,6 @@ import logging
 import numpy
 from operator import itemgetter
 from ..classifier_settings import LOGISTIC_REGRESSION, SVR, SGD_CLASSIFIER
-from cloudml.trainer.exceptions import TrainerValueError
 
 
 class WeightsCalculator(object):
@@ -127,9 +126,8 @@ class WeightsCalculator(object):
                 <class_label2>: etc}
         """
         if segment not in self.weights:
-            raise TrainerValueError("Feature weights for {1!s} segment wasn't "
-                                    "filled: {0}".format(self.weights,
-                                                         segment))
+            raise ValueError("Feature weights for {1!s} segment wasn't "
+                             "filled: {0}".format(self.weights, segment))
 
         if signed:
             result = {}
@@ -161,7 +159,7 @@ class WeightsCalculator(object):
     def _get_feature_names_from_vectorizer(self, name, vectorizer):
         try:
             feature_names = vectorizer.get_feature_names()
-        except (ValueError, TrainerValueError):
+        except ValueError:
             return []
 
         return ['%s->%s' % (name, feature_names[j])

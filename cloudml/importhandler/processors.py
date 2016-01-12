@@ -49,7 +49,7 @@ def composite_python(expression_value, value, row_data):  # pragma: no cover
     try:
         return eval(res)
     except Exception as e:
-        logging.exception(
+        logging.error(
             'Expression template %s, expression %s' % (expression_value, res))
         raise ProcessException(e.message, e)
 

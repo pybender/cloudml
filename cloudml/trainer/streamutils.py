@@ -6,7 +6,7 @@ Json stream loading utilities.
 
 import json
 import csv
-from cloudml.trainer.exceptions import TrainerValueError
+from cloudml.trainer.exceptions import StreamReadError
 
 
 class JsonStreamReader(object):
@@ -62,8 +62,8 @@ def jsoniterload(stream):
             if obj is not None:
                 yield obj
         except Exception, ex:
-            raise TrainerValueError('Failed to read next line from the input '
-                                    'stream. Error: %s' % ex, ex)
+            raise StreamReadError('Failed to read next line from the input '
+                                  'stream. Error: %s' % ex, ex)
 
 
 SOURCE_FORMATS = {

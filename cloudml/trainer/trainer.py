@@ -31,7 +31,7 @@ from exceptions import EmptyDataException, SchemaException
 from metrics import ClassificationModelMetrics, RegressionModelMetrics
 from model_visualization import TrainedModelVisualizator
 from exceptions import ItemParseException, InvalidTrainerFile, \
-    TransformerNotFound, TrainerValueError, EmptyDataException
+    TransformerNotFound, EmptyDataException
 from classifier_settings import TYPE_CLASSIFICATION, TYPE_REGRESSION
 
 DEFAULT_SEGMENT = 'default'
@@ -160,8 +160,7 @@ class Trainer(object):
 
         if percent:
             if percent < 0 or percent > 100:
-                raise TrainerValueError("percent parameter should be from 0 "
-                                        "to 100")
+                raise ValueError("percent parameter should be from 0 to 100")
 
             self._count = self._count - int(self._count * percent / 100)
             for segment in self._vect_data:
@@ -412,8 +411,7 @@ class Trainer(object):
 
     def vect_data2csv(self, file_name):
         if not self.intermediate_data[self.TRAIN_VECT_DATA]:
-            raise TrainerValueError("Execute train with store_vect_data "
-                                    "parameter")
+            raise ValueError("Execute train with store_vect_data parameter")
 
         few_segments = len(self.intermediate_data[self.TRAIN_VECT_DATA]) > 1
         for segment, data in \
@@ -582,7 +580,7 @@ class Trainer(object):
                 if feature['transformer-type'] in ('Lda', 'Lsi'):
                     feature['transformer'].num_features = \
                         transformed_data.shape[1]
-            except (ValueError, TrainerValueError) as e:
+            except ValueError as e:
                 logging.warn('Feature %s will be ignored due to '
                              'transformation error: %s.' %
                              (feature['name'], str(e)))
