@@ -3,7 +3,7 @@
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 from utils import parse_parameters
-from cloudml.trainer.exceptions import BaseException
+from cloudml.trainer.exceptions import BaseTrainerException
 
 
 class NoScaler(StandardScaler):
@@ -51,7 +51,7 @@ SCALERS = {
 }
 
 
-class ScalerException(BaseException):
+class ScalerException(BaseTrainerException):
     pass
 
 
