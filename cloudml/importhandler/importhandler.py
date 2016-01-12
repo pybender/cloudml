@@ -47,9 +47,12 @@ class ExtractionPlan(object):
     Reads and validates extraction plan configuration from a XML file.
     """
     def __init__(self, config, is_file=True):
-        if is_file:
+        if is_file and os.path.isfile(config):
             with open(config, 'r') as fp:
                 config = fp.read()
+        else:
+            raise ImportHandlerException("import handler file '%s' not found"
+                                         % config)
 
         if not config:
             raise ImportHandlerException('import handler file is empty')

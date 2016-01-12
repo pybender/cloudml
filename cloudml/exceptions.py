@@ -44,8 +44,8 @@ def traceback_info():
             .format(co.co_filename, tb.tb_lineno, modname, co.co_name)
         line = linecache.getline(filename, tb.tb_lineno)
         if line:
-            l = '{0}: {1}'.format(s, line.strip())
-        res = [format_line(l, locals=f.f_locals)]
+            s = '{0}: {1}'.format(s, line.strip())
+        res = [format_line(s, locals=f.f_locals)]
 
         return res
 
@@ -116,6 +116,20 @@ def print_exception(e):
         BOLD = '\033[1m'
         UNDERLINE = '\033[4m'
 
+        def disable(self):
+            self.HEADER = ''
+            self.OKGREEN = ''
+            self.OKBLUE = ''
+            self.WARNING = ''
+            self.FAIL = ''
+            self.ENDC = ''
+            self.BOLD = ''
+            self.UNDERLINE = ''
+
+    c = bcolors()
+    if not sys.stdout.isatty():
+        c.disable()
+
     obj = ChainedException("Got exception", e)
     i = 0
     ind = ""
@@ -127,21 +141,18 @@ def print_exception(e):
                 lne = line.get('line', None)
                 local_vars = line.get('locals', None)
                 if exception:
-                    print "".join([ind, bcolors.WARNING, exception,
-                                   bcolors.ENDC])
+                    print "".join([ind, c.WARNING, exception, c.ENDC])
                 elif lne:
-                    print "".join([ind, bcolors.BOLD, lne, bcolors.ENDC])
+                    print "".join([ind, c.BOLD, lne, c.ENDC])
                 if local_vars:
-                    print "".join([bcolors.OKBLUE, ind, "Local variables:",
-                                   bcolors.ENDC])
+                    print "".join([c.OKBLUE, ind, "Local variables:", c.ENDC])
                     for (k, v) in local_vars.iteritems():
-                        print "".join([ind, bcolors.OKGREEN, "    ", str(k),
-                                       ": ", bcolors.ENDC, str(v)])
+                        print "".join([ind, c.OKGREEN, "    ", str(k),
+                                       ": ", c.ENDC, str(v)])
         if hasattr(obj, 'chain') and obj.chain is not None \
                 and hasattr(obj.chain, 'traceback') and obj.chain._traceback:
             print
-            print "".join([ind, bcolors.HEADER, "CAUSED BY:",
-                           bcolors.ENDC])
+            print "".join([ind, c.HEADER, "CAUSED BY:", c.ENDC])
             obj = obj.chain
             ind += "    "
             i += 1

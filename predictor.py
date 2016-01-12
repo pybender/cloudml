@@ -24,10 +24,12 @@ from cloudml.trainer.exceptions import InvalidTrainerFile
 from cloudml.utils import init_logging, determine_data_format
 from cloudml import print_exception
 
+
 DONE = 0
 INVALID_EXTRACTION_PLAN = 1
 INVALID_TRAINER = 2
 PARAMETERS_REQUIRED = 3
+PREDICTION_ERROR = 4
 
 
 def roc(iterator, trainer, params):
@@ -87,48 +89,54 @@ def main(argv=None):
     try:
         with open(args.path, 'r') as fp:
             trainer = load_trainer(fp)
-    except InvalidTrainerFile, exc:
+    except (IOError, InvalidTrainerFile) as exc:
         logging.warn('Invalid trainer file: {0!s}'.format(exc))
         print_exception(exc)
         return INVALID_TRAINER
 
-    iterator = None
-    if args.input is not None:
-        # Read evaluation data from file.
-        eval_fp = open(args.input, 'r')
-        file_format = determine_data_format(args.input)
-        iterator = streamingiterload(eval_fp, source_format=file_format)
-    elif args.extraction is not None:
-        # Use import handler
-        try:
-            eval_context = list_to_dict(args.eval_params)
-            plan = ExtractionPlan(args.extraction)
-            eval_handler = ImportHandler(plan, eval_context)
-        except ImportHandlerException, e:
-            logging.warn('Invalid extraction plan: %s' % e.message)
-            return INVALID_EXTRACTION_PLAN
+    try:
+        iterator = None
+        if args.input is not None:
+            # Read evaluation data from file.
+            eval_fp = open(args.input, 'r')
+            file_format = determine_data_format(args.input)
+            iterator = streamingiterload(eval_fp, source_format=file_format)
+        elif args.extraction is not None:
+            # Use import handler
+            try:
+                eval_context = list_to_dict(args.eval_params)
+                plan = ExtractionPlan(args.extraction)
+                eval_handler = ImportHandler(plan, eval_context)
+            except ImportHandlerException as e:
+                logging.warn('Invalid extraction plan: %s' % e.message)
+                print_exception(e)
+                return INVALID_EXTRACTION_PLAN
 
-        logging.info('Starting training with params:')
-        for key, value in eval_context.items():
-            logging.info('%s --> %s' % (key, value))
+            logging.info('Starting training with params:')
+            for key, value in eval_context.items():
+                logging.info('%s --> %s' % (key, value))
 
-        iterator = eval_handler
-    else:
-        # TODO: Add mutually exclusive group
-        logging.warn('Need to either specify -i or -e')
-        parser.print_help()
-        return PARAMETERS_REQUIRED
+            iterator = eval_handler
+        else:
+            # TODO: Add mutually exclusive group
+            logging.warn('Need to either specify -i or -e')
+            parser.print_help()
+            return PARAMETERS_REQUIRED
 
-    eval_method = EVALUATION_METHODS.get(args.method)
-    if eval_method is not None:
-        eval_method(iterator, trainer, list_to_dict(args.params))
-    if args.input is not None:
-        eval_fp.close()
+        eval_method = EVALUATION_METHODS.get(args.method)
+        if eval_method is not None:
+            eval_method(iterator, trainer, list_to_dict(args.params))
+        if args.input is not None:
+            eval_fp.close()
 
-    if args.store_vect is not None:
-        logging.info('Storing vectorized data to %s' % args.store_vect)
-        trainer.store_vect_data(
-            trainer.predict_data.values(), args.store_vect)
+        if args.store_vect is not None:
+            logging.info('Storing vectorized data to %s' % args.store_vect)
+            trainer.store_vect_data(
+                trainer.predict_data.values(), args.store_vect)
+    except Exception as e:
+        logging.info('Error occurred during prediction: %s' % e.message)
+        print_exception(e)
+        return PREDICTION_ERROR
 
     return DONE
 
