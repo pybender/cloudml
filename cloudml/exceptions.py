@@ -22,11 +22,11 @@ def traceback_info():
                     return type(data)(map(convert, data))
                 else:
                     return str(data)
-            except Exception as e:
+            except Exception:
                 return str(data)
 
         res = {'line': line, 'locals': {}}
-        if locals and len(locals) < 10 :
+        if locals and len(locals) < 10:
             for n, val in locals.iteritems():
                 res['locals'][convert(n)] = convert(val)
         return res
@@ -87,7 +87,7 @@ class ChainedException(Exception):
         # index to prevent deep cycle
         i = 0
         reasons = []
-        while i<20 and current.chain is not None and \
+        while i < 20 and current.chain is not None and \
                 isinstance(current.chain, ChainedException):
             reasons.append(current.chain._traceback)
             current = current.chain

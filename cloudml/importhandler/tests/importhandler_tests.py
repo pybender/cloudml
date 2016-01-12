@@ -316,7 +316,7 @@ class CompositeTypeTest(unittest.TestCase):
                                     'composite-type-import-handler.xml'))
 
     @patch('cloudml.importhandler.datasources.DbDataSource._get_iter',
-           return_value =db_row_iter_mock())
+           return_value=db_row_iter_mock())
     def composite_test(self, mock_db):
         self._extractor = ImportHandler(self._plan, {
             'start': '2012-12-03',
