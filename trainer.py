@@ -4,8 +4,8 @@
 Model trainer command line utility.
 """
 
-# Authors: Ioannis Foukarakis <ifoukarakis@upwork.com>
-#          Nikolay Melnik <nmelnik@upwork.com>
+# Authors: Ioannis Foukarakis <ifoukarakis@cloud.upwork.com>
+#          Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 import os
 import sys
@@ -19,7 +19,7 @@ from cloudml.trainer.store import store_trainer
 from cloudml.trainer.streamutils import streamingiterload
 from cloudml.trainer.trainer import Trainer, list_to_dict, TransformerNotFound
 from cloudml.utils import init_logging, determine_data_format
-from cloudml import print_exception
+from cloudml.exceptions import print_exception
 
 
 # Status codes

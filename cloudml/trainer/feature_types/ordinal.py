@@ -2,7 +2,7 @@
 This module contains map feature type processor
 """
 
-# Author: Nikolay Melnik <nmelnik@upwork.com>
+# Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 from base import FeatureTypeBase, FeatureTypeInstanceBase
 from cloudml.utils import isfloat, isint

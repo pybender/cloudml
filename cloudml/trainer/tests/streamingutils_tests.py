@@ -1,4 +1,4 @@
-# Authors: Ioannis Foukarakis <ifoukarakis@upwork.com>
+# Authors: Ioannis Foukarakis <ifoukarakis@cloud.upwork.com>
 
 import unittest
 import os
@@ -41,7 +41,7 @@ class ParserTest(unittest.TestCase):
         self.assertEquals('hire', json_objects[3]['class'],
                           'Invalid class for fourth JSON object')
 
-    def testLoadMultipleJSONSingleFile(self):
+    def testLoadMultipleCSVSingleFile(self):
         f = open(os.path.join(BASEDIR, 'stream.data.csv'))
         count = 0
         csv_objects = []

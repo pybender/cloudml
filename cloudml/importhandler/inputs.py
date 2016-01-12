@@ -2,7 +2,7 @@
 Classes for processing user input data.
 """
 
-# Author: Nikolay Melnik <nmelnik@upwork.com>
+# Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 import re
 

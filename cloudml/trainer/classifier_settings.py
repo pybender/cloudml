@@ -2,7 +2,7 @@
 This module gathers classifiers description.
 """
 
-# Author: Nikolay Melnik <nmelnik@upwork.com>
+# Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 # TODO: Maybe this settings should be moved to another place,
 # for example xml file.
 
@@ -17,12 +17,13 @@ GRADIENT_BOOSTING_CLASSIFIER = 'gradient boosting classifier'
 
 EXTRA_TREES_CLASSIFIER = 'extra trees classifier'
 RANDOM_FOREST_CLASSIFIER = 'random forest classifier'
+RANDOM_FOREST_REGRESSOR = 'random forest regressor'
 
 CLASSIFIER_MODELS = (
     LOGISTIC_REGRESSION, SGD_CLASSIFIER, DECISION_TREE_CLASSIFIER,
     EXTRA_TREES_CLASSIFIER, RANDOM_FOREST_CLASSIFIER,
     GRADIENT_BOOSTING_CLASSIFIER)
-REGRESSION_MODELS = (SVR, DECISION_TREE_REGRESSOR)
+REGRESSION_MODELS = (SVR, DECISION_TREE_REGRESSOR, RANDOM_FOREST_REGRESSOR)
 
 
 TYPE_CLASSIFICATION = 'classification'
@@ -74,6 +75,15 @@ be a positive float. Smaller values specify stronger regularization.'}
     epsilon = {'name': 'epsilon', 'type': 'float'}
     class_weight = {'name': 'class_weight', 'type': 'auto_dict'}
     intercept_scaling = {'name': "intercept_scaling", 'type': 'float'}
+    tree_regressor_criterion = {
+        'name': "criterion",
+        'type': 'string',
+        'choices': ['mse'],
+        'default': 'mse'}
+    warm_start = {'name': 'warm_start', 'type': 'boolean'}
+    min_weight_fraction_leaf = {
+        'name': "min_weight_fraction_leaf",
+        'type': 'float', 'default': 0.0}
 
 
 CLASSIFIERS = {
@@ -114,8 +124,7 @@ The newton-cg and lbfgs solvers support only l2 penalties.'},
             {'name': 'learning_rate', 'type': 'string'},
             {'name': 'eta0', 'type': 'float'},
             {'name': 'power_t', 'type': 'float'},
-            Params.class_weight,
-            {'name': 'warm_start', 'type': 'boolean'},
+            Params.class_weight, Params.warm_start,
             {'name': 'rho', 'type': 'string'},
             {'name': 'seed', 'type': 'string'}),
         'defaults': {'n_iter': 20, 'shuffle': True}},
@@ -176,7 +185,18 @@ The newton-cg and lbfgs solvers support only l2 penalties.'},
             Params.max_leaf_nodes, Params.bootstrap,
             Params.oob_score, Params.n_jobs,
             Params.random_state, Params.verbose,
-            Params.class_weight]}
+            Params.class_weight]},
+    RANDOM_FOREST_REGRESSOR: {
+        'cls': 'sklearn.ensemble.RandomForestRegressor',
+        'parameters': [
+            Params.n_estimators, Params.tree_regressor_criterion,
+            Params.max_features, Params.max_depth,
+            Params.min_samples_split, Params.min_samples_leaf,
+            Params.min_weight_fraction_leaf,
+            Params.max_leaf_nodes, Params.bootstrap,
+            Params.oob_score, Params.n_jobs,
+            Params.random_state, Params.verbose,
+            Params.warm_start]}
 }
 
 

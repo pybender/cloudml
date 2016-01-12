@@ -1,9 +1,10 @@
-# Author: Nikolay Melnik <nmelnik@upwork.com>
+# Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 import os
 import unittest
-from mock import patch, ANY
+from mock import patch
 
-from predictor import *
+from predictor import main, PARAMETERS_REQUIRED, INVALID_TRAINER, \
+    DONE
 from test_utils import db_row_iter_mock
 
 

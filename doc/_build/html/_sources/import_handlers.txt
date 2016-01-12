@@ -155,8 +155,7 @@ Examples:
 
 .. code-block:: xml
 
-    <db name="odw" host="localhost" dbname="odw" user="postgres"
-        password="postgres" vendor="postgres" />
+    <db name="myDbDatasource" host="localhost" dbname="mydb" user="postgres" password="postgres" vendor="postgres" />
 
 
 .. _csv_datasource:
@@ -230,48 +229,46 @@ parameters can be defined at a later stage during the import phase:
 
     <plan>
         <inputs>
-            <param name="opening_id" type="string"/>
+            <param name="entity_id" type="string"/>
         </inputs>
         <datasources>
             <http name="jar" method="GET" url="http://service.com:11000/jar/" />
         </datasources>
         <import>
-            <entity datasource="jar" name="opening">
-                <query><![CDATA[#{opening_id}.json]]></query>
-                <field jsonpath="$.op_title" name="opening.title" type="string"/>
-                <field jsonpath="$.op_job" name="opening.description" type="string"/>
+            <entity datasource="jar" name="entity">
+                <query><![CDATA[#{entity_id}.json]]></query>
+                <field jsonpath="$.title" name="entity.title" type="string"/>
+                <field jsonpath="$.full_description" name="entity.description" type="string"/>
                 ...
             </entity>
         </import>
     </plan>
 
-In this case, when importing data, the system will query http://service.com:11000/jar/1.json url (User sets user paramer `opening_id` as 1, when running importhandler.py command).
+In this case, when importing data, the system will query http://service.com:11000/jar/1.json url (User sets user paramer `entity_id` as 1, when running importhandler.py command).
 
 .. _pig_datasource:
 
 Pig
 ---
 
-Pig is a tool for analyzing large data sets based on Hadoop. Pig Latin
-is the language which allows querying and/or transformation of the data. A Pig
-datasource is a connection to a remote Hadoop/Pig cluster. It is defined
-using `<pig>` tag. Possible attributes are as follows:
+Pig is a tool for analyzing large data sets based on Hadoop. Pig Latin is the language which allows querying and/or transformation of the data. A Pig
+datasource is a connection to a remote Hadoop/Pig cluster. It is defined using `<pig>` tag. Possible attributes are as follows:
 
 - `name` : string
     A unique name for this data source.
 - `jobid` : string, optional
     Define job flow id, if one is required to use the existing cluster.
 - `amazon_access_token` : string
-    By default use cloudml-control api keys.
+    Access token to Amazon services. By default used `AMAZON_ACCESS_TOKEN` from local config file.
 - `amazon_token_secret` : string
-    By default use cloudml-control api keys.
+    Access token secret to Amazon services. By default used `AMAZON_TOKEN_SECRET` from local config file.
 - `ami_version` : string, optional
     Amazon Machine Image (AMI) version to use for instances.
     `Supported ami and pig versions <http://docs.aws.amazon.com/ElasticMapReduce/latest/DeveloperGuide/Pig_SupportedVersions.html>`_.
 - `bucket_name` : string, optional
     Amazon S3 bucket name for saving results, logs, etc.
-- `ec2_keyname` : string, optional
-    EC2 key used for the start instances, by default use cloudml-control keypair.
+- `ec2_keyname` : string, optional, default=`cloudml-control`
+    EC2 key used for the start instances.
 - `keep_alive` : boolean, optional
     Denotes whether or not the cluster should stay alive upon completion.
 - `hadoop_params` : string, optional
@@ -313,7 +310,7 @@ There are two methods for storing pig results:
     <query target="result">
         <![CDATA[
             ...
-            result = FOREACH B GENERATE application, opening;
+            result = FOREACH B GENERATE customer, order;
         ]]>
     </query>
 
@@ -323,7 +320,7 @@ There are two methods for storing pig results:
 
     <query>
         <![CDATA[
-            C = FOREACH B GENERATE application, opening;
+            C = FOREACH B GENERATE customer, order;
             STORE C INTO '$output' USING JsonStorage();
         ]]>
     </query>
@@ -361,14 +358,14 @@ Another example with processing json input parameter is as follows:
 
     <plan>
         <inputs>
-            <param name="contractor_info" type="string"/>
+            <param name="customer_info" type="string"/>
         </inputs>
         <datasources/>
         <import>
-            <entity datasource="input" name="contractor_info">
-                <query>contractor_info</query>
-                <field jsonpath="$.dev_recno" name="contractor.id" type="string"/>
-                <field jsonpath="$.dev_region" name="contractor.region" type="string"/>
+            <entity datasource="input" name="customer_info">
+                <query>customer_info</query>
+                <field jsonpath="$.identifier" name="customer.id" type="string"/>
+                <field jsonpath="$.region" name="customer.region" type="string"/>
             </entity>
         </import>
     </plan>
@@ -383,17 +380,11 @@ data from each data source input will be translated. This is undertaken within t
 `<import>` element. In order to be able to understand how the mapping
 is undertaken, the concept of entity needs to be introduced.
 
-An entity model's data is derived from various data sources. i.e. an entity
-may describe the data being derived from a database table or view. Each
-entity is associated with a datasource and (possibly) some query
-parameters. For example, a database entity might use a SQL query, while
-an HTTP entity might add some path and query parameters to the
-data source's URL. An entity describes multiple entity "instances". i.e.
-if an entity describes a database table, an entity "instance" describes
-a row in the database.
+An entity model's data is derived from various data sources. i.e. an entity may describe the data being derived from a database table or view. Each entity is associated with a datasource and (possibly) some query
+parameters. For example, a database entity might use a SQL query, while an HTTP entity might add some path and query parameters to the data source's URL. An entity describes multiple entity "instances". i.e.
+if an entity describes a database table, an entity "instance" describes a row in the database.
 
-An entity is defined using the `<entity>` tag. The possible attributes
-of the element are as follows:
+An entity is defined using the `<entity>` tag. The possible attributes of the element are as follows:
 
 - `name` : string
     a unique name to identify the entity.
@@ -410,20 +401,19 @@ of the element are as follows:
 
 .. note::
 
-    If `autoload_fields` are set, declared entity fields would be overridden with automaticaly created fields by parsing the result data row. If the field is declared, that is not present in the row,
-    it would not be deleted.
+    If `autoload_fields` are set, declared entity fields would be overridden with automaticaly created fields by parsing the result data row. If the field is declared, that is not present in the row, it would not be deleted.
 
 Examples:
 
 .. code-block:: xml
 
     <!-- An entity that uses a DB connection -->
-    <entity name="employer" datasource="mysqlConn" query="SELECT * FROM table">
+    <entity name="customer" datasource="myDbDatasource" query="SELECT * FROM customer_table">
         ...
     </entity>
 
     <!-- An entity that uses an HTTP datasource -->
-    <entity name="employer" datasource="odr" query="opening/f/#{opening}.json">
+    <entity name="customer" datasource="myHttpDatasource" query="data/#{customer}.json">
         ...
     </entity>
 
@@ -431,21 +421,15 @@ Examples:
 Queries
 -------
 
-The first possible child of a `<entity>` is a query. This can be used
-to improve readability of the XML file and replace the query attribute
-of the entity. It is also useful if the query does not return data, but
-actually triggers data calculation. Examples of such cases include
-running a set of SQL queries that create tables or execute a Pig
-script. In this case, attribute `target` is required to be defined inside
-the `<query>` tag. The value of this attribute provides details on
-where to look for the actual data.
+The first possible child of a `<entity>` is a query. This can be used to improve readability of the XML file and replace the query attribute of the entity. It is also useful if the query does not return data, but actually triggers data calculation. Examples of such cases include running a set of SQL queries that create tables or execute a Pig script. In this case, attribute `target` is required to be defined inside
+the `<query>` tag. The value of this attribute provides details on where to look for the actual data.
 
 Examples:
 
 .. code-block:: xml
 
     <!-- An entity that uses a DB connection -->
-    <entity name="employer" datasource="mysqlConn">
+    <entity name="customer" datasource="myDbDatasource">
         <query>
             <![CDATA[
                 SELECT *
@@ -457,10 +441,10 @@ Examples:
     </entity>
 
     <!-- An entity that uses an HTTP datasource -->
-    <entity name="employer" datasource="json_ds">
+    <entity name="customer" datasource="myHttpDatasource">
      <query>
             <![CDATA[
-                opening/f/#{opening}.json
+                person/#{person}.json
             ]]>
         </query>
         ...
@@ -481,9 +465,7 @@ It is possible to use variables in queries using the notation `#{variable}`. Thi
 Fields
 ------
 
-Fields are used to define how data is extracted from each entity
-"instance". They are defined using the `<field>` tag, and can define
-the following attributes:
+Fields are used to define how data is extracted from each entity "instance". They are defined using the `<field>` tag, and can define the following attributes:
 
 - `name` : string
     a unique name for the field.
@@ -532,17 +514,16 @@ HTTP JSON entities:
 .. code-block:: xml
 
     <entity name="jar_application" datasource="jar" query="get_s/#{employer}/#{application}.json">
-        <field name="ja.bid_rate" type="float" jsonpath="$.result.hr_pay_rate" />
-        <field name="ja.bid_amount" type="float" jsonpath="$.result.fp_pay_amount" />
-        <field name="opening.pref_count" type="int" jsonpath="$.result.job_pref_matches.prefs_match" />
-        <field name="application.creation_time" jsonpath="$.result.creation_time" dateFormat="YYYY-mm-DD" />
-
+        <field name="ja.rate" type="float" jsonpath="$.result.pay_rate" />
+        <field name="ja.amount" type="float" jsonpath="$.result.pay_amount" />
+        <field name="application.creation_time" jsonpath="$.result.created_at" dateFormat="YYYY-mm-DD" />
+        ...
     </entity>
 
     <entity name="contractor" datasource="jar" query="opening/f/#{opening}.json">
-        <field name="contractor.skills" path="$.skills.*.skl_name" join="," />
+        <field name="contractor.skills" path="$.skills.*.name" join="," />
         <field name="contractor.greeting" template="Hello #{contractor.name}" />
-        <field name="matches_pref_english" script="#{contractor.dev_eng_skill}> #{pref_english})" />
+        <field name="matches_pref_rating" script="#{contractor.rating} > #{pref_rating})" />
     </entity>
 
 DB entity:
@@ -610,10 +591,9 @@ Entity with field json datasource:
 
     <field name="contractor_info" transform="json" column="contractor_info"/>
     <entity name="contractor_info" datasource="contractor_info">
-        <field name="contractor.dev_is_looking" jsonpath="$.dev_is_looking" />
-        <field name="contractor.dev_is_looking_week" jsonpath="$.dev_is_looking_week" />
-        <field name="contractor.dev_active_interviews" jsonpath="$.dev_active_interviews" />
-        <field name="contractor.dev_availability" type="integer" jsonpath="$.dev_availability" />
+        <field name="contractor.name" jsonpath="$.full_name" />
+        <field name="contractor.have_interviews" jsonpath="$.have_interviews" />
+        <field name="contractor.is_available" type="boolean" jsonpath="$.availability" />
     </entity>
 
 
@@ -639,9 +619,7 @@ There are two variants to pass variables to the python script:
 Sqoop
 -----
 
-Tag sqoop instructs import handler to run a Sqoop import. It should be
-used only on entities that have a pig datasource. A sqoop tag may
-contain the following attributes:
+Tag sqoop instructs import handler to run a Sqoop import. It should be used only on entities that have a pig datasource. A sqoop tag may contain the following attributes:
 
 - `target` : string, required
     the target file to save imported data on HDFS.
@@ -701,17 +679,17 @@ In order to load sqoop results in the pig script, the following must be defined:
             register 's3://odesk-match-staging/pig/lib/elephant-bird-hadoop-compat-4.4.jar';
             register 's3://odesk-match-staging/pig/lib/piggybank-0.12.0.jar';
 
-            openings_dataset = LOAD '$openings_dataset*' USING org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'YES_MULTILINE') AS (
-                bidid:long
-                , jobid:long
-                , seller_userid:long
-                , is_hired:chararray
+            order_dataset = LOAD '$openings_dataset*' USING org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'YES_MULTILINE') AS (
+                customer_id:long
+                , seller_id:long
+                , amount:chararray
+                , customer_country:chararray
                 , seller_country:chararray
             );
 
-            result = FOREACH openings_dataset GENERATE 
+            result = FOREACH order_dataset GENERATE 
                 * 
-                , funcs.join((job_country, seller_country), ',') as buyer_seller_countries
+                , funcs.join((customer_country, seller_country), ',') as customer_seller_country
             ;
             ]]>
         <query/>
@@ -723,12 +701,12 @@ In addition, sqoop results can also auto load, for example:
 .. code-block:: xml
 
     <entity name="myEntity" datasource="pigConnection">
-        <sqoop target="openings_dataset" table="temp_table" datasource="sqoop_db_datasource" direct="true" mappers="1"/>
+        <sqoop target="order_dataset" table="temp_table" datasource="sqoop_db_datasource" direct="true" mappers="1"/>
         <query autoload_sqoop_dataset="true" sqoop_dataset_name="openings_dataset" target="result">
             <![CDATA[
-            result = FOREACH openings_dataset GENERATE 
+            result = FOREACH order_dataset GENERATE 
                 * 
-                , funcs.join((job_country, seller_country), ',') as buyer_seller_countries
+                , funcs.join((customer_country, seller_country), ',') as customer_seller_country
             ;
             ]]>
         <query/>
@@ -750,17 +728,13 @@ When `autoload_sqoop_dataset` set CloudML will automatically add sqoop results d
 Nested entities
 ---------------
 
-It is possible that, not all data required will originate from one
-entity, also, it may be possible to gather data from more than one
-data source. For example, consider the following use case::
+It is possible that, not all data required will originate from one entity, also, it may be possible to gather data from more than one data source. For example, consider the following use case::
 
     A really important feature is application ranking.
-    In order to rank the application, data regarding the application,
-    the employer, the job opening and the contractor are required.
-    However, this data may be derived from different HTTP URLs.
+    In order to rank the application, data regarding the application, the employer, the job opening and the contractor are required. However, this data may be derived from different HTTP URLs.
 
 
-A solution for this problem is to use nested entities. A nested entity is a normal entity, with the benefit that it is able to use data from it's parent entity to formulate the query. A nested entity may result in two ways:
+A solution for this problem is to use nested entities.A nested entity is a normal entity, with the benefit that it is able to use data from it's parent entity to formulate the query. A nested entity may result in two ways:
 
 - querying a 'global' datasource (i.e. querying a different table in DB, calling a different HTTP service).
 - converting one of the parent entity's field to a new entity (i.e. parsing the data of a DB column as a JSON document). In this case, the field acts as a data source.
@@ -771,22 +745,20 @@ Example:
 
 .. code-block:: xml
 
-    <entity name="application" datasource="ods" query="job_application/pa/#{application}.json">
-        <field name="opening" jsonpath="$.result.#{application}.opening_ref" />
-        <field name="contractor" jsonpath="$.result.#{application}.developer_ref" />
-        <field name="employer" jsonpath="$.result.#{application}.team_ref" />
+    <entity name="application" datasource="myHttpDatasource" query="application/#{application}.json">
+        <field name="opening" jsonpath="$.result.#{application}.id" />
+        <field name="user" jsonpath="$.result.#{application}.user" />
+        <field name="employer" jsonpath="$.result.#{application}.employer" />
 
         <!-- Nested entity using a global datasource -->
         <entity name="opening" datasource="odr" query="opening/f/#{opening}.json">
-            <field name="opening.title" jsonpath="$.op_title" />
-            <field name="opening.description" jsonpath="$.op_job" />
+            <field name="opening.title" jsonpath="$.title" />
+            <field name="opening.description" jsonpath="$.full_description" />
         </entity>
     </entity>
 
 
-The second option is to convert one of the parent entity's fields to a
-new entity. This is useful if a field in the parent entity contains CSV
-or JSON data. In order to undertake this, two things need to be done:
+The second option is to convert one of the parent entity's fields to a new entity. This is useful if a field in the parent entity contains CSV or JSON data. In order to undertake this, two things need to be done:
 
 - Define property 'transform' in the parent entity field, using the appropriate type. This creates a datasource accessible from all child entities. The data source's name is the field's name, while the data source type depends on the the value of the transform entity.
 - In the new entity, define the name of the parent entity's field as the data source name. 
@@ -811,7 +783,7 @@ Example:
 
         <!-- Nested entity using data from JSON field -->
         <entity name="profileEntity" datasource="profile">
-            <field name="score" jsonpath="$.score" />
+            <field name="rating" jsonpath="$.rating" />
         </entity>
     </entity>
 
@@ -820,11 +792,8 @@ Example:
 Predict
 =======
 
-The final part of the data import handler describes which models to
-invoke and how the response is formulated. While the old import handler
-was used with a single model, the new version should allow
-multiple binary classifier models use, provided that the same
-input vector are expected.
+The final part of the data import handler describes which models to invoke and how the response is formulated. While the old import handler was used with a single model, the new version should allow
+multiple binary classifier models use, provided that the same input vector are expected.
 
 Response format is defined inside `<predict>` tag. Predict tag is required to needs have the following sub-elements:
 
@@ -862,7 +831,7 @@ Allows overriding which label to use as positive label. If not defined, true is 
 
 .. code-block:: xml
 
-    <model name="rank" value="BestMatch.v31">
+    <model name="rank" value="MyModel">
         <positive_label value="false" />
     </model>
 
@@ -888,8 +857,8 @@ A positive_label tag may have the following attributes:
 
 .. code-block:: xml
 
-    <model name="recommend" value="my_model">
-        <weight label="good_hire" script="3 if isHourly('#{opening.type_raw}') else 2" />
+    <model name="recommend" value="myModel">
+        <weight label="good_hire" script="3 if isHourly('#{opening.type}') else 2" />
         <weight label="no_hire" value="1.0" />
         <weight label="bad_hire" value="1.0" />
     </model>

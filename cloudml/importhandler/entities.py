@@ -2,14 +2,12 @@
 Classes to process XML Import Handler import section.
 """
 
-# Author: Nikolay Melnik <nmelnik@upwork.com>
+# Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 from collections import OrderedDict
-import json
 import logging
 from datetime import datetime
 import re
-import math
 from jsonpath import jsonpath
 
 from exceptions import ProcessException, ImportHandlerException
@@ -445,8 +443,8 @@ order by ordinal_position;""".format(sqoop_import.table,
                                     SCHEMA_INFO_FIELDS)}
                                    for opt in iterator]
                 except Exception, exc:
-                    return ValueError("Can't execute the query: {0}."
-                                      "Error: {1}".format(sql, exc))
+                    raise ValueError("Can't execute the query: {0}."
+                                     "Error: {1}".format(sql, exc))
 
                 fields_str = construct_pig_fields(fields_data)
                 load_dataset_script = PIG_TEMPLATE.format(

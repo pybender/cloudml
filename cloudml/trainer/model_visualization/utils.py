@@ -1,7 +1,6 @@
-# Author: Nikolay Melnik <nmelnik@upwork.com>
+# Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 import sklearn
-import json
 import logging
 
 

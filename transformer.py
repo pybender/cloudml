@@ -4,7 +4,7 @@
 Command line util for train transformers
 """
 
-# Author: Nikolay Melnik <nmelnik@upwork.com>
+# Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 import os
 import sys
@@ -15,17 +15,16 @@ from cloudml.importhandler.importhandler import ImportHandlerException, \
     ExtractionPlan, ImportHandler
 
 from cloudml.trainer import __version__
-from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from cloudml.transformers.transformer import Transformer, \
     TransformerSchemaException
 from cloudml.trainer.trainer import list_to_dict
 from cloudml.trainer.streamutils import streamingiterload
 from cloudml.utils import init_logging
-from cloudml import print_exception
+from cloudml.exceptions import print_exception
 
 
 DONE = 0
-INVALID_TRANSOFMER_CONFIG = 1
+INVALID_TRANSFORMER_CONFIG = 1
 INVALID_EXTRACTION_PLAN = 2
 PARAMETERS_REQUIRED = 3
 TRANSFORMER_ERROR = 4
@@ -41,7 +40,7 @@ def main(argv=None):
     except (TransformerSchemaException, IOError) as e:
         logging.warn('Invalid feature model: %s' % e.message)
         print_exception(e)
-        return INVALID_TRANSOFMER_CONFIG
+        return INVALID_TRANSFORMER_CONFIG
 
     try:
         if args.input is not None:
@@ -86,7 +85,6 @@ def main(argv=None):
 def create_parser():
     """ Setups argument parser """
     from argparse import ArgumentParser, RawDescriptionHelpFormatter
-    program_name = os.path.basename(sys.argv[0])
     program_version = 'v%s' % __version__
     program_version_message = '%%(prog)s %s ' % (program_version, )
     program_shortdesc = __import__('__main__').__doc__

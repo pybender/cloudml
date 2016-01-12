@@ -3,15 +3,13 @@ This module gather classes and utils for categorical and categorical_label
 feature types processing.
 """
 
-# Author: Nikolay Melnik <nmelnik@upwork.com>
+# Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 import re
 from functools import update_wrapper
-
 from sklearn.feature_extraction.text import CountVectorizer
 
-from base import FeatureTypeBase, FeatureTypeInstanceBase, \
-    InvalidFeatureTypeException
+from base import FeatureTypeBase, FeatureTypeInstanceBase
 
 
 class CategoricalFeatureTypeInstance(FeatureTypeInstanceBase):
@@ -61,7 +59,7 @@ class tokenizer_dec(object):
         self.func = func
         self.split_pattern = split_pattern
         try:
-            functools.update_wrapper(self, func)
+            update_wrapper(self, func)
         except:
             pass
 

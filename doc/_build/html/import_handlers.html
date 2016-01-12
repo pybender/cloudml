@@ -107,7 +107,7 @@
     
 
 <!--
-      <p class="doc-version">This documentation is for Cloudml <strong>version 2.0</strong> &mdash; <a href="http://scikit-learn.org/stable/support.html#documentation-resources">Other versions</a></p> -->
+      <p class="doc-version">This documentation is for CloudML <strong>version 2.0</strong> &mdash; <a href="http://scikit-learn.org/stable/support.html#documentation-resources">Other versions</a></p> -->
 <!--     <p class="citing">If you use the software, please consider <a href="about.html#citing-scikit-learn">citing scikit-learn</a>.</p> -->
     <ul>
 <li><a class="reference internal" href="#">Import Handler file format</a><ul>
@@ -359,8 +359,7 @@ the element used is <cite>&lt;db&gt;</cite>.</p>
 </ul>
 <p>Note that name is required in both cases. For named connections, only name-ref should be present. When defining the DB connection details in handler&#8217;s file, host, dbname and vendor should be present.</p>
 <p>Examples:</p>
-<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;db</span> <span class="na">name=</span><span class="s">&quot;odw&quot;</span> <span class="na">host=</span><span class="s">&quot;localhost&quot;</span> <span class="na">dbname=</span><span class="s">&quot;odw&quot;</span> <span class="na">user=</span><span class="s">&quot;postgres&quot;</span>
-    <span class="na">password=</span><span class="s">&quot;postgres&quot;</span> <span class="na">vendor=</span><span class="s">&quot;postgres&quot;</span> <span class="nt">/&gt;</span>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;db</span> <span class="na">name=</span><span class="s">&quot;myDbDatasource&quot;</span> <span class="na">host=</span><span class="s">&quot;localhost&quot;</span> <span class="na">dbname=</span><span class="s">&quot;mydb&quot;</span> <span class="na">user=</span><span class="s">&quot;postgres&quot;</span> <span class="na">password=</span><span class="s">&quot;postgres&quot;</span> <span class="na">vendor=</span><span class="s">&quot;postgres&quot;</span> <span class="nt">/&gt;</span>
 </pre></div>
 </div>
 </div>
@@ -450,30 +449,28 @@ URL. If specific entities need to be queried, the query
 parameters can be defined at a later stage during the import phase:</p>
 <div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;plan&gt;</span>
     <span class="nt">&lt;inputs&gt;</span>
-        <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;opening_id&quot;</span> <span class="na">type=</span><span class="s">&quot;string&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;entity_id&quot;</span> <span class="na">type=</span><span class="s">&quot;string&quot;</span><span class="nt">/&gt;</span>
     <span class="nt">&lt;/inputs&gt;</span>
     <span class="nt">&lt;datasources&gt;</span>
         <span class="nt">&lt;http</span> <span class="na">name=</span><span class="s">&quot;jar&quot;</span> <span class="na">method=</span><span class="s">&quot;GET&quot;</span> <span class="na">url=</span><span class="s">&quot;http://service.com:11000/jar/&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;/datasources&gt;</span>
     <span class="nt">&lt;import&gt;</span>
-        <span class="nt">&lt;entity</span> <span class="na">datasource=</span><span class="s">&quot;jar&quot;</span> <span class="na">name=</span><span class="s">&quot;opening&quot;</span><span class="nt">&gt;</span>
-            <span class="nt">&lt;query&gt;</span><span class="cp">&lt;![CDATA[#{opening_id}.json]]&gt;</span><span class="nt">&lt;/query&gt;</span>
-            <span class="nt">&lt;field</span> <span class="na">jsonpath=</span><span class="s">&quot;$.op_title&quot;</span> <span class="na">name=</span><span class="s">&quot;opening.title&quot;</span> <span class="na">type=</span><span class="s">&quot;string&quot;</span><span class="nt">/&gt;</span>
-            <span class="nt">&lt;field</span> <span class="na">jsonpath=</span><span class="s">&quot;$.op_job&quot;</span> <span class="na">name=</span><span class="s">&quot;opening.description&quot;</span> <span class="na">type=</span><span class="s">&quot;string&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;entity</span> <span class="na">datasource=</span><span class="s">&quot;jar&quot;</span> <span class="na">name=</span><span class="s">&quot;entity&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;query&gt;</span><span class="cp">&lt;![CDATA[#{entity_id}.json]]&gt;</span><span class="nt">&lt;/query&gt;</span>
+            <span class="nt">&lt;field</span> <span class="na">jsonpath=</span><span class="s">&quot;$.title&quot;</span> <span class="na">name=</span><span class="s">&quot;entity.title&quot;</span> <span class="na">type=</span><span class="s">&quot;string&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;field</span> <span class="na">jsonpath=</span><span class="s">&quot;$.full_description&quot;</span> <span class="na">name=</span><span class="s">&quot;entity.description&quot;</span> <span class="na">type=</span><span class="s">&quot;string&quot;</span><span class="nt">/&gt;</span>
             ...
         <span class="nt">&lt;/entity&gt;</span>
     <span class="nt">&lt;/import&gt;</span>
 <span class="nt">&lt;/plan&gt;</span>
 </pre></div>
 </div>
-<p>In this case, when importing data, the system will query <a class="reference external" href="http://service.com:11000/jar/1.json">http://service.com:11000/jar/1.json</a> url (User sets user paramer <cite>opening_id</cite> as 1, when running importhandler.py command).</p>
+<p>In this case, when importing data, the system will query <a class="reference external" href="http://service.com:11000/jar/1.json">http://service.com:11000/jar/1.json</a> url (User sets user paramer <cite>entity_id</cite> as 1, when running importhandler.py command).</p>
 </div>
 <div class="section" id="pig">
 <span id="pig-datasource"></span><h3><a class="toc-backref" href="#id16">Pig</a><a class="headerlink" href="#pig" title="Permalink to this headline">¶</a></h3>
-<p>Pig is a tool for analyzing large data sets based on Hadoop. Pig Latin
-is the language which allows querying and/or transformation of the data. A Pig
-datasource is a connection to a remote Hadoop/Pig cluster. It is defined
-using <cite>&lt;pig&gt;</cite> tag. Possible attributes are as follows:</p>
+<p>Pig is a tool for analyzing large data sets based on Hadoop. Pig Latin is the language which allows querying and/or transformation of the data. A Pig
+datasource is a connection to a remote Hadoop/Pig cluster. It is defined using <cite>&lt;pig&gt;</cite> tag. Possible attributes are as follows:</p>
 <ul>
 <li><dl class="first docutils">
 <dt><cite>name</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
@@ -489,13 +486,13 @@ using <cite>&lt;pig&gt;</cite> tag. Possible attributes are as follows:</p>
 </li>
 <li><dl class="first docutils">
 <dt><cite>amazon_access_token</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
-<dd><p class="first last">By default use cloudml-control api keys.</p>
+<dd><p class="first last">Access token to Amazon services. By default used <cite>AMAZON_ACCESS_TOKEN</cite> from local config file.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><cite>amazon_token_secret</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
-<dd><p class="first last">By default use cloudml-control api keys.</p>
+<dd><p class="first last">Access token secret to Amazon services. By default used <cite>AMAZON_TOKEN_SECRET</cite> from local config file.</p>
 </dd>
 </dl>
 </li>
@@ -513,8 +510,8 @@ using <cite>&lt;pig&gt;</cite> tag. Possible attributes are as follows:</p>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt><cite>ec2_keyname</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string, optional</span></dt>
-<dd><p class="first last">EC2 key used for the start instances, by default use cloudml-control keypair.</p>
+<dt><cite>ec2_keyname</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string, optional, default=`cloudml-control`</span></dt>
+<dd><p class="first last">EC2 key used for the start instances.</p>
 </dd>
 </dl>
 </li>
@@ -585,7 +582,7 @@ using <cite>&lt;pig&gt;</cite> tag. Possible attributes are as follows:</p>
 <div class="highlight-sql"><div class="highlight"><pre><span class="o">&lt;</span><span class="n">query</span> <span class="n">target</span><span class="o">=</span><span class="ss">&quot;result&quot;</span><span class="o">&gt;</span>
     <span class="o">&lt;!</span><span class="p">[</span><span class="n">CDATA</span><span class="p">[</span>
         <span class="p">...</span>
-        <span class="k">result</span> <span class="o">=</span> <span class="n">FOREACH</span> <span class="n">B</span> <span class="n">GENERATE</span> <span class="n">application</span><span class="p">,</span> <span class="n">opening</span><span class="p">;</span>
+        <span class="k">result</span> <span class="o">=</span> <span class="n">FOREACH</span> <span class="n">B</span> <span class="n">GENERATE</span> <span class="n">customer</span><span class="p">,</span> <span class="k">order</span><span class="p">;</span>
     <span class="p">]]</span><span class="o">&gt;</span>
 <span class="o">&lt;/</span><span class="n">query</span><span class="o">&gt;</span>
 </pre></div>
@@ -595,7 +592,7 @@ using <cite>&lt;pig&gt;</cite> tag. Possible attributes are as follows:</p>
 </ul>
 <div class="highlight-sql"><div class="highlight"><pre><span class="o">&lt;</span><span class="n">query</span><span class="o">&gt;</span>
     <span class="o">&lt;!</span><span class="p">[</span><span class="n">CDATA</span><span class="p">[</span>
-        <span class="k">C</span> <span class="o">=</span> <span class="n">FOREACH</span> <span class="n">B</span> <span class="n">GENERATE</span> <span class="n">application</span><span class="p">,</span> <span class="n">opening</span><span class="p">;</span>
+        <span class="k">C</span> <span class="o">=</span> <span class="n">FOREACH</span> <span class="n">B</span> <span class="n">GENERATE</span> <span class="n">customer</span><span class="p">,</span> <span class="k">order</span><span class="p">;</span>
         <span class="n">STORE</span> <span class="k">C</span> <span class="k">INTO</span> <span class="s1">&#39;$output&#39;</span> <span class="k">USING</span> <span class="n">JsonStorage</span><span class="p">();</span>
     <span class="p">]]</span><span class="o">&gt;</span>
 <span class="o">&lt;/</span><span class="n">query</span><span class="o">&gt;</span>
@@ -630,14 +627,14 @@ datasource with the query <code class="docutils literal"><span class="pre">any</
 <p>Another example with processing json input parameter is as follows:</p>
 <div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;plan&gt;</span>
     <span class="nt">&lt;inputs&gt;</span>
-        <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;contractor_info&quot;</span> <span class="na">type=</span><span class="s">&quot;string&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;customer_info&quot;</span> <span class="na">type=</span><span class="s">&quot;string&quot;</span><span class="nt">/&gt;</span>
     <span class="nt">&lt;/inputs&gt;</span>
     <span class="nt">&lt;datasources/&gt;</span>
     <span class="nt">&lt;import&gt;</span>
-        <span class="nt">&lt;entity</span> <span class="na">datasource=</span><span class="s">&quot;input&quot;</span> <span class="na">name=</span><span class="s">&quot;contractor_info&quot;</span><span class="nt">&gt;</span>
-            <span class="nt">&lt;query&gt;</span>contractor_info<span class="nt">&lt;/query&gt;</span>
-            <span class="nt">&lt;field</span> <span class="na">jsonpath=</span><span class="s">&quot;$.dev_recno&quot;</span> <span class="na">name=</span><span class="s">&quot;contractor.id&quot;</span> <span class="na">type=</span><span class="s">&quot;string&quot;</span><span class="nt">/&gt;</span>
-            <span class="nt">&lt;field</span> <span class="na">jsonpath=</span><span class="s">&quot;$.dev_region&quot;</span> <span class="na">name=</span><span class="s">&quot;contractor.region&quot;</span> <span class="na">type=</span><span class="s">&quot;string&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;entity</span> <span class="na">datasource=</span><span class="s">&quot;input&quot;</span> <span class="na">name=</span><span class="s">&quot;customer_info&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;query&gt;</span>customer_info<span class="nt">&lt;/query&gt;</span>
+            <span class="nt">&lt;field</span> <span class="na">jsonpath=</span><span class="s">&quot;$.identifier&quot;</span> <span class="na">name=</span><span class="s">&quot;customer.id&quot;</span> <span class="na">type=</span><span class="s">&quot;string&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;field</span> <span class="na">jsonpath=</span><span class="s">&quot;$.region&quot;</span> <span class="na">name=</span><span class="s">&quot;customer.region&quot;</span> <span class="na">type=</span><span class="s">&quot;string&quot;</span><span class="nt">/&gt;</span>
         <span class="nt">&lt;/entity&gt;</span>
     <span class="nt">&lt;/import&gt;</span>
 <span class="nt">&lt;/plan&gt;</span>
@@ -651,16 +648,10 @@ datasource with the query <code class="docutils literal"><span class="pre">any</
 data from each data source input will be translated. This is undertaken within the
 <cite>&lt;import&gt;</cite> element. In order to be able to understand how the mapping
 is undertaken, the concept of entity needs to be introduced.</p>
-<p>An entity model&#8217;s data is derived from various data sources. i.e. an entity
-may describe the data being derived from a database table or view. Each
-entity is associated with a datasource and (possibly) some query
-parameters. For example, a database entity might use a SQL query, while
-an HTTP entity might add some path and query parameters to the
-data source&#8217;s URL. An entity describes multiple entity &#8220;instances&#8221;. i.e.
-if an entity describes a database table, an entity &#8220;instance&#8221; describes
-a row in the database.</p>
-<p>An entity is defined using the <cite>&lt;entity&gt;</cite> tag. The possible attributes
-of the element are as follows:</p>
+<p>An entity model&#8217;s data is derived from various data sources. i.e. an entity may describe the data being derived from a database table or view. Each entity is associated with a datasource and (possibly) some query
+parameters. For example, a database entity might use a SQL query, while an HTTP entity might add some path and query parameters to the data source&#8217;s URL. An entity describes multiple entity &#8220;instances&#8221;. i.e.
+if an entity describes a database table, an entity &#8220;instance&#8221; describes a row in the database.</p>
+<p>An entity is defined using the <cite>&lt;entity&gt;</cite> tag. The possible attributes of the element are as follows:</p>
 <ul>
 <li><dl class="first docutils">
 <dt><cite>name</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
@@ -693,34 +684,27 @@ of the element are as follows:</p>
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">If <cite>autoload_fields</cite> are set, declared entity fields would be overridden with automaticaly created fields by parsing the result data row. If the field is declared, that is not present in the row,
-it would not be deleted.</p>
+<p class="last">If <cite>autoload_fields</cite> are set, declared entity fields would be overridden with automaticaly created fields by parsing the result data row. If the field is declared, that is not present in the row, it would not be deleted.</p>
 </div>
 <p>Examples:</p>
 <div class="highlight-xml"><div class="highlight"><pre><span class="c">&lt;!-- An entity that uses a DB connection --&gt;</span>
-<span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;employer&quot;</span> <span class="na">datasource=</span><span class="s">&quot;mysqlConn&quot;</span> <span class="na">query=</span><span class="s">&quot;SELECT * FROM table&quot;</span><span class="nt">&gt;</span>
+<span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;customer&quot;</span> <span class="na">datasource=</span><span class="s">&quot;myDbDatasource&quot;</span> <span class="na">query=</span><span class="s">&quot;SELECT * FROM customer_table&quot;</span><span class="nt">&gt;</span>
     ...
 <span class="nt">&lt;/entity&gt;</span>
 
 <span class="c">&lt;!-- An entity that uses an HTTP datasource --&gt;</span>
-<span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;employer&quot;</span> <span class="na">datasource=</span><span class="s">&quot;odr&quot;</span> <span class="na">query=</span><span class="s">&quot;opening/f/#{opening}.json&quot;</span><span class="nt">&gt;</span>
+<span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;customer&quot;</span> <span class="na">datasource=</span><span class="s">&quot;myHttpDatasource&quot;</span> <span class="na">query=</span><span class="s">&quot;data/#{customer}.json&quot;</span><span class="nt">&gt;</span>
     ...
 <span class="nt">&lt;/entity&gt;</span>
 </pre></div>
 </div>
 <div class="section" id="queries">
 <h3><a class="toc-backref" href="#id19">Queries</a><a class="headerlink" href="#queries" title="Permalink to this headline">¶</a></h3>
-<p>The first possible child of a <cite>&lt;entity&gt;</cite> is a query. This can be used
-to improve readability of the XML file and replace the query attribute
-of the entity. It is also useful if the query does not return data, but
-actually triggers data calculation. Examples of such cases include
-running a set of SQL queries that create tables or execute a Pig
-script. In this case, attribute <cite>target</cite> is required to be defined inside
-the <cite>&lt;query&gt;</cite> tag. The value of this attribute provides details on
-where to look for the actual data.</p>
+<p>The first possible child of a <cite>&lt;entity&gt;</cite> is a query. This can be used to improve readability of the XML file and replace the query attribute of the entity. It is also useful if the query does not return data, but actually triggers data calculation. Examples of such cases include running a set of SQL queries that create tables or execute a Pig script. In this case, attribute <cite>target</cite> is required to be defined inside
+the <cite>&lt;query&gt;</cite> tag. The value of this attribute provides details on where to look for the actual data.</p>
 <p>Examples:</p>
 <div class="highlight-xml"><div class="highlight"><pre><span class="c">&lt;!-- An entity that uses a DB connection --&gt;</span>
-<span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;employer&quot;</span> <span class="na">datasource=</span><span class="s">&quot;mysqlConn&quot;</span><span class="nt">&gt;</span>
+<span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;customer&quot;</span> <span class="na">datasource=</span><span class="s">&quot;myDbDatasource&quot;</span><span class="nt">&gt;</span>
     <span class="nt">&lt;query&gt;</span>
         <span class="cp">&lt;![CDATA[</span>
 <span class="cp">            SELECT *</span>
@@ -732,10 +716,10 @@ where to look for the actual data.</p>
 <span class="nt">&lt;/entity&gt;</span>
 
 <span class="c">&lt;!-- An entity that uses an HTTP datasource --&gt;</span>
-<span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;employer&quot;</span> <span class="na">datasource=</span><span class="s">&quot;json_ds&quot;</span><span class="nt">&gt;</span>
+<span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;customer&quot;</span> <span class="na">datasource=</span><span class="s">&quot;myHttpDatasource&quot;</span><span class="nt">&gt;</span>
  <span class="nt">&lt;query&gt;</span>
         <span class="cp">&lt;![CDATA[</span>
-<span class="cp">            opening/f/#{opening}.json</span>
+<span class="cp">            person/#{person}.json</span>
 <span class="cp">        ]]&gt;</span>
     <span class="nt">&lt;/query&gt;</span>
     ...
@@ -754,9 +738,7 @@ where to look for the actual data.</p>
 </div>
 <div class="section" id="fields">
 <h3><a class="toc-backref" href="#id20">Fields</a><a class="headerlink" href="#fields" title="Permalink to this headline">¶</a></h3>
-<p>Fields are used to define how data is extracted from each entity
-&#8220;instance&#8221;. They are defined using the <cite>&lt;field&gt;</cite> tag, and can define
-the following attributes:</p>
+<p>Fields are used to define how data is extracted from each entity &#8220;instance&#8221;. They are defined using the <cite>&lt;field&gt;</cite> tag, and can define the following attributes:</p>
 <ul>
 <li><dl class="first docutils">
 <dt><cite>name</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
@@ -870,17 +852,16 @@ the following attributes:</p>
 <p>Examples:</p>
 <p>HTTP JSON entities:</p>
 <div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;jar_application&quot;</span> <span class="na">datasource=</span><span class="s">&quot;jar&quot;</span> <span class="na">query=</span><span class="s">&quot;get_s/#{employer}/#{application}.json&quot;</span><span class="nt">&gt;</span>
-    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;ja.bid_rate&quot;</span> <span class="na">type=</span><span class="s">&quot;float&quot;</span> <span class="na">jsonpath=</span><span class="s">&quot;$.result.hr_pay_rate&quot;</span> <span class="nt">/&gt;</span>
-    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;ja.bid_amount&quot;</span> <span class="na">type=</span><span class="s">&quot;float&quot;</span> <span class="na">jsonpath=</span><span class="s">&quot;$.result.fp_pay_amount&quot;</span> <span class="nt">/&gt;</span>
-    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;opening.pref_count&quot;</span> <span class="na">type=</span><span class="s">&quot;int&quot;</span> <span class="na">jsonpath=</span><span class="s">&quot;$.result.job_pref_matches.prefs_match&quot;</span> <span class="nt">/&gt;</span>
-    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;application.creation_time&quot;</span> <span class="na">jsonpath=</span><span class="s">&quot;$.result.creation_time&quot;</span> <span class="na">dateFormat=</span><span class="s">&quot;YYYY-mm-DD&quot;</span> <span class="nt">/&gt;</span>
-
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;ja.rate&quot;</span> <span class="na">type=</span><span class="s">&quot;float&quot;</span> <span class="na">jsonpath=</span><span class="s">&quot;$.result.pay_rate&quot;</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;ja.amount&quot;</span> <span class="na">type=</span><span class="s">&quot;float&quot;</span> <span class="na">jsonpath=</span><span class="s">&quot;$.result.pay_amount&quot;</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;application.creation_time&quot;</span> <span class="na">jsonpath=</span><span class="s">&quot;$.result.created_at&quot;</span> <span class="na">dateFormat=</span><span class="s">&quot;YYYY-mm-DD&quot;</span> <span class="nt">/&gt;</span>
+    ...
 <span class="nt">&lt;/entity&gt;</span>
 
 <span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;contractor&quot;</span> <span class="na">datasource=</span><span class="s">&quot;jar&quot;</span> <span class="na">query=</span><span class="s">&quot;opening/f/#{opening}.json&quot;</span><span class="nt">&gt;</span>
-    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;contractor.skills&quot;</span> <span class="na">path=</span><span class="s">&quot;$.skills.*.skl_name&quot;</span> <span class="na">join=</span><span class="s">&quot;,&quot;</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;contractor.skills&quot;</span> <span class="na">path=</span><span class="s">&quot;$.skills.*.name&quot;</span> <span class="na">join=</span><span class="s">&quot;,&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;contractor.greeting&quot;</span> <span class="na">template=</span><span class="s">&quot;Hello #{contractor.name}&quot;</span> <span class="nt">/&gt;</span>
-    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;matches_pref_english&quot;</span> <span class="na">script=</span><span class="s">&quot;#{contractor.dev_eng_skill}&gt; #{pref_english})&quot;</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;matches_pref_rating&quot;</span> <span class="na">script=</span><span class="s">&quot;#{contractor.rating} &gt; #{pref_rating})&quot;</span> <span class="nt">/&gt;</span>
 <span class="nt">&lt;/entity&gt;</span>
 </pre></div>
 </div>
@@ -940,10 +921,9 @@ the following attributes:</p>
 <p>Entity with field json datasource:</p>
 <div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;contractor_info&quot;</span> <span class="na">transform=</span><span class="s">&quot;json&quot;</span> <span class="na">column=</span><span class="s">&quot;contractor_info&quot;</span><span class="nt">/&gt;</span>
 <span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;contractor_info&quot;</span> <span class="na">datasource=</span><span class="s">&quot;contractor_info&quot;</span><span class="nt">&gt;</span>
-    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;contractor.dev_is_looking&quot;</span> <span class="na">jsonpath=</span><span class="s">&quot;$.dev_is_looking&quot;</span> <span class="nt">/&gt;</span>
-    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;contractor.dev_is_looking_week&quot;</span> <span class="na">jsonpath=</span><span class="s">&quot;$.dev_is_looking_week&quot;</span> <span class="nt">/&gt;</span>
-    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;contractor.dev_active_interviews&quot;</span> <span class="na">jsonpath=</span><span class="s">&quot;$.dev_active_interviews&quot;</span> <span class="nt">/&gt;</span>
-    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;contractor.dev_availability&quot;</span> <span class="na">type=</span><span class="s">&quot;integer&quot;</span> <span class="na">jsonpath=</span><span class="s">&quot;$.dev_availability&quot;</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;contractor.name&quot;</span> <span class="na">jsonpath=</span><span class="s">&quot;$.full_name&quot;</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;contractor.have_interviews&quot;</span> <span class="na">jsonpath=</span><span class="s">&quot;$.have_interviews&quot;</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;contractor.is_available&quot;</span> <span class="na">type=</span><span class="s">&quot;boolean&quot;</span> <span class="na">jsonpath=</span><span class="s">&quot;$.availability&quot;</span> <span class="nt">/&gt;</span>
 <span class="nt">&lt;/entity&gt;</span>
 </pre></div>
 </div>
@@ -966,9 +946,7 @@ the following attributes:</p>
 </div>
 <div class="section" id="sqoop">
 <span id="id6"></span><h3><a class="toc-backref" href="#id21">Sqoop</a><a class="headerlink" href="#sqoop" title="Permalink to this headline">¶</a></h3>
-<p>Tag sqoop instructs import handler to run a Sqoop import. It should be
-used only on entities that have a pig datasource. A sqoop tag may
-contain the following attributes:</p>
+<p>Tag sqoop instructs import handler to run a Sqoop import. It should be used only on entities that have a pig datasource. A sqoop tag may contain the following attributes:</p>
 <ul>
 <li><dl class="first docutils">
 <dt><cite>target</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string, required</span></dt>
@@ -1051,17 +1029,17 @@ import. This feature is particularly useful if the following needs to be run:</p
 <span class="cp">        register &#39;s3://odesk-match-staging/pig/lib/elephant-bird-hadoop-compat-4.4.jar&#39;;</span>
 <span class="cp">        register &#39;s3://odesk-match-staging/pig/lib/piggybank-0.12.0.jar&#39;;</span>
 
-<span class="cp">        openings_dataset = LOAD &#39;$openings_dataset*&#39; USING org.apache.pig.piggybank.storage.CSVExcelStorage(&#39;,&#39;, &#39;YES_MULTILINE&#39;) AS (</span>
-<span class="cp">            bidid:long</span>
-<span class="cp">            , jobid:long</span>
-<span class="cp">            , seller_userid:long</span>
-<span class="cp">            , is_hired:chararray</span>
+<span class="cp">        order_dataset = LOAD &#39;$openings_dataset*&#39; USING org.apache.pig.piggybank.storage.CSVExcelStorage(&#39;,&#39;, &#39;YES_MULTILINE&#39;) AS (</span>
+<span class="cp">            customer_id:long</span>
+<span class="cp">            , seller_id:long</span>
+<span class="cp">            , amount:chararray</span>
+<span class="cp">            , customer_country:chararray</span>
 <span class="cp">            , seller_country:chararray</span>
 <span class="cp">        );</span>
 
-<span class="cp">        result = FOREACH openings_dataset GENERATE</span>
+<span class="cp">        result = FOREACH order_dataset GENERATE</span>
 <span class="cp">            *</span>
-<span class="cp">            , funcs.join((job_country, seller_country), &#39;,&#39;) as buyer_seller_countries</span>
+<span class="cp">            , funcs.join((customer_country, seller_country), &#39;,&#39;) as customer_seller_country</span>
 <span class="cp">        ;</span>
 <span class="cp">        ]]&gt;</span>
     <span class="nt">&lt;query/&gt;</span>
@@ -1070,12 +1048,12 @@ import. This feature is particularly useful if the following needs to be run:</p
 </div>
 <p>In addition, sqoop results can also auto load, for example:</p>
 <div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;myEntity&quot;</span> <span class="na">datasource=</span><span class="s">&quot;pigConnection&quot;</span><span class="nt">&gt;</span>
-    <span class="nt">&lt;sqoop</span> <span class="na">target=</span><span class="s">&quot;openings_dataset&quot;</span> <span class="na">table=</span><span class="s">&quot;temp_table&quot;</span> <span class="na">datasource=</span><span class="s">&quot;sqoop_db_datasource&quot;</span> <span class="na">direct=</span><span class="s">&quot;true&quot;</span> <span class="na">mappers=</span><span class="s">&quot;1&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;sqoop</span> <span class="na">target=</span><span class="s">&quot;order_dataset&quot;</span> <span class="na">table=</span><span class="s">&quot;temp_table&quot;</span> <span class="na">datasource=</span><span class="s">&quot;sqoop_db_datasource&quot;</span> <span class="na">direct=</span><span class="s">&quot;true&quot;</span> <span class="na">mappers=</span><span class="s">&quot;1&quot;</span><span class="nt">/&gt;</span>
     <span class="nt">&lt;query</span> <span class="na">autoload_sqoop_dataset=</span><span class="s">&quot;true&quot;</span> <span class="na">sqoop_dataset_name=</span><span class="s">&quot;openings_dataset&quot;</span> <span class="na">target=</span><span class="s">&quot;result&quot;</span><span class="nt">&gt;</span>
         <span class="cp">&lt;![CDATA[</span>
-<span class="cp">        result = FOREACH openings_dataset GENERATE</span>
+<span class="cp">        result = FOREACH order_dataset GENERATE</span>
 <span class="cp">            *</span>
-<span class="cp">            , funcs.join((job_country, seller_country), &#39;,&#39;) as buyer_seller_countries</span>
+<span class="cp">            , funcs.join((customer_country, seller_country), &#39;,&#39;) as customer_seller_country</span>
 <span class="cp">        ;</span>
 <span class="cp">        ]]&gt;</span>
     <span class="nt">&lt;query/&gt;</span>
@@ -1095,38 +1073,32 @@ result = LOAD &#39;$dataset*&#39; USING org.apache.pig.piggybank.storage.CSVExce
 </div>
 <div class="section" id="nested-entities">
 <h3><a class="toc-backref" href="#id22">Nested entities</a><a class="headerlink" href="#nested-entities" title="Permalink to this headline">¶</a></h3>
-<p>It is possible that, not all data required will originate from one
-entity, also, it may be possible to gather data from more than one
-data source. For example, consider the following use case:</p>
+<p>It is possible that, not all data required will originate from one entity, also, it may be possible to gather data from more than one data source. For example, consider the following use case:</p>
 <div class="highlight-python"><div class="highlight"><pre>A really important feature is application ranking.
-In order to rank the application, data regarding the application,
-the employer, the job opening and the contractor are required.
-However, this data may be derived from different HTTP URLs.
+In order to rank the application, data regarding the application, the employer, the job opening and the contractor are required. However, this data may be derived from different HTTP URLs.
 </pre></div>
 </div>
-<p>A solution for this problem is to use nested entities. A nested entity is a normal entity, with the benefit that it is able to use data from it&#8217;s parent entity to formulate the query. A nested entity may result in two ways:</p>
+<p>A solution for this problem is to use nested entities.A nested entity is a normal entity, with the benefit that it is able to use data from it&#8217;s parent entity to formulate the query. A nested entity may result in two ways:</p>
 <ul class="simple">
 <li>querying a &#8216;global&#8217; datasource (i.e. querying a different table in DB, calling a different HTTP service).</li>
 <li>converting one of the parent entity&#8217;s field to a new entity (i.e. parsing the data of a DB column as a JSON document). In this case, the field acts as a data source.</li>
 </ul>
 <p>A nested entity is defined inside another <cite>&lt;entity&gt;</cite> and follows exactly the same syntax. However, it might also use the values of parent entity as variables, in addition to the input parameter values.</p>
 <p>Example:</p>
-<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;application&quot;</span> <span class="na">datasource=</span><span class="s">&quot;ods&quot;</span> <span class="na">query=</span><span class="s">&quot;job_application/pa/#{application}.json&quot;</span><span class="nt">&gt;</span>
-    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;opening&quot;</span> <span class="na">jsonpath=</span><span class="s">&quot;$.result.#{application}.opening_ref&quot;</span> <span class="nt">/&gt;</span>
-    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;contractor&quot;</span> <span class="na">jsonpath=</span><span class="s">&quot;$.result.#{application}.developer_ref&quot;</span> <span class="nt">/&gt;</span>
-    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;employer&quot;</span> <span class="na">jsonpath=</span><span class="s">&quot;$.result.#{application}.team_ref&quot;</span> <span class="nt">/&gt;</span>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;application&quot;</span> <span class="na">datasource=</span><span class="s">&quot;myHttpDatasource&quot;</span> <span class="na">query=</span><span class="s">&quot;application/#{application}.json&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;opening&quot;</span> <span class="na">jsonpath=</span><span class="s">&quot;$.result.#{application}.id&quot;</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;user&quot;</span> <span class="na">jsonpath=</span><span class="s">&quot;$.result.#{application}.user&quot;</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;employer&quot;</span> <span class="na">jsonpath=</span><span class="s">&quot;$.result.#{application}.employer&quot;</span> <span class="nt">/&gt;</span>
 
     <span class="c">&lt;!-- Nested entity using a global datasource --&gt;</span>
     <span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;opening&quot;</span> <span class="na">datasource=</span><span class="s">&quot;odr&quot;</span> <span class="na">query=</span><span class="s">&quot;opening/f/#{opening}.json&quot;</span><span class="nt">&gt;</span>
-        <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;opening.title&quot;</span> <span class="na">jsonpath=</span><span class="s">&quot;$.op_title&quot;</span> <span class="nt">/&gt;</span>
-        <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;opening.description&quot;</span> <span class="na">jsonpath=</span><span class="s">&quot;$.op_job&quot;</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;opening.title&quot;</span> <span class="na">jsonpath=</span><span class="s">&quot;$.title&quot;</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;opening.description&quot;</span> <span class="na">jsonpath=</span><span class="s">&quot;$.full_description&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;/entity&gt;</span>
 <span class="nt">&lt;/entity&gt;</span>
 </pre></div>
 </div>
-<p>The second option is to convert one of the parent entity&#8217;s fields to a
-new entity. This is useful if a field in the parent entity contains CSV
-or JSON data. In order to undertake this, two things need to be done:</p>
+<p>The second option is to convert one of the parent entity&#8217;s fields to a new entity. This is useful if a field in the parent entity contains CSV or JSON data. In order to undertake this, two things need to be done:</p>
 <ul class="simple">
 <li>Define property &#8216;transform&#8217; in the parent entity field, using the appropriate type. This creates a datasource accessible from all child entities. The data source&#8217;s name is the field&#8217;s name, while the data source type depends on the the value of the transform entity.</li>
 <li>In the new entity, define the name of the parent entity&#8217;s field as the data source name.</li>
@@ -1148,7 +1120,7 @@ or JSON data. In order to undertake this, two things need to be done:</p>
 
     &lt;!-- Nested entity using data from JSON field --&gt;
     &lt;entity name=&quot;profileEntity&quot; datasource=&quot;profile&quot;&gt;
-        &lt;field name=&quot;score&quot; jsonpath=&quot;$.score&quot; /&gt;
+        &lt;field name=&quot;rating&quot; jsonpath=&quot;$.rating&quot; /&gt;
     &lt;/entity&gt;
 &lt;/entity&gt;
 </pre></div>
@@ -1157,11 +1129,8 @@ or JSON data. In order to undertake this, two things need to be done:</p>
 </div>
 <div class="section" id="predict">
 <span id="id7"></span><h2><a class="toc-backref" href="#id23">Predict</a><a class="headerlink" href="#predict" title="Permalink to this headline">¶</a></h2>
-<p>The final part of the data import handler describes which models to
-invoke and how the response is formulated. While the old import handler
-was used with a single model, the new version should allow
-multiple binary classifier models use, provided that the same
-input vector are expected.</p>
+<p>The final part of the data import handler describes which models to invoke and how the response is formulated. While the old import handler was used with a single model, the new version should allow
+multiple binary classifier models use, provided that the same input vector are expected.</p>
 <p>Response format is defined inside <cite>&lt;predict&gt;</cite> tag. Predict tag is required to needs have the following sub-elements:</p>
 <ul class="simple">
 <li><cite>&lt;model&gt;</cite> - defines parameters for using a model with the data from the <cite>&lt;import&gt;</cite> part of the handler.</li>
@@ -1205,7 +1174,7 @@ have the following attributes:</p>
 <div class="section" id="positive-label">
 <h4>positive_label<a class="headerlink" href="#positive-label" title="Permalink to this headline">¶</a></h4>
 <p>Allows overriding which label to use as positive label. If not defined, true is considered as a positive label. Example:</p>
-<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;model</span> <span class="na">name=</span><span class="s">&quot;rank&quot;</span> <span class="na">value=</span><span class="s">&quot;BestMatch.v31&quot;</span><span class="nt">&gt;</span>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;model</span> <span class="na">name=</span><span class="s">&quot;rank&quot;</span> <span class="na">value=</span><span class="s">&quot;MyModel&quot;</span><span class="nt">&gt;</span>
     <span class="nt">&lt;positive_label</span> <span class="na">value=</span><span class="s">&quot;false&quot;</span> <span class="nt">/&gt;</span>
 <span class="nt">&lt;/model&gt;</span>
 </pre></div>
@@ -1249,8 +1218,8 @@ have the following attributes:</p>
 </dl>
 </li>
 </ul>
-<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;model</span> <span class="na">name=</span><span class="s">&quot;recommend&quot;</span> <span class="na">value=</span><span class="s">&quot;my_model&quot;</span><span class="nt">&gt;</span>
-    <span class="nt">&lt;weight</span> <span class="na">label=</span><span class="s">&quot;good_hire&quot;</span> <span class="na">script=</span><span class="s">&quot;3 if isHourly(&#39;#{opening.type_raw}&#39;) else 2&quot;</span> <span class="nt">/&gt;</span>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;model</span> <span class="na">name=</span><span class="s">&quot;recommend&quot;</span> <span class="na">value=</span><span class="s">&quot;myModel&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;weight</span> <span class="na">label=</span><span class="s">&quot;good_hire&quot;</span> <span class="na">script=</span><span class="s">&quot;3 if isHourly(&#39;#{opening.type}&#39;) else 2&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;weight</span> <span class="na">label=</span><span class="s">&quot;no_hire&quot;</span> <span class="na">value=</span><span class="s">&quot;1.0&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;weight</span> <span class="na">label=</span><span class="s">&quot;bad_hire&quot;</span> <span class="na">value=</span><span class="s">&quot;1.0&quot;</span> <span class="nt">/&gt;</span>
 <span class="nt">&lt;/model&gt;</span>
@@ -1308,7 +1277,7 @@ have the following attributes:</p>
     </div>
 
     <div class="footer">
-        &copy; 2015, Upwork.
+        &copy; 2013-2016, Upwork.
       <a href="_sources/import_handlers.txt" rel="nofollow">Show this page source</a>
     </div>
      <div class="rel rellarge">

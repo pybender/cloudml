@@ -4,12 +4,16 @@
 Feature JSON file format
 ========================
 
-Features.json file includes information such as:
+To define the model it needed to create the model specification. It's a json-format file, that includes information such as:
 
 1. Name of the schema.
 2. The classifier's configuration.
 3. List of the features (with the name, type and other relevant processing instructions).
 4. Generic feature types, in the event that more than one feature share the same feature type.
+
+.. note::
+
+	In the documentation the file is named as `features.json`, but it could be used any name with `json` extention.
 
 There are four top-level elements:
 

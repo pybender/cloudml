@@ -4,8 +4,8 @@
 importhandler-- extract values from DB according to extraction plan.
 """
 
-# Authors: Ioannis Foukarakis <ifoukarakis@upwork.com>
-#          Nikolay Melnik <nmelnik@upwork.com>
+# Authors: Ioannis Foukarakis <ifoukarakis@cloud.upwork.com>
+#          Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 import os
 import sys
@@ -14,7 +14,7 @@ import logging
 from cloudml.importhandler.importhandler import ImportHandlerException, \
     ExtractionPlan, ImportHandler
 from cloudml.utils import init_logging
-from cloudml import print_exception
+from cloudml.exceptions import print_exception
 
 
 DONE = 0
@@ -67,7 +67,6 @@ def create_parser():
     from cloudml.importhandler import __version__
     from argparse import ArgumentParser
     from argparse import RawDescriptionHelpFormatter
-    program_name = os.path.basename(sys.argv[0])
     program_version = 'v%s' % __version__
     program_version_message = '%%(prog)s %s ' % (program_version, )
     program_shortdesc = __import__('__main__').__doc__
@@ -100,4 +99,4 @@ if __name__ == '__main__':
     try:
         sys.exit(main())
     except KeyboardInterrupt:
-        logging.warn('keybord interrupt')
+        logging.warn('keyboard interrupt')

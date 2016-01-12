@@ -5,7 +5,7 @@ from composite import CompositeFeatureType
 from ordinal import OrdinalFeatureType
 from date import DateFeatureType
 from regex import RegexFeatureType, RegexFeatureTypeInstance
-from primitive_types import BooleanFeatureType, IntFeatureType,\
+from primitive_types import BooleanFeatureType, IntFeatureType, \
     FloatFeatureType, StrFeatureType, PrimitiveFeatureTypeInstance
 from base import InvalidFeatureTypeException
 

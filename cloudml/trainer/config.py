@@ -3,8 +3,8 @@ This module holds classes and utils to parse model configuration
 from features.json file.
 """
 
-# Authors: Ioannis Foukarakis <ifoukarakis@upwork.com>
-#          Nikolay Melnik <nmelnik@upwork.com>
+# Authors: Ioannis Foukarakis <ifoukarakis@cloud.upwork.com>
+#          Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 import json
 import importlib
@@ -38,6 +38,11 @@ class FeatureModel(object):
                 data = json.loads(config)
         except (ValueError, IOError) as e:
             raise SchemaException(message='%s %s ' % (config, e), chain=e)
+
+        if not isinstance(data, dict):
+            raise SchemaException(message="Parsed JSON data is of type %s. "
+                                          "Dictionary is expected." %
+                                          type(data))
 
         if not isinstance(data, dict):
             raise SchemaException(message="Parsed JSON data is of type %s. "

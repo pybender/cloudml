@@ -1,44 +1,44 @@
-# Authors: Ioannis Foukarakis <ifoukarakis@upwork.com>
-#          Nikolay Melnik <nmelnik@upwork.com>
+# Authors: Ioannis Foukarakis <ifoukarakis@cloud.upwork.com>
+#          Nikolay Melnik <nmelnik@cloud.upwork.com>
 
-from cloudml import ChainedException
-
-
-class BaseException(ChainedException):
-    def __init__(self, message, chain=None, Errors=None):
-        super(BaseException, self).__init__(message, chain)
-        self.Errors = Errors
+from cloudml.exceptions import ChainedException
 
 
-class SchemaException(BaseException):
+class BaseTrainerException(ChainedException):
+    def __init__(self, message, chain=None, errors=None):
+        super(BaseTrainerException, self).__init__(message, chain)
+        self.errors = errors
+
+
+class SchemaException(BaseTrainerException):
     """
     Exception to be raised if there is an error parsing or using the
     configuration.
     """
 
 
-class ItemParseException(BaseException):
+class ItemParseException(BaseTrainerException):
     """
     Exception to be raised if there is an error parsing an item according to
     its feature type
     """
 
 
-class InvalidTrainerFile(BaseException):
+class InvalidTrainerFile(BaseTrainerException):
     """
     Exception to be raised if trainer could not be unpickled from file.
     """
 
 
-class TransformerNotFound(BaseException):
+class TransformerNotFound(BaseTrainerException):
     """
     Exception to be raised if predefined transormer could not be found.
     """
 
 
-class EmptyDataException(BaseException):
+class EmptyDataException(BaseTrainerException):
     pass
 
 
-class StreamReadError(BaseException):
+class StreamReadError(BaseTrainerException):
     pass

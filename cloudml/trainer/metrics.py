@@ -3,7 +3,7 @@ This module holds classes and utils to calculate evaluation model
 metrics.
 """
 
-# Author: Nikolay Melnik <nmelnik@upwork.com>
+# Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 import logging
 from collections import OrderedDict
@@ -19,7 +19,7 @@ __all__ = ['Metrics']
 
 
 class BaseMetrics(object):
-    METRICS_TO_CALC = ()
+    METRICS_TO_CALC = {}
     DEFAULTS = {}
 
     def __init__(self):
@@ -40,7 +40,7 @@ class BaseMetrics(object):
         if self._classes_set and not classes == self._classes_set:
             raise ValueError(
                 'Classes was set before to %s, now it is being set with %s, '
-                'which should be equal' % (self._classes_set, classes))
+                'which should be equal', self._classes_set, classes)
         self._classes_set = classes
         self._classifier[segment] = classifier
 
@@ -89,15 +89,15 @@ class BaseMetrics(object):
 
         Note: Now it used in the REST API.
         """
-        def recursive_convert(v):
-            value = v
-            if isinstance(v, list) or isinstance(v, tuple):
-                value = [recursive_convert(item) for item in v]
-            elif isinstance(v, numpy.ndarray):
-                value = [recursive_convert(item) for item in v.tolist()]
-            elif isinstance(v, dict):
+        def recursive_convert(val):
+            value = val
+            if isinstance(val, list) or isinstance(val, tuple):
+                value = [recursive_convert(item) for item in val]
+            elif isinstance(val, numpy.ndarray):
+                value = [recursive_convert(item) for item in val.tolist()]
+            elif isinstance(val, dict):
                 value = dict([(x, recursive_convert(y))
-                              for x, y in v.iteritems()])
+                              for x, y in val.iteritems()])
 
             return value
 

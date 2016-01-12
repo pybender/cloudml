@@ -2,7 +2,7 @@
 Unittests for sqoop section of entity with pig datasource.
 """
 
-# Author: Nikolay Melnik <nmelnik@upwork.com>
+# Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 import unittest
 from lxml import objectify

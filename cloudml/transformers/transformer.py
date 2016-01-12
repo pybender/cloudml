@@ -3,7 +3,7 @@ Module gathers classes and methods for implementing pretrained
 transformers.
 """
 
-# Author: Nikolay Melnik <nmelnik@upwork.com>
+# Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 import logging
 import json
@@ -11,7 +11,7 @@ import json
 
 from cloudml.trainer.transformers import get_transformer
 from cloudml.trainer.feature_types import FEATURE_TYPE_FACTORIES
-from cloudml import ChainedException
+from cloudml.exceptions import ChainedException
 
 
 class TransformerSchemaException(ChainedException):
@@ -20,9 +20,9 @@ class TransformerSchemaException(ChainedException):
     configuration.
     """
 
-    def __init__(self, message, chain=None, Errors=None):
+    def __init__(self, message, chain=None, errors=None):
         super(TransformerSchemaException, self).__init__(message, chain)
-        self.Errors = Errors
+        self.errors = errors
 
 
 class Transformer(object):
@@ -74,13 +74,16 @@ class Transformer(object):
                         'type': feature_type,
                         'transformer-type': transformer_type,
                         'transformer': transformer}
+        self.voc_size = None
 
     def train(self, iterator):
         logging.info('Start train transformer "%s"' % self.name)
         self._prepare_data(iterator)
-        self.feature['transformer'].fit(self._vect_data)
-        self.voc_size = len(self.feature['transformer'].vocabulary_)
-        logging.info('Vocabulary size: %d' % self.voc_size)
+        transformer = self.feature['transformer']
+        transformer.fit(self._vect_data)
+        if hasattr(transformer, 'vocabulary_'):
+            self.voc_size = len(transformer.vocabulary_)
+            logging.info('Vocabulary size: %d' % self.voc_size)
         logging.info('Train completed')
 
     def transform(self, data):

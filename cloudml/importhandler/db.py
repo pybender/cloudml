@@ -3,14 +3,13 @@ This module is a generic place used to hold helper functions
 connect and query with databases.
 """
 
-# Authors: Ioannis Foukarakis <ifoukarakis@upwork.com>
-#          Nikolay Melnik <nmelnik@upwork.com>
+# Authors: Ioannis Foukarakis <ifoukarakis@cloud.upwork.com>
+#          Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 import psycopg2
 import psycopg2.extras
 
 from uuid import uuid4
-from time import time
 
 
 def run_queries(queries, conn_string):  # pragma: no cover
@@ -28,7 +27,7 @@ def run_queries(queries, conn_string):  # pragma: no cover
 
     conn = psycopg2.connect(conn_string)
     for query in queries:
-        cursor = conn.cursor().execute(query)
+        conn.cursor().execute(query)
     conn.commit()
 
 

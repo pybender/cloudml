@@ -1,5 +1,5 @@
-from cloudml.exceptions import *
-__version__ = '0.1.1'
+""" CloudML is a declarative machine learning classifier project """
 
-__all__ = ['importhandler']
+__version__ = '0.3.1'
 
+__all__ = ['importhandler', 'trainer', 'transformers']

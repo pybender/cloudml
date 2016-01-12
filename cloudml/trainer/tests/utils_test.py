@@ -1,4 +1,4 @@
-# Authors: Ioannis Foukarakis <ifoukarakis@upwork.com>
+# Authors: Ioannis Foukarakis <ifoukarakis@cloud.upwork.com>
 
 
 import unittest

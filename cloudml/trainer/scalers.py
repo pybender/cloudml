@@ -1,4 +1,4 @@
-# Author: Nikolay Melnik <nmelnik@upwork.com>
+# Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
@@ -17,7 +17,7 @@ class NoScaler(StandardScaler):
         return X
 
     def inverse_transform(self, X, copy=None):
-        return Xd
+        return X
 
 
 DEFAULT_SCALER = "MinMaxScaler"

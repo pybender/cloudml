@@ -107,7 +107,7 @@
     
 
 <!--
-      <p class="doc-version">This documentation is for Cloudml <strong>version 2.0</strong> &mdash; <a href="http://scikit-learn.org/stable/support.html#documentation-resources">Other versions</a></p> -->
+      <p class="doc-version">This documentation is for CloudML <strong>version 2.0</strong> &mdash; <a href="http://scikit-learn.org/stable/support.html#documentation-resources">Other versions</a></p> -->
 <!--     <p class="citing">If you use the software, please consider <a href="about.html#citing-scikit-learn">citing scikit-learn</a>.</p> -->
     <ul>
 <li><a class="reference internal" href="#">Feature JSON file format</a><ul>
@@ -150,13 +150,17 @@
             
   <div class="section" id="feature-json-file-format">
 <span id="features"></span><h1>Feature JSON file format<a class="headerlink" href="#feature-json-file-format" title="Permalink to this headline">¶</a></h1>
-<p>Features.json file includes information such as:</p>
+<p>To define the model it needed to create the model specification. It&#8217;s a json-format file, that includes information such as:</p>
 <ol class="arabic simple">
 <li>Name of the schema.</li>
 <li>The classifier&#8217;s configuration.</li>
 <li>List of the features (with the name, type and other relevant processing instructions).</li>
 <li>Generic feature types, in the event that more than one feature share the same feature type.</li>
 </ol>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In the documentation the file is named as <cite>features.json</cite>, but it could be used any name with <cite>json</cite> extention.</p>
+</div>
 <p>There are four top-level elements:</p>
 <ul class="simple">
 <li><a class="reference internal" href="#classifier"><span>classifier</span></a> - defining the configuration of the classifier to use.</li>
@@ -166,7 +170,7 @@
 </ul>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">A full example of the features.json file can found in <a class="reference download internal" href="_downloads/features.json"><code class="xref download docutils literal"><span class="pre">feature.json</span></code></a>.</p>
+<p class="last">A full example of the features.json file can found in <a class="reference download internal" href="_downloads/features1.json"><code class="xref download docutils literal"><span class="pre">feature.json</span></code></a>.</p>
 </div>
 <div class="section" id="classifier">
 <span id="id1"></span><h2>Classifier<a class="headerlink" href="#classifier" title="Permalink to this headline">¶</a></h2>
@@ -174,7 +178,7 @@
 <ul>
 <li><dl class="first docutils">
 <dt><cite>type</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
-<dd><p class="first last">Defines the Scikit-learn classifier class, which would be used to create the model.</p>
+<dd><p class="first last">Defines the <a class="reference external" href="http://scikit-learn.org/">Scikit-learn</a> classifier class, which would be used to create the model.</p>
 </dd>
 </dl>
 </li>
@@ -389,7 +393,7 @@ See <a class="reference internal" href="#feature-scalers"><span>scalers</span></
 </li>
 <li><dl class="first docutils">
 <dt><cite>categorical</cite></dt>
-<dd><p class="first last">Use CountVectorizer preprocessor which implements tokenization and occurrence counting.</p>
+<dd><p class="first last">Use <a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html">scikit-learn&#8217;s CountVectorizer</a> preprocessor which implements tokenization and occurrence counting.</p>
 </dd>
 </dl>
 </li>
@@ -667,7 +671,7 @@ For &#8220;I&#8217;m a machine learning enthusiast&#8221;, the following feature
     </div>
 
     <div class="footer">
-        &copy; 2015, Upwork.
+        &copy; 2013-2016, Upwork.
       <a href="_sources/features.txt" rel="nofollow">Show this page source</a>
     </div>
      <div class="rel rellarge">

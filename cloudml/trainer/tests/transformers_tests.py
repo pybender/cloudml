@@ -1,11 +1,10 @@
-# Authors: Ioannis Foukarakis <ifoukarakis@upwork.com>
-#          Nikolay Melnik <nmelnik@upwork.com>
+# Authors: Ioannis Foukarakis <ifoukarakis@cloud.upwork.com>
+#          Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 
 import unittest
 
-from cloudml.trainer.transformers import get_transformer, ScalerDecorator, \
-    Ntile
+from cloudml.trainer.transformers import get_transformer, Ntile
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 

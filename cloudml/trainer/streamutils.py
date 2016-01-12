@@ -2,7 +2,7 @@
 Json stream loading utilities.
 """
 
-# Author: Ioannis Foukarakis <ifoukarakis@upwork.com>
+# Author: Ioannis Foukarakis <ifoukarakis@cloud.upwork.com>
 
 import json
 import csv
@@ -27,7 +27,7 @@ class JsonStreamReader(object):
                 # Try to get a json object from the data stream
             try:
                 obj, index = self._decoder.raw_decode(self.sbuffer)
-            except Exception, e:
+            except Exception:
                 self.parsing = False
                 # If we got an object fire the callback infra
             if self.parsing:

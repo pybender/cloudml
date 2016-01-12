@@ -2,7 +2,7 @@
 Unittests for inline predict section classes.
 """
 
-# Author: Nikolay Melnik <nmelnik@upwork.com>
+# Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 import unittest
 from lxml import objectify

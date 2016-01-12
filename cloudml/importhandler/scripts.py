@@ -2,7 +2,7 @@
 Python script manager.
 """
 
-# Author: Nikolay Melnik <nmelnik@upwork.com>
+# Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 import logging
 
@@ -10,7 +10,7 @@ from utils import ParametrizedTemplate
 
 # Context:
 from processors import composite_string, composite_python, \
-    composite_readability, process_key_value
+    composite_readability, process_key_value  # pylint: disable=W0611
 from exceptions import ImportHandlerException, LocalScriptNotFoundException
 
 
@@ -29,7 +29,7 @@ class Script(object):
     def _process_amazon_file(self):
         from boto import connect_s3
         from boto.s3.key import Key
-        from config import AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET,\
+        from config import AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET, \
             BUCKET_NAME
         try:
             s3_conn = connect_s3(AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET)
