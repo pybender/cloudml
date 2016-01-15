@@ -145,14 +145,14 @@ def print_exception(e, with_colors=True, ret_value=False):
     ex = ChainedException("Got exception", e)
     tb_str = ''
     ind = ''
-    nl = '\n\r'
+    nl = '\r\n'
 
     if not ex.traceback:
         return
 
     for tb in ex.traceback:
         if tb_str and tb:
-            tb_str += "".join([nl, nl, ind[:-4], c.HEADER,
+            tb_str += "".join([nl, nl, ind[:-1], c.HEADER,
                                "CAUSED BY:", c.ENDC])
         for line in tb:
             exception = line.get('exception', None)
