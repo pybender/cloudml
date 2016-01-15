@@ -23,10 +23,11 @@ def traceback_info():
                 else:
                     return str(data)
             except Exception:
-                return str(data)
+                return "Can't parse data"
 
-        res = {'line': line, 'locals': {}}
-        if locals and len(locals) < 10:
+        res = {'line': line}
+        if locals:
+            res['locals'] = {}
             for n, val in locals.iteritems():
                 res['locals'][convert(n)] = convert(val)
         return res
@@ -76,85 +77,90 @@ class ChainedException(Exception):
         super(ChainedException, self).__init__(message)
         self._traceback = traceback_info()
         self.chain = chain
-        self.traceback = self._get_traceback()
 
-    def _get_traceback(self):
-        """
-        Returns full backtrace based on all exceptions chain
-        """
-        trace = {'trace': self._traceback}
-        current = self
-        # index to prevent deep cycle
+    @property
+    def traceback(self):
+        tb = []
+        obj = self
         i = 0
-        reasons = []
-        while i < 20 and current.chain is not None and \
-                isinstance(current.chain, ChainedException):
-            reasons.append(current.chain._traceback)
-            current = current.chain
-            i += 1
-
-        trace['reasons'] = reasons
-        return trace
+        while i < 20 and obj is not None:
+            if hasattr(obj, '_traceback') and obj._traceback:
+                tb.append(obj._traceback)
+            if hasattr(obj, 'chain') and obj.chain is not None:
+                obj = obj.chain
+            else:
+                obj = None
+        return tb
 
     def __str__(self):
         return self.message
 
 
-def print_exception(e):
+def print_exception(e, with_colors=True, ret_value=False):
     """
     Prints exception in command line
     :return:
     """
 
     class bcolors:
-        HEADER = '\033[95m'
-        OKBLUE = '\033[94m'
-        OKGREEN = '\033[92m'
-        WARNING = '\033[93m'
-        FAIL = '\033[91m'
-        ENDC = '\033[0m'
-        BOLD = '\033[1m'
-        UNDERLINE = '\033[4m'
+        HEADER = 'HEADER'
+        VARS = 'VARS'
+        VAR_NAME = 'VAR_NAME'
+        EXC_LINE = 'EXC_LINE'
+        ENDC = 'ENDC'
+        TB_LINE = 'TB_LINE'
+
+        def cmd(self):
+            self.HEADER = '\033[95m'
+            self.VARS = '\033[94m'
+            self.VAR_NAME = '\033[92m'
+            self.EXC_LINE = '\033[93m'
+            self.ENDC = '\033[0m'
+            self.TB_LINE = '\033[1m'
 
         def disable(self):
             self.HEADER = ''
-            self.OKGREEN = ''
-            self.OKBLUE = ''
-            self.WARNING = ''
-            self.FAIL = ''
+            self.VAR_NAME = ''
+            self.VARS = ''
+            self.EXC_LINE = ''
             self.ENDC = ''
-            self.BOLD = ''
-            self.UNDERLINE = ''
+            self.TB_LINE = ''
 
     c = bcolors()
-    if not sys.stdout.isatty():
+    if not with_colors:
         c.disable()
+    elif sys.stdout.isatty():
+        c.cmd()
 
-    obj = ChainedException("Got exception", e)
-    i = 0
-    ind = ""
-    print
-    while i < 20 and obj is not None:
-        if hasattr(obj, '_traceback') and obj._traceback:
-            for line in obj._traceback:
-                exception = line.get('exception', None)
-                lne = line.get('line', None)
-                local_vars = line.get('locals', None)
-                if exception:
-                    print "".join([ind, c.WARNING, exception, c.ENDC])
-                elif lne:
-                    print "".join([ind, c.BOLD, lne, c.ENDC])
-                if local_vars:
-                    print "".join([c.OKBLUE, ind, "Local variables:", c.ENDC])
-                    for (k, v) in local_vars.iteritems():
-                        print "".join([ind, c.OKGREEN, "    ", str(k),
+    ex = ChainedException("Got exception", e)
+    tb_str = ''
+    ind = ''
+    nl = '\n\r'
+
+    if not ex.traceback:
+        return
+
+    for tb in ex.traceback:
+        if tb_str and tb:
+            tb_str += "".join([nl, nl, ind[:-4], c.HEADER,
+                               "CAUSED BY:", c.ENDC])
+        for line in tb:
+            exception = line.get('exception', None)
+            lne = line.get('line', None)
+            local_vars = line.get('locals', None)
+            if exception:
+                tb_str += "".join([nl, ind, c.EXC_LINE, exception, c.ENDC])
+            elif lne:
+                tb_str += "".join([nl, ind, c.TB_LINE, lne, c.ENDC])
+            if local_vars:
+                tb_str += "".join([nl, c.VARS, ind, "Local variables:",
+                                   c.ENDC])
+                for (k, v) in local_vars.iteritems():
+                    tb_str += "".join([nl, ind, "\t", c.VAR_NAME, str(k),
                                        ": ", c.ENDC, str(v)])
-        if hasattr(obj, 'chain') and obj.chain is not None \
-                and hasattr(obj.chain, 'traceback') and obj.chain._traceback:
-            print
-            print "".join([ind, c.HEADER, "CAUSED BY:", c.ENDC])
-            obj = obj.chain
-            ind += "    "
-            i += 1
-        else:
-            obj = None
+        ind += "\t"
+
+    if ret_value:
+        return tb_str
+    else:
+        print tb_str

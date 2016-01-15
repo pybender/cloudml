@@ -34,7 +34,7 @@ class Transformer(object):
                     data = json.load(fp)
             else:
                 data = json.loads(config)
-        except ValueError as e:
+        except (ValueError, IOError) as e:
             raise TransformerSchemaException(message='%s %s ' % (config, e),
                                              chain=e)
 
