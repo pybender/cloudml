@@ -15,8 +15,8 @@ class TrainerTestCase(unittest.TestCase):
         res = main(argv=[filename])
         self.assertEquals(res, INVALID_FEATURE_MODEL)
         logging_mock.warn.assert_called_with(
-            "Can't load features file. [Errno 2] "
-            "No such file or directory: '{0}'".format(filename))
+            "Invalid feature model: not-exsistant-file.json [Errno 2] "
+            "No such file or directory: '{0}' ".format(filename))
 
     @patch('trainer.logging')
     def test_invalid_features(self, logging_mock):

@@ -1,6 +1,8 @@
 # Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 import os
 import json
+from nose.plugins import xunit
+from nose.plugins.xunit import Tee
 
 
 BASEDIR = 'testdata'
@@ -21,3 +23,10 @@ def db_row_iter_mock(*args, **kwargs):
         data = json.loads(fp.read())
     for r in data:
         yield r
+
+
+class LocalTee(Tee):
+    def isatty(self):
+        return False
+
+xunit.Tee = LocalTee

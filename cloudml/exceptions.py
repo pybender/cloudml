@@ -7,19 +7,26 @@ def traceback_info():
     """
     Extracts backtrace and populates it with local variables for each line
     """
+    max_recursion_deep = 20
+
     def format_line(line, locals=None):
         """
         Line to dictionary
         """
-        def convert(data):
+        def convert(data, ri):
             try:
+                if ri > max_recursion_deep:
+                    return str(data)
                 import collections
                 if isinstance(data, basestring):
                     return str(data)
-                elif isinstance(data, collections.Mapping):
-                    return dict(map(convert, data.iteritems()))
-                elif isinstance(data, collections.Iterable):
-                    return type(data)(map(convert, data))
+                elif isinstance(data, (set, list, tuple)):
+                    return [convert(item, ri + 1) for item in data]
+                elif isinstance(data, dict):
+                    d = dict()
+                    for k, v in data.iteritems():
+                        d[str(k)] = convert(v, ri + 1)
+                    return d
                 else:
                     return str(data)
             except Exception:
@@ -29,7 +36,7 @@ def traceback_info():
         if locals:
             res['locals'] = {}
             for n, val in locals.iteritems():
-                res['locals'][convert(n)] = convert(val)
+                res['locals'][str(n)] = convert(val, 0)
         return res
 
     def process_tb_frame(tb):
@@ -53,17 +60,21 @@ def traceback_info():
     try:
         t, v, tb = sys.exc_info()
         __stop_recursion__ = 1
+        __stop_index__ = 0
         result = []
         if tb is None:
             return result
         result.append({'exception': '{}'.format(''.join(
             traceback.format_exception_only(t, v)))})
         result.append(format_line('Traceback (most recent call last):'))
+
         while tb is not None:
-            if tb.tb_frame.f_locals.get('__stop_recursion__'):
+            if tb.tb_frame.f_locals.get('__stop_recursion__') \
+                    or __stop_index__ > max_recursion_deep:
                 break
             result.extend(process_tb_frame(tb))
             tb = tb.tb_next
+            __stop_index__ += 1
         return result
     finally:
         del tb
@@ -82,8 +93,7 @@ class ChainedException(Exception):
     def traceback(self):
         tb = []
         obj = self
-        i = 0
-        while i < 20 and obj is not None:
+        while obj is not None:
             if hasattr(obj, '_traceback') and obj._traceback:
                 tb.append(obj._traceback)
             if hasattr(obj, 'chain') and obj.chain is not None:

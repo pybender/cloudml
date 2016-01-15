@@ -126,14 +126,14 @@ class ScriptTest(unittest.TestCase):
                           script._process_local_file)
         self.assertRaises(ImportHandlerException, script.get_script_str)
         script = Script(self.LOCAL_SCRIPT_CORRECT)
-        self.assertEqual('def always99(a):\n    return 99',
+        self.assertEqual('def always99(a):\n    return 99\n',
                          script.get_script_str())
         self.assertEqual(os.path.join(self.BASE_DIR, "local_script.py"),
                          script.src)
         self.assertEqual(None, script.text)
 
         script = Script(self.PRIORITY_SCRIPT)
-        self.assertEqual('def always99(a):\n    return 99',
+        self.assertEqual('def always99(a):\n    return 99\n',
                          script.get_script_str())
         self.assertEqual(os.path.join(self.BASE_DIR, "local_script.py"),
                          script.src)
