@@ -7,9 +7,7 @@ Classes for processing user input data.
 import re
 
 from exceptions import ImportHandlerException
-from db import postgres_iter
-from utils import process_primitive, process_date
-from cloudml.utils import process_bool
+from utils import PROCESS_STRATEGIES
 
 
 __all__ = ['Input']
@@ -22,16 +20,6 @@ class Input(object):
     config: lxml.etree._Element
         parsed by lxml.objectify input definition tag.
     """
-# TODO: int in documentation.
-# We need use int or integer everywhere
-    PROCESS_STRATEGIES = {
-        'string': process_primitive(str),
-        'float': process_primitive(float),
-        'boolean': process_primitive(process_bool),
-        'integer': process_primitive(int),
-        'date': process_date
-    }
-
     def __init__(self, config):
         self.name = config.get('name')
         self.type = config.get('type', 'string')
@@ -51,9 +39,9 @@ class Input(object):
             raise ImportHandlerException(
                 'Input parameter %s is required' % self.name)
 
-        strategy = self.PROCESS_STRATEGIES.get(self.type)
+        strategy = PROCESS_STRATEGIES.get(self.type)
         if strategy is None:
-            types = ", ".join(self.PROCESS_STRATEGIES.keys())
+            types = ", ".join(PROCESS_STRATEGIES.keys())
             raise ImportHandlerException('Type of the input parameter %s is \
 invalid: %s. Choose one of %s' % (self.name, self.type, types))
 

@@ -4,7 +4,7 @@ import json
 import os
 from string import Template
 from datetime import datetime
-from ..utils import isint, isfloat
+from ..utils import isint, isfloat, process_bool
 
 
 class ParametrizedTemplate(Template):
@@ -55,6 +55,18 @@ def process_primitive(strategy):
 
 def process_date(value, format):
     return datetime.strptime(value, format)
+
+
+PROCESS_STRATEGIES = {
+    'string': process_primitive(str),
+    'float': process_primitive(float),
+    # TODO: how do we need convert '1'?
+    'boolean': process_primitive(process_bool),
+    'json': lambda x: x,
+    'integer': process_primitive(int),
+    'date': process_date
+}
+
 
 DIR = os.path.dirname(__file__)
 with open(os.path.join(DIR, 'templates', 'pig_template.txt')) as fp:

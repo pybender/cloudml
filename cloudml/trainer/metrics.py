@@ -135,7 +135,7 @@ class ClassificationModelMetrics(BaseMetrics):
                       'roc_auc': 'Area under ROC curve',
                       'confusion_matrix': 'Confusion Matrix',
                       'accuracy': 'Accuracy',
-                      'avarage_precision': 'Avarage Precision',
+                      'average_precision': 'Avarage Precision',
                       'precision_recall_curve': 'Precision-recall curve'}
     MORE_DIMENSIONAL_METRICS = {'confusion_matrix': 'Confusion Matrix',
                                 'accuracy': 'Accuracy',
@@ -179,7 +179,7 @@ class ClassificationModelMetrics(BaseMetrics):
         return self._roc_curve
 
     @property
-    def avarage_precision(self):
+    def average_precision(self):
         from ml_metrics import apk
         if not hasattr(self, '_apk'):
             self._apk = apk(self._labels, self._preds)

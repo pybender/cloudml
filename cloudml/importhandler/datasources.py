@@ -600,7 +600,7 @@ class PigDataSource(BaseDataSource):
         """
         logging.info('Running emr jobflow')
         self.jobid = self.emr_conn.run_jobflow(
-            name='Cloudml jobflow',
+            name='CloudML jobflow',
             log_uri=self.log_uri,
             ami_version=self.ami_version,
             visible_to_all_users=True,

@@ -393,7 +393,7 @@ class LogisticRegressionTrainerTestCase(BaseTrainerTestCase):
             self.assertTrue(pos_label in metrics.roc_auc)
             self.assertEquals(metrics.roc_auc[pos_label], 1.0)
 
-            self.assertEquals(metrics.avarage_precision, 0.0)
+            self.assertEquals(metrics.average_precision, 0.0)
             # make sure we have tested all published metrics
             for key in ClassificationModelMetrics.BINARY_METRICS.keys():
                 self.assertTrue(

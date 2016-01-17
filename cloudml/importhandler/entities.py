@@ -11,9 +11,8 @@ import re
 from jsonpath import jsonpath
 
 from exceptions import ProcessException, ImportHandlerException
-from utils import get_key, ParametrizedTemplate, process_primitive, \
+from utils import ParametrizedTemplate, PROCESS_STRATEGIES, \
     load_json
-from cloudml.utils import process_bool
 from datasources import DATASOURCES_REQUIRE_QUERY
 
 
@@ -79,14 +78,6 @@ class Field(object):
         required: string, optional, (default='false')
             whether this field is required to have a value or not.
     """
-    PROCESS_STRATEGIES = {
-        'string': process_primitive(str),
-        'float': process_primitive(float),
-        # TODO: how do we need convert '1'?
-        'boolean': process_primitive(process_bool),
-        'json': lambda x: x,
-        'integer': process_primitive(int)
-    }
 
     def __init__(self, config, entity):
         self.name = config.get('name')  # unique
@@ -145,8 +136,8 @@ class Field(object):
         """
         Validates field configuration.
         """
-        if self.type not in self.PROCESS_STRATEGIES:
-            types = ", ".join(self.PROCESS_STRATEGIES.keys())
+        if self.type not in PROCESS_STRATEGIES:
+            types = ", ".join(PROCESS_STRATEGIES.keys())
             raise ImportHandlerException(
                 'Type of the field %s is invalid: %s. Choose one of %s' %
                 (self.name, self.type, types))
@@ -176,7 +167,7 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
             if self.key_path and self.value_path and value:
                 # Treat as a dictionary
                 keys = jsonpath(value[0], self.key_path)
-                strategy = self.PROCESS_STRATEGIES.get(self.type)
+                strategy = PROCESS_STRATEGIES.get(self.type)
                 values = []
                 for value in jsonpath(value[0], self.value_path):
                     try:
@@ -238,7 +229,7 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
             value = ParametrizedTemplate(self.template).safe_substitute(params)
 
         if convert_type and value is not None:
-            strategy = self.PROCESS_STRATEGIES.get(self.type)
+            strategy = PROCESS_STRATEGIES.get(self.type)
             try:
                 value = strategy(value)
             except ValueError, exc:
@@ -428,7 +419,7 @@ class EntityProcessor(object):
                 sqoop_query = sqoop_import.build_query(params)
                 logging.info('Run query %s' % sqoop_query)
                 # We running db datasource query to create a table
-                sqoop_iter = sqoop_import.datasource.run_queries(sqoop_query)
+                sqoop_import.datasource.run_queries(sqoop_query)
             if self.entity.autoload_sqoop_dataset:
                 from utils import SCHEMA_INFO_FIELDS, PIG_TEMPLATE, \
                     construct_pig_fields
@@ -450,7 +441,8 @@ order by ordinal_position;""".format(sqoop_import.table,
                 load_dataset_script = PIG_TEMPLATE.format(
                     self.entity.sqoop_dataset_name,
                     sqoop_import.target,
-                    fields_str)
+                    fields_str,
+                    self.datasource.bucket_name)
                 query = "{0}\n{1}".format(load_dataset_script, query)
 
         if self.datasource.type == 'pig':
