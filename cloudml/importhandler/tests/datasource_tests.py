@@ -207,6 +207,29 @@ class DataSourcesTest(unittest.TestCase):
         self.assertEquals(ds.type, 'input')
 
 
+def conn_exec_print(cursor, query):
+    print "Query is", query
+
+
+class DbDataSourceTests(unittest.TestCase):
+
+    def setUp(self):
+        self.datasource = DataSource.factory(DataSourcesTest.DB)
+        self.assertEquals(type(self.datasource), DbDataSource)
+
+    @patch('cloudml.importhandler.db.execute', side_effect=conn_exec_print)
+    def test_sql_injection_on_query_target(self, exec_mock):
+        query = 'SELECT * FROM pg_catalog.pg_tables'
+
+        iter_ = self.datasource._get_iter(
+            query, query_target='target_tbl')
+
+        with self.assertRaises(ValueError):
+            self.datasource._get_iter(
+                query,
+                query_target='target_tbl;delete * from tbl3;')
+
+
 class PigDataSourceTests(unittest.TestCase):
 
     @patch('time.sleep', return_value=None)
