@@ -21,7 +21,7 @@ import requests
 from requests import ConnectionError
 
 from exceptions import ImportHandlerException, ProcessException
-from db import postgres_iter, run_queries
+from db import postgres_iter, run_queries, check_table_name
 
 logging.getLogger('boto').setLevel(logging.INFO)
 
@@ -148,6 +148,7 @@ class DbDataSource(BaseDataSource):
         queries = [q + ';' for q in queries]
 
         if query_target:
+            check_table_name(query_target)
             queries.append("SELECT * FROM %s;" % query_target)
 
         return queries
@@ -601,7 +602,7 @@ class PigDataSource(BaseDataSource):
         """
         logging.info('Running emr jobflow')
         self.jobid = self.emr_conn.run_jobflow(
-            name='Cloudml jobflow',
+            name='CloudML jobflow',
             log_uri=self.log_uri,
             ami_version=self.ami_version,
             visible_to_all_users=True,

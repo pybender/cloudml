@@ -4,7 +4,7 @@ and evaluating the model.
 """
 
 # Authors: Ioannis Foukarakis <ifoukarakis@cloud.upwork.com>
-#          Panagiotis Papadimitriou <papadimitriou@upwork.com>
+#          Panagiotis Papadimitriou <papadimitriou@cloud.upwork.com>
 #          Nikolay Melnik <nmelnik@cloud.upwork.com>
 #          Nader Soliman <nsoliman@cloud.upwork.com>
 
@@ -48,7 +48,7 @@ class Trainer(object):
              the feature model object
         """
         self._feature_model = feature_model
-        self._initilize_classifier(feature_model)
+        self._initialize_classifier(feature_model)
 
         self.features = {}
         self._count = 0
@@ -112,7 +112,7 @@ class Trainer(object):
     def set_features(self, features):
         self.features = features
 
-    def _initilize_classifier(self, feature_model):
+    def _initialize_classifier(self, feature_model):
         # Classifier to use
         self._classifier_type = feature_model.classifier_type
         logging.info('Using "%s"', self._classifier_type)
@@ -204,7 +204,7 @@ class Trainer(object):
 
     def generate_trained_model_visualization(self, segment, true_data):
         log_memory_usage("Memory usage")
-        logging.info("Genarate trained model visualization")
+        logging.info("Generate trained model visualization")
         self.model_visualizer.generate(segment, true_data)
         self.get_visualization(segment)
         log_memory_usage("Memory usage (after gen model visualization)")
@@ -385,7 +385,7 @@ class Trainer(object):
         """
         self._prepare_data(iterator)
         segments = {}
-        logging.info('Vectorization & Tansformation Starting')
+        logging.info('Vectorization & Transformation Starting')
         for segment in self._vect_data:
             logging.info('Processing Segment: %s', segment)
             segments[segment] = {
@@ -540,9 +540,6 @@ class Trainer(object):
                                         self._classifier[segment],
                                         [], segment)
 
-        # FIXME: do we need it?
-        # self.generate_trained_model_visualization(
-        #     segment, self.metrics._true_data[segment])
         log_memory_usage("Memory usage")
 
     def _get_segment_name(self, row_data):

@@ -8,7 +8,8 @@ from ..classifier_settings import LOGISTIC_REGRESSION, SVR, SGD_CLASSIFIER
 
 class WeightsCalculator(object):
     def __init__(self, trainer, clf_weights_field=None):
-        # self.weight = {
+        # Structura of weights
+        # {
         #   <segment>: {
         #      <class_label>: [
         #         {'name': 'name',
@@ -44,7 +45,6 @@ class WeightsCalculator(object):
             logging.warning('There are no classes in the segment %s', segment)
             return
 
-        clf_weights = self._get_clf_weights(clf)
         true_data.data = numpy.absolute(true_data.data)
         mean_data = true_data.mean(0).transpose()
 

@@ -22,7 +22,7 @@ class TestField(unittest.TestCase):
         with self.assertRaisesRegexp(
                 ImportHandlerException,
                 "Type of the field field_name is invalid: invalid. \
-Choose one of boolean, integer, json, float, string"):
+Choose one of string, float, json, boolean, date, integer"):
             field = Field({
                 'name': 'field_name',
                 'type': 'invalid'}, entity=None)

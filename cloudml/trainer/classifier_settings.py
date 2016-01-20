@@ -153,20 +153,6 @@ The newton-cg and lbfgs solvers support only l2 penalties.'},
             Params.min_density,
             Params.class_weight
         ]},
-    # GRADIENT_BOOSTING_CLASSIFIER: {
-    #     'cls': 'sklearn.ensemble.GradientBoostingClassifier',
-    #     'parameters': [
-    #         {'name': "loss",
-    #          'type': 'string',
-    #          'choices': ['deviance'],
-    #          'default': 'deviance'},
-    #         {'name': "learning_rate", 'type': 'float', 'default': 0.1},
-    #         Params.n_estimators,
-    #         Params.max_features, Params.max_depth,
-    #         Params.min_samples_split, Params.min_samples_leaf,
-    #         Params.max_leaf_nodes,
-    #         {'name': "subsample", 'type': 'float', 'default': 1.0},
-    #         Params.verbose]},
     EXTRA_TREES_CLASSIFIER: {
         'cls': 'sklearn.ensemble.ExtraTreesClassifier',
         'parameters': [
