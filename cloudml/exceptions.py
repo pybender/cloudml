@@ -7,7 +7,7 @@ def traceback_info():
     """
     Extracts backtrace and populates it with local variables for each line
     """
-    max_recursion_deep = 20
+    max_recursion_deep = 40
 
     def format_line(line, locals=None):
         """
