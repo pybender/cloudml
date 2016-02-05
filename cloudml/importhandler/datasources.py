@@ -600,6 +600,7 @@ class PigDataSource(BaseDataSource):
         Runs hadoop jobflow and saves ID to jobid field.
         """
         logging.info('Running emr jobflow')
+        logging.info(self.log_uri)
         self.jobid = self.emr_conn.run_jobflow(
             name='CloudML jobflow',
             log_uri=self.log_uri,
@@ -607,13 +608,13 @@ class PigDataSource(BaseDataSource):
             visible_to_all_users=True,
             bootstrap_actions=bootstrap_actions,
             ec2_keyname=self.ec2_keyname,
-            # keep_alive=self.keep_alive,
+            #keep_alive=self.keep_alive,
             num_instances=self.num_instances,
             master_instance_type=self.master_instance_type,
             slave_instance_type=self.slave_instance_type,
             # api_params={'Instances.Ec2SubnetId':'subnet-3f5bc256'},
             action_on_failure='CONTINUE',
-            job_flow_role='EMR_DefaultRole',
+            job_flow_role='EMRJobflowDefault',
             service_role='EMR_DefaultRole',
             steps=[pig_step, ])
         logging.info('New JobFlow id is %s' % self.jobid)
