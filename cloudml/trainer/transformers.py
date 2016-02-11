@@ -190,7 +190,7 @@ class Params:
     train_algorithm_w2v = {'name': 'train_algorithm', 'type': 'string',
                            'choices': ['skip-gram', 'cbow']}
     train_algorithm_d2v = {'name': 'train_algorithm', 'type': 'string',
-                           'choices': ['pv-dm', 'pv-dbow']}
+                           'choices': ['pv-dm', 'pv-dbow', 'both']}
     vector_size = {'name': 'vector_size', 'type': 'integer'}
     window = {'name': 'window', 'type': 'integer'}
     min_count = {'name': 'min_count', 'type': 'integer'}
