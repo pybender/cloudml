@@ -232,6 +232,8 @@ class DbDataSourceTests(unittest.TestCase):
 
 class PigDataSourceTests(unittest.TestCase):
 
+    @mock_emr
+    @mock_s3
     @patch('time.sleep', return_value=None)
     def test_get_iter(self, sleep_mock):
         ds = PigDataSource(DataSourcesTest.PIG)
@@ -241,29 +243,65 @@ class PigDataSourceTests(unittest.TestCase):
         clear_output_folder = MagicMock()
         _create_jobflow_and_run_steps = MagicMock()
 
-        def _get_status_mock(status_state, state):
-            item_mock = MagicMock()
-            item_mock.state = status_state
-            status_mock = MagicMock()
-            status_mock.state = state
-            status_mock.steps = [item_mock, item_mock, item_mock]
-            return status_mock
-
-        status_mocks = [_get_status_mock('RUNNING', 'RUNNING'),
-                        _get_status_mock('WAITING', 'WAITING'),
-                        _get_status_mock('COMPLETED', 'COMPLETED')]
-        describe_jobflow = MagicMock(side_effect=status_mocks)
         pig_import = 'cloudml.importhandler.datasources.PigDataSource'
         with patch('{}.get_pig_step'.format(pig_import), get_pig_step):
             with patch('{}.clear_output_folder'.format(pig_import),
                        clear_output_folder):
-                with patch("boto.emr.connection.EmrConnection."
-                           "describe_jobflow", describe_jobflow):
-                    # create new job flow.
-                    with patch('{}._create_jobflow_'
-                               'and_run_steps'.format(pig_import),
-                               _create_jobflow_and_run_steps):
-                        iter_ = ds._get_iter('query here', 'query target')
+                # create new job flow.
+                with patch('{}._create_jobflow_'
+                           'and_run_steps'.format(pig_import),
+                           _create_jobflow_and_run_steps):
+
+                    def _get_status_mock(state, status_state):
+                        item_mock = MagicMock()
+                        item_mock.state = status_state
+                        status_mock = MagicMock()
+                        status_mock.state = state
+                        status_mock.steps = [item_mock, item_mock, item_mock]
+                        return status_mock
+
+                    def get_check_mock(statuses):
+                        statuses = [('RUNNING', 'RUNNING')] + statuses
+                        status_mocks = []
+                        for st in statuses:
+                            status_mocks.append(_get_status_mock(*st))
+                        return MagicMock(side_effect=status_mocks)
+
+                    # Completed job
+                    def check_completed(stat_list):
+                        mock = get_check_mock(stat_list)
+                        with patch("boto.emr.connection.EmrConnection."
+                                   "describe_jobflow", mock):
+                            iter_ = ds._get_iter('query here', 'query target')
+
+                    check_completed([('COMPLETED', 'COMPLETED')])
+                    check_completed([('WAITING', 'COMPLETED')])
+
+                    # Failed job
+                    def check_failed(stat_list):
+                        mock = get_check_mock(stat_list)
+                        with patch("boto.emr.connection.EmrConnection."
+                                   "describe_jobflow", mock):
+                            with self.assertRaises(ImportHandlerException):
+                                ds._get_iter('query here', 'query target')
+
+                    check_failed([('COMPLETED', 'FAILED')])
+                    check_failed([('WAITING', 'FAILED')])
+                    check_failed([('FAILED', 'FAILED')])
+
+                    # Job is completed with unexpected state
+                    mock = get_check_mock([('COMPLETED', 'UNEXPECTED')])
+                    with patch("boto.emr.connection.EmrConnection."
+                               "describe_jobflow", mock):
+                        ds._get_iter('query here', 'query target')
+
+                    # Job with unexpected state
+                    mock = get_check_mock([
+                        ('UNEXPECTED', 'UNEXPECTED'),
+                        ('COMPLETED', 'COMPLETED')])
+                    with patch("boto.emr.connection.EmrConnection."
+                               "describe_jobflow", mock):
+                        ds._get_iter('query here', 'query target')
 
     @mock_s3
     def test_generate_download_url(self):
