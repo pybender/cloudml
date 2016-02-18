@@ -1,1 +1,1 @@
-from visualizators import Visualizator as TrainedModelVisualizator
+from visualizers import Visualizer as TrainedModelVisualizer

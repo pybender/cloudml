@@ -465,37 +465,18 @@ class PigDataSource(BaseDataSource):
                     "State of jobflow changed: %s. Step %s state is: %s",
                     status.state, step_number, step_state)
 
-                if status.state == 'RUNNING':
-                    self._process_running_state(status, step_number)
+                fn_name = '_process_{0}_state'.format(status.state.lower())
+                if hasattr(self, fn_name):
+                    process_fn = getattr(self, fn_name)
+                    process_fn(status, step_state, step_number)
+                else:
+                    logging.warning(
+                        'Jobflow status is unexpected: %s', status.state)
 
-                if status.state == 'COMPLETED':
-                    if step_state == 'FAILED':
-                        self._fail_jobflow(step_number)
-                    elif step_state == 'COMPLETED':
-                        logging.info('Step is completed')
-                        break
-                    else:
-                        logging.info(
-                            'Unexpected job state for status %s: %s',
-                            status.state, step_state)
-                elif status.state == 'RUNNING':
-                    pass  # processing the task
-                elif status.state == 'WAITING':
-                    if step_state == 'PENDING':
-                        # we reusing cluster and have waiting status
-                        # of jobflow from previous job
-                        pass
-                    elif step_state == 'FAILED':
-                        self._fail_jobflow(step_number)
-                    elif step_state == 'COMPLETED':
-                        logging.info('Step is completed')
-                        break
-                    else:
-                        logging.info(
-                            'Unexpected job state for status %s: %s',
-                            status.state, step_state)
-                elif status.state == 'FAILED':
-                    self._fail_jobflow(step_number)
+                if status.state == 'COMPLETED' or \
+                        (status.state == 'WAITING'
+                            and step_state == 'COMPLETED'):
+                    break  # job is completed -> no need check status
 
                 previous_state = status.state
 
@@ -600,6 +581,7 @@ class PigDataSource(BaseDataSource):
         Runs hadoop jobflow and saves ID to jobid field.
         """
         logging.info('Running emr jobflow')
+        logging.info(self.log_uri)
         self.jobid = self.emr_conn.run_jobflow(
             name='CloudML jobflow',
             log_uri=self.log_uri,
@@ -607,13 +589,13 @@ class PigDataSource(BaseDataSource):
             visible_to_all_users=True,
             bootstrap_actions=bootstrap_actions,
             ec2_keyname=self.ec2_keyname,
-            # keep_alive=self.keep_alive,
+            #keep_alive=self.keep_alive,
             num_instances=self.num_instances,
             master_instance_type=self.master_instance_type,
             slave_instance_type=self.slave_instance_type,
             # api_params={'Instances.Ec2SubnetId':'subnet-3f5bc256'},
             action_on_failure='CONTINUE',
-            job_flow_role='EMR_DefaultRole',
+            job_flow_role='EMR_EC2_DefaultRole',
             service_role='EMR_DefaultRole',
             steps=[pig_step, ])
         logging.info('New JobFlow id is %s' % self.jobid)
@@ -643,7 +625,10 @@ class PigDataSource(BaseDataSource):
 
     # Different jobflow states processing methods.
 
-    def _process_running_state(self, status, step_number):
+    def _process_running_state(self, status, step_state, step_number):
+        """
+        Processes `RUNNING` job status.
+        """
         if hasattr(status, 'masterpublicdnsname'):
             masterpublicdnsname = status.masterpublicdnsname
             if self.import_handler is not None and \
@@ -661,6 +646,42 @@ class PigDataSource(BaseDataSource):
 ssh -D localhost:12345 hadoop@%(dns)s -i ~/.ssh/cloudml-control.pem
 After creating ssh tunnel web ui will be available on localhost:9026 using
 socks proxy localhost:12345''' % {'dns': masterpublicdnsname})
+
+    def _process_completed_state(self, status, step_state, step_number):
+        """
+        Processes `COMPLETED` job status.
+        """
+        if step_state == 'FAILED':
+            self._fail_jobflow(step_number)
+        elif step_state == 'COMPLETED':
+            logging.info('Step is completed')
+        else:
+            logging.info(
+                'Unexpected job state for status %s: %s',
+                status.state, step_state)
+
+    def _process_failed_state(self, status, step_state, step_number):
+        """
+        Processes `FAILED` job status.
+        """
+        self._fail_jobflow(step_number)
+
+    def _process_waiting_state(self, status, step_state, step_number):
+        """
+        Processes `WAITING` job status.
+        """
+        if step_state == 'PENDING':
+            # we reusing cluster and have waiting status
+            # of jobflow from previous job
+            pass
+        elif step_state == 'FAILED':
+            self._fail_jobflow(step_number)
+        elif step_state == 'COMPLETED':
+            logging.info('Step is completed')
+        else:
+            logging.info(
+                'Unexpected job state for status %s: %s',
+                status.state, step_state)
 
     def _fail_jobflow(self, step_number):
         logging.error('Jobflow failed, shutting down.')

@@ -23,7 +23,7 @@ from sklearn.preprocessing import Imputer
 from feature_types import FEATURE_TYPE_DEFAULTS
 from classifier_settings import TYPE_CLASSIFICATION
 from transformers import TRANSFORMERS, SuppressTransformer
-from model_visualization import TrainedModelVisualizator
+from model_visualization import TrainedModelVisualizer
 from exceptions import ItemParseException, EmptyDataException, \
     TransformerNotFound
 from utils import is_empty
@@ -57,7 +57,7 @@ class Trainer(object):
         self.visualization = {}
         self.intermediate_data = defaultdict(dict)
 
-        self.model_visualizer = TrainedModelVisualizator.factory(self)
+        self.model_visualizer = TrainedModelVisualizer.factory(self)
 
     @property
     def classifier_type(self):
