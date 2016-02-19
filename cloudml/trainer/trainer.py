@@ -576,7 +576,7 @@ class Trainer(object):
                              'transformation error: %s.',
                              feature['name'], e)
                 transformed_data = None
-                feature['tranformer'] = SuppressTransformer()
+                feature['transformer'].num_features = 0
             return transformed_data
         elif feature['transformer'] is None and \
                 feature['transformer-type'] is not None:
