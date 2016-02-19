@@ -7,7 +7,7 @@ from ..classifier_settings import LOGISTIC_REGRESSION, SVR, \
 from weights import WeightsCalculator, SVRWeightsCalculator
 
 
-class BaseTrainedModelVisualizator(object):
+class BaseTrainedModelVisualizer(object):
     WEIGHTS_CLS = WeightsCalculator
 
     def __init__(self, trainer):
@@ -27,11 +27,11 @@ class BaseTrainedModelVisualizator(object):
         }
 
 
-class LRTrainingVisualizer(BaseTrainedModelVisualizator):
+class LRTrainingVisualizer(BaseTrainedModelVisualizer):
     pass
 
 
-class SVRTrainingVisualizer(BaseTrainedModelVisualizator):
+class SVRTrainingVisualizer(BaseTrainedModelVisualizer):
     WEIGHTS_CLS = SVRWeightsCalculator
 
     def __init__(self, trainer):
@@ -65,11 +65,11 @@ class SVRTrainingVisualizer(BaseTrainedModelVisualizator):
         return res
 
 
-class SGDTrainingVisualizer(BaseTrainedModelVisualizator):
+class SGDTrainingVisualizer(BaseTrainedModelVisualizer):
     pass
 
 
-class DecisionTreeTrainingVisualizer(BaseTrainedModelVisualizator):
+class DecisionTreeTrainingVisualizer(BaseTrainedModelVisualizer):
     DEFAULT_DEEP = 100
 
     def regenerate_tree(self, segment, weights, deep=DEFAULT_DEEP):
@@ -90,11 +90,11 @@ class DecisionTreeTrainingVisualizer(BaseTrainedModelVisualizator):
         return res
 
 
-class GBTrainingVisualizer(BaseTrainedModelVisualizator):
+class GBTrainingVisualizer(BaseTrainedModelVisualizer):
     pass
 
 
-class ExtraTreesTrainingVisualizer(BaseTrainedModelVisualizator):
+class ExtraTreesTrainingVisualizer(BaseTrainedModelVisualizer):
     DEFAULT_DEEP = 100
 
     def regenerate_trees(self, segment, weights, deep=DEFAULT_DEEP):
@@ -123,7 +123,7 @@ class RandomForestTrainingVisualizer(ExtraTreesTrainingVisualizer):
     pass
 
 
-class RandomForestRegressorTV(BaseTrainedModelVisualizator):
+class RandomForestRegressorTV(BaseTrainedModelVisualizer):
     def generate(self, segment, true_data):
         pass
 
@@ -134,7 +134,7 @@ class RandomForestRegressorTV(BaseTrainedModelVisualizator):
         return res
 
 
-class Visualizator(object):
+class Visualizer(object):
     TRAINING_VISUALIZER_DICT = {
         LOGISTIC_REGRESSION: LRTrainingVisualizer,
         SVR: SVRTrainingVisualizer,
