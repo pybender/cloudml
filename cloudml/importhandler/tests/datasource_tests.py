@@ -9,6 +9,8 @@ import os
 from moto import mock_s3, mock_emr
 from mock import patch, MagicMock, Mock
 from lxml import objectify
+from placebo.pill import Pill
+import boto3
 
 from cloudml.importhandler.datasources import DataSource, BaseDataSource, \
     DbDataSource, HttpDataSource, CsvDataSource, PigDataSource, \
@@ -232,11 +234,24 @@ class DbDataSourceTests(unittest.TestCase):
 
 class PigDataSourceTests(unittest.TestCase):
 
+    def setUp(self):
+        super(PigDataSourceTests, self).setUp()
+        self.pill = Pill(debug=True)
+        self.session = boto3.session.Session()
+        boto3.DEFAULT_SESSION = self.session
+
     @mock_emr
     @mock_s3
     @patch('time.sleep', return_value=None)
     def test_get_iter(self, sleep_mock):
+        # Amazon mock
+        self.pill.attach(self.session, os.path.abspath(
+            os.path.join(os.path.dirname(__file__),
+                         'placebo_responses/datasource/get_iter')))
+        self.pill.playback()
+
         ds = PigDataSource(DataSourcesTest.PIG)
+
         self.assertRaises(ProcessException, ds._get_iter, 'query here')
 
         get_pig_step = MagicMock()
@@ -303,17 +318,26 @@ class PigDataSourceTests(unittest.TestCase):
                                "describe_jobflow", mock):
                         ds._get_iter('query here', 'query target')
 
-    @mock_s3
     def test_generate_download_url(self):
-        ds = PigDataSource(DataSourcesTest.PIG)
-        bucket = ds.s3_conn.create_bucket('mybucket')
+        # Amazon mock
+        self.pill.attach(self.session, os.path.abspath(
+            os.path.join(os.path.dirname(__file__),
+                         'placebo_responses/datasource/download_url')))
+        self.pill.playback()
 
+        ds = PigDataSource(DataSourcesTest.PIG)
         url = ds.generate_download_url(step=0, log_type='stdout')
         self.assertTrue(url)
 
     @mock_s3
     @mock_emr
     def test_get_pig_step(self):
+        # Amazon mock
+        self.pill.attach(self.session, os.path.abspath(
+            os.path.join(os.path.dirname(__file__),
+                         'placebo_responses/datasource/get_iter')))
+        self.pill.playback()
+
         ds = PigDataSource(DataSourcesTest.PIG)
         bucket = ds.s3_conn.create_bucket('mybucket')
 

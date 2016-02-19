@@ -5,14 +5,11 @@ Python script manager.
 # Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 import logging
-
 from utils import ParametrizedTemplate
-
-# Context:
-from processors import composite_string, composite_python, \
-    composite_readability, process_key_value  # pylint: disable=W0611
 from exceptions import ImportHandlerException, LocalScriptNotFoundException
-
+import boto3
+import os.path
+from config import AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET, BUCKET_NAME
 
 __all__ = ['ScriptManager', 'Script']
 
@@ -25,25 +22,20 @@ class Script(object):
         self.text = config.text
         self.src = config.attrib.get("src", None)
         self.out_string = ''
+        self.s3 = boto3.resource(
+            's3',
+            aws_access_key_id=AMAZON_ACCESS_TOKEN,
+            aws_secret_access_key=AMAZON_TOKEN_SECRET)
 
     def _process_amazon_file(self):
-        from boto import connect_s3
-        from boto.s3.key import Key
-        from config import AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET, \
-            BUCKET_NAME
         try:
-            s3_conn = connect_s3(AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET)
-            b = s3_conn.get_bucket(BUCKET_NAME)
-            key = Key(b)
-            key.key = self.src
-            res = key.get_contents_as_string()
-            self.out_string = res or ''
+            res = self.s3.Object(BUCKET_NAME, self.src).get()
+            self.out_string = res.get("Body", '')
         except Exception as exc:
             raise ImportHandlerException("Error accessing file '{0}' on Amazon"
                                          ": {1}".format(self.src, exc.message))
 
     def _process_local_file(self):
-        import os.path
         if os.path.isfile(self.src):
             with open(self.src, 'r') as fp:
                 fs = fp.read()

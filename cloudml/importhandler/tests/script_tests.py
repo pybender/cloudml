@@ -6,18 +6,13 @@ Unittests for python scripts manager class.
 
 import unittest
 
-from cloudml.importhandler.scripts import ScriptManager, prepare_context, \
-    Script
+from cloudml.importhandler.scripts import ScriptManager, Script
 from cloudml.importhandler.exceptions import ImportHandlerException, \
     LocalScriptNotFoundException
 from lxml import objectify
 import os
-from moto import mock_s3
-from mock import patch
-from boto import connect_s3
-from boto.s3.key import Key
-from config import AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET, \
-    BUCKET_NAME
+from placebo.pill import Pill
+import boto3
 
 
 class ScriptManagerTest(unittest.TestCase):
@@ -102,6 +97,9 @@ class ScriptTest(unittest.TestCase):
 
     def setUp(self):
         super(ScriptTest, self).setUp()
+        self.pill = Pill(debug=True)
+        self.session = boto3.session.Session()
+        boto3.DEFAULT_SESSION = self.session
 
     def test_empty_values(self):
         script = Script(self.EMPTY_SRC)
@@ -121,6 +119,12 @@ class ScriptTest(unittest.TestCase):
         self.assertEqual('1+1', script.text)
 
     def test_local_file(self):
+        # Amazon mock
+        self.pill.attach(self.session, os.path.abspath(
+            os.path.join(os.path.dirname(__file__),
+                         'placebo_responses/script/incorrect')))
+        self.pill.playback()
+
         script = Script(self.LOCAL_SCRIPT_INCORRECT)
         self.assertRaises(LocalScriptNotFoundException,
                           script._process_local_file)
@@ -139,27 +143,24 @@ class ScriptTest(unittest.TestCase):
                          script.src)
         self.assertEqual('2+2', script.text)
 
-    @mock_s3
     def test_incorrect_amazon_file(self):
-        s3_conn = connect_s3(AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET)
-        self.b = s3_conn.create_bucket(BUCKET_NAME)
+        # Amazon mock
+        self.pill.attach(self.session, os.path.abspath(
+            os.path.join(os.path.dirname(__file__),
+                         'placebo_responses/script/incorrect')))
+        self.pill.playback()
 
         script = Script(self.AMAZON_INCORRECT)
         self.assertRaises(ImportHandlerException, script.get_script_str)
 
-    @mock_s3
     def test_correct_amazon_file(self):
-        # Creating the amazon file
-        s3_conn = connect_s3(AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET)
-        self.b = s3_conn.create_bucket(BUCKET_NAME)
-        self.key = Key(self.b)
-        self.key.key = "amazon_script.py"
-        self.key.set_contents_from_string("3+5")
+        # Amazon mock
+        self.pill.attach(self.session, os.path.abspath(
+            os.path.join(os.path.dirname(__file__),
+                         'placebo_responses/script/correct')))
+        self.pill.playback()
 
-        with patch('boto.s3.key.Key.get_contents_as_string',
-                   return_value='3+5'):
-            script = Script(self.AMAZON_CORRECT)
-            self.assertEqual(None, script.text)
-            self.assertEqual("amazon_script.py", script.src)
-            script.get_script_str()
-            self.assertEqual("3+5", script.get_script_str())
+        script = Script(self.AMAZON_CORRECT)
+        self.assertEqual(None, script.text)
+        self.assertEqual("amazon_script.py", script.src)
+        self.assertEqual("3+5", script.get_script_str())
