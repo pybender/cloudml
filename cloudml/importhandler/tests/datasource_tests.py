@@ -254,6 +254,9 @@ class PigDataSourceTests(unittest.TestCase):
 
         self.assertRaises(ProcessException, ds._get_iter, 'query here')
 
+        ds.jobid = 1234
+        ds._get_iter('query here', 'query target')
+
         get_pig_step = MagicMock()
         clear_output_folder = MagicMock()
         _create_jobflow_and_run_steps = MagicMock()
@@ -329,17 +332,13 @@ class PigDataSourceTests(unittest.TestCase):
         url = ds.generate_download_url(step=0, log_type='stdout')
         self.assertTrue(url)
 
-    @mock_s3
-    @mock_emr
     def test_get_pig_step(self):
         # Amazon mock
         self.pill.attach(self.session, os.path.abspath(
             os.path.join(os.path.dirname(__file__),
-                         'placebo_responses/datasource/get_iter')))
+                         'placebo_responses/datasource/get_pig_step')))
         self.pill.playback()
 
         ds = PigDataSource(DataSourcesTest.PIG)
-        bucket = ds.s3_conn.create_bucket('mybucket')
-
         pig_step = ds.get_pig_step('query')
         self.assertTrue(pig_step)
