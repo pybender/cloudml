@@ -100,7 +100,7 @@ class WeightsCalculator(object):
                         index += transformer.num_topics
 
                 # Word2Vec, Doc2Vec
-                if transformer is not None and \
+                elif transformer is not None and \
                         hasattr(transformer, 'vector_size'):
                     for vj in range(0, transformer.num_features):
                         name = '%s->Vector Element #%d' % (base_name, vj)
