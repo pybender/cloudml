@@ -1,0 +1,13 @@
+{
+    "status_code": 200, 
+    "data": {
+            "Expiration": "2016-06-06",
+            "ETag": "etag",
+            "ServerSideEncryption": "AES256",
+            "VersionId": "1",
+            "SSECustomerAlgorithm": "string",
+            "SSECustomerKeyMD5": "dshjhjhjkhjh3h3khejhje2kh3jhjh",
+            "SSEKMSKeyId": "abcde",
+            "RequestCharged": "cloudml"
+    }
+}

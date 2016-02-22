@@ -1,0 +1,20 @@
+{
+    "status_code": 200,
+    "data": {
+        "JobFlows": [
+            {
+                "JobFlowId": "234",
+                "ExecutionStatusDetail": {
+                    "State": "FAILED"
+                },
+                "Steps": [
+                    {
+                        "ExecutionStatusDetail": {
+                            "State": "FAILED"
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}

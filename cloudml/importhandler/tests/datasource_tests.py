@@ -6,11 +6,12 @@ Unittests for datasources classes.
 
 import unittest
 import os
-from moto import mock_s3, mock_emr
-from mock import patch, MagicMock, Mock
+from mock import patch, MagicMock, Mock, ANY
 from lxml import objectify
 from placebo.pill import Pill
 import boto3
+import json
+
 
 from cloudml.importhandler.datasources import DataSource, BaseDataSource, \
     DbDataSource, HttpDataSource, CsvDataSource, PigDataSource, \
@@ -240,86 +241,147 @@ class PigDataSourceTests(unittest.TestCase):
         self.session = boto3.session.Session()
         boto3.DEFAULT_SESSION = self.session
 
-    @mock_emr
-    @mock_s3
     @patch('time.sleep', return_value=None)
-    def test_get_iter(self, sleep_mock):
+    def test_get_iter_existing_job(self, sleep_mock):
         # Amazon mock
         self.pill.attach(self.session, os.path.abspath(
             os.path.join(os.path.dirname(__file__),
-                         'placebo_responses/datasource/get_iter')))
+                         'placebo_responses/datasource/get_iter_existing_job')
+        ))
         self.pill.playback()
+        pig_import = 'cloudml.importhandler.datasources.PigDataSource'
+
+        ds = PigDataSource(DataSourcesTest.PIG)
+
+        # test correct case with existing job
+        # (DescribeJobFlows_1: 2 steps exist before adding a new one)
+        # (DescribeJobFlows_2: RUNNING, RUNNING)
+        # (DescribeJobFlows_3: WAITING, COMPLETED)
+        ds.jobid = "1234"
+        with patch("{}.get_result".format(pig_import), MagicMock()):
+            with patch("{}._process_running_state".format(pig_import)) \
+                    as run_handler:
+                with patch("{}._process_waiting_state".format(pig_import)) \
+                        as wait_handler:
+                    ds._get_iter('query here', 'query target')
+                    # step_number is 3
+                    run_handler.assert_called_with(ANY, 'RUNNING', 3)
+                    wait_handler.assert_called_with(ANY, 'COMPLETED', 3)
+
+    @patch('time.sleep', return_value=None)
+    def test_get_iter_create_job(self, sleep_mock):
+        # Amazon mock
+        self.pill.attach(self.session, os.path.abspath(
+            os.path.join(os.path.dirname(__file__),
+                         'placebo_responses/datasource/get_iter_create_job')
+        ))
+        self.pill.playback()
+        pig_import = 'cloudml.importhandler.datasources.PigDataSource'
+
+        ds = PigDataSource(DataSourcesTest.PIG)
+        ds.jobid = None
+        with patch("{}.get_result".format(pig_import), MagicMock()):
+            with patch("{}._process_completed_state".format(pig_import)) as \
+                    complete_handler:
+                ds._get_iter('query here', 'query target')
+                self.assertEqual("234", ds.jobid)
+                # step_number is 1
+                complete_handler.assert_called_with(ANY, 'COMPLETED', 1)
+
+    @patch('time.sleep', return_value=None)
+    def test_get_iter_check_statuses(self, sleep_mock):
+        # Amazon mock
+        self.pill.attach(self.session, os.path.abspath(
+            os.path.join(os.path.dirname(__file__),
+                         'placebo_responses/datasource/get_iter_statuses')
+        ))
+        self.pill.playback()
+        pig_import = 'cloudml.importhandler.datasources.PigDataSource'
 
         ds = PigDataSource(DataSourcesTest.PIG)
 
         self.assertRaises(ProcessException, ds._get_iter, 'query here')
 
-        ds.jobid = 1234
-        ds._get_iter('query here', 'query target')
-
-        get_pig_step = MagicMock()
+        _store_query_to_s3 = MagicMock(return_value="s3://bucket/script.jar")
         clear_output_folder = MagicMock()
-        _create_jobflow_and_run_steps = MagicMock()
+        _run_steps_on_existing_jobflow = MagicMock(return_value=1)
+        get_result = MagicMock()
+        _get_log = MagicMock(return_value="Some log")
 
-        pig_import = 'cloudml.importhandler.datasources.PigDataSource'
-        with patch('{}.get_pig_step'.format(pig_import), get_pig_step):
-            with patch('{}.clear_output_folder'.format(pig_import),
+        ds.jobid = "234"
+        with patch("{}._store_query_to_s3".format(pig_import),
+                   _store_query_to_s3):
+            with patch("{}.clear_output_folder".format(pig_import),
                        clear_output_folder):
-                # create new job flow.
-                with patch('{}._create_jobflow_'
-                           'and_run_steps'.format(pig_import),
-                           _create_jobflow_and_run_steps):
+                with patch("{}.get_result".format(pig_import), get_result):
+                    with patch("{}._run_steps_on_existing_jobflow".format(
+                            pig_import, _run_steps_on_existing_jobflow)):
+                        with patch("{}._get_log".format(pig_import), _get_log):
+                            # test failed case with new job
+                            # (DescribeJobFlows_1: FAILED, FAILED)
+                            self.assertRaises(ImportHandlerException,
+                                              ds._get_iter,
+                                              "query here", "query target")
 
-                    def _get_status_mock(state, status_state):
-                        item_mock = MagicMock()
-                        item_mock.state = status_state
-                        status_mock = MagicMock()
-                        status_mock.state = state
-                        status_mock.steps = [item_mock, item_mock, item_mock]
-                        return status_mock
+                            # test failed case with new job
+                            # (DescribeJobFlows_2: COMPLETED, FAILED)
+                            self.assertRaises(ImportHandlerException,
+                                              ds._get_iter,
+                                              "query here", "query target")
 
-                    def get_check_mock(statuses):
-                        statuses = [('RUNNING', 'RUNNING')] + statuses
-                        status_mocks = []
-                        for st in statuses:
-                            status_mocks.append(_get_status_mock(*st))
-                        return MagicMock(side_effect=status_mocks)
+                            # test failed case with new job
+                            # (DescribeJobFlows_3: WAITING, FAILED)
+                            self.assertRaises(ImportHandlerException,
+                                              ds._get_iter,
+                                              "query here", "query target")
 
-                    # Completed job
-                    def check_completed(stat_list):
-                        mock = get_check_mock(stat_list)
-                        with patch("boto.emr.connection.EmrConnection."
-                                   "describe_jobflow", mock):
-                            iter_ = ds._get_iter('query here', 'query target')
-
-                    check_completed([('COMPLETED', 'COMPLETED')])
-                    check_completed([('WAITING', 'COMPLETED')])
-
-                    # Failed job
-                    def check_failed(stat_list):
-                        mock = get_check_mock(stat_list)
-                        with patch("boto.emr.connection.EmrConnection."
-                                   "describe_jobflow", mock):
-                            with self.assertRaises(ImportHandlerException):
+                            # unexpected status check
+                            # (DescribeJobFlows_4: COMPLETED, UNEXPECTED)
+                            with patch("{}._process_completed_state".format(
+                                    pig_import)) as complete_handler:
                                 ds._get_iter('query here', 'query target')
+                                complete_handler.assert_called_with(
+                                    ANY, 'UNEXPECTED', 1)
 
-                    check_failed([('COMPLETED', 'FAILED')])
-                    check_failed([('WAITING', 'FAILED')])
-                    check_failed([('FAILED', 'FAILED')])
+                            # unexpected and completed status check
+                            # (DescribeJobFlows_5: UNEXPECTED, UNEXPECTED)
+                            # (DescribeJobFlows_6: WAITING, PENDING)
+                            # (DescribeJobFlows_7: COMPLETED, COMPLETED)
+                            with patch("{}._process_waiting_state".format(
+                                    pig_import)) as waiting_handler:
+                                with patch("{}._process_completed_state".
+                                           format(pig_import)) as \
+                                        complete_handler:
+                                    ds._get_iter('query here', 'query target')
+                                    waiting_handler.assert_called_with(
+                                        ANY, 'PENDING', 1)
+                                    complete_handler.assert_called_with(
+                                        ANY, 'COMPLETED', 1)
 
-                    # Job is completed with unexpected state
-                    mock = get_check_mock([('COMPLETED', 'UNEXPECTED')])
-                    with patch("boto.emr.connection.EmrConnection."
-                               "describe_jobflow", mock):
-                        ds._get_iter('query here', 'query target')
+                            # running and completed status check
+                            # (DescribeJobFlows_8: RUNNING, RUNNING)
+                            # (DescribeJobFlows_9: WAITING, COMPLETED)
+                            with patch("{}._process_running_state".format(
+                                    pig_import)) as run_handler:
+                                with patch("{}._process_waiting_state".format(
+                                        pig_import)) as wait_handler:
+                                    ds._get_iter('query here', 'query target')
+                                    run_handler.assert_called_with(
+                                        ANY, 'RUNNING', 1)
+                                    wait_handler.assert_called_with(
+                                        ANY, 'COMPLETED', 1)
 
-                    # Job with unexpected state
-                    mock = get_check_mock([
-                        ('UNEXPECTED', 'UNEXPECTED'),
-                        ('COMPLETED', 'COMPLETED')])
-                    with patch("boto.emr.connection.EmrConnection."
-                               "describe_jobflow", mock):
-                        ds._get_iter('query here', 'query target')
+                            # DescribeJobFlows_10 - corrupted response
+                            # (no ExecutionStatusDetail)
+                            self.assertRaises(ImportHandlerException,
+                                              ds._get_iter,
+                                              "query here", "query target")
+
+                            # DescribeJobFlows_11 - corrupted response
+                            # (no State)
+                            self.assertRaises(ImportHandlerException,
+                                              ds._get_iter,
+                                              "query here", "query target")
 
     def test_generate_download_url(self):
         # Amazon mock
@@ -342,3 +404,25 @@ class PigDataSourceTests(unittest.TestCase):
         ds = PigDataSource(DataSourcesTest.PIG)
         pig_step = ds.get_pig_step('query')
         self.assertTrue(pig_step)
+
+    def test_get_result_job(self):
+        response = open(
+            os.path.join(os.path.dirname(__file__),
+            'placebo_responses/datasource/get_iter_existing_job/'
+            'elasticmapreduce.DescribeJobFlows_1.json'), 'r').read()
+        res = json.loads(response)
+
+        ds = PigDataSource(DataSourcesTest.PIG)
+
+        # job has been found
+        job = ds._get_result_job(res['data'], "1234")
+        self.assertTrue(job)
+        self.assertEqual("1234", job["JobFlowId"])
+
+        # no job with this id
+        self.assertRaises(ImportHandlerException,
+                          ds._get_result_job, res['data'], "1235")
+
+        # error response
+        self.assertRaises(ImportHandlerException,
+                          ds._get_result_job, {"Error": "error"}, "1234")

@@ -13,6 +13,8 @@ import boto
 from moto import mock_s3, mock_emr
 from mock import patch, Mock, MagicMock
 from httmock import HTTMock, urlmatch
+from placebo.pill import Pill
+import boto3
 
 from cloudml.importhandler.importhandler import ExtractionPlan, \
     ImportHandlerException, ImportHandler
@@ -31,15 +33,25 @@ class PigXMLPlanTest(unittest.TestCase):
         self._plan = ExtractionPlan(os.path.join(
             BASEDIR, 'extractorxml',
             'pig-train-import-handler.xml'))
+        self.pill = Pill(debug=True)
+        self.session = boto3.session.Session()
+        boto3.DEFAULT_SESSION = self.session
+
 
     @mock_s3
     @mock_emr
     @patch('subprocess.Popen')
     @patch('time.sleep', return_value=None)
-    @patch("boto.emr.connection.EmrConnection.describe_jobflow")
     @patch(PIG_DS + '._create_jobflow_and_run_steps')
     def test_pig_datasource(self, _create_jobflow_and_run_steps,
-                            describe_jobflow, sleep_mock, sqoop_mock):
+                            sleep_mock, sqoop_mock):
+        # Amazon mock
+        self.pill.attach(self.session, os.path.abspath(
+            os.path.join(os.path.dirname(__file__),
+                         'placebo_responses/datasource/get_iter_existing_job')
+        ))
+        self.pill.playback()
+
         # Sqoop import subprocess mock
         process_mock = Mock()
         attrs = {'wait.return_value': 0,
@@ -47,17 +59,6 @@ class PigXMLPlanTest(unittest.TestCase):
         process_mock.configure_mock(**attrs)
         sqoop_mock.return_value = process_mock
 
-        # check pig job status mock
-        def _get_status_mock(status_state, state):
-            item_mock = MagicMock()
-            item_mock.state = status_state
-            status_mock = MagicMock()
-            status_mock.state = state
-            status_mock.steps = [item_mock, item_mock, item_mock]
-            return status_mock
-
-        status_mocks = [_get_status_mock('COMPLETED', 'COMPLETED')]
-        describe_jobflow.side_effect = status_mocks
 
         # Creating nessesary buckets and keys.
         from boto.s3.key import Key

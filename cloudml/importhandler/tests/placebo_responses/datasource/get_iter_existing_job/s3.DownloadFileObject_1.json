@@ -1,0 +1,7 @@
+{
+    "status_code": 200, 
+    "data": {
+        "Some param": "Some value",
+        "Other param": "Other value"
+    }
+}

@@ -22,14 +22,14 @@ class Script(object):
         self.text = config.text
         self.src = config.attrib.get("src", None)
         self.out_string = ''
-        self.s3 = boto3.resource(
-            's3',
-            aws_access_key_id=AMAZON_ACCESS_TOKEN,
-            aws_secret_access_key=AMAZON_TOKEN_SECRET)
 
     def _process_amazon_file(self):
         try:
-            res = self.s3.Object(BUCKET_NAME, self.src).get()
+            s3 = boto3.resource(
+                's3',
+                aws_access_key_id=AMAZON_ACCESS_TOKEN,
+                aws_secret_access_key=AMAZON_TOKEN_SECRET)
+            res = s3.Object(BUCKET_NAME, self.src).get()
             self.out_string = res.get("Body", '')
         except Exception as exc:
             raise ImportHandlerException("Error accessing file '{0}' on Amazon"

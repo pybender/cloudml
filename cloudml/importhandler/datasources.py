@@ -16,6 +16,7 @@ from botocore.exceptions import ClientError
 import boto3
 import requests
 from requests import ConnectionError
+import cStringIO
 
 from exceptions import ImportHandlerException, ProcessException
 from db import postgres_iter, run_queries, check_table_name
@@ -498,18 +499,18 @@ class PigDataSource(BaseDataSource):
                 steps = job.get('Steps', None)
                 step_state = None
                 if steps:
-                    step = steps[step_number - 1]
+                    step = steps[int(step_number) - 1]
                     step_detail = step.get('ExecutionStatusDetail', None)
                     if step_detail:
                         step_state = step_detail.get('State', None)
                 logging.info(
-                    "State of jobflow changed: %s. Step %s state is: %s",
+                    "State of jobflow changed: %s. Step %d state is: %s",
                     state, step_number, step_state)
 
                 fn_name = '_process_{0}_state'.format(state.lower())
                 if hasattr(self, fn_name):
                     process_fn = getattr(self, fn_name)
-                    process_fn(job, step_state, step_number)
+                    process_fn(job, step_state, int(step_number))
                 else:
                     logging.warning(
                         'Jobflow status is unexpected: %s', state)
@@ -542,22 +543,22 @@ class PigDataSource(BaseDataSource):
                 else:
                     raise ImportHandlerException(e.message)
 
-        import cStringIO
         # TODO: Need getting data from all nodes
         type_result = 'm'
+        print "haha"
         if not key_exists("%spart-m-00000" % self.result_path):
             type_result = 'r'
+        print "Here"
         i = 0
         first_result = False
         while True:
             sbuffer = cStringIO.StringIO()
             k_name = "%spart-%s-%05d" % (self.result_path, type_result, i)
-            print k_name
             if not key_exists(k_name):
                 break
             logging.info('Getting from s3 file %s' % k_name)
-            self.s3.meta.client.download_file(self.bucket_name,
-                                              k_name, sbuffer)
+            self.s3.Object(self.bucket_name, k_name).download_file(sbuffer)
+
             i += 1
             sbuffer.seek(0)
             for line in sbuffer:
