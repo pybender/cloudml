@@ -194,7 +194,7 @@ class Params:
     vector_size = {'name': 'vector_size', 'type': 'integer'}
     window = {'name': 'window', 'type': 'integer'}
     min_count = {'name': 'min_count', 'type': 'integer'}
-    seed = {'name': 'seed', 'type': 'string'}
+    seed = {'name': 'seed', 'type': 'integer'}
     hierarchical_sampling = {'name': 'hierarchical_sampling',
                              'type': 'boolean'}
     negative_sampling = {'name': 'negative_sampling', 'type': 'boolean'}
