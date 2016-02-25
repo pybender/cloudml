@@ -35,9 +35,7 @@ class Script(object):
                 aws_access_key_id=AMAZON_ACCESS_TOKEN,
                 aws_secret_access_key=AMAZON_TOKEN_SECRET)
             res = s3.Object(BUCKET_NAME, self.src).get()
-            s3.Object(BUCKET_NAME, self.src).put(Body='3+5')
             self.out_string = res["Body"].read(res["ContentLength"])
-            logging.debug('Out string: %s' % self.out_string)
 
         except Exception as exc:
             raise ImportHandlerException("Error accessing file '{0}' on Amazon"
