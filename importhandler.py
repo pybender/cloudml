@@ -38,10 +38,6 @@ def main(argv=None):
     try:
         plan = ExtractionPlan(args.path)
         extractor = ImportHandler(plan, context)
-        #pig_ds = extractor.plan.datasources['pig']
-        # Checking iterator
-        #row = extractor.next()
-        #logging.info("RESULT: %s " % row['opening_id'])
 
     except ImportHandlerException, e:
         logging.warn('Invalid extraction plan: {}'.format(e.message))
