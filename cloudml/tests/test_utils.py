@@ -38,13 +38,13 @@ class StreamPill(Pill):
             response_data = json.load(fp, object_hook=deserialize)
             if 'Body' in response_data['data']:
                 import cStringIO
-                self.string = cStringIO.StringIO()
-                self.string.write(response_data['data']['Body'])
-                self.string.seek(0)
+                self.stream = cStringIO.StringIO()
+                self.stream.write(response_data['data']['Body'])
+                self.stream.seek(0)
                 response_data['data']['ContentLength'] = \
                     len(response_data['data']['Body'])
                 response_data['data']['Body'] = \
-                    StreamingBody(self.string,
+                    StreamingBody(self.stream,
                                   len(response_data['data']['Body']))
 
         return (FakeHttpResponse(response_data['status_code']),
