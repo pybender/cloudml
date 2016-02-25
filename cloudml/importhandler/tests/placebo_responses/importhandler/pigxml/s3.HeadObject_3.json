@@ -3,7 +3,7 @@
     "data": {
         "Error": {
             "Code": "404",
-            "Message": "Not Found"
+            "Message": "Object not found"
         }
     }
 }

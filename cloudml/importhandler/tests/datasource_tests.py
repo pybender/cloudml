@@ -8,7 +8,7 @@ import unittest
 import os
 from mock import patch, MagicMock, Mock, ANY
 from lxml import objectify
-from placebo.pill import Pill
+from cloudml.tests.test_utils import StreamPill
 import boto3
 import json
 
@@ -234,20 +234,22 @@ class DbDataSourceTests(unittest.TestCase):
 
 
 class PigDataSourceTests(unittest.TestCase):
+    PLACEBO_RESPONSES_DIR = os.path.abspath(
+        os.path.join(os.path.dirname(__file__),
+                     'placebo_responses/datasource/'))
 
     def setUp(self):
         super(PigDataSourceTests, self).setUp()
-        self.pill = Pill(debug=True)
+        self.pill = StreamPill(debug=True)
         self.session = boto3.session.Session()
         boto3.DEFAULT_SESSION = self.session
 
     @patch('time.sleep', return_value=None)
     def test_get_iter_existing_job(self, sleep_mock):
         # Amazon mock
-        self.pill.attach(self.session, os.path.abspath(
-            os.path.join(os.path.dirname(__file__),
-                         'placebo_responses/datasource/get_iter_existing_job')
-        ))
+        self.pill.attach(self.session,
+                         os.path.join(self.PLACEBO_RESPONSES_DIR,
+                                      'get_iter_existing_job'))
         self.pill.playback()
         pig_import = 'cloudml.importhandler.datasources.PigDataSource'
 
@@ -271,10 +273,9 @@ class PigDataSourceTests(unittest.TestCase):
     @patch('time.sleep', return_value=None)
     def test_get_iter_create_job(self, sleep_mock):
         # Amazon mock
-        self.pill.attach(self.session, os.path.abspath(
-            os.path.join(os.path.dirname(__file__),
-                         'placebo_responses/datasource/get_iter_create_job')
-        ))
+        self.pill.attach(self.session,
+                         os.path.join(self.PLACEBO_RESPONSES_DIR,
+                                      'get_iter_create_job'))
         self.pill.playback()
         pig_import = 'cloudml.importhandler.datasources.PigDataSource'
 
@@ -291,10 +292,9 @@ class PigDataSourceTests(unittest.TestCase):
     @patch('time.sleep', return_value=None)
     def test_get_iter_check_statuses(self, sleep_mock):
         # Amazon mock
-        self.pill.attach(self.session, os.path.abspath(
-            os.path.join(os.path.dirname(__file__),
-                         'placebo_responses/datasource/get_iter_statuses')
-        ))
+        self.pill.attach(self.session,
+                         os.path.join(self.PLACEBO_RESPONSES_DIR,
+                                      'get_iter_statuses'))
         self.pill.playback()
         pig_import = 'cloudml.importhandler.datasources.PigDataSource'
 
@@ -385,9 +385,9 @@ class PigDataSourceTests(unittest.TestCase):
 
     def test_generate_download_url(self):
         # Amazon mock
-        self.pill.attach(self.session, os.path.abspath(
-            os.path.join(os.path.dirname(__file__),
-                         'placebo_responses/datasource/download_url')))
+        self.pill.attach(self.session,
+                         os.path.join(self.PLACEBO_RESPONSES_DIR,
+                                      'download_url'))
         self.pill.playback()
 
         ds = PigDataSource(DataSourcesTest.PIG)
@@ -396,9 +396,9 @@ class PigDataSourceTests(unittest.TestCase):
 
     def test_get_pig_step(self):
         # Amazon mock
-        self.pill.attach(self.session, os.path.abspath(
-            os.path.join(os.path.dirname(__file__),
-                         'placebo_responses/datasource/get_pig_step')))
+        self.pill.attach(self.session,
+                         os.path.join(self.PLACEBO_RESPONSES_DIR,
+                                      'get_pig_step'))
         self.pill.playback()
 
         ds = PigDataSource(DataSourcesTest.PIG)
@@ -406,10 +406,10 @@ class PigDataSourceTests(unittest.TestCase):
         self.assertTrue(pig_step)
 
     def test_get_result_job(self):
-        response = open(
-            os.path.join(os.path.dirname(__file__),
-            'placebo_responses/datasource/get_iter_existing_job/'
-            'elasticmapreduce.DescribeJobFlows_1.json'), 'r').read()
+        response = open(os.path.join(
+            self.PLACEBO_RESPONSES_DIR,
+            'get_iter_existing_job/elasticmapreduce.DescribeJobFlows_1.json'),
+                        'r').read()
         res = json.loads(response)
 
         ds = PigDataSource(DataSourcesTest.PIG)

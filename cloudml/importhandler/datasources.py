@@ -530,12 +530,12 @@ class PigDataSource(BaseDataSource):
         """
         Returns running pig script results.
         """
-        def key_exists(key_name):
+        def key_exists(s3, bucket, key_name):
             """
             Checks if key exists in the bucket
             """
             try:
-                self.s3.Object(self.bucket, key_name).load()
+                s3.Object(bucket, key_name).load()
                 return True
             except ClientError as e:
                 if e.response['Error']['Code'] == "404":
@@ -545,19 +545,20 @@ class PigDataSource(BaseDataSource):
 
         # TODO: Need getting data from all nodes
         type_result = 'm'
-        print "haha"
-        if not key_exists("%spart-m-00000" % self.result_path):
+        if not key_exists(self.s3, self.bucket_name,
+                          "%spart-m-00000" % self.result_path):
             type_result = 'r'
-        print "Here"
         i = 0
         first_result = False
         while True:
             sbuffer = cStringIO.StringIO()
             k_name = "%spart-%s-%05d" % (self.result_path, type_result, i)
-            if not key_exists(k_name):
+            if not key_exists(self.s3, self.bucket_name, k_name):
                 break
             logging.info('Getting from s3 file %s' % k_name)
-            self.s3.Object(self.bucket_name, k_name).download_file(sbuffer)
+            key = self.s3.Object(self.bucket_name, k_name).get()
+            for chunk in iter(lambda: key['Body'].read(4096), b''):
+                sbuffer.write(chunk)
 
             i += 1
             sbuffer.seek(0)
@@ -650,7 +651,7 @@ class PigDataSource(BaseDataSource):
                 #'KeepJobFlowAliveWhenNoSteps': self.keep_alive,
                 'MasterInstanceType': self.master_instance_type,
                 'SlaveInstanceType': self.slave_instance_type,
-                'InstanceCount': self.num_instances,
+                'InstanceCount': int(self.num_instances),
                 #'Ec2SubnetId': 'subnet-3f5bc256',
             },
             JobFlowRole='EMR_EC2_DefaultRole',
@@ -788,7 +789,7 @@ socks proxy localhost:12345''' % {'dns': masterpublicdnsname})
         k_name = "/%s/%s/steps/%d/%s" % (log_uri, jobid, step, log_type)
         logging.info('Log uri: %s' % k_name)
         res = self.s3.Object(self.bucket_name, k_name).get()
-        return res.get('Body', '')
+        return res['Body'].read(res['ContentLength'])
 
 
 class InputDataSource(BaseDataSource):

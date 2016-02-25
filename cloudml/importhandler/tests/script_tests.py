@@ -11,7 +11,7 @@ from cloudml.importhandler.exceptions import ImportHandlerException, \
     LocalScriptNotFoundException
 from lxml import objectify
 import os
-from placebo.pill import Pill
+from cloudml.tests.test_utils import StreamPill
 import boto3
 
 
@@ -69,6 +69,8 @@ def stripSpecial(value):
 class ScriptTest(unittest.TestCase):
     BASE_DIR = os.path.abspath(
         os.path.join(os.path.dirname(__file__), '../../../testdata'))
+    PLACEBO_RESPONSES_DIR = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), 'placebo_responses/script/'))
     EMPTY_SRC = objectify.fromstring(
         """<script src="" />"""
     )
@@ -97,7 +99,7 @@ class ScriptTest(unittest.TestCase):
 
     def setUp(self):
         super(ScriptTest, self).setUp()
-        self.pill = Pill(debug=True)
+        self.pill = StreamPill(debug=True)
         self.session = boto3.session.Session()
         boto3.DEFAULT_SESSION = self.session
 
@@ -120,9 +122,8 @@ class ScriptTest(unittest.TestCase):
 
     def test_local_file(self):
         # Amazon mock
-        self.pill.attach(self.session, os.path.abspath(
-            os.path.join(os.path.dirname(__file__),
-                         'placebo_responses/script/incorrect')))
+        self.pill.attach(self.session,
+                         os.path.join(self.PLACEBO_RESPONSES_DIR, 'incorrect'))
         self.pill.playback()
 
         script = Script(self.LOCAL_SCRIPT_INCORRECT)
@@ -145,9 +146,8 @@ class ScriptTest(unittest.TestCase):
 
     def test_incorrect_amazon_file(self):
         # Amazon mock
-        self.pill.attach(self.session, os.path.abspath(
-            os.path.join(os.path.dirname(__file__),
-                         'placebo_responses/script/incorrect')))
+        self.pill.attach(self.session,
+                         os.path.join(self.PLACEBO_RESPONSES_DIR, 'incorrect'))
         self.pill.playback()
 
         script = Script(self.AMAZON_INCORRECT)
@@ -155,11 +155,9 @@ class ScriptTest(unittest.TestCase):
 
     def test_correct_amazon_file(self):
         # Amazon mock
-        self.pill.attach(self.session, os.path.abspath(
-            os.path.join(os.path.dirname(__file__),
-                         'placebo_responses/script/correct')))
+        self.pill.attach(self.session,
+                         os.path.join(self.PLACEBO_RESPONSES_DIR, 'correct'))
         self.pill.playback()
-
         script = Script(self.AMAZON_CORRECT)
         self.assertEqual(None, script.text)
         self.assertEqual("amazon_script.py", script.src)
