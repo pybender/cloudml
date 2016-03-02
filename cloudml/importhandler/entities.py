@@ -468,6 +468,7 @@ order by ordinal_position;""".format(sqoop_import.table,
         Returns entity's processed next row data.
         """
         row = self.iterator.next()
+        print "row", row
         row_data = {}
         row_data.update(self.params)
 
