@@ -249,6 +249,12 @@ class CsvDataSource(BaseDataSource):
         if 'src' not in attrs:
             raise ImportHandlerException('No source given')
         self.src = attrs['src']
+        if 'delimiter' in attrs:
+            self.delimiter = attrs['delimiter']
+            if self.delimiter == '\\t':
+                self.delimiter = '\t'
+        else:
+            self.delimiter = ','
         try:
             self.offset = int(attrs.get('offset', 0))
             self.count = int(attrs.get('count', sys.maxint))
@@ -273,7 +279,7 @@ class CsvDataSource(BaseDataSource):
 
         i = 0
         with contextlib.closing(urllib.urlopen(self.src)) as stream:
-            reader = csv.reader(stream)
+            reader = csv.reader(stream, delimiter=self.delimiter)
             # TODO: not is the best way. Refactore
             for row in reader:
                 i += 1
