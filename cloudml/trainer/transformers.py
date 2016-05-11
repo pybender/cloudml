@@ -5,7 +5,8 @@ from copy import deepcopy
 from scipy.sparse import csc_matrix
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
-from sklearn.feature_extraction.text import LdaVectorizer, LsiVectorizer
+from sklearn.feature_extraction.text import LdaVectorizer, LsiVectorizer, \
+    Word2VecVectorizer, Doc2VecVectorizer
 from sklearn.preprocessing import StandardScaler
 
 from utils import copy_expected, parse_parameters
@@ -165,7 +166,7 @@ class Params:
     COUNT_PARAMS = [input_, encoding, decode_error,
                     strip_accents, analyzer, ngram_range_min,
                     ngram_range_max, lowercase, token_pattern,
-                    max_df, min_df, max_features, binary]
+                    binary, max_df, min_df, max_features]
 
     norm = {'name': "norm", 'type': 'string',
             'choices': ['l1', 'l2']}
@@ -185,6 +186,41 @@ class Params:
     power_iters = {'name': 'power_iters', 'type': 'integer'}
     extra_samples = {'name': 'extra_samples', 'type': 'integer'}
 
+    # Word2Vec and Doc2Vec params
+    train_algorithm_w2v = {'name': 'train_algorithm', 'type': 'string',
+                           'choices': ['skip-gram', 'cbow']}
+    train_algorithm_d2v = {'name': 'train_algorithm', 'type': 'string',
+                           'choices': ['pv-dm', 'pv-dbow', 'both']}
+    vector_size = {'name': 'vector_size', 'type': 'integer'}
+    window = {'name': 'window', 'type': 'integer'}
+    min_count = {'name': 'min_count', 'type': 'integer'}
+    seed = {'name': 'seed', 'type': 'string'}
+    hierarchical_sampling = {'name': 'hierarchical_sampling',
+                             'type': 'boolean'}
+    negative_sampling = {'name': 'negative_sampling', 'type': 'boolean'}
+    cbow_mean = {'name': 'cbow_mean', 'type': 'boolean'}
+    null_word = {'name': 'null_word', 'type': 'boolean'}
+
+    # TODO: hash by default, probably more functions should be added. Not used
+    hash_function = {'name': 'hash_function', 'type': 'string',
+                     'choices': ['hash']}
+    iterations = {'name': 'iterations', 'type': 'integer'}
+
+    # TODO: None by default, probably more functions should be added. Not used
+    trim_rule = {'name': 'trim_rule', 'type': 'string',
+                 'choices': ['callable']}
+    sample = {'name': 'sample', 'type': 'float'}
+    workers = {'name': 'workers', 'type': 'integer'}
+
+    WORD2VEC_PARAMS = [vector_size, window, min_count,
+                       seed, hierarchical_sampling, negative_sampling,
+                       workers, iterations, sample]
+
+    dbow_words = {'name': 'dbow_words', 'type': 'boolean'}
+    dm_mean = {'name': 'dm_mean', 'type': 'boolean'}
+    dm_concat = {'name': 'dm_concat', 'type': 'boolean'}
+    dm_tag_count = {'name': 'dm_tag_count', 'type': 'integer'}
+    retrain_count = {'name': 'retrain_count', 'type': 'integer'}
 
 TRANSFORMERS = {
     'Dictionary': {
@@ -230,6 +266,21 @@ TRANSFORMERS = {
     'Ntile': {
         'class': Ntile,
         'parameters': [{'name': 'number_tile', 'type': 'integer'}],
+        'default': '',
+        'defaults': {}
+    },
+    'Word2Vec': {
+        'class': Word2VecVectorizer,
+        'parameters': Params.COUNT_PARAMS[:10] + Params.WORD2VEC_PARAMS + [
+            Params.train_algorithm_w2v, Params.null_word, Params.cbow_mean],
+        'default': '',
+        'defaults': {}
+    },
+    'Doc2Vec': {
+        'class': Doc2VecVectorizer,
+        'parameters': Params.COUNT_PARAMS[:10] + Params.WORD2VEC_PARAMS + [
+            Params.train_algorithm_d2v, Params.dbow_words, Params.dm_mean,
+            Params.dm_concat, Params.dm_tag_count, Params.retrain_count],
         'default': '',
         'defaults': {}
     }

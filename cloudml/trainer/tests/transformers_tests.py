@@ -6,7 +6,8 @@ import unittest
 
 from cloudml.trainer.transformers import get_transformer, Ntile
 from sklearn.feature_extraction import DictVectorizer
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer, \
+    Word2VecVectorizer, Doc2VecVectorizer
 
 
 class TransformersTest(unittest.TestCase):
@@ -90,6 +91,32 @@ class TransformersTest(unittest.TestCase):
                 'min_df': 10, 'max_df': 20}
         }
         self.assertIsNone(get_transformer(data))
+
+    def test_get_transformer_word2vec(self):
+        data = {
+            'type': 'Word2Vec',
+            'params': {'train_algorithm': 'skip-gram',
+                       'min_count': 3}
+        }
+        transformer = get_transformer(data)
+        self.assertIsInstance(transformer, Word2VecVectorizer)
+        self.assertEqual(transformer.train_algorithm, 'skip-gram')
+        self.assertEqual(transformer.min_count, 3)
+
+    def test_get_transformer_doc2vec(self):
+        data = {
+            'type': 'Doc2Vec',
+            'params': {'train_algorithm': 'pv-dm',
+                       'vector_size': 400,
+                       'min_count': 5,
+                       'iterations': 6}
+        }
+        transformer = get_transformer(data)
+        self.assertIsInstance(transformer, Doc2VecVectorizer)
+        self.assertEqual(transformer.train_algorithm, 'pv-dm')
+        self.assertEqual(transformer.min_count, 5)
+        self.assertEqual(transformer.vector_size, 400)
+        self.assertEqual(transformer.iterations, 6)
 
 if __name__ == '__main__':
     unittest.main()

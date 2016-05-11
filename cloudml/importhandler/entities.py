@@ -199,7 +199,7 @@ is invalid: use %s only for string fields' % (self.name, attr_name))
             match = re.search(self.regex, value)
             if match:
                 value = match.group(0)
-                print value
+                #print value
             else:
                 return None
 
@@ -468,6 +468,7 @@ order by ordinal_position;""".format(sqoop_import.table,
         Returns entity's processed next row data.
         """
         row = self.iterator.next()
+        #print "row", row
         row_data = {}
         row_data.update(self.params)
 

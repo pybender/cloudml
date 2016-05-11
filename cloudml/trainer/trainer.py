@@ -567,7 +567,8 @@ class Trainer(object):
         if feature['transformer'] is not None:
             try:
                 transformed_data = feature['transformer'].fit_transform(data)
-                if feature['transformer-type'] in ('Lda', 'Lsi'):
+                if feature['transformer-type'] in ('Lda', 'Lsi', 'Word2Vec',
+                                                   'Doc2Vec'):
                     feature['transformer'].num_features = \
                         transformed_data.shape[1]
             except ValueError as e:
@@ -575,7 +576,7 @@ class Trainer(object):
                              'transformation error: %s.',
                              feature['name'], e)
                 transformed_data = None
-                feature['tranformer'] = SuppressTransformer()
+                feature['transformer'].num_features = 0
             return transformed_data
         elif feature['transformer'] is None and \
                 feature['transformer-type'] is not None:

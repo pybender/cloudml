@@ -25,7 +25,7 @@ from utils import iterchildren
 from exceptions import ImportHandlerException, ProcessException
 from scripts import ScriptManager, Script
 from predict import Predict
-
+from base import AmazonSettingsMixin
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -41,7 +41,7 @@ class DecimalEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-class ExtractionPlan(object):
+class ExtractionPlan(AmazonSettingsMixin):
     """
     Reads and validates extraction plan configuration from a XML file.
     """
@@ -120,6 +120,7 @@ class ExtractionPlan(object):
         """
         for script in config.xpath("script"):
             s = Script(script)
+            s.amazon_settings = self.amazon_settings
             self.scripts.append(s)
             self.script_manager.add_python(s.get_script_str())
 

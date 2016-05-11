@@ -23,7 +23,7 @@ from requests import ConnectionError
 from exceptions import ImportHandlerException, ProcessException
 from db import postgres_iter, run_queries, check_table_name
 
-logging.getLogger('boto').setLevel(logging.DEBUG)
+logging.getLogger('boto').setLevel(logging.INFO)
 
 
 DATASOURCES_REQUIRE_QUERY = ['db', 'pig']
@@ -249,6 +249,12 @@ class CsvDataSource(BaseDataSource):
         if 'src' not in attrs:
             raise ImportHandlerException('No source given')
         self.src = attrs['src']
+        if 'delimiter' in attrs:
+            self.delimiter = attrs['delimiter']
+            if self.delimiter == '\\t':
+                self.delimiter = '\t'
+        else:
+            self.delimiter = ','
         try:
             self.offset = int(attrs.get('offset', 0))
             self.count = int(attrs.get('count', sys.maxint))
@@ -273,7 +279,7 @@ class CsvDataSource(BaseDataSource):
 
         i = 0
         with contextlib.closing(urllib.urlopen(self.src)) as stream:
-            reader = csv.reader(stream)
+            reader = csv.reader(stream, delimiter=self.delimiter)
             # TODO: not is the best way. Refactore
             for row in reader:
                 i += 1
@@ -502,7 +508,7 @@ class PigDataSource(BaseDataSource):
             sbuffer = cStringIO.StringIO()
             k = Key(b)
             k.key = "%spart-%s-%05d" % (self.result_path, type_result, i)
-            print k.key
+            #print k.key
             if not k.exists():
                 break
             logging.info('Getting from s3 file %s' % k.key)

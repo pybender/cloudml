@@ -1,13 +1,12 @@
 """
-Module gathers classes and methods for implementing pretrained
-transformers.
+Module gathers classes and methods for implementing
+training and using the pretrained transformers.
 """
 
 # Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
 
 import logging
 import json
-
 
 from cloudml.trainer.transformers import get_transformer
 from cloudml.trainer.feature_types import FEATURE_TYPE_FACTORIES
@@ -18,10 +17,9 @@ class TransformerSchemaException(Exception):
     Exception to be raised if there is an error parsing or using the
     configuration.
     """
-
-    def __init__(self, message, Errors=None):
+    def __init__(self, message, errors=None):
         super(TransformerSchemaException, self).__init__(message)
-        self.Errors = Errors
+        self.errors = errors
 
 
 class Transformer(object):
