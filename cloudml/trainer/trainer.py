@@ -742,7 +742,7 @@ class Trainer(object):
                     feature.get('transformer') is not None:
                 result = TRANSFORMERS[feature['transformer-type']]['default']
             elif feature.get('type') is not None:
-                result = feature['type']._default_value
+                result = FEATURE_TYPE_DEFAULTS.get(feature['type'], value)
 
         return result
 
