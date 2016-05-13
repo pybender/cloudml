@@ -181,9 +181,12 @@ class FeatureModel(object):
             if feature_type is None:
                 feature_type = self._process_feature_type(feature)
 
+        required = feature.get('is-required', True)
         # Check if it is a target variable
         if feature.get('is-target-variable', False) is True:
             self.target_variable = feature['name']
+            # target variable should be required
+            required = True
 
         # Get Scaler
         default_scaler = feature_type.default_scaler
@@ -200,7 +203,6 @@ class FeatureModel(object):
             transformer_type = transformer_config.get('type')
         transformer = get_transformer(transformer_config)
 
-        required = feature.get('is-required', True)
         default = feature.get('default', None)
         name = feature['name']
         if name in self.feature_names:
@@ -218,6 +220,7 @@ class FeatureModel(object):
                                           'required': required,
                                           'scaler': scaler,
                                           'default': default}
+
 
     def __str__(self):
         """

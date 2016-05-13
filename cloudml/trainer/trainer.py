@@ -698,7 +698,7 @@ class Trainer(object):
         for feature_name, feature in self._feature_model.features.iteritems():
             ft = feature.get('type', None)
             item = row_data.get(feature_name, None)
-            if (item is None or item == '') and \
+            if is_empty(item) and \
                 self._feature_model.target_variable == feature_name and \
                     not is_predict:
                 raise ItemParseException('Target feature is null')
