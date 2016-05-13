@@ -2,7 +2,7 @@ jsonpath==0.54
 psycopg2>=2.4.6
 numpy==1.7.1
 scipy==0.12.0
--e git+https://github.com/odeskdataproducts/scikit-learn.git#egg=scikit-learn
+-e git+https://github.com/odeskdataproducts/scikit-learn.git@MATCH-61_word2vec_doc2vec#egg=scikit-learn
 memory-profiler==0.27
 sqlparse==0.1.11
 ml_metrics==0.1.2
