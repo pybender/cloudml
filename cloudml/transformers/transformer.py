@@ -94,6 +94,9 @@ class Transformer(object):
             try:
                 ft = self.feature.get('type', None)
                 item = row.get(self.feature['name'], None)
+                if not item:
+                    raise ValueError("No data for %s feature in row" %
+                                     self.feature['name'])
                 data = ft.transform(item)
                 self._vect_data.append(data)
             except Exception, e:
