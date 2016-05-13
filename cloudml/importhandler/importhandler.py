@@ -45,7 +45,7 @@ class ExtractionPlan(object):
     """
     Reads and validates extraction plan configuration from a XML file.
     """
-    def __init__(self, config, is_file=True, callback=None):
+    def __init__(self, config, is_file=True, amazon_settings=None):
         if is_file:
             with open(config, 'r') as fp:
                 config = fp.read()
@@ -74,7 +74,7 @@ class ExtractionPlan(object):
 
         self.scripts = []
         self.script_manager = ScriptManager()
-        self.load_scripts(self.data, callback)
+        self.load_scripts(self.data, amazon_settings)
 
         # Loading import section
         self.entity = Entity(self.data['import'].entity)
@@ -114,12 +114,12 @@ class ExtractionPlan(object):
         ds = DataSource.DATASOURCE_DICT['input']()
         self.datasources[ds.name] = ds
 
-    def load_scripts(self, config, callback=None):
+    def load_scripts(self, config, amazon_settings=None):
         """
         Loads and executes javascript from import handler configuration.
         """
         for script in config.xpath("script"):
-            s = Script(script, callback)
+            s = Script(script, amazon_settings)
             self.scripts.append(s)
             self.script_manager.add_python(s.get_script_str())
 

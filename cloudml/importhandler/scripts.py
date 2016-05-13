@@ -24,15 +24,15 @@ class Script(object):
     """
     Manages script entity in XML Import Handler
     """
-    def __init__(self, config, callback=None):
+    def __init__(self, config, amazon_settings=None):
         self.text = config.text
         self.src = config.attrib.get("src", None)
         self.out_string = ''
         self.token = AMAZON_ACCESS_TOKEN
         self.secret = AMAZON_TOKEN_SECRET
         self.bucket_name = BUCKET_NAME
-        if callback is not None:
-            self.token, self.secret, self.bucket_name = callback()
+        if amazon_settings is not None:
+            self.token, self.secret, self.bucket_name = amazon_settings()
 
 
     def _process_amazon_file(self):
