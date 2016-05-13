@@ -23,7 +23,7 @@ from requests import ConnectionError
 from exceptions import ImportHandlerException, ProcessException
 from db import postgres_iter, run_queries, check_table_name
 
-logging.getLogger('boto').setLevel(logging.DEBUG)
+logging.getLogger('boto').setLevel(logging.INFO)
 
 
 DATASOURCES_REQUIRE_QUERY = ['db', 'pig']
