@@ -54,4 +54,8 @@ FEATURE_PARAMS_TYPES = {
         'type': 'text',
         'help_text': 'Please enter valid json'
     },
+    'categories': {
+        'type': 'list',
+        'help_text': 'Please enter single of list categories'
+    },
 }

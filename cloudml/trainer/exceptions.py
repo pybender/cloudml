@@ -21,6 +21,11 @@ class ItemParseException(BaseTrainerException):
     its feature type
     """
 
+class ItemParseIgnore(BaseTrainerException):
+    """
+    Exception to be raised if item is ignored
+    """
+
 
 class InvalidTrainerFile(BaseTrainerException):
     """
