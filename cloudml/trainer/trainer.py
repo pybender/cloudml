@@ -515,7 +515,7 @@ class Trainer(object):
                 if callback is not None:
                     callback(row)
             except ItemParseIgnore, e:
-                logging.debug('Ignoring item #%d: %s', self._count, e)
+                #logging.debug('Ignoring item #%d: %s', self._count, e)
                 if ignore_error:
                     self._ignored += 1
                 else:
