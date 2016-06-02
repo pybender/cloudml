@@ -1,0 +1,27 @@
+{
+    "status_code": 200, 
+    "data": {
+        "JobFlows": [
+            {
+                "JobFlowId": "234",
+                "ExecutionStatusDetail": {
+                    "State": "RUNNING"
+                },
+                "Instances": {
+                    "MasterInstanceType": "type",
+                    "MasterPublicDnsName": "dns_name",
+                    "MasterInstanceId": "abc-123",
+                    "SlaveInstanceType": "type",
+                    "InstanceCount": 123
+                },
+                "Steps": [
+                    {
+                        "ExecutionStatusDetail": {
+                            "State": "RUNNING"
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}

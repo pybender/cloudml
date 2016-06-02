@@ -38,6 +38,7 @@ def main(argv=None):
     try:
         plan = ExtractionPlan(args.path)
         extractor = ImportHandler(plan, context)
+
     except ImportHandlerException, e:
         logging.warn('Invalid extraction plan: {}'.format(e.message))
         return INVALID_EXTRACTION_PLAN

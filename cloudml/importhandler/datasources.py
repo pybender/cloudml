@@ -12,13 +12,11 @@ import itertools
 import json
 import urllib
 import contextlib
-import boto
-import boto.emr
-from boto.s3.key import Key
-from boto.exception import EmrResponseError
-from boto.emr.step import PigStep, InstallPigStep, JarStep
+from botocore.exceptions import ClientError
+import boto3
 import requests
 from requests import ConnectionError
+import cStringIO
 
 from exceptions import ImportHandlerException, ProcessException
 from db import postgres_iter, run_queries, check_table_name
@@ -351,12 +349,16 @@ class PigDataSource(BaseDataSource):
         self.ami_version = self.config.get('ami_version', DEFAILT_AMI_VERSION)
         self.bucket_name = self.config.get('bucket_name', BUCKET_NAME)
 
-        self.s3_conn = boto.connect_s3(self.amazon_access_token,
-                                       self.amazon_token_secret)
-        self.emr_conn = boto.emr.connect_to_region(
-            'us-west-1',
+        self.s3 = boto3.resource(
+            's3',
             aws_access_key_id=self.amazon_access_token,
             aws_secret_access_key=self.amazon_token_secret)
+        self.emr = boto3.client(
+            'emr',
+            region_name='us-west-1',
+            aws_access_key_id=self.amazon_access_token,
+            aws_secret_access_key=self.amazon_token_secret)
+
         self.jobid = config.get('jobid', None)
         ts = int(time.time())
         self.result_path = "/cloudml/output/%s/%d/" % (self.name, ts)
@@ -431,11 +433,30 @@ class PigDataSource(BaseDataSource):
         """
         Generates url to download running pig script logs.
         """
-        b = self.s3_conn.get_bucket(self.bucket_name)
-        key = Key(b)
-        key.key = '/{1}/{2}/steps/%d/%s'.format(
+        s3_client = self.s3.meta.client
+        key_name = '/{1}/{2}/steps/%d/%s'.format(
             self.log_path, self.jobid, step, log_type)
-        return key.generate_url(expires_in)
+        url = s3_client.generate_presigned_url(
+            'get_object',
+            Params={'Bucket': self.bucket_name, 'Key': key_name},
+            ExpiresIn=expires_in)
+        return url
+
+    def _get_result_job(self, response, j_id):
+        job_flows = response.get('JobFlows', None)
+        if not job_flows:
+            raise ImportHandlerException("Unexpected EMR result: {}"
+                                         .format(response))
+        job = None
+        for j in job_flows:
+            job_id = j.get('JobFlowId', None)
+            if job_id and job_id == j_id:
+                job = j  # job with requested id found
+                break
+        if not job:
+            raise ImportHandlerException("Job with id #%s not found "
+                                         "in response" % self.jobid)
+        return job
 
     def process_pig_script(self, query, query_target=None):
         logging.info('Start processing pig datasource...')
@@ -459,32 +480,53 @@ class PigDataSource(BaseDataSource):
         while True:
             time.sleep(10)
             try:
-                status = self.emr_conn.describe_jobflow(self.jobid)
-            except EmrResponseError:
+                res = self.emr.describe_job_flows(JobFlowIds=[self.jobid])
+            except ClientError:
                 logging.info("Getting throttled. Sleeping for 10 secs.")
                 time.sleep(10)
                 continue
 
-            if previous_state != status.state:
-                step_state = status.steps[step_number - 1].state
-                logging.info(
-                    "State of jobflow changed: %s. Step %s state is: %s",
-                    status.state, step_number, step_state)
+            # getting required job from returned result
+            job = self._get_result_job(res, self.jobid)
 
-                fn_name = '_process_{0}_state'.format(status.state.lower())
+            # getting job state
+            status_detail = job.get('ExecutionStatusDetail', None)
+            if not status_detail:
+                raise ImportHandlerException("Status Details are not "
+                                             "returned for job: {}".
+                                             format(job))
+            state = status_detail.get('State', None)
+            if not state:
+                raise ImportHandlerException("State is not present in "
+                                             "job status details: {}".
+                                             format(status_detail))
+
+            if previous_state != state:
+                steps = job.get('Steps', None)
+                step_state = None
+                if steps:
+                    step = steps[int(step_number) - 1]
+                    step_detail = step.get('ExecutionStatusDetail', None)
+                    if step_detail:
+                        step_state = step_detail.get('State', None)
+                logging.info(
+                    "State of jobflow changed: %s. Step %d state is: %s",
+                    state, step_number, step_state)
+
+                fn_name = '_process_{0}_state'.format(state.lower())
                 if hasattr(self, fn_name):
                     process_fn = getattr(self, fn_name)
-                    process_fn(status, step_state, step_number)
+                    process_fn(job, step_state, int(step_number))
                 else:
                     logging.warning(
-                        'Jobflow status is unexpected: %s', status.state)
+                        'Jobflow status is unexpected: %s', state)
 
-                if status.state == 'COMPLETED' or \
-                        (status.state == 'WAITING'
+                if state == 'COMPLETED' or \
+                        (state == 'WAITING'
                             and step_state == 'COMPLETED'):
                     break  # job is completed -> no need check status
 
-                previous_state = status.state
+                previous_state = state
 
         logging.info(
             "Pig results stored to: s3://%s%s" %
@@ -494,25 +536,36 @@ class PigDataSource(BaseDataSource):
         """
         Returns running pig script results.
         """
-        b = self.s3_conn.get_bucket(self.bucket_name)
-        k = Key(b)
-        import cStringIO
+        def key_exists(s3, bucket, key_name):
+            """
+            Checks if key exists in the bucket
+            """
+            try:
+                s3.Object(bucket, key_name).load()
+                return True
+            except ClientError as e:
+                if e.response['Error']['Code'] == "404":
+                    return False
+                else:
+                    raise ImportHandlerException(e.message)
+
         # TODO: Need getting data from all nodes
-        k.key = "%spart-m-00000" % self.result_path
         type_result = 'm'
-        if not k.exists():
+        if not key_exists(self.s3, self.bucket_name,
+                          "%spart-m-00000" % self.result_path):
             type_result = 'r'
         i = 0
         first_result = False
         while True:
             sbuffer = cStringIO.StringIO()
-            k = Key(b)
-            k.key = "%spart-%s-%05d" % (self.result_path, type_result, i)
-            #print k.key
-            if not k.exists():
+            k_name = "%spart-%s-%05d" % (self.result_path, type_result, i)
+            if not key_exists(self.s3, self.bucket_name, k_name):
                 break
-            logging.info('Getting from s3 file %s' % k.key)
-            k.get_contents_to_file(sbuffer)
+            logging.info('Getting from s3 file %s' % k_name)
+            key = self.s3.Object(self.bucket_name, k_name).get()
+            for chunk in iter(lambda: key['Body'].read(4096), b''):
+                sbuffer.write(chunk)
+
             i += 1
             sbuffer.seek(0)
             for line in sbuffer:
@@ -537,16 +590,24 @@ class PigDataSource(BaseDataSource):
         """
         logging.info('Appending pig step.')
         pig_file = self._store_query_to_s3(query, query_target)
-        pig_args = ['-p', 'output=%s' % self.result_uri]
-
+        pig_args = ['s3n://us-east-1.elasticmapreduce/libs/pig/pig-script',
+                    '--base-path',
+                    's3n://us-east-1.elasticmapreduce/libs/pig/']
+        pig_args.extend(['--pig-versions', 'latest'])
+        pig_args.extend(['--run-pig-script', '--args', '-f', pig_file])
+        pig_args.extend(['-p', 'output=%s' % self.result_uri])
         for k, v in self.sqoop_results_uries.iteritems():
             pig_args.append("-p")
             pig_args.append("%s=%s" % (k, v))
-        pig_step = PigStep(
-            self.name,
-            pig_file=pig_file,
-            pig_args=pig_args)
-        pig_step.action_on_failure = 'CONTINUE'
+        pig_step = {
+            'Name': self.name,
+            'ActionOnFailure': 'CONTINUE',
+            'HadoopJarStep': {
+                'Jar':
+                's3n://us-east-1.elasticmapreduce/libs/script-runner/'
+                'script-runner.jar',
+                'Args': pig_args}
+        }
         return pig_step
 
     def _store_query_to_s3(self, query, query_target=None):
@@ -556,30 +617,27 @@ class PigDataSource(BaseDataSource):
         if query_target:
             query += \
                 "\nSTORE %s INTO '$output' USING JsonStorage();" % query_target
-        b = self.s3_conn.get_bucket(self.bucket_name)
-        k = Key(b)
         logging.info("Store pig script to s3: %s" % query)
-        k.key = 'cloudml/pig/' + self.name + '_script.pig'
-        k.set_contents_from_string(query)
-        return 's3://%s/%s' % (self.bucket_name, k.key)
+        k_name = 'cloudml/pig/' + self.name + '_script.pig'
+        self.s3.Object(self.bucket_name, k_name).put(Body=query)
+        return 's3://%s/%s' % (self.bucket_name, k_name)
 
     def clear_output_folder(self, name):
         """
         Deletes results of previous execution scripts on this datasource.
         """
         logging.info('Clearing output folder on Amazon S3')
-        b = self.s3_conn.get_bucket(self.bucket_name)
-        k = Key(b)
-        k.key = "cloudml/output/%s" % name
-        k.delete()
+        self.s3.Object(self.bucket_name, "cloudml/output/%s" % name).delete()
 
     # Run steps on jobflow related methods
 
     def _run_steps_on_existing_jobflow(self, pig_step):
-        status = self.emr_conn.describe_jobflow(self.jobid)
-        step_number = len(status.steps) + 1
+        status = self.emr.describe_job_flows(JobFlowIds=[self.jobid])
+        job = self._get_result_job(status, self.jobid)
+        steps = job.get('Steps', None)
+        step_number = len(steps) + 1 if steps is not None else 1
         logging.info('Using existing emr jobflow: %s' % self.jobid)
-        self.emr_conn.add_jobflow_steps(self.jobid, [pig_step, ])
+        self.emr.add_job_flow_steps(JobFlowId=self.jobid, Steps=[pig_step, ])
         return step_number
 
     def _create_jobflow_and_run_steps(self, bootstrap_actions, pig_step):
@@ -588,22 +646,24 @@ class PigDataSource(BaseDataSource):
         """
         logging.info('Running emr jobflow')
         logging.info(self.log_uri)
-        self.jobid = self.emr_conn.run_jobflow(
-            name='CloudML jobflow',
-            log_uri=self.log_uri,
-            ami_version=self.ami_version,
-            visible_to_all_users=True,
-            bootstrap_actions=bootstrap_actions,
-            ec2_keyname=self.ec2_keyname,
-            #keep_alive=self.keep_alive,
-            num_instances=self.num_instances,
-            master_instance_type=self.master_instance_type,
-            slave_instance_type=self.slave_instance_type,
-            # api_params={'Instances.Ec2SubnetId':'subnet-3f5bc256'},
-            action_on_failure='CONTINUE',
-            job_flow_role='EMR_EC2_DefaultRole',
-            service_role='EMR_DefaultRole',
-            steps=[pig_step, ])
+        res = self.emr.run_job_flow(
+            Name='CloudML jobflow',
+            LogUri=self.log_uri,
+            AmiVersion=self.ami_version,
+            VisibleToAllUsers=True,
+            BootstrapActions=bootstrap_actions,
+            Instances={
+                'Ec2KeyName': self.ec2_keyname,
+                #'KeepJobFlowAliveWhenNoSteps': self.keep_alive,
+                'MasterInstanceType': self.master_instance_type,
+                'SlaveInstanceType': self.slave_instance_type,
+                'InstanceCount': int(self.num_instances),
+                #'Ec2SubnetId': 'subnet-3f5bc256',
+            },
+            JobFlowRole='EMR_EC2_DefaultRole',
+            ServiceRole='EMR_DefaultRole',
+            Steps=[pig_step, ])
+        self.jobid = res.get('JobFlowId', None)
         logging.info('New JobFlow id is %s' % self.jobid)
         return 1
 
@@ -614,18 +674,22 @@ class PigDataSource(BaseDataSource):
             * configure hadoop
         """
         bootstrap_actions = []
-        install_ganglia = boto.emr.BootstrapAction(
-            'Install ganglia',
-            's3://elasticmapreduce/bootstrap-actions/install-ganglia', []
-        )
+        install_ganglia = {
+            'Name': 'Install ganglia',
+            'ScriptBootstrapAction': {
+                'Path':
+                    's3://elasticmapreduce/bootstrap-actions/install-ganglia'}
+        }
         bootstrap_actions.append(install_ganglia)
         if self.hadoop_params is not None:
             params = self.hadoop_params.split(',')
-            config_bootstrapper = boto.emr.BootstrapAction(
-                'Configure hadoop',
-                's3://elasticmapreduce/bootstrap-actions/configure-hadoop',
-                params
-            )
+            config_bootstrapper = {
+                'Name': 'Configure hadoop',
+                'ScriptBootstrapAction': {
+                    'Path':
+                    's3://elasticmapreduce/bootstrap-actions/configure-hadoop',
+                    'Args': params}
+            }
             bootstrap_actions.append(config_bootstrapper)
         return bootstrap_actions
 
@@ -635,8 +699,12 @@ class PigDataSource(BaseDataSource):
         """
         Processes `RUNNING` job status.
         """
-        if hasattr(status, 'masterpublicdnsname'):
-            masterpublicdnsname = status.masterpublicdnsname
+        masterpublicdnsname = None
+        instance = status.get('Instances', None)
+        if instance:
+            masterpublicdnsname = instance.get('MasterPublicDnsName', None)
+
+        if masterpublicdnsname:
             if self.import_handler is not None and \
                     self.import_handler.callback is not None:
                 callback_params = {
@@ -662,9 +730,10 @@ socks proxy localhost:12345''' % {'dns': masterpublicdnsname})
         elif step_state == 'COMPLETED':
             logging.info('Step is completed')
         else:
+            state = status.get('ExecutionStatusDetail').get('State', None)
             logging.info(
                 'Unexpected job state for status %s: %s',
-                status.state, step_state)
+                state, step_state)
 
     def _process_failed_state(self, status, step_state, step_number):
         """
@@ -685,9 +754,10 @@ socks proxy localhost:12345''' % {'dns': masterpublicdnsname})
         elif step_state == 'COMPLETED':
             logging.info('Step is completed')
         else:
+            state = status.get('ExecutionStatusDetail').get('State', None)
             logging.info(
                 'Unexpected job state for status %s: %s',
-                status.state, step_state)
+                state, step_state)
 
     def _fail_jobflow(self, step_number):
         logging.error('Jobflow failed, shutting down.')
@@ -722,11 +792,10 @@ socks proxy localhost:12345''' % {'dns': masterpublicdnsname})
         """
         Gets running pig script logs.
         """
-        b = self.s3_conn.get_bucket(self.bucket_name)
-        k = Key(b)
-        k.key = "/%s/%s/steps/%d/%s" % (log_uri, jobid, step, log_type)
-        logging.info('Log uri: %s' % k.key)
-        return k.get_contents_as_string()
+        k_name = "/%s/%s/steps/%d/%s" % (log_uri, jobid, step, log_type)
+        logging.info('Log uri: %s' % k_name)
+        res = self.s3.Object(self.bucket_name, k_name).get()
+        return res['Body'].read(res['ContentLength'])
 
 
 class InputDataSource(BaseDataSource):

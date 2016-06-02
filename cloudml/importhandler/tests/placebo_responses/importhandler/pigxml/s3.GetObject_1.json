@@ -1,0 +1,7 @@
+{
+    "status_code": 200, 
+    "data": {
+        "Body": "{\"opening\": 57}",
+        "ContentLength": 48
+    }
+}

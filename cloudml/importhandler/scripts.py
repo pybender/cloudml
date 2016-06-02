@@ -13,7 +13,8 @@ from processors import composite_string, composite_python, \
     composite_readability, process_key_value  # pylint: disable=W0611
 from exceptions import ImportHandlerException, LocalScriptNotFoundException
 from base import AmazonSettingsMixin
-
+import boto3
+import os.path
 
 __all__ = ['ScriptManager', 'Script']
 
@@ -28,23 +29,21 @@ class Script(AmazonSettingsMixin):
         self.out_string = ''
 
     def _process_amazon_file(self):
-        from boto import connect_s3
-        from boto.s3.key import Key
         AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET, \
             BUCKET_NAME = self.amazon_settings
         try:
-            s3_conn = connect_s3(AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET)
-            b = s3_conn.get_bucket(BUCKET_NAME)
-            key = Key(b)
-            key.key = self.src
-            res = key.get_contents_as_string()
-            self.out_string = res or ''
+            s3 = boto3.resource(
+                's3',
+                aws_access_key_id=AMAZON_ACCESS_TOKEN,
+                aws_secret_access_key=AMAZON_TOKEN_SECRET)
+            res = s3.Object(BUCKET_NAME, self.src).get()
+            self.out_string = res["Body"].read(res["ContentLength"])
+
         except Exception as exc:
             raise ImportHandlerException("Error accessing file '{0}' on Amazon"
                                          ": {1}".format(self.src, exc.message))
 
     def _process_local_file(self):
-        import os.path
         if os.path.isfile(self.src):
             with open(self.src, 'r') as fp:
                 fs = fp.read()
