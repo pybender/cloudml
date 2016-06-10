@@ -16,6 +16,9 @@ from exceptions import ImportHandlerException, LocalScriptNotFoundException
 
 __all__ = ['ScriptManager', 'Script']
 
+class ContextItem(object):
+    def __str__(self):
+        return "The item"
 
 class Script(object):
     """
@@ -80,7 +83,8 @@ class ScriptManager(object):
     """
     def __init__(self):
         self.data = ''
-        self.context = {}
+        self.context = globals().copy()
+        self.context_items = []
 
     def add_python(self, script):
         """
@@ -128,151 +132,152 @@ class ScriptManager(object):
 
     def _exec(self, text, row_data=None):
         row_data = row_data or {}
-        context = globals().copy()
-        context.update(locals())
-        context.update(prepare_context(row_data))
-        context.update(self.context)
+        context = self.context
+        self.context.update(locals())
+        self.context.update(self.prepare_context(row_data))
+        #context.update(self.context)
 
         try:
-            return eval(text, context, context)
+            return eval(text, self.context, self.context)
         except Exception,  exc:
             raise ImportHandlerException(
                 "Exception occurs while executing script: {0}. {1}".format(
                     text[:100], exc))
 
 
-def prepare_context(data):
-    """
-    Prepares context dictionary.
-    Convertes defenitions like
-        data['el.field1'] = val1
-        data['el.field2'] = val2
-    to object el in the context, where field1 = val1, field2 = val2
+    def prepare_context(self, data):
+        """
+        Prepares context dictionary.
+        Convertes defenitions like
+            data['el.field1'] = val1
+            data['el.field2'] = val2
+        to object el in the context, where field1 = val1, field2 = val2
 
-    data: dict
-        dictionary of the context data
+        data: dict
+            dictionary of the context data
 
-    >>> data = {'data.x1': 10, 'data.result.sum': 21}
-    >>> data['data.result.metrics.extra'] = [1, 2, 3]
-    >>> res = prepare_context(data)
-    >>> el = res['data']
-    >>> el.x1
-    10
-    >>> el.result.sum
-    21
-    >>> el.result.metrics.extra[0]
-    1
+        >>> data = {'data.x1': 10, 'data.result.sum': 21}
+        >>> data['data.result.metrics.extra'] = [1, 2, 3]
+        >>> res = prepare_context(data)
+        >>> el = res['data']
+        >>> el.x1
+        10
+        >>> el.result.sum
+        21
+        >>> el.result.metrics.extra[0]
+        1
 
-    >>> data = {'data': 10, 'data.x': 3}
-    >>> prepare_context(data)
-    Traceback (most recent call last):
-        ...
-    ImportHandlerException: Can't set variable 'data' in \
-the context twice. Keys are: data.x, data.
+        >>> data = {'data': 10, 'data.x': 3}
+        >>> prepare_context(data)
+        Traceback (most recent call last):
+            ...
+        ImportHandlerException: Can't set variable 'data' in \
+    the context twice. Keys are: data.x, data.
 
-    >>> prepare_context({'data': 10, 'data.x': 3})
-    Traceback (most recent call last):
-        ...
-    ImportHandlerException: Can't set variable 'data' in the \
-context twice. Keys are: data.x, data.
+        >>> prepare_context({'data': 10, 'data.x': 3})
+        Traceback (most recent call last):
+            ...
+        ImportHandlerException: Can't set variable 'data' in the \
+    context twice. Keys are: data.x, data.
 
-    >>> prepare_context({'data.x': 10, 'data.x.y': 3})
-    Traceback (most recent call last):
-        ...
-    ImportHandlerException: Can't create the x variable for \
-data.x: element x already exist and equals The item (<class \
-'cloudml.importhandler.scripts.ContextItem'>). Keys are: data.x.y, data.x.
+        >>> prepare_context({'data.x': 10, 'data.x.y': 3})
+        Traceback (most recent call last):
+            ...
+        ImportHandlerException: Can't create the x variable for \
+    data.x: element x already exist and equals The item (<class \
+    'cloudml.importhandler.scripts.ContextItem'>). Keys are: data.x.y, data.x.
 
-    >>> prepare_context({'data.x': 10, 'data': 3})
-    Traceback (most recent call last):
-        ...
-    ImportHandlerException: Can't create the 'data' variable \
-in the context: element 'data' already exist and equals 3 \
-(<type 'int'>). Keys are: data, data.x.
+        >>> prepare_context({'data.x': 10, 'data': 3})
+        Traceback (most recent call last):
+            ...
+        ImportHandlerException: Can't create the 'data' variable \
+    in the context: element 'data' already exist and equals 3 \
+    (<type 'int'>). Keys are: data, data.x.
 
-    >>> prepare_context({'data.x.y.a': 10, 'data.x.y': 3})
-    Traceback (most recent call last):
-        ...
-    ImportHandlerException: Can't create the y variable for \
-data.x.y.a: element y already exist and equals 3 (<type 'int'>). \
-Keys are: data.x.y, data.x.y.a.
+        >>> prepare_context({'data.x.y.a': 10, 'data.x.y': 3})
+        Traceback (most recent call last):
+            ...
+        ImportHandlerException: Can't create the y variable for \
+    data.x.y.a: element y already exist and equals 3 (<type 'int'>). \
+    Keys are: data.x.y, data.x.y.a.
 
-    >>> prepare_context({'': 10})
-    Traceback (most recent call last):
-        ...
-    ImportHandlerException: Variable name couldn't be empty.
+        >>> prepare_context({'': 10})
+        Traceback (most recent call last):
+            ...
+        ImportHandlerException: Variable name couldn't be empty.
 
-    >>> prepare_context({None: 10})
-    Traceback (most recent call last):
-        ...
-    ImportHandlerException: Variable name couldn't be empty.
+        >>> prepare_context({None: 10})
+        Traceback (most recent call last):
+            ...
+        ImportHandlerException: Variable name couldn't be empty.
 
-    >>> prepare_context({'x. ': 10})
-    Traceback (most recent call last):
-        ...
-    ImportHandlerException: Field name couldn't be empty. Key is 'x. '.
-    """
-    class ContextItem(object):
-        def __str__(self):
-            return "The item"
+        >>> prepare_context({'x. ': 10})
+        Traceback (most recent call last):
+            ...
+        ImportHandlerException: Field name couldn't be empty. Key is 'x. '.
+        """
 
-    context = {}
-    for key, val in data.iteritems():
-        _check_name(key)
+        #self.context = {}
+        for key, val in data.iteritems():
+            if key in self.context_items:
+                continue
+            _check_name(key)
 
-        splited = key.split('.')
-        splitted_count = len(splited)
-        if splitted_count == 1:  # simply key value here
-            if key in context:
-                raise ImportHandlerException(
-                    "Can't set variable '{0}' in the context"
-                    " twice. Keys are: {1}.".format(
-                        key, ', '.join(data.keys())))
-            context[key] = val
-        else:
-            # build obj using recursion
-            for i in xrange(0, splitted_count):
-                name = splited[i]
-                _check_name(name, key)
-                if i == 0:
-                    if name in context:
-                        obj = context[name]
-                        if not isinstance(obj, ContextItem):
-                            raise ImportHandlerException(
-                                "Can't create the '{0}' variable in the "
-                                "context: element '{0}' already exist and "
-                                "equals {1} ({2}). Keys "
-                                "are: {3}.".format(
-                                    name, str(obj)[:20], type(obj),
-                                    ', '.join(data.keys())))
-                    else:
-                        context[name] = ContextItem()
-                        obj = context[name]
-                elif i == splitted_count - 1:
-                    # creating the class field
-                    if hasattr(obj, name):
-                        raise ImportHandlerException(
-                            "Can't create the {0} variable for {3}:"
-                            " element {0} already exist and equals "
-                            "{1} ({2}). Keys are: {4}.".format(
-                                name, str(obj)[:20], type(obj), key,
-                                ', '.join(data.keys())))
-                    setattr(obj, name, val)
-                else:
-                    if hasattr(obj, name):
-                        obj = getattr(obj, name)
-                        if not isinstance(obj, ContextItem):
+            splited = key.split('.')
+            splitted_count = len(splited)
+            if splitted_count == 1:  # simply key value here
+                if key in self.context:
+                    raise ImportHandlerException(
+                        "Can't set variable '{0}' in the context"
+                        " twice. Keys are: {1}.".format(
+                            key, ', '.join(data.keys())))
+                self.context[key] = val
+                self.context_items.append(key)
+            else:
+                # build obj using recursion
+                for i in xrange(0, splitted_count):
+                    name = splited[i]
+                    _check_name(name, key)
+                    if i == 0:
+                        if name in self.context:
+                            obj = self.context[name]
+                            if not isinstance(obj, ContextItem):
+                                raise ImportHandlerException(
+                                    "Can't create the '{0}' variable in the "
+                                    "context: element '{0}' already exist and "
+                                    "equals {1} ({2}). Keys "
+                                    "are: {3}.".format(
+                                        name, str(obj)[:20], type(obj),
+                                        ', '.join(data.keys())))
+                        else:
+                            self.context[name] = ContextItem()
+                            obj = self.context[name]
+                    elif i == splitted_count - 1:
+                        # creating the class field
+                        if hasattr(obj, name):
                             raise ImportHandlerException(
                                 "Can't create the {0} variable for {3}:"
                                 " element {0} already exist and equals "
                                 "{1} ({2}). Keys are: {4}.".format(
                                     name, str(obj)[:20], type(obj), key,
                                     ', '.join(data.keys())))
+                        setattr(obj, name, val)
+                        self.context_items.append(key)
                     else:
-                        item = ContextItem()
-                        setattr(obj, name, item)
-                        obj = item
-    return context
+                        if hasattr(obj, name):
+                            obj = getattr(obj, name)
+                            if not isinstance(obj, ContextItem):
+                                raise ImportHandlerException(
+                                    "Can't create the {0} variable for {3}:"
+                                    " element {0} already exist and equals "
+                                    "{1} ({2}). Keys are: {4}.".format(
+                                        name, str(obj)[:20], type(obj), key,
+                                        ', '.join(data.keys())))
+                        else:
+                            item = ContextItem()
+                            setattr(obj, name, item)
+                            obj = item
+        return self.context
 
 
 def _check_name(name, key=None):
