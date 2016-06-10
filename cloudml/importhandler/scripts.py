@@ -12,6 +12,9 @@ from utils import ParametrizedTemplate
 from processors import composite_string, composite_python, \
     composite_readability, process_key_value  # pylint: disable=W0611
 from exceptions import ImportHandlerException, LocalScriptNotFoundException
+from boto import connect_s3
+from boto.s3.key import Key
+from config import AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET, BUCKET_NAME
 
 
 __all__ = ['ScriptManager', 'Script']
@@ -24,19 +27,21 @@ class Script(object):
     """
     Manages script entity in XML Import Handler
     """
-    def __init__(self, config):
+    def __init__(self, config, amazon_settings=None):
         self.text = config.text
         self.src = config.attrib.get("src", None)
         self.out_string = ''
+        self.token = AMAZON_ACCESS_TOKEN
+        self.secret = AMAZON_TOKEN_SECRET
+        self.bucket_name = BUCKET_NAME
+        if amazon_settings is not None:
+            self.token, self.secret, self.bucket_name = amazon_settings()
+
 
     def _process_amazon_file(self):
-        from boto import connect_s3
-        from boto.s3.key import Key
-        from config import AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET, \
-            BUCKET_NAME
         try:
-            s3_conn = connect_s3(AMAZON_ACCESS_TOKEN, AMAZON_TOKEN_SECRET)
-            b = s3_conn.get_bucket(BUCKET_NAME)
+            s3_conn = connect_s3(self.token, self.secret)
+            b = s3_conn.get_bucket(self.bucket_name)
             key = Key(b)
             key.key = self.src
             res = key.get_contents_as_string()

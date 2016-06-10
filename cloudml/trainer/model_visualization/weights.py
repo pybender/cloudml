@@ -90,12 +90,23 @@ class WeightsCalculator(object):
                 transformer = feature['transformer']
                 preprocessor = feature['type'].preprocessor
 
+                # Lda, Lsi
                 if transformer is not None and \
                         hasattr(transformer, 'num_topics'):
                     for tj in range(0, transformer.num_features - 1):
                         name = '%s->Topic #%d' % (base_name, tj)
                         self.weights[segment][label][index + tj]['name'] = name
-                    index += transformer.num_topics
+                    if transformer.num_features:
+                        index += transformer.num_topics
+
+                # Word2Vec, Doc2Vec
+                elif transformer is not None and \
+                        hasattr(transformer, 'vector_size'):
+                    for vj in range(0, transformer.num_features):
+                        name = '%s->Vector Element #%d' % (base_name, vj)
+                        self.weights[segment][label][index + vj]['name'] = name
+                    if transformer.num_features:
+                        index += transformer.num_features
 
                 elif transformer is not None and \
                         hasattr(transformer, 'get_feature_names'):
@@ -103,7 +114,6 @@ class WeightsCalculator(object):
                         base_name, transformer)
                     for vj, name in enumerate(names):
                         self.weights[segment][label][index + vj]['name'] = name
-
                     index += len(names)
 
                 elif preprocessor is not None and \
