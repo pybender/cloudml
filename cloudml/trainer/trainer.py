@@ -499,7 +499,11 @@ class Trainer(object):
                 for feature_name in self._feature_model.features:
                     if isinstance(self._feature_model.features[feature_name]['type'], CategoricalFeatureTypeInstance) and self._feature_model.features[feature_name]['type']._params:
                         categories = self._feature_model.features[feature_name]['type']._params.get('categories', None)
-                        if categories and data[feature_name] not in categories:
+                        exclude = self._feature_model.features[feature_name]['type']._params.get('exclude', False)
+                        if exclude and categories and data[feature_name] in categories:
+                            raise ItemParseIgnore("Item will be exclude: '%s' feature value is '%s',"
+                             "but should not be in %s" % (feature_name, data[feature_name], categories))
+                        elif not exclude and categories and data[feature_name] not in categories:
                             raise ItemParseIgnore("Item not in categories: '%s' feature value is '%s',"
                              "but should be in %s" % (feature_name, data[feature_name], categories))
 
