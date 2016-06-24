@@ -1,5 +1,7 @@
 Changelog
 =========
+* Task - Set params default values for all existing transformers
+* Task - Added exclude param to categorical feature type
 * Task - Migrate from boto to boto3
 * Task - Disabled warning message when skip records
 * Task - Added support categories param for categorycal feature type
