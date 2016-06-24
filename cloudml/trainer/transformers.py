@@ -188,7 +188,7 @@ class Params:
     eta = {'name': 'eta', 'type': 'float',
            'default': None}  # TODO: float_vector
     distributed = {'name': 'distributed', 'type': 'boolean', 'default': False}
-    chunk_size = {'name': 'chunk_size', 'type': 'integer', 'default': 2000}
+    chunksize = {'name': 'chunksize', 'type': 'integer', 'default': 2000}
     passes = {'name': 'passes', 'type': 'integer', 'default': 1}
     update_every = {'name': 'update_every', 'type': 'integer', 'default': 1}
     decay = {'name': 'decay', 'type': 'float', 'default': 0.5}
@@ -289,7 +289,7 @@ TRANSFORMERS = {
         'class': LdaVectorizer,
         'parameters': Params.COUNT_PARAMS + [
             Params.num_topics, Params.alpha, Params.eta,
-            Params.distributed, Params.chunk_size, Params.decay, Params.passes,
+            Params.distributed, Params.chunksize, Params.decay, Params.passes,
             Params.update_every],
         'default': '',
         'defaults': {'stop_words': 'english'}
@@ -299,7 +299,7 @@ TRANSFORMERS = {
         'parameters': Params.COUNT_PARAMS + [
             Params.num_topics, Params.distributed,
             Params.onepass, Params.power_iters, Params.extra_samples,
-            Params.decay, Params.chunk_size],
+            Params.decay, Params.chunksize],
         'default': '',
         'defaults': {'stop_words': 'english', 'decay': 1.0,
                      'chunk_size': 20000}
