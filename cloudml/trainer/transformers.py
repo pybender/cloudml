@@ -216,7 +216,7 @@ class Params:
                               'zero as training progresses)'}
     min_alpha = {'name': 'min_alpha', 'type': 'float',
                  'default': 0.0001}
-    seed = {'name': 'seed', 'type': 'string', 'default': '1',
+    seed = {'name': 'seed', 'type': 'integer', 'default': 1,
             'help_text': 'Used for the random number generator. Initial '
                          'vectors for each word are seeded with a hash of the '
                          'concatenation of word + str(seed)'}
