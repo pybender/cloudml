@@ -58,4 +58,8 @@ FEATURE_PARAMS_TYPES = {
         'type': 'list',
         'help_text': 'Please enter single of list categories'
     },
+    'exclude': {
+        'type': 'boolean',
+        'help_text': 'If set to true catigories will be exclude'
+    }
 }

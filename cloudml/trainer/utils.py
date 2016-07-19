@@ -45,6 +45,25 @@ def parse_parameters(config, settings, process_range_params=True):
     return params
 
 
+def set_defaults(original, params):
+    """Set defaults dict from default values in parameters"""
+    for p in params:
+        if 'default' in p and not p['name'] in original:
+            original[p['name']] = p['default']
+    return original
+
+
+def set_params_defaults(params, defaults):
+    """Updated parameters config with default values from defaults dict"""
+    updated_defaults = []
+    for p in params:
+        cp = p.copy()
+        if cp['name'] in defaults:
+            cp['default'] = defaults[cp['name']]
+        updated_defaults.append(cp)
+    return updated_defaults
+
+
 def is_empty(var):
     """
     Returns true if item is None or has a length of zero (if this item has
