@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 from distutils.core import Command
 from unittest import TextTestRunner, TestLoader
 from glob import glob
-from os.path import splitext, basename, join as pjoin
+from os.path import splitext, basename, isfile, join as pjoin
 
 
 PROJECT_BASE_DIR = ''
@@ -13,18 +13,20 @@ TEST_PATHS = ['tests']
 
 
 def parse_requirements(requirements):
-    with open(requirements) as f:
-        install_requires = []
-        dependency_links = []
-        for l in f:
-            if not l.strip('\n') or l.startswith('#'):
-                continue
-            if l.startswith('-'):
-                dependency_links.append(l.strip('\n').replace('-e ', ''))
-            else:
-                install_requires.append(l.strip('\n'))
-    install_requires.reverse()
+    install_requires = []
+    dependency_links = []
+    if os.path.isfile(requirements):
+        with open(requirements) as f:
+            for l in f:
+                if not l.strip('\n') or l.startswith('#'):
+                    continue
+                if l.startswith('-'):
+                    dependency_links.append(l.strip('\n').replace('-e ', ''))
+                else:
+                    install_requires.append(l.strip('\n'))
+        install_requires.reverse()
     return install_requires, dependency_links
+
 
 
 install_requires, dependency_links = parse_requirements('requirements.txt')
@@ -153,12 +155,14 @@ ifoukarakis@cloud.upwork.com, nmelnik@cloud.upwork.com',
     include_package_data=True,
     scripts=['trainer.py', 'predictor.py',
                'transformer.py', 'importhandler.py'],
-    package_dir={
-        'cloudml': 'cloudml'
-    },
-    package_data={
-        '': ['*.txt', '*.rst', 'schema.xsd']
-    },
+ #   package_dir={
+ #       'cloudml': 'cloudml'
+ #   },
+#    package_data={
+#        'cloudml': ['requirements.txt','cloudml/importhandler/templates/pig_template.txt', '*.rst', 'cloudml/importhandler/schema.xsd']
+#    },
+#    data_files=[ ('cloudml/importhandler/templates/', ['pig_template.txt']),
+#                 ('cloudml/importhandler/', [ 'schema.xsd'])],
     url='http://www.upwork.com',
     cmdclass={
         'test': NoseCommand,
@@ -172,7 +176,7 @@ ifoukarakis@cloud.upwork.com, nmelnik@cloud.upwork.com',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.7',
     ],
-    setup_requires=["numpy==1.7.1"],
+    setup_requires=["numpy==1.10.04"],
     install_requires=install_requires,
     dependency_links=dependency_links,
     tests_require=['nose', 'coverage', 'moto==0.3.3', 'mock==1.0.1']

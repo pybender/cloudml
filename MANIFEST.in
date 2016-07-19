@@ -1,0 +1,4 @@
+include LICENSE.txt
+include requirements.txt
+include cloudml/importhandler/templates/pig_template.txt
+include cloudml/importhandler/schema.xsd

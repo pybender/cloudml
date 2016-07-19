@@ -11,6 +11,8 @@ local_config.coffee
 ve
 src
 build
+dist
+
 *.sqlite
 
 **/.DS_Store
@@ -23,6 +25,7 @@ fabconf.py
 .settings
 .vagrant
 .idea/*
+.eggs
 
 node_modules/*
 npm-debug.log
