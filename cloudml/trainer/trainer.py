@@ -493,8 +493,7 @@ class Trainer(object):
                 if segment not in self._vect_data:
                     self._vect_data[segment] = defaultdict(list)
                     segments[segment] = 0
-                segments[segment] += 1
-                self._order_data.append(segment)
+                
                 from feature_types.categorical import CategoricalFeatureTypeInstance
                 for feature_name in self._feature_model.features:
                     if isinstance(self._feature_model.features[feature_name]['type'], CategoricalFeatureTypeInstance) and self._feature_model.features[feature_name]['type']._params:
@@ -512,7 +511,8 @@ class Trainer(object):
                     #     continue
                     self._vect_data[segment][feature_name].append(
                         data[feature_name])
-
+                segments[segment] += 1
+                self._order_data.append(segment)
                 if save_raw:
                     self._raw_data[segment].append(row)
 
