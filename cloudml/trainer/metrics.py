@@ -136,11 +136,14 @@ class ClassificationModelMetrics(BaseMetrics):
                       'confusion_matrix': 'Confusion Matrix',
                       'accuracy': 'Accuracy',
                       'average_precision': 'Avarage Precision',
-                      'precision_recall_curve': 'Precision-recall curve'}
+                      'precision_recall_curve': 'Precision-recall curve',
+                      'log_loss': 'Logistic (Cross-Entropy) Loss',
+                      }
     MORE_DIMENSIONAL_METRICS = {'confusion_matrix': 'Confusion Matrix',
                                 'accuracy': 'Accuracy',
                                 'roc_curve': 'ROC curve',
                                 'roc_auc': 'Area under ROC curve',
+                                'log_loss': 'Logistic (Cross-Entropy) Loss',
                                 }
     DEFAULTS = {'type': 'classification'}
 
@@ -230,6 +233,18 @@ class ClassificationModelMetrics(BaseMetrics):
             labels, preds = prepare_labels_preds(self._labels, self._preds)
             self._accuracy = sk_metrics.accuracy_score(labels, preds)
         return self._accuracy
+
+    @property
+    def log_loss(self):
+        if not hasattr(self, '_log_loss'):
+            # fit the dimensions ([n_samples, n_classes = len(set(_labels))])
+            probs = self._probs \
+                if self.classes_count == len(set(self._labels)) \
+                else [[prob[self.classes_set.index(c)]
+                       for c in self.classes_set if c in set(self._labels)]
+                      for prob in self._probs]
+            self._log_loss = sk_metrics.log_loss(self._labels, probs)
+        return self._log_loss
 
     def _get_metrics_names(self):
         if self.classes_count == 2:
