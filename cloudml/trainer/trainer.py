@@ -55,6 +55,7 @@ class Trainer(object):
         self.train_time = {}
         self._segments = {}
         self.visualization = {}
+        self._strict_mode = False
         self.intermediate_data = defaultdict(dict)
 
         self.model_visualizer = TrainedModelVisualizer.factory(self)
@@ -62,6 +63,9 @@ class Trainer(object):
     @property
     def classifier_type(self):
         return self._classifier_type
+
+    def set_strict_mode(self, value=True):
+        self._strict_mode = value
 
     @property
     def classifier(self):
@@ -752,8 +756,11 @@ class Trainer(object):
         3. If feature has a type with a default value, this one is used.
         """
         result = value
+        empty = is_empty(value)
+        if empty and self._strict_mode:
+            raise ItemParseException('Feature %s is emty' % feature['name'])
 
-        if is_empty(value):
+        if empty:
             if feature.get('default') is not None:
                 result = feature.get('default')
             elif feature.get('transformer-type') is not None and \

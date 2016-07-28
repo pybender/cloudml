@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.4.1
+---------
+* Feature - Added strict mode. In this mode does not use default values for required features
+
+
 0.4.0
 ---------
 * Task - Set params default values for all existing transformers
