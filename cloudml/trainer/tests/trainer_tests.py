@@ -378,6 +378,7 @@ class LogisticRegressionTrainerTestCase(BaseTrainerTestCase):
             metrics = self._trainer.test(self._data)
             self.assertIsInstance(metrics, ClassificationModelMetrics)
             self.assertEquals(metrics.accuracy, 1.0)
+            self.assertAlmostEquals(metrics.log_loss, 0.3, places=1)
             self.assertIsInstance(metrics.confusion_matrix, ndarray)
             precision, recall = metrics.precision_recall_curve
             self.assertIsInstance(precision, ndarray)
@@ -440,6 +441,7 @@ class LogisticRegressionTrainerTestCase(BaseTrainerTestCase):
         metrics = self._trainer.test(self._data)
         self.assertIsInstance(metrics, ClassificationModelMetrics)
         self.assertEquals(metrics.accuracy, 1.0)
+        self.assertFloatEqual(metrics.log_loss, 0.42220093627691441)
         self.assertIsInstance(metrics.confusion_matrix, ndarray)
         # precision, recall = metrics.precision_recall_curve
         # self.assertIsInstance(precision, ndarray)
@@ -527,6 +529,7 @@ class LogisticRegressionTrainerTestCase(BaseTrainerTestCase):
         #
         self.assertIsInstance(metrics, ClassificationModelMetrics)
         self.assertEquals(metrics.accuracy, 1.0)
+        self.assertFloatEqual(metrics.log_loss, 0.31950270999559421)
         self.assertIsInstance(metrics.confusion_matrix, ndarray)
         for pos_label in metrics.classes_set:
             self.assertFalse(numpy.all(numpy.isnan(
