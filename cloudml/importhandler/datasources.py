@@ -522,8 +522,7 @@ class PigDataSource(BaseDataSource):
                         'Jobflow status is unexpected: %s', state)
 
                 if state == 'COMPLETED' or \
-                        (state == 'WAITING'
-                            and step_state == 'COMPLETED'):
+                        (state == 'WAITING' and step_state == 'COMPLETED'):
                     break  # job is completed -> no need check status
 
                 previous_state = state
@@ -654,11 +653,11 @@ class PigDataSource(BaseDataSource):
             BootstrapActions=bootstrap_actions,
             Instances={
                 'Ec2KeyName': self.ec2_keyname,
-                #'KeepJobFlowAliveWhenNoSteps': self.keep_alive,
+                # 'KeepJobFlowAliveWhenNoSteps': self.keep_alive,
                 'MasterInstanceType': self.master_instance_type,
                 'SlaveInstanceType': self.slave_instance_type,
                 'InstanceCount': int(self.num_instances),
-                #'Ec2SubnetId': 'subnet-3f5bc256',
+                # 'Ec2SubnetId': 'subnet-3f5bc256',
             },
             JobFlowRole='EMR_EC2_DefaultRole',
             ServiceRole='EMR_DefaultRole',

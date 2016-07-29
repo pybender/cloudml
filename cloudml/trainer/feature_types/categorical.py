@@ -24,7 +24,7 @@ class CategoricalFeatureTypeInstance(FeatureTypeInstanceBase):
 
 
 class CategoricalFeatureType(FeatureTypeBase):
-    optional_params = ['exclude','categories','split_pattern', 'min_df']
+    optional_params = ['exclude', 'categories', 'split_pattern', 'min_df']
     instance = CategoricalFeatureTypeInstance
 
     def get_instance(self, params, input_format=None):

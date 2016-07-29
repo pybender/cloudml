@@ -221,7 +221,6 @@ class FeatureModel(object):
                                           'scaler': scaler,
                                           'default': default}
 
-
     def __str__(self):
         """
         Returns a string with information about this configuration.
