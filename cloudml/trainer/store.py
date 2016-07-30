@@ -24,15 +24,15 @@ class TrainerStorage(object):
         self.version = __version__
 
     @classmethod
-    def load(cls, fp):
-        return cls._load(fp)
+    def load(cls, fp, load_classifier=True, load_visualisation=True):
+        return cls._load(fp, load_classifier, load_visualisation)
 
     @classmethod
-    def loads(cls, s):
-        return cls._load(s)
+    def loads(cls, s, load_classifier=True, load_visualisation=True):
+        return cls._load(s, load_classifier, load_visualisation)
 
     @classmethod
-    def _load(cls, storage):
+    def _load(cls, storage, load_classifier=True, load_visualisation=True):
         try:
             if isinstance(storage, basestring):
                 storage = pickle.loads(storage)
@@ -42,15 +42,17 @@ class TrainerStorage(object):
             raise InvalidTrainerFile("Could not unpickle trainer - %s" % exc)
         trainer = Trainer(storage._feature_model)
         if hasattr(storage, "_features"):
-            trainer.set_classifier(storage._classifier)
+            if load_classifier:
+                trainer.set_classifier(storage._classifier)
             trainer.set_features(storage._features)
             if hasattr(storage, "_segments"):
                 trainer._segments = storage._segments
-            if hasattr(storage, "visualization"):
+            if hasattr(storage, "visualization") and load_visualisation:
                 trainer.visualization = storage.visualization
         else:
             trainer._feature_model.group_by = []
-            trainer.set_classifier({"default": storage._classifier})
+            if load_classifier:
+                trainer.set_classifier({"default": storage._classifier})
             trainer.set_features({"default": storage._feature_model.features})
 
         return trainer
@@ -67,5 +69,5 @@ def store_trainer(trainer, fp):
     storage.dump(fp)
 
 
-def load_trainer(fp):
-    return TrainerStorage.load(fp)
+def load_trainer(fp, load_classifier=True, load_visualisation=True):
+    return TrainerStorage.load(fp, load_classifier, load_visualisation)
