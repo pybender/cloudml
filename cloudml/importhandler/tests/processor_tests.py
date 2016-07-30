@@ -288,7 +288,8 @@
 #         }
 
 #         result = process_composite('should ignore', item, row_data)
-#         self.assertDictEqual(result, {'test.feature1': '\xe2\x80\x99 value 4'})
+#         self.assertDictEqual(result, {'test.feature1':
+#                                       '\xe2\x80\x99 value 4'})
 #         script_manager = ScriptManager()
 #         script_manager.add_python("""def intToBoolean(a):
 #             return a == 1

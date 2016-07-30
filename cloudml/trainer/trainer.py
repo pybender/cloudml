@@ -24,8 +24,8 @@ from feature_types import FEATURE_TYPE_DEFAULTS
 from classifier_settings import TYPE_CLASSIFICATION
 from transformers import TRANSFORMERS, SuppressTransformer
 from model_visualization import TrainedModelVisualizer
-from exceptions import ItemParseException, ItemParseIgnore, EmptyDataException, \
-    TransformerNotFound
+from exceptions import ItemParseException, ItemParseIgnore, \
+    EmptyDataException, TransformerNotFound
 from utils import is_empty
 
 DEFAULT_SEGMENT = 'default'
@@ -497,18 +497,25 @@ class Trainer(object):
                 if segment not in self._vect_data:
                     self._vect_data[segment] = defaultdict(list)
                     segments[segment] = 0
-                
-                from feature_types.categorical import CategoricalFeatureTypeInstance
+
+                from feature_types.categorical import \
+                    CategoricalFeatureTypeInstance
                 for feature_name in self._feature_model.features:
                     if isinstance(self._feature_model.features[feature_name]['type'], CategoricalFeatureTypeInstance) and self._feature_model.features[feature_name]['type']._params:
                         categories = self._feature_model.features[feature_name]['type']._params.get('categories', None)
                         exclude = self._feature_model.features[feature_name]['type']._params.get('exclude', False)
-                        if exclude and categories and data[feature_name] in categories:
-                            raise ItemParseIgnore("Item will be exclude: '%s' feature value is '%s',"
-                             "but should not be in %s" % (feature_name, data[feature_name], categories))
-                        elif not exclude and categories and data[feature_name] not in categories:
-                            raise ItemParseIgnore("Item not in categories: '%s' feature value is '%s',"
-                             "but should be in %s" % (feature_name, data[feature_name], categories))
+                        if exclude and categories and \
+                                data[feature_name] in categories:
+                            raise ItemParseIgnore(
+                                "Item will be exclude: '%s' feature value is "
+                                "'%s', but should not be in %s" %
+                                (feature_name, data[feature_name], categories))
+                        elif not exclude and categories and \
+                                data[feature_name] not in categories:
+                            raise ItemParseIgnore(
+                                "Item not in categories: '%s' feature value is"
+                                " '%s', but should be in %s" %
+                                (feature_name, data[feature_name], categories))
 
                 for feature_name in self._feature_model.features:
                     # if feature_name in self._feature_model.group_by:
@@ -523,7 +530,7 @@ class Trainer(object):
                 if callback is not None:
                     callback(row)
             except ItemParseIgnore, e:
-                #logging.debug('Ignoring item #%d: %s', self._count, e)
+                # logging.debug('Ignoring item #%d: %s', self._count, e)
                 if ignore_error:
                     self._ignored += 1
                 else:

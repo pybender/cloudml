@@ -174,7 +174,6 @@ def autoload_fields_by_row(entity, row, prefix=''):
                         'column': key,
                         'transform': 'json'}, entity)
                     if key not in entity.nested_entities_field_ds:
-                        #print "not in"
                         json_entity = Entity(dict(name=key, datasource=key))
                         autoload_fields_by_row(
                             json_entity, item_dict, prefix='{0}.'.format(key))

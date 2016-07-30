@@ -3,6 +3,7 @@ Changelog
 
 0.4.1
 ---------
+* Task - Added log loss metric
 * Feature - Added strict mode. In this mode does not use default values for required features
 
 

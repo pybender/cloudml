@@ -62,6 +62,7 @@ class PigXMLPlanTest(unittest.TestCase):
         row = self._extractor.next()
         self.assertEquals(row['opening_id'], 57)
 
+
 @urlmatch(netloc='test.odesk.com:11000')
 def http_mock(url, request):
     if url.path == '/opening/f/something.json':
