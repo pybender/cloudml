@@ -730,7 +730,8 @@ class Trainer(object):
                 self._feature_model.target_variable == feature_name and \
                     not is_predict:
                 raise ItemParseException('Target feature is null')
-            if feature.get('required', True):
+            if feature.get('required', True) and not (self._feature_model.target_variable == feature_name and \
+                    is_predict):
                 item = self._find_default(item, feature)
             input_format = feature.get('input-format', 'plain')
             if ft is not None:
