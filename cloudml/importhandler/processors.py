@@ -10,13 +10,22 @@ import re
 import math
 import datetime
 import logging
-from jsonpath import jsonpath
+from jsonpath_rw import parse
 from sklearn.feature_extraction.readability import Readability
 
 from exceptions import ProcessException
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
+
+
+def jsonpath(obj, path):
+    """JSONPath adapter"""
+    path_expr = parse(path)
+    res = path_expr.find(obj)
+    if res:
+        return [match.value for match in res]
+    return False
 
 
 def process_key_value(key_path, value_path, value):  # pragma: no cover

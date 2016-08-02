@@ -21,7 +21,7 @@
       <entity datasource="contractor_info" name="contractor_info">
         <field join="," jsonpath="$.skills.*.skl_name" name="contractor.skills"/>
         <field jsonpath="$.tsexams" name="tsexams">
-          <script><![CDATA[process_key_value("$.*.ts_name", "$.*.ts_score", #{value})]]></script>
+          <script><![CDATA[process_key_value("$[*].ts_name", "$..ts_score", #{value})]]></script>
         </field>
         <field jsonpath="$.dev_adj_score_recent" name="contractor.dev_adj_score_recent"/>
         <field jsonpath="$.dev_is_looking" name="contractor.dev_is_looking"/>

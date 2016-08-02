@@ -8,7 +8,7 @@
   </datasources>
   <import>
     <entity datasource="input" query="contractor_info" name="contractor_info">
-      <field join="," jsonpath="$.skills.*.skl_name" name="contractor.skills"/>
+      <field join="," jsonpath="$.skills..skl_name" name="contractor.skills"/>
     </entity>
   </import>
 </plan>

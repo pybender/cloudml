@@ -11,7 +11,7 @@ import logging
 from cloudml.trainer.config import FeatureModel
 from cloudml.trainer.trainer import Trainer, DEFAULT_SEGMENT, \
     _adjust_classifier_class
-from jsonpath import jsonpath
+from cloudml.importhandler.processors import jsonpath
 from cloudml.trainer.store import store_trainer, load_trainer
 from cloudml.trainer.streamutils import streamingiterload
 from cloudml.tests.test_utils import get_iterator
@@ -330,8 +330,8 @@ class LogisticRegressionTrainerTestCase(BaseTrainerTestCase):
                 self.assertIn('positive', weights)
                 self.assertIn('negative', weights)
 
-                container = jsonpath(weights['negative'], '$.*.name') + \
-                    jsonpath(weights['positive'], '$.*.name')
+                container = jsonpath(weights['negative'], '$..name') + \
+                    jsonpath(weights['positive'], '$..name')
                 for item in expected:
                     self.assertIn(item, container,
                                   'Item %s not in weights!' % item)
