@@ -8,7 +8,7 @@ from collections import OrderedDict
 import logging
 from datetime import datetime
 import re
-from jsonpath import jsonpath
+from cloudml.jsonpath import jsonpath
 
 from exceptions import ProcessException, ImportHandlerException
 from utils import ParametrizedTemplate, PROCESS_STRATEGIES, \

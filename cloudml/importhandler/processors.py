@@ -10,7 +10,7 @@ import re
 import math
 import datetime
 import logging
-from jsonpath import jsonpath
+from cloudml.jsonpath import jsonpath
 from sklearn.feature_extraction.readability import Readability
 
 from exceptions import ProcessException

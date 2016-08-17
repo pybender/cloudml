@@ -11,7 +11,7 @@ import logging
 from cloudml.trainer.config import FeatureModel
 from cloudml.trainer.trainer import Trainer, DEFAULT_SEGMENT, \
     _adjust_classifier_class
-from jsonpath import jsonpath
+from cloudml.jsonpath import jsonpath
 from cloudml.trainer.store import store_trainer, load_trainer
 from cloudml.trainer.streamutils import streamingiterload
 from cloudml.tests.test_utils import get_iterator

@@ -1,6 +1,10 @@
 Changelog
 =========
 
+0.4.2
+---------
+* Support - Removed jsonpath from requirements and temporary included it to project
+
 0.4.1
 ---------
 * Task - Added log loss metric
