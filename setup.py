@@ -123,24 +123,6 @@ class CoverageCommand(Command):
         cov.save()
 
 
-class SonarCommand(Command):
-    description = 'generate sonar report'
-    user_options = []
-
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        cc = CoverageCommand(self.distribution)
-        cc.run()
-        os.system(
-            'sonar-runner'
-            ' -Dproject.settings=scripts/sonar-project.properties'
-        )
-
 setup(
     name='cloudml',
     version=read_version_string(),
@@ -155,19 +137,10 @@ ifoukarakis@cloud.upwork.com, nmelnik@cloud.upwork.com',
     include_package_data=True,
     scripts=['trainer.py', 'predictor.py',
                'transformer.py', 'importhandler.py'],
- #   package_dir={
- #       'cloudml': 'cloudml'
- #   },
-#    package_data={
-#        'cloudml': ['requirements.txt','cloudml/importhandler/templates/pig_template.txt', '*.rst', 'cloudml/importhandler/schema.xsd']
-#    },
-#    data_files=[ ('cloudml/importhandler/templates/', ['pig_template.txt']),
-#                 ('cloudml/importhandler/', [ 'schema.xsd'])],
     url='http://www.upwork.com',
     cmdclass={
         'test': NoseCommand,
-        'coverage': CoverageCommand,
-        'sonar': SonarCommand
+        'coverage': CoverageCommand
     },
     classifiers=[
         'Environment :: Console',
