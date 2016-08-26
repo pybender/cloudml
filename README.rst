@@ -1,6 +1,8 @@
-# CloudML
+CloudML
+=======
 
-## A set of tools that allow building a classifier on the cloud.
+A set of tools that allow building a classifier on the cloud.
+
 
 It consists of three components:
 
@@ -8,18 +10,22 @@ It consists of three components:
 2. Trainer: which receives data from the import handler and trains a classifier to produce a classification model.
 3. Predictor: which uses a model produced by the trainer in order to predict the class of incoming requests.
 
-## The Latest Version
+The Latest Version
+------------------
 
 Details of the latest version can be found on the CloudML project GitHub page: https://github.com/odeskdataproducts/cloudml.
 
-## Documentation
+Documentation
+-------------
 
 The documentation available as of the date of this release is included in HTML format in the doc/_build/ directory.
 
-## Installation
+Installation
+------------
 
 Please see the documentation page called install. The platform specific notes also could be found in this page.
 
-## Licensing
+Licensing
+---------
 
 Please see the file called LICENSE.
