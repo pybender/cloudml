@@ -19,7 +19,7 @@ Documentation
 -------------
 
 The documentation available `here 
-<http://cloudml.readthedocs.io/en/latest/>`_.. .
+<http://cloudml.readthedocs.io/en/latest/>`_ .
 
 Installation
 ------------
