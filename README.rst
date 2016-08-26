@@ -18,7 +18,7 @@ Details of the latest version can be found on the CloudML project GitHub page: h
 Documentation
 -------------
 
-The documentation available as of the date of this release is included in HTML format in the doc/_build/ directory.
+The documentation available .. _here: http://cloudml.readthedocs.io/en/latest/.
 
 Installation
 ------------
