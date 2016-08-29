@@ -144,7 +144,7 @@ ifoukarakis@cloud.upwork.com, nmelnik@cloud.upwork.com',
     },
     classifiers=[
         'Environment :: Console',
-        'Intended Audience :: Match team',
+        'Intended Audience :: Information Technology',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.7',
