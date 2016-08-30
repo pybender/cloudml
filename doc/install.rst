@@ -38,8 +38,7 @@ Ubuntu
     $ export LAPACK=/usr/lib/liblapack.so
     $ export ATLAS=/usr/lib/libatlas.so
     $ export BLAS=/usr/lib/libblas.so
-    $ pip install numpy==1.7.1
-    $ pip install scipy==0.12.0
+    $ pip install numpy==1.10.04
 
 
 3. Install CloudML with pip:
@@ -57,6 +56,13 @@ In order to build CloudML from the source package, download the source package f
 
 Mac OSX
 -------
+
+Install CloudML with pip:
+
+.. code-block:: console
+
+    $ pip install cloudml
+
 
 Windows
 -------
