@@ -534,13 +534,13 @@ class Trainer(object):
                 if ignore_error:
                     self._ignored += 1
                 else:
-                    raise e
+                    raise ItemParseIgnore(e.message, e)
             except ItemParseException, e:
                 logging.debug('Ignoring item #%d: %s', self._count, e)
                 if ignore_error:
                     self._ignored += 1
                 else:
-                    raise e
+                    raise ItemParseException(e.message, e)
         return segments
 
     def _get_segments_info(self):
@@ -749,7 +749,7 @@ class Trainer(object):
                 except Exception as e:
                     raise ItemParseException(
                         'Error processing feature %s: %s' %
-                        (feature_name, e))
+                        (feature_name, e), e)
             else:
                 result[feature_name] = item
         return result

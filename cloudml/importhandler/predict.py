@@ -41,7 +41,7 @@ class Weight(object):
         except Exception, exc:
             raise ImportHandlerException(
                 'Invalid predict model weight: {0}.'
-                'Should be a float value.'.format(config.get('value')))
+                'Should be a float value.'.format(config.get('value')), exc)
 
 
 class ResultLabel(object):

@@ -14,10 +14,11 @@ import logging
 from cloudml.importhandler.importhandler import ImportHandlerException, \
     ExtractionPlan, ImportHandler
 from cloudml.utils import init_logging
-
+from cloudml import print_exception
 
 DONE = 0
 INVALID_EXTRACTION_PLAN = 1
+IMPORT_HANDLER_ERROR = 2
 
 
 def main(argv=None):
@@ -25,32 +26,39 @@ def main(argv=None):
     args = parser.parse_args(argv)
     init_logging(args.debug)
 
-    if args.user_params is not None:
-        param_list = [x.split('=', 1) for x in args.user_params]
-        context = dict((key, value) for (key, value) in param_list)
-    else:
-        context = {}
-
-    logging.info('User-defined parameters:')
-    for key, value in context.items():
-        logging.info('%s --> %s' % (key, value))
-
     try:
-        plan = ExtractionPlan(args.path)
-        extractor = ImportHandler(plan, context)
+        if args.user_params is not None:
+            param_list = [x.split('=', 1) for x in args.user_params]
+            context = dict((key, value) for (key, value) in param_list)
+        else:
+            context = {}
 
-    except ImportHandlerException, e:
-        logging.warn('Invalid extraction plan: {}'.format(e.message))
-        return INVALID_EXTRACTION_PLAN
+        logging.info('User-defined parameters:')
+        for key, value in context.items():
+            logging.info('%s --> %s' % (key, value))
 
-    if args.output is not None:
-        logging.info('Storing data to %s...' % args.output)
-        getattr(extractor,
-                'store_data_{}'.format(args.format),
-                extractor.store_data_json)(args.output)
+        try:
+            plan = ExtractionPlan(args.path)
+            extractor = ImportHandler(plan, context)
 
-        logging.info('Total %s lines' % (extractor.count, ))
-        logging.info('Ignored %s lines' % (extractor.ignored, ))
+        except ImportHandlerException, e:
+            logging.warn('Invalid extraction plan: {}'.format(e.message))
+            print_exception(e)
+            return INVALID_EXTRACTION_PLAN
+
+        if args.output is not None:
+            logging.info('Storing data to %s...' % args.output)
+            getattr(extractor,
+                    'store_data_{}'.format(args.format),
+                    extractor.store_data_json)(args.output)
+
+            logging.info('Total %s lines' % (extractor.count, ))
+            logging.info('Ignored %s lines' % (extractor.ignored, ))
+    except Exception, e:
+        logging.warn('Error processing import handler: {}'.format(e.message))
+        print_exception(e)
+        return IMPORT_HANDLER_ERROR
+
     return DONE
 
 

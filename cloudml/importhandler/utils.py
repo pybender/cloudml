@@ -5,7 +5,7 @@ import os
 from string import Template
 from datetime import datetime
 from ..utils import isint, isfloat, process_bool
-
+from cloudml.importhandler.exceptions import ProcessException
 
 class ParametrizedTemplate(Template):
     delimiter = '#'
@@ -198,8 +198,8 @@ def load_json(val):
     if isinstance(val, basestring):
         try:
             return json.loads(val)
-        except:
+        except Exception as e:
             from exceptions import ProcessException
             raise ProcessException(
-                'Couldn\'t parse JSON message: {}'.format(val))
+                'Couldn\'t parse JSON message: {}'.format(val), e)
     return val

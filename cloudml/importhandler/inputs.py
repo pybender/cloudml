@@ -52,9 +52,9 @@ invalid: %s. Choose one of %s' % (self.name, self.type, types))
 doesn't match to regular expression %s: %s" % (self.name, self.regex, value))
         try:
             return strategy(value, format=self.format)
-        except ValueError:
+        except ValueError as e:
             raise ImportHandlerException(
                 'Value of the input parameter %s is invalid %s%s: %s' %
                 (self.name, self.type,
                  " in format %s" % self.format if self.format else "",
-                 value))
+                 value), e)

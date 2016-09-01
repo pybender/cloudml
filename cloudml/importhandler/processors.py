@@ -29,9 +29,9 @@ def process_key_value(key_path, value_path, value):  # pragma: no cover
     try:
         values = map(float, jsonpath(value, value_path))
     except ValueError as e:
-        raise ProcessException(e)
+        raise ProcessException(e, e)
     except TypeError as e:
-        raise ProcessException(e)
+        raise ProcessException(e, e)
     if keys is not False and values is not False:
         result = dict(zip(keys, values))
     else:
@@ -48,10 +48,10 @@ def composite_python(expression_value, value, row_data):  # pragma: no cover
     res = composite_string(expression_value, value, row_data)
     try:
         return eval(res)
-    except Exception:
-        logging.exception(
+    except Exception as e:
+        logging.error(
             'Expression template %s, expression %s' % (expression_value, res))
-        raise
+        raise ProcessException(e.message, e)
 
 
 def composite_readability(expression_value, value,
