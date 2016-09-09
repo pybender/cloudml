@@ -3,6 +3,7 @@ Changelog
 
 0.4.2
 ---------
+* Task - Added chained exceptions with traceback info
 * Support - Removed jsonpath from requirements and temporary included it to project
 
 0.4.1

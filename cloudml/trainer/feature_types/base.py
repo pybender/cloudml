@@ -1,13 +1,14 @@
 # Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
+from cloudml import ChainedException
 
 
-class InvalidFeatureTypeException(Exception):
+class InvalidFeatureTypeException(ChainedException):
     """
     Exception to be raised if there is an error parsing or using the
     configuration.
     """
-    def __init__(self, message, Errors=None):
-        super(InvalidFeatureTypeException, self).__init__(message)
+    def __init__(self, message, chain=None, Errors=None):
+        super(InvalidFeatureTypeException, self).__init__(message, chain)
         self.Errors = Errors
 
 
