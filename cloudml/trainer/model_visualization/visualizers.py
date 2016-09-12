@@ -1,11 +1,12 @@
 # Author: Nikolay Melnik <nmelnik@cloud.upwork.com>
+import logging
 
-from ..classifier_settings import LOGISTIC_REGRESSION, SVR, \
-    SGD_CLASSIFIER, DECISION_TREE_CLASSIFIER, \
-    GRADIENT_BOOSTING_CLASSIFIER, EXTRA_TREES_CLASSIFIER, \
-    RANDOM_FOREST_CLASSIFIER, RANDOM_FOREST_REGRESSOR
+from ..classifier_settings import (LOGISTIC_REGRESSION, SVR,
+                                   SGD_CLASSIFIER, DECISION_TREE_CLASSIFIER,
+                                   GRADIENT_BOOSTING_CLASSIFIER, EXTRA_TREES_CLASSIFIER,
+                                   RANDOM_FOREST_CLASSIFIER, RANDOM_FOREST_REGRESSOR,
+                                   XGBOOST_REGRESSOR, XGBOOST_CLASSIFIER)
 from weights import WeightsCalculator, SVRWeightsCalculator
-
 
 class BaseTrainedModelVisualizer(object):
     WEIGHTS_CLS = WeightsCalculator
@@ -30,6 +31,11 @@ class BaseTrainedModelVisualizer(object):
 class LRTrainingVisualizer(BaseTrainedModelVisualizer):
     pass
 
+class XGBOOSTTrainingVisualizer(BaseTrainedModelVisualizer):
+    logging.info('Visualize model: XGBOOSTTrainingVisualizer')
+
+class XGBOOSTTrainingRegressorVisualizer(BaseTrainedModelVisualizer):
+    logging.info('Visualize model: XGBOOSTTrainingRegressorVisualizer')
 
 class SVRTrainingVisualizer(BaseTrainedModelVisualizer):
     WEIGHTS_CLS = SVRWeightsCalculator
@@ -143,9 +149,10 @@ class Visualizer(object):
         GRADIENT_BOOSTING_CLASSIFIER: GBTrainingVisualizer,
         EXTRA_TREES_CLASSIFIER: ExtraTreesTrainingVisualizer,
         RANDOM_FOREST_CLASSIFIER: RandomForestTrainingVisualizer,
-        RANDOM_FOREST_REGRESSOR: RandomForestRegressorTV
+        RANDOM_FOREST_REGRESSOR: RandomForestRegressorTV,
+        XGBOOST_REGRESSOR: XGBOOSTTrainingVisualizer,
+        XGBOOST_CLASSIFIER: XGBOOSTTrainingRegressorVisualizer
     }
-
     @classmethod
     def factory(cls, trainer):
         return cls.TRAINING_VISUALIZER_DICT[trainer.classifier_type](trainer)

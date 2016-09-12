@@ -15,6 +15,9 @@ DECISION_TREE_REGRESSOR = 'decision tree regressor'
 # don't support sparse matrix
 GRADIENT_BOOSTING_CLASSIFIER = 'gradient boosting classifier'
 
+XGBOOST_REGRESSOR = "xgboost regressor"
+XGBOOST_CLASSIFIER = "xgboost classifier"
+
 EXTRA_TREES_CLASSIFIER = 'extra trees classifier'
 RANDOM_FOREST_CLASSIFIER = 'random forest classifier'
 RANDOM_FOREST_REGRESSOR = 'random forest regressor'
@@ -22,8 +25,8 @@ RANDOM_FOREST_REGRESSOR = 'random forest regressor'
 CLASSIFIER_MODELS = (
     LOGISTIC_REGRESSION, SGD_CLASSIFIER, DECISION_TREE_CLASSIFIER,
     EXTRA_TREES_CLASSIFIER, RANDOM_FOREST_CLASSIFIER,
-    GRADIENT_BOOSTING_CLASSIFIER)
-REGRESSION_MODELS = (SVR, DECISION_TREE_REGRESSOR, RANDOM_FOREST_REGRESSOR)
+    GRADIENT_BOOSTING_CLASSIFIER, XGBOOST_CLASSIFIER)
+REGRESSION_MODELS = (SVR, DECISION_TREE_REGRESSOR, RANDOM_FOREST_REGRESSOR, XGBOOST_REGRESSOR)
 
 
 TYPE_CLASSIFICATION = 'classification'
@@ -182,9 +185,52 @@ The newton-cg and lbfgs solvers support only l2 penalties.'},
             Params.max_leaf_nodes, Params.bootstrap,
             Params.oob_score, Params.n_jobs,
             Params.random_state, Params.verbose,
-            Params.warm_start]}
+            Params.warm_start]},
+    XGBOOST_REGRESSOR:{
+        'cls': 'xgboost.XGBRegressor',
+        'parameters': [
+            {'name': 'max_depth', 'type': 'int', 'default': 3},
+            {'name': 'learning_rate', 'type': 'float', 'default': 0.1},
+            {'name': 'n_estimators', 'type': 'int', 'default': 100},
+            {'name': 'silent', 'type': 'boolean', 'default': True},
+            {'name': 'objective', 'type': 'string', 'default': 'reg:linear'},
+            {'name': 'nthread', 'type': 'int', 'default': -1},
+            {'name': 'gamma', 'type': 'float', 'default': 0},
+            {'name': 'min_child_weight', 'type': 'int', 'default': 1},
+            {'name': 'max_delta_step', 'type': 'int', 'default': 0},
+            {'name': 'subsample', 'type': 'float', 'default': 1},
+            {'name': 'colsample_bytree', 'type': 'float', 'default': 1},
+            {'name': 'colsample_bylevel', 'type': 'float', 'default': 1},
+            {'name': 'reg_alpha', 'type': "float", 'default': 0},
+            {'name': 'reg_lambda', 'type': "float", 'default': 1},
+            {'name': 'scale_pos_weight', 'type': "float", 'default': 1},
+            {'name': 'base_score', 'type': "float", 'default': 0.5},
+            {'name': 'seed', 'type': "int", 'default': 0},
+            {'name': 'missing', 'type': "float", 'default': None}
+        ]},
+    XGBOOST_CLASSIFIER:{
+        'cls': 'xgboost.XGBClassifier',
+        'parameters': [
+            {'name': 'max_depth', 'type': 'int', 'default': 3},
+            {'name': 'learning_rate', 'type': 'float', 'default': 0.1},
+            {'name': 'n_estimators', 'type': 'int', 'default': 100},
+            {'name': 'silent', 'type': 'boolean', 'default': True},
+            {'name': 'objective', 'type': 'string', 'default': 'binary:logistic'},
+            {'name': 'nthread', 'type': 'int', 'default': -1},
+            {'name': 'gamma', 'type': 'float', 'default': 0},
+            {'name': 'min_child_weight', 'type': 'int', 'default': 1},
+            {'name': 'max_delta_step', 'type': 'int', 'default': 0},
+            {'name': 'subsample', 'type': 'float', 'default': 1},
+            {'name': 'colsample_bytree', 'type': 'float', 'default': 1},
+            {'name': 'colsample_bylevel', 'type': 'float', 'default': 1},
+            {'name': 'reg_alpha', 'type': "float", 'default': 0},
+            {'name': 'reg_lambda', 'type': "float", 'default': 1},
+            {'name': 'scale_pos_weight', 'type': "float", 'default': 1},
+            {'name': 'base_score', 'type': "float", 'default': 0.5},
+            {'name': 'seed', 'type': "int", 'default': 0},
+            {'name': 'missing', 'type': "float", 'default': None}
+        ]}
 }
-
 
 def get_model_type(classifier_type):
     """

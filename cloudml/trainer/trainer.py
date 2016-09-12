@@ -190,6 +190,9 @@ class Trainer(object):
         if segment != DEFAULT_SEGMENT:
             self._classifier[segment] = \
                 deepcopy(self._classifier[DEFAULT_SEGMENT])
+        print ("self._classifier:", self._classifier)
+        print ("segment:", segment)
+        print ("true_data:", true_data)
         self._classifier[segment].fit(true_data, [str(l) for l in labels])
         log_memory_usage("Memory usage (model fitted with true data)")
 
