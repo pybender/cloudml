@@ -149,7 +149,7 @@ ifoukarakis@cloud.upwork.com, nmelnik@cloud.upwork.com',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.7',
     ],
-    setup_requires=["numpy==1.10.04"],
+    #setup_requires=["numpy==1.10.04"],
     install_requires=install_requires,
     dependency_links=dependency_links,
     tests_require=['nose', 'coverage', 'moto==0.3.3', 'mock==1.0.1']
