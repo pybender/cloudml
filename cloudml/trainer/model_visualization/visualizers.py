@@ -160,8 +160,6 @@ class XGBClassifierTree():
 
 class XGBOOSTTrainingVisualizer(BaseTrainedModelVisualizer):
     def regenerate_trees(self, segment, weights):
-        logging.info('XGBOOSTTrainingVisualizer:  regenerate_trees')
-        logging.info('XGBOOSTTrainingVisualizer regenerate_trees  weights:  %s' % weights)
         clf = self._trainer.get_classifier(segment)
         xgbtree = XGBClassifierTree(clf)
         xgbtree.parse_graph()
@@ -169,7 +167,6 @@ class XGBOOSTTrainingVisualizer(BaseTrainedModelVisualizer):
         return trees
 
     def get_visualization(self, segment, **kwargs):
-        logging.info('XGBOOSTTrainingVisualizer: get_visualization')
         res = super(XGBOOSTTrainingVisualizer,self).get_visualization(segment)
         weights = self.weights_calc.get_weights(segment, signed=False)
         res['trees'] = self.regenerate_trees(segment, weights)
@@ -217,16 +214,13 @@ class SGDTrainingVisualizer(BaseTrainedModelVisualizer):
 
 class DecisionTreeTrainingVisualizer(BaseTrainedModelVisualizer):
     DEFAULT_DEEP = 100
-    logging.info('Visualize model: DecisionTreeTrainingVisualizer')
 
     def regenerate_tree(self, segment, weights, deep=DEFAULT_DEEP):
         from utils import build_tree
-        logging.info('Visualize model: regenerate_tree')
         clf = self._trainer.get_classifier(segment)
         return build_tree(clf.tree_, weights, max_deep=deep)
 
     def get_visualization(self, segment, deep=DEFAULT_DEEP):
-        logging.info('Visualize model: get_visualization')
         res = super(DecisionTreeTrainingVisualizer,
                     self).get_visualization(segment)
         weights = self.weights_calc.get_weights(segment, signed=False)
@@ -245,9 +239,7 @@ class GBTrainingVisualizer(BaseTrainedModelVisualizer):
 
 class ExtraTreesTrainingVisualizer(BaseTrainedModelVisualizer):
     DEFAULT_DEEP = 100
-    logging.info('Visualize model: ExtraTreesTrainingVisualizer')
     def regenerate_trees(self, segment, weights, deep=DEFAULT_DEEP):
-        logging.info('Visualize model: ExtraTreesTrainingVisualizer: regenerate_trees')
         from utils import build_tree
         trees = []
         trees_clf = self._trainer.get_classifier(segment)
@@ -259,13 +251,11 @@ class ExtraTreesTrainingVisualizer(BaseTrainedModelVisualizer):
                 max_deep=deep
             )
             trees.append(tree)
-            logging.info(tree)
         return trees
 
     def get_visualization(self, segment, deep=DEFAULT_DEEP):
         res = super(ExtraTreesTrainingVisualizer,
                     self).get_visualization(segment)
-        logging.info('Visualize model: ExtraTreesTrainingVisualizer: get_visualization')
         weights = self.weights_calc.get_weights(segment, signed=False)
         res['trees'] = self.regenerate_trees(segment, weights, deep)
         return res
