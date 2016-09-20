@@ -20,7 +20,7 @@
             user="postgres"
             password="postgres"
             vendor="postgres" />
-        <pig amazon_access_token="AKIAJYNNIPFWF2ABW42Q" amazon_token_secret="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" bucket_name="odesk-match-prod" ec2_keyname="cloudml-control" hadoop_params="-m,mapreduce.map.java.opts=-Xmx864m,-m,mapreduce.reduce.java.opts=-Xmx1536m,-m,mapreduce.map.memory.mb=1024,-m,mapreduce.reduce.memory.mb=2048,-y,yarn.nodemanager.resource.memory-mb=18226" keep_alive="true" master_instance_type="c3.2xlarge" name="pig" num_instances="2" slave_instance_type="c3.4xlarge"/>
+        <pig amazon_access_token="token" amazon_token_secret="secret" bucket_name="odesk-match-prod" ec2_keyname="cloudml-control" hadoop_params="-m,mapreduce.map.java.opts=-Xmx864m,-m,mapreduce.reduce.java.opts=-Xmx1536m,-m,mapreduce.map.memory.mb=1024,-m,mapreduce.reduce.memory.mb=2048,-y,yarn.nodemanager.resource.memory-mb=18226" keep_alive="true" master_instance_type="c3.2xlarge" name="pig" num_instances="2" slave_instance_type="c3.4xlarge"/>
 
     </datasources>
 
