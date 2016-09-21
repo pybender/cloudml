@@ -1,9 +1,13 @@
 Changelog
 =========
 
-0.4.2
+0.4.3
 ---------
 * Task - Added chained exceptions with traceback info
+* Support - Migrated pigdatasource to aws.describe_cluster method
+
+0.4.2
+---------
 * Support - Removed jsonpath from requirements and temporary included it to project
 
 0.4.1

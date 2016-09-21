@@ -481,9 +481,9 @@ class PigDataSource(BaseDataSource):
         while True:
             time.sleep(10)
             try:
-                res = self.emr.describe_job_flows(JobFlowIds=[self.jobid])
-            except ClientError:
-                logging.info("Getting throttled. Sleeping for 10 secs.")
+                res = self.emr.describe_cluster(ClusterId=self.jobid)
+            except ClientError as e:
+                logging.exception("Getting throttled. Sleeping for 10 secs.")
                 time.sleep(10)
                 continue
 
@@ -491,7 +491,7 @@ class PigDataSource(BaseDataSource):
             job = self._get_result_job(res, self.jobid)
 
             # getting job state
-            status_detail = job.get('ExecutionStatusDetail', None)
+            status_detail = job.get('Status', None)
             if not status_detail:
                 raise ImportHandlerException("Status Details are not "
                                              "returned for job: {}".
@@ -503,7 +503,8 @@ class PigDataSource(BaseDataSource):
                                              format(status_detail))
 
             if previous_state != state:
-                steps = job.get('Steps', None)
+                steps = self.emr.list_steps(ClusterId=self.jobid)
+                steps = steps.get('Steps', None)
                 step_state = None
                 if steps:
                     step = steps[int(step_number) - 1]
@@ -632,9 +633,8 @@ class PigDataSource(BaseDataSource):
     # Run steps on jobflow related methods
 
     def _run_steps_on_existing_jobflow(self, pig_step):
-        status = self.emr.describe_job_flows(JobFlowIds=[self.jobid])
-        job = self._get_result_job(status, self.jobid)
-        steps = job.get('Steps', None)
+        steps = self.emr.list_steps(ClusterId=self.jobid)
+        steps = steps.get('Steps', None)
         step_number = len(steps) + 1 if steps is not None else 1
         logging.info('Using existing emr jobflow: %s' % self.jobid)
         self.emr.add_job_flow_steps(JobFlowId=self.jobid, Steps=[pig_step, ])
@@ -699,10 +699,7 @@ class PigDataSource(BaseDataSource):
         """
         Processes `RUNNING` job status.
         """
-        masterpublicdnsname = None
-        instance = status.get('Instances', None)
-        if instance:
-            masterpublicdnsname = instance.get('MasterPublicDnsName', None)
+        masterpublicdnsname = status.get('MasterPublicDnsName', None)
 
         if masterpublicdnsname:
             if self.import_handler is not None and \
@@ -721,7 +718,7 @@ ssh -D localhost:12345 hadoop@%(dns)s -i ~/.ssh/cloudml-control.pem
 After creating ssh tunnel web ui will be available on localhost:9026 using
 socks proxy localhost:12345''' % {'dns': masterpublicdnsname})
 
-    def _process_completed_state(self, status, step_state, step_number):
+    def _process_terminated_state(self, status, step_state, step_number):
         """
         Processes `COMPLETED` job status.
         """
@@ -730,12 +727,12 @@ socks proxy localhost:12345''' % {'dns': masterpublicdnsname})
         elif step_state == 'COMPLETED':
             logging.info('Step is completed')
         else:
-            state = status.get('ExecutionStatusDetail').get('State', None)
+            state = status.get('Status').get('State', None)
             logging.info(
                 'Unexpected job state for status %s: %s',
                 state, step_state)
 
-    def _process_failed_state(self, status, step_state, step_number):
+    def _process_terminated_with_errors_state(self, status, step_state, step_number):
         """
         Processes `FAILED` job status.
         """
@@ -754,7 +751,7 @@ socks proxy localhost:12345''' % {'dns': masterpublicdnsname})
         elif step_state == 'COMPLETED':
             logging.info('Step is completed')
         else:
-            state = status.get('ExecutionStatusDetail').get('State', None)
+            state = status.get('Status').get('State', None)
             logging.info(
                 'Unexpected job state for status %s: %s',
                 state, step_state)
