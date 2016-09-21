@@ -5466,6 +5466,10 @@ CLASSIFIERS = {
 for name, config in CLASSIFIERS.iteritems():
     if name in FULL_SUPPORT:
         config['support'] = True
+        config['support_description'] = 'Supported'
+    else:
+        config['support_description'] = 'Test Mode'
+        config['support'] = False
 
 
 def get_model_type(classifier_type):
