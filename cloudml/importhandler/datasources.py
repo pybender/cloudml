@@ -444,20 +444,11 @@ class PigDataSource(BaseDataSource):
         return url
 
     def _get_result_job(self, response, j_id):
-        job_flows = response.get('JobFlows', None)
-        if not job_flows:
+        cluster = response.get('Cluster', None)
+        if not cluster:
             raise ImportHandlerException("Unexpected EMR result: {}"
                                          .format(response))
-        job = None
-        for j in job_flows:
-            job_id = j.get('JobFlowId', None)
-            if job_id and job_id == j_id:
-                job = j  # job with requested id found
-                break
-        if not job:
-            raise ImportHandlerException("Job with id #%s not found "
-                                         "in response" % self.jobid)
-        return job
+        return cluster
 
     def process_pig_script(self, query, query_target=None):
         logging.info('Start processing pig datasource...')
