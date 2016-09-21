@@ -514,7 +514,7 @@ class PigDataSource(BaseDataSource):
                     logging.warning(
                         'Jobflow status is unexpected: %s', state)
 
-                if state == 'COMPLETED' or \
+                if state == 'TERMINATED' or \
                         (state == 'WAITING' and step_state == 'COMPLETED'):
                     break  # job is completed -> no need check status
 
