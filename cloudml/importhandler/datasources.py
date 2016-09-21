@@ -499,7 +499,7 @@ class PigDataSource(BaseDataSource):
                 step_state = None
                 if steps:
                     step = steps[int(step_number) - 1]
-                    step_detail = step.get('ExecutionStatusDetail', None)
+                    step_detail = step.get('Status', None)
                     if step_detail:
                         step_state = step_detail.get('State', None)
                 logging.info(
