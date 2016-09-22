@@ -427,7 +427,8 @@ class PigDataSource(BaseDataSource):
         """
         Returns results iterator.
         """
-        self.process_pig_script(query, query_target)
+        logging.info('Process pig datasource')
+        #self.process_pig_script(query, query_target)
         return self.get_result()
 
     def generate_download_url(self, step, log_type, expires_in=3600):
@@ -528,6 +529,7 @@ class PigDataSource(BaseDataSource):
         """
         Returns running pig script results.
         """
+        logging.info('Getting results from hadoop')
         def key_exists(s3, bucket, key_name):
             """
             Checks if key exists in the bucket
@@ -542,6 +544,9 @@ class PigDataSource(BaseDataSource):
                     raise ImportHandlerException(e.message, e)
 
         # TODO: Need getting data from all nodes
+
+        self.result_path = 'cloudml/output/pig-script/1474440754/'
+        logging.info(self.result_path)
         type_result = 'm'
         if not key_exists(self.s3, self.bucket_name,
                           "%spart-m-00000" % self.result_path):

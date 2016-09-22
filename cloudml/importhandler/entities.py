@@ -409,43 +409,44 @@ class EntityProcessor(object):
                     entity.datasource_name, entity.name))
 
         # Process sqoop imports
-        for sqoop_import in self.entity.sqoop_imports:
 
-            sqoop_import.datasource = import_handler.plan.datasources.get(
-                sqoop_import.datasource_name)
-            if sqoop_import.query:
+#         for sqoop_import in self.entity.sqoop_imports:
 
-                sqoop_query = sqoop_import.build_query(params)
-                logging.info('Run query %s' % sqoop_query)
-                # We running db datasource query to create a table
-                sqoop_import.datasource.run_queries(sqoop_query)
-            if self.entity.autoload_sqoop_dataset:
-                from utils import SCHEMA_INFO_FIELDS, PIG_TEMPLATE, \
-                    construct_pig_fields
-                sql = """select * from {0} limit 1;
-select {1} from INFORMATION_SCHEMA.COLUMNS where table_name = '{0}'
-order by ordinal_position;""".format(sqoop_import.table,
-                                     ','.join(SCHEMA_INFO_FIELDS))
+#             sqoop_import.datasource = import_handler.plan.datasources.get(
+#                 sqoop_import.datasource_name)
+#             if sqoop_import.query:
 
-                try:
-                    iterator = sqoop_import.datasource._get_iter(sql)
-                    fields_data = [{key: opt[i] for i, key in enumerate(
-                                    SCHEMA_INFO_FIELDS)}
-                                   for opt in iterator]
-                except Exception, exc:
-                    raise ValueError("Can't execute the query: {0}."
-                                     "Error: {1}".format(sql, exc))
+#                 sqoop_query = sqoop_import.build_query(params)
+#                 logging.info('Run query %s' % sqoop_query)
+#                 # We running db datasource query to create a table
+#                 sqoop_import.datasource.run_queries(sqoop_query)
+#             if self.entity.autoload_sqoop_dataset:
+#                 from utils import SCHEMA_INFO_FIELDS, PIG_TEMPLATE, \
+#                     construct_pig_fields
+#                 sql = """select * from {0} limit 1;
+# select {1} from INFORMATION_SCHEMA.COLUMNS where table_name = '{0}'
+# order by ordinal_position;""".format(sqoop_import.table,
+#                                      ','.join(SCHEMA_INFO_FIELDS))
 
-                fields_str = construct_pig_fields(fields_data)
-                load_dataset_script = PIG_TEMPLATE.format(
-                    self.entity.sqoop_dataset_name,
-                    sqoop_import.target,
-                    fields_str,
-                    self.datasource.bucket_name)
-                query = "{0}\n{1}".format(load_dataset_script, query)
+#                 try:
+#                     iterator = sqoop_import.datasource._get_iter(sql)
+#                     fields_data = [{key: opt[i] for i, key in enumerate(
+#                                     SCHEMA_INFO_FIELDS)}
+#                                    for opt in iterator]
+#                 except Exception, exc:
+#                     raise ValueError("Can't execute the query: {0}."
+#                                      "Error: {1}".format(sql, exc))
+
+#                 fields_str = construct_pig_fields(fields_data)
+#                 load_dataset_script = PIG_TEMPLATE.format(
+#                     self.entity.sqoop_dataset_name,
+#                     sqoop_import.target,
+#                     fields_str,
+#                     self.datasource.bucket_name)
+#                 query = "{0}\n{1}".format(load_dataset_script, query)
 
         if self.datasource.type == 'pig':
-            self.datasource.run_sqoop_imports(self.entity.sqoop_imports)
+            #self.datasource.run_sqoop_imports(self.entity.sqoop_imports)
             self.datasource.set_import_handler(import_handler)
 
         if self.datasource.type == 'input' and query != 'any':

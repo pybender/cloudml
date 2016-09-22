@@ -1,0 +1,146 @@
+<plan>
+  <inputs>
+    <param name="train" type="integer"/>
+    <param name="year" type="string"/>
+  </inputs>
+  <datasources>
+    <db dbname="udw1" host="udw01.odesk.com" name="udw1" password="odesk123" port="5432" user="fares19" vendor="postgres"/>
+    <pig amazon_access_token="AKIAIOPBXIBJ23S3GICQ" amazon_token_secret="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" bucket_name="odesk-match-prod" hadoop_params="-m,mapreduce.map.java.opts=-Xmx864m,-m,mapreduce.reduce.java.opts=-Xmx1536m,-m,mapreduce.map.memory.mb=1024,-m,mapreduce.reduce.memory.mb=2048,-y,yarn.nodemanager.resource.memory-mb=18226" keep_alive="false" master_instance_type="c3.4xlarge" name="pig-script" num_instances="20" slave_instance_type="c3.4xlarge"/>
+  </datasources>
+  <import>
+    <entity datasource="pig-script" name="application">
+      <sqoop datasource="udw1" direct="true" mappers="1" options="" table="pig_job_quality_data" target="pig_job_quality_data"><![CDATA[drop table if exists pig_job_quality_data;
+create table pig_job_quality_data as
+select 
+  a.contractor as contractor_num
+  , a.application
+  , a.rank_asc
+  , a.more_than_one_app
+  , a.op_amount_avg
+  , a.fp_avg
+  , a.est_hours_avg
+  , a.fjp_avg
+  , a.promoter_giving_avg
+  , a.demoter_giving_avg
+  , a.neutral_giving_avg
+  , a.group_hist
+  , a.category_hist
+  , a.segment_hist
+  , a.eng_type_avg
+  , a.eng_duration_avg
+  , a.skills_hist
+  , a.company_name
+  , a.title
+  , a.answer_count 
+  , a.answer_score 
+  , a.question_count 
+  , a.question_score 
+  , a.badge_type 
+  , a.award_count 
+  , a.badge_rank 
+  , case when n.freelancer_nss >= 0.8 then 'A' when n.freelancer_nss >= 0.2 then 'BC' else 'D' end as segment 
+  , case when n.freelancer_nss >= 0.9 then 'A' when n.freelancer_nss >= 0.4 then 'BC' else 'D' end as segment2 
+
+  , d.group as new_group
+  , d.category as new_category
+from fares19.last_apps_before_first_asg_app_hist_v2 a 
+join agg.freelancer_nss n on a.contractor::int = n.contractor::int 
+left join dev_cat_2_v2 d on d.contractor::int  = a.contractor::int 
+where n.freelancer_nss is not null and 
+      (('#{train}' = 1 and a.contractor%100 <= 80) or 
+       ('#{train}' = 0 and a.contractor%100 >  80));
+]]></sqoop>
+      <query target="result"><![CDATA[set default_parallel 20;
+register 's3://odesk-match-staging/pig/lib/elephant-bird-core-4.4.jar';
+register 's3://odesk-match-staging/pig/lib/elephant-bird-pig-4.4.jar';
+register 's3://odesk-match-staging/pig/lib/elephant-bird-hadoop-compat-4.4.jar';
+register 's3://odesk-match-staging/pig/lib/piggybank-0.12.0.jar';
+register 's3://odesk-match-staging/pig/lib/json-simple-1.1.1.jar';
+register 's3://odesk-match-staging/pig/lib/odesk-udfs.py' using jython as funcs;
+register 's3://odesk-match-staging/pig/lib/bestmatch-udfs.py' using jython as bestmatch;
+job_quality_data = LOAD '$pig_job_quality_data*' USING  org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'YES_MULTILINE') AS (contractor_num:int,application:int,rank_asc:int, more_than_one_app:boolean, op_amount_avg:float,fp_avg:float,est_hours_avg:float, fjp_avg:float,promoter_giving_avg:float,demoter_giving_avg:float,neutral_giving_avg:float,group_hist:chararray,category_hist:chararray,segment_hist:chararray,eng_type_avg:float,eng_duration_avg:float,skills_hist:chararray,company_name:chararray,title:chararray,answer_count:int , answer_score:int,question_count:int,question_score:int,badge_type:chararray,award_count:int,badge_rank:chararray, segment:chararray, segment2:chararray, new_group:chararray,new_category:chararray);
+
+ja_quick_info_tmp = LOAD 's3://odesk-match-prod/ja_quick_info/2016/{01,02,03}/*' USING com.twitter.elephantbird.pig.load.JsonLoader('-nestedLoad');
+ja_quick_info = FOREACH ja_quick_info_tmp 
+      GENERATE  
+      (int) $0#'job_application_id' AS application,
+      funcs.asMap($0#'contractor'#'dev_scores', 'label', 'avg_category_score', 'double') AS dev_scores,
+      funcs.asMap($0#'contractor'#'tsexams', 'ts_name', 'ts_score', 'double') as contractor_tsexams,
+      (int) $0#'contractor'#'dev_test_passed_count' as dev_test_passed_count,
+      (int) $0#'contractor'#'dev_skill_test_passed_count' as dev_skill_test_passed_count,    
+      funcs.mapsToCSV($0#'contractor'#'skills', 'skl_name', ',') as contractor_skills,
+      funcs.mapsToCSV($0#'contractor'#'job_categories', 'level1', ',') as job_categories,
+      funcs.mapsToCSV($0#'contractor'#'job_categories', 'level2', ',') as job_subcategories,
+      funcs.mapsToCSV($0#'contractor'#'experiences', 'exp_title', ', ') AS contractor_experience_titles, 
+      funcs.mapsToCSV($0#'contractor'#'experiences', 'exp_company', '|') AS contractor_experience_companies, 
+      funcs.mapsToCSV($0#'contractor'#'education', 'ed_degree', ', ') AS contractor_education_degrees, 
+      funcs.mapsToCSV($0#'contractor'#'education', 'ed_school', '|') AS contractor_education_schools, 
+      (float) $0#'contractor'#'dev_bill_rate' as dev_bill_rate,
+      (boolean) $0#'contractor'#'dev_expose_full_name' as dev_expose_full_name,
+      (float) $0#'contractor'#'dev_year_exp' as dev_year_exp, 
+      (int) $0#'contractor'#'dev_portfolio_items_count' as dev_portfolio_items_count, 
+      (float) $0#'contractor'#'dev_eng_skill' as dev_eng_skill,
+      (chararray) $0#'contractor'#'dev_timezone' as dev_timezone,
+      (chararray) $0#'contractor'#'dev_country' as dev_country,
+      (chararray) $0#'contractor'#'dev_region' as dev_region;
+dataset = JOIN job_quality_data BY application, ja_quick_info BY application;
+result = FOREACH dataset 
+GENERATE *;]]></query>
+      <field column="ja_quick_info::application" name="application" type="integer"/>
+      <field column="ja_quick_info::contractor_experience_titles" name="contractor.experience_titles" type="string"/>
+      <field column="ja_quick_info::contractor_experience_companies" name="contractor.experience_companies" type="string"/>
+      <field column="ja_quick_info::contractor_education_degrees" name="contractor.education_degrees" type="string"/>
+      <field column="ja_quick_info::contractor_education_schools" name="contractor.education_schools" type="string"/>
+      <field column="ja_quick_info::dev_scores" name="contractor.dev_scores" type="json"/>
+      <field column="ja_quick_info::contractor_tsexams" name="contractor.tsexams" type="json"/>
+      <field column="ja_quick_info::dev_test_passed_count" name="contractor.dev_test_passed_count" type="integer"/>
+      <field column="ja_quick_info::dev_skill_test_passed_count" name="contractor.dev_skill_test_passed_count" type="integer"/>
+      <field column="ja_quick_info::contractor_skills" name="contractor.skills" type="string"/>
+      <field column="ja_quick_info::job_categories" name="contractor.job_categories" type="string"/>
+      <field column="ja_quick_info::job_subcategories" name="contractor.job_subcategories" type="string"/>
+      <field column="ja_quick_info::dev_bill_rate" name="contractor.dev_bill_rate" type="float"/>
+      <field column="ja_quick_info::dev_expose_full_name" name="contractor.dev_expose_full_name" type="float"/>
+      <field column="ja_quick_info::dev_year_exp" name="contractor.dev_year_exp" type="float"/>
+      <field column="ja_quick_info::dev_portfolio_items_count" name="contractor.dev_portfolio_items_count" type="integer"/>
+      <field column="ja_quick_info::dev_eng_skill" name="contractor.dev_eng_skill" type="float"/>
+      <field column="ja_quick_info::dev_timezone" name="contractor.dev_timezone" type="string"/>
+      <field column="ja_quick_info::dev_country" name="contractor.dev_country" type="string"/>
+      <field column="ja_quick_info::dev_region" name="contractor.dev_region" type="string"/>
+      <field column="job_quality_data::rank_asc" name="rank_asc" type="integer"/>
+      <field column="job_quality_data::more_than_one_app" name="more_than_one_app" type="boolean"/>
+      <field column="job_quality_data::rank_diff" name="rank_diff" type="integer"/>
+      <field column="job_quality_data::op_amount_avg" name="op_amount_avg" type="float"/>
+      <field column="job_quality_data::fp_avg" name="fp_avg" type="float"/>
+      <field column="job_quality_data::est_hours_avg" name="est_hours_avg" type="float"/>
+      <field column="job_quality_data::fjp_avg" name="fjp_avg" type="float"/>
+      <field column="job_quality_data::promoter_giving_avg" name="promoter_giving_avg" type="float"/>
+      <field column="job_quality_data::demoter_giving_avg" name="demoter_giving_avg" type="float"/>
+      <field column="job_quality_data::neutral_giving_avg" name="neutral_giving_avg" type="float"/>
+      <field column="job_quality_data::group_hist" name="group_hist" type="string"/>
+      <field column="job_quality_data::category_hist" name="category_hist" type="string"/>
+      <field column="job_quality_data::segment_hist" name="segment_hist" type="string"/>
+      <field column="job_quality_data::eng_type_avg" name="eng_type_avg" type="string"/>
+      <field column="job_quality_data::eng_duration_avg" name="eng_duration_avg" type="string"/>
+      <field column="job_quality_data::skills_hist" name="skills_hist" type="string"/>
+      <field column="job_quality_data::company_name" name="company_name" type="string"/>
+      <field column="job_quality_data::title" name="title" type="string"/>
+      <field column="job_quality_data::badge_type" name="badge_type" type="string"/>
+      <field column="job_quality_data::badge_rank" name="badge_rank" type="string"/>
+      <field column="job_quality_data::answer_count" name="answer_count" type="integer"/>
+      <field column="job_quality_data::answer_score" name="answer_score" type="integer"/>
+      <field column="job_quality_data::question_count" name="question_count" type="integer"/>
+      <field column="job_quality_data::question_score" name="question_score" type="integer"/>
+      <field column="job_quality_data::award_count" name="award_count" type="integer"/>
+      <field column="job_quality_data::segment" name="segment" type="string"/>
+      <field column="job_quality_data::segment2" name="segment2" type="string"/>
+      <field column="job_quality_data::new_group" name="new_group" type="string"/>
+      <field column="job_quality_data::new_category" name="new_category" type="string"/>
+    </entity>
+  </import>
+  <predict>
+    <result>
+      <label/>
+      <probability/>
+    </result>
+  </predict>
+</plan>
