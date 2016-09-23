@@ -427,7 +427,7 @@ class PigDataSource(BaseDataSource):
         """
         Returns results iterator.
         """
-        #self.process_pig_script(query, query_target)
+        self.process_pig_script(query, query_target)
         return self.get_result()
 
     def generate_download_url(self, step, log_type, expires_in=3600):
@@ -537,7 +537,6 @@ class PigDataSource(BaseDataSource):
                 return True
             except ClientError as e:
                 if e.response['Error']['Code'] == "404":
-                    raise
                     return False
                 else:
                     raise ImportHandlerException(e.message, e)
