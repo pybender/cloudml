@@ -362,8 +362,8 @@ class PigDataSource(BaseDataSource):
 
         self.jobid = config.get('jobid', None)
         ts = int(time.time())
-        self.result_path = "/cloudml/output/%s/%d/" % (self.name, ts)
-        self.result_uri = "s3n://%s%s" % (self.bucket_name, self.result_path)
+        self.result_path = "cloudml/output/%s/%d/" % (self.name, ts)
+        self.result_uri = "s3n://%s/%s" % (self.bucket_name, self.result_path)
         self.sqoop_result_uri = "s3n://%s/cloudml/output/%s/%d_sqoop/" % (
             self.bucket_name, self.name, ts)
         self.sqoop_results_uries = {}
@@ -427,7 +427,7 @@ class PigDataSource(BaseDataSource):
         """
         Returns results iterator.
         """
-        self.process_pig_script(query, query_target)
+        #self.process_pig_script(query, query_target)
         return self.get_result()
 
     def generate_download_url(self, step, log_type, expires_in=3600):
@@ -521,7 +521,7 @@ class PigDataSource(BaseDataSource):
                 previous_state = state
 
         logging.info(
-            "Pig results stored to: s3://%s%s" %
+            "Pig results stored to: s3://%s/%s" %
             (self.bucket_name, self.result_path))
 
     def get_result(self):
@@ -537,15 +537,17 @@ class PigDataSource(BaseDataSource):
                 return True
             except ClientError as e:
                 if e.response['Error']['Code'] == "404":
+                    raise
                     return False
                 else:
                     raise ImportHandlerException(e.message, e)
 
         # TODO: Need getting data from all nodes
-        type_result = 'm'
+
+        type_result = 'r'
         if not key_exists(self.s3, self.bucket_name,
-                          "%spart-m-00000" % self.result_path):
-            type_result = 'r'
+                          "%spart-r-00000" % self.result_path):
+            type_result = 'm'
         i = 0
         first_result = False
         while True:
