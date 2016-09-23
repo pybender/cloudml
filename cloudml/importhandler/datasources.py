@@ -470,12 +470,12 @@ class PigDataSource(BaseDataSource):
 
         previous_state = None
         while True:
-            time.sleep(10)
+            time.sleep(60)
             try:
                 res = self.emr.describe_cluster(ClusterId=self.jobid)
             except ClientError as e:
                 logging.exception("Getting throttled. Sleeping for 10 secs.")
-                time.sleep(10)
+                time.sleep(60)
                 continue
 
             # getting required job from returned result
