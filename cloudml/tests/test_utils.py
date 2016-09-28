@@ -3,9 +3,18 @@ import os
 import json
 from placebo.pill import Pill, LOG, FakeHttpResponse, deserialize
 from botocore.response import StreamingBody
-
+from nose.plugins import xunit
+from nose.plugins.xunit import Tee
 
 BASEDIR = 'testdata'
+
+
+class LocalTee(Tee):
+    """Mocks sys.stdout functions"""
+    def isatty(self):
+        return True
+
+xunit.Tee = LocalTee
 
 
 def get_iterator(dirname, filename, fmt='json'):

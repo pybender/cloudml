@@ -20,11 +20,13 @@ from cloudml.transformers.transformer import Transformer, \
 from cloudml.trainer.trainer import list_to_dict
 from cloudml.trainer.streamutils import streamingiterload
 from cloudml.utils import init_logging
+from cloudml import print_exception
 
 DONE = 0
 INVALID_TRANSFORMER_CONFIG = 1
 INVALID_EXTRACTION_PLAN = 2
 PARAMETERS_REQUIRED = 3
+TRAINING_ERROR = 4
 
 
 def main(argv=None):
@@ -34,39 +36,47 @@ def main(argv=None):
 
     try:
         transformer = Transformer(args.path)
-    except TransformerSchemaException, e:
+    except (TransformerSchemaException, IOError) as e:
         logging.warn('Invalid feature model: %s' % e.message)
+        print_exception(e)
         return INVALID_TRANSFORMER_CONFIG
 
-    if args.input is not None:
-        file_format = os.path.splitext(args.input)[1][1:]
-        with open(args.input, 'r') as train_fp:
-            transformer.train(
-                streamingiterload(train_fp, source_format=file_format))
-    elif args.extraction is not None:
-        train_context = list_to_dict(args.train_params)
+    try:
+        if args.input is not None:
+            file_format = os.path.splitext(args.input)[1][1:]
+            with open(args.input, 'r') as train_fp:
+                transformer.train(
+                    streamingiterload(train_fp, source_format=file_format))
+        elif args.extraction is not None:
+            train_context = list_to_dict(args.train_params)
 
-        try:
-            plan = ExtractionPlan(args.extraction)
-            train_handler = ImportHandler(plan, train_context)
-        except ImportHandlerException, e:
-            logging.warn('Invalid extraction plan: %s' % e.message)
-            return INVALID_EXTRACTION_PLAN
+            try:
+                plan = ExtractionPlan(args.extraction)
+                train_handler = ImportHandler(plan, train_context)
+            except ImportHandlerException, e:
+                logging.warn('Invalid extraction plan: %s' % e.message)
+                print_exception(e)
+                return INVALID_EXTRACTION_PLAN
 
-        logging.info('Starting training with params:')
-        for key, value in train_context.items():
-            logging.info('%s --> %s' % (key, value))
-        transformer.train(train_handler)
-    else:
-        logging.warn('You must define either an input file or '
-                     'an extraction plan')
-        parser.print_help()
-        return PARAMETERS_REQUIRED
+            logging.info('Starting training with params:')
+            for key, value in train_context.items():
+                logging.info('%s --> %s' % (key, value))
+            transformer.train(train_handler)
+        else:
+            logging.warn('You must define either an input file or '
+                         'an extraction plan')
+            parser.print_help()
+            return PARAMETERS_REQUIRED
 
-    if args.output is not None:
-        logging.info('Storing transformer to %s' % args.output)
-        with open(args.output, 'w') as trainer_fp:
-            pickle.dump(transformer, trainer_fp)
+        if args.output is not None:
+            logging.info('Storing transformer to %s' % args.output)
+            with open(args.output, 'w') as trainer_fp:
+                pickle.dump(transformer, trainer_fp)
+    except Exception as e:
+        logging.warn('Error occurred during training transformer: %s'
+                     % e.message)
+        print_exception(e)
+        return TRAINING_ERROR
 
     return DONE
 

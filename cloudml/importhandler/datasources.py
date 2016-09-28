@@ -205,12 +205,12 @@ class HttpDataSource(BaseDataSource):
             resp = requests.request(self.method, url, stream=True)
         except ConnectionError as exc:
             raise ImportHandlerException(
-                'Cannot reach url: {}'.format(str(exc)))
+                'Cannot reach url: {}'.format(str(exc)), exc)
         try:
             result = resp.json()
         except Exception as exc:
             raise ImportHandlerException(
-                'Cannot parse json: {}'.format(str(exc)))
+                'Cannot parse json: {}'.format(str(exc)), exc)
         if isinstance(result, dict):
             return iter([resp.json()])
         return iter(resp.json())
@@ -256,8 +256,9 @@ class CsvDataSource(BaseDataSource):
         try:
             self.offset = int(attrs.get('offset', 0))
             self.count = int(attrs.get('count', sys.maxint))
-        except (ValueError, TypeError):
-            raise ImportHandlerException('offset and count should be integers')
+        except (ValueError, TypeError) as e:
+            raise ImportHandlerException('offset and count should be integers',
+                                         e)
         logging.info('In csv datasource {0} there are '
                      'offset {1} and count {2}'.format(
                          self.name, self.offset, self.count))
@@ -361,8 +362,8 @@ class PigDataSource(BaseDataSource):
 
         self.jobid = config.get('jobid', None)
         ts = int(time.time())
-        self.result_path = "/cloudml/output/%s/%d/" % (self.name, ts)
-        self.result_uri = "s3n://%s%s" % (self.bucket_name, self.result_path)
+        self.result_path = "cloudml/output/%s/%d/" % (self.name, ts)
+        self.result_uri = "s3n://%s/%s" % (self.bucket_name, self.result_path)
         self.sqoop_result_uri = "s3n://%s/cloudml/output/%s/%d_sqoop/" % (
             self.bucket_name, self.name, ts)
         self.sqoop_results_uries = {}
@@ -443,20 +444,11 @@ class PigDataSource(BaseDataSource):
         return url
 
     def _get_result_job(self, response, j_id):
-        job_flows = response.get('JobFlows', None)
-        if not job_flows:
+        cluster = response.get('Cluster', None)
+        if not cluster:
             raise ImportHandlerException("Unexpected EMR result: {}"
                                          .format(response))
-        job = None
-        for j in job_flows:
-            job_id = j.get('JobFlowId', None)
-            if job_id and job_id == j_id:
-                job = j  # job with requested id found
-                break
-        if not job:
-            raise ImportHandlerException("Job with id #%s not found "
-                                         "in response" % self.jobid)
-        return job
+        return cluster
 
     def process_pig_script(self, query, query_target=None):
         logging.info('Start processing pig datasource...')
@@ -464,7 +456,7 @@ class PigDataSource(BaseDataSource):
             pig_step = self.get_pig_step(query, query_target)
         except Exception, exc:
             raise ProcessException(
-                "Can't initialize pig datasource: {0}".format(exc))
+                "Can't initialize pig datasource: {0}".format(exc), exc)
 
         self.clear_output_folder(self.name)
 
@@ -478,19 +470,19 @@ class PigDataSource(BaseDataSource):
 
         previous_state = None
         while True:
-            time.sleep(10)
+            time.sleep(60)
             try:
-                res = self.emr.describe_job_flows(JobFlowIds=[self.jobid])
-            except ClientError:
-                logging.info("Getting throttled. Sleeping for 10 secs.")
-                time.sleep(10)
+                res = self.emr.describe_cluster(ClusterId=self.jobid)
+            except ClientError as e:
+                logging.exception("Getting throttled. Sleeping for 10 secs.")
+                time.sleep(60)
                 continue
 
             # getting required job from returned result
             job = self._get_result_job(res, self.jobid)
 
             # getting job state
-            status_detail = job.get('ExecutionStatusDetail', None)
+            status_detail = job.get('Status', None)
             if not status_detail:
                 raise ImportHandlerException("Status Details are not "
                                              "returned for job: {}".
@@ -502,11 +494,12 @@ class PigDataSource(BaseDataSource):
                                              format(status_detail))
 
             if previous_state != state:
-                steps = job.get('Steps', None)
+                steps = self.emr.list_steps(ClusterId=self.jobid)
+                steps = steps.get('Steps', None)
                 step_state = None
                 if steps:
                     step = steps[int(step_number) - 1]
-                    step_detail = step.get('ExecutionStatusDetail', None)
+                    step_detail = step.get('Status', None)
                     if step_detail:
                         step_state = step_detail.get('State', None)
                 logging.info(
@@ -521,14 +514,14 @@ class PigDataSource(BaseDataSource):
                     logging.warning(
                         'Jobflow status is unexpected: %s', state)
 
-                if state == 'COMPLETED' or \
+                if state == 'TERMINATED' or \
                         (state == 'WAITING' and step_state == 'COMPLETED'):
                     break  # job is completed -> no need check status
 
                 previous_state = state
 
         logging.info(
-            "Pig results stored to: s3://%s%s" %
+            "Pig results stored to: s3://%s/%s" %
             (self.bucket_name, self.result_path))
 
     def get_result(self):
@@ -546,13 +539,14 @@ class PigDataSource(BaseDataSource):
                 if e.response['Error']['Code'] == "404":
                     return False
                 else:
-                    raise ImportHandlerException(e.message)
+                    raise ImportHandlerException(e.message, e)
 
         # TODO: Need getting data from all nodes
-        type_result = 'm'
+
+        type_result = 'r'
         if not key_exists(self.s3, self.bucket_name,
-                          "%spart-m-00000" % self.result_path):
-            type_result = 'r'
+                          "%spart-r-00000" % self.result_path):
+            type_result = 'm'
         i = 0
         first_result = False
         while True:
@@ -631,9 +625,8 @@ class PigDataSource(BaseDataSource):
     # Run steps on jobflow related methods
 
     def _run_steps_on_existing_jobflow(self, pig_step):
-        status = self.emr.describe_job_flows(JobFlowIds=[self.jobid])
-        job = self._get_result_job(status, self.jobid)
-        steps = job.get('Steps', None)
+        steps = self.emr.list_steps(ClusterId=self.jobid)
+        steps = steps.get('Steps', None)
         step_number = len(steps) + 1 if steps is not None else 1
         logging.info('Using existing emr jobflow: %s' % self.jobid)
         self.emr.add_job_flow_steps(JobFlowId=self.jobid, Steps=[pig_step, ])
@@ -698,10 +691,7 @@ class PigDataSource(BaseDataSource):
         """
         Processes `RUNNING` job status.
         """
-        masterpublicdnsname = None
-        instance = status.get('Instances', None)
-        if instance:
-            masterpublicdnsname = instance.get('MasterPublicDnsName', None)
+        masterpublicdnsname = status.get('MasterPublicDnsName', None)
 
         if masterpublicdnsname:
             if self.import_handler is not None and \
@@ -720,7 +710,7 @@ ssh -D localhost:12345 hadoop@%(dns)s -i ~/.ssh/cloudml-control.pem
 After creating ssh tunnel web ui will be available on localhost:9026 using
 socks proxy localhost:12345''' % {'dns': masterpublicdnsname})
 
-    def _process_completed_state(self, status, step_state, step_number):
+    def _process_terminated_state(self, status, step_state, step_number):
         """
         Processes `COMPLETED` job status.
         """
@@ -729,12 +719,12 @@ socks proxy localhost:12345''' % {'dns': masterpublicdnsname})
         elif step_state == 'COMPLETED':
             logging.info('Step is completed')
         else:
-            state = status.get('ExecutionStatusDetail').get('State', None)
+            state = status.get('Status').get('State', None)
             logging.info(
                 'Unexpected job state for status %s: %s',
                 state, step_state)
 
-    def _process_failed_state(self, status, step_state, step_number):
+    def _process_terminated_with_errors_state(self, status, step_state, step_number):
         """
         Processes `FAILED` job status.
         """
@@ -753,7 +743,7 @@ socks proxy localhost:12345''' % {'dns': masterpublicdnsname})
         elif step_state == 'COMPLETED':
             logging.info('Step is completed')
         else:
-            state = status.get('ExecutionStatusDetail').get('State', None)
+            state = status.get('Status').get('State', None)
             logging.info(
                 'Unexpected job state for status %s: %s',
                 state, step_state)
@@ -813,7 +803,7 @@ class InputDataSource(BaseDataSource):
             result = json.loads(query)
         except Exception as exc:
             raise ImportHandlerException('Cannot parse json: {}'.format(
-                str(exc)))
+                str(exc)), exc)
         if isinstance(result, dict):
             return iter([result])
         return iter(result)

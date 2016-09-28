@@ -36,8 +36,8 @@ class FeatureModel(object):
                     data = json.load(fp)
             else:
                 data = json.loads(config)
-        except ValueError as e:
-            raise SchemaException(message='%s %s ' % (config, e))
+        except (ValueError, IOError) as e:
+            raise SchemaException(message='%s %s ' % (config, e), chain=e)
 
         if not isinstance(data, dict):
             raise SchemaException(message="Parsed JSON data is of type %s. "

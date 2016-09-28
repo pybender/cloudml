@@ -10,15 +10,16 @@ import json
 
 from cloudml.trainer.transformers import get_transformer
 from cloudml.trainer.feature_types import FEATURE_TYPE_FACTORIES
+from cloudml import ChainedException
 
 
-class TransformerSchemaException(Exception):
+class TransformerSchemaException(ChainedException):
     """
     Exception to be raised if there is an error parsing or using the
     configuration.
     """
-    def __init__(self, message, errors=None):
-        super(TransformerSchemaException, self).__init__(message)
+    def __init__(self, message, chain=None, errors=None):
+        super(TransformerSchemaException, self).__init__(message, chain)
         self.errors = errors
 
 
@@ -31,8 +32,9 @@ class Transformer(object):
                     data = json.load(fp)
             else:
                 data = json.loads(config)
-        except ValueError as e:
-            raise TransformerSchemaException(message='%s %s ' % (config, e))
+        except (ValueError, IOError) as e:
+            raise TransformerSchemaException(message='%s %s ' % (config, e),
+                                             chain=e)
 
         if 'transformer-name' not in data:
             raise TransformerSchemaException(
@@ -62,9 +64,9 @@ class Transformer(object):
             feature_type = factory.get_instance(data.get('params', None),
                                                 data.get('input-format',
                                                          'plain'))
-        except:
+        except Exception as e:
             raise TransformerSchemaException('Feature type error: %s'
-                                             % (data['type']))
+                                             % (data['type']), e)
 
         self.feature = {'name': data['field-name'],
                         'type': feature_type,
@@ -105,4 +107,4 @@ class Transformer(object):
                 if ignore_error:
                     self._ignored += 1
                 else:
-                    raise e
+                    raise TransformerSchemaException(e.message, e)

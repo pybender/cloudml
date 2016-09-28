@@ -47,8 +47,12 @@ class ExtractionPlan(AmazonSettingsMixin):
     """
     def __init__(self, config, is_file=True):
         if is_file:
-            with open(config, 'r') as fp:
-                config = fp.read()
+            if os.path.isfile(config):
+                with open(config, 'r') as fp:
+                    config = fp.read()
+            else:
+                raise ImportHandlerException("import handler file '%s' not "
+                                             "found" % config)
 
         if not config:
             raise ImportHandlerException('import handler file is empty')
@@ -58,7 +62,8 @@ class ExtractionPlan(AmazonSettingsMixin):
         except etree.XMLSyntaxError as e:
             raise ImportHandlerException(
                 "Valid XML is expected for import handler. "
-                "Parse error: {0}".format(e)
+                "Parse error: {0}".format(e),
+                e
             )
 
         if not self.is_valid():

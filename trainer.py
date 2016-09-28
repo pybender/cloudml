@@ -19,6 +19,7 @@ from cloudml.trainer.store import store_trainer
 from cloudml.trainer.streamutils import streamingiterload
 from cloudml.trainer.trainer import Trainer, list_to_dict, TransformerNotFound
 from cloudml.utils import init_logging, determine_data_format
+from cloudml import print_exception
 
 
 # Status codes
@@ -28,6 +29,7 @@ INVALID_EXTRACTION_PLAN = 2
 PARAMETERS_REQUIRED = 3
 PERCENT_ERR_FORMAT = "Percent value '{0}' would be ignored. \
 Should be value from 0 to 100."
+TRAINING_ERROR = 4
 
 
 def main(argv=None):
@@ -39,111 +41,119 @@ def main(argv=None):
         model = FeatureModel(args.path)
     except IOError, exc:
         logging.warn("Can't load features file. {0!s}".format(exc))
+        print_exception(exc)
         return INVALID_FEATURE_MODEL
     except SchemaException, exc:
         logging.warn('Invalid feature model: {0!s}'.format(exc))
+        print_exception(exc)
         return INVALID_FEATURE_MODEL
 
-    trainer = Trainer(model)
+    try:
+        trainer = Trainer(model)
 
-    if args.transformer_path is not None:
-        # defines pretrained transformers path
-        trainer.set_transformer_getter(
-            transformer_getter(args.transformer_path))
+        if args.transformer_path is not None:
+            # defines pretrained transformers path
+            trainer.set_transformer_getter(
+                transformer_getter(args.transformer_path))
 
-    test_percent = parse_percent(args.test_percent)
-    if args.input is not None:
-        # Read training data from file
-        file_format = determine_data_format(args.input)
-        with open(args.input, 'r') as train_fp:
-            logging.info("Training the model using input file dataset.")
-            trainer.train(
-                streamingiterload(train_fp, source_format=file_format),
-                test_percent,
-                store_vect_data=args.store_train_vect is not None)
+        test_percent = parse_percent(args.test_percent)
+        if args.input is not None:
+            # Read training data from file
+            file_format = determine_data_format(args.input)
+            with open(args.input, 'r') as train_fp:
+                logging.info("Training the model using input file dataset.")
+                trainer.train(
+                    streamingiterload(train_fp, source_format=file_format),
+                    test_percent,
+                    store_vect_data=args.store_train_vect is not None)
 
-            if args.store_train_vect is not None:
-                logging.info('Storing train vectorized data to %s' %
-                             args.store_train_vect)
-                trainer.vect_data2csv(args.store_train_vect)
+                if args.store_train_vect is not None:
+                    logging.info('Storing train vectorized data to %s' %
+                                 args.store_train_vect)
+                    trainer.vect_data2csv(args.store_train_vect)
 
-            if test_percent != 0 and args.skip_tests is False \
-               and args.test is None:
-                with open(args.input, 'r') as test_fp:
-                    trainer.test(
-                        streamingiterload(
-                            test_fp, source_format=file_format),
-                        test_percent
-                    )
+                if test_percent != 0 and args.skip_tests is False \
+                   and args.test is None:
+                    with open(args.input, 'r') as test_fp:
+                        trainer.test(
+                            streamingiterload(
+                                test_fp, source_format=file_format),
+                            test_percent
+                        )
 
-        if args.test is not None and args.skip_tests is False:
-            file_format = os.path.splitext(args.test)[1][1:]
-            with open(args.test, 'r') as test_fp:
-                trainer.test(streamingiterload(test_fp,
-                                               source_format=file_format))
+            if args.test is not None and args.skip_tests is False:
+                file_format = os.path.splitext(args.test)[1][1:]
+                with open(args.test, 'r') as test_fp:
+                    trainer.test(streamingiterload(test_fp,
+                                                   source_format=file_format))
 
-    elif args.extraction is not None:
-        train_context = list_to_dict(args.train_params)
-        try:
-            plan = ExtractionPlan(args.extraction)
-            train_handler = ImportHandler(plan, train_context)
-        except ImportHandlerException, e:
-            logging.warn('Invalid extraction plan: %s' % e.message)
-            return INVALID_EXTRACTION_PLAN
+        elif args.extraction is not None:
+            train_context = list_to_dict(args.train_params)
+            try:
+                plan = ExtractionPlan(args.extraction)
+                train_handler = ImportHandler(plan, train_context)
+            except ImportHandlerException, e:
+                logging.warn('Invalid extraction plan: %s' % e.message)
+                print_exception(e)
+                return INVALID_EXTRACTION_PLAN
 
-        logging.info('Starting training with params:')
-        for key, value in train_context.items():
-            logging.info('%s --> %s' % (key, value))
+            logging.info('Starting training with params:')
+            for key, value in train_context.items():
+                logging.info('%s --> %s' % (key, value))
 
-        trainer.train(train_handler, test_percent)
+            trainer.train(train_handler, test_percent)
 
-        if args.skip_tests is False:
-            if test_percent != 0:
-                if args.test_params is None:
-                    test_handler = ImportHandler(plan, train_context)
+            if args.skip_tests is False:
+                if test_percent != 0:
+                    if args.test_params is None:
+                        test_handler = ImportHandler(plan, train_context)
+                        logging.info('Starting testing with params:')
+                        for key, value in train_context.iteritems():
+                            logging.info('%s --> %s' % (key, value))
+
+                        trainer.test(test_handler, test_percent)
+                    else:
+                        logging.warn("Either test percent, either test "
+                                     "parameters should be defined. Not both.")
+                        return PARAMETERS_REQUIRED
+
+                elif args.test_params is not None:
+                    test_context = list_to_dict(args.test_params)
+                    test_handler = ImportHandler(plan, test_context)
                     logging.info('Starting testing with params:')
-                    for key, value in train_context.iteritems():
+                    for key, value in test_context.iteritems():
                         logging.info('%s --> %s' % (key, value))
 
-                    trainer.test(test_handler, test_percent)
-                else:
-                    logging.warn("Either test percent, either test "
-                                 "parameters should be defined. Not both.")
-                    return PARAMETERS_REQUIRED
-
-            elif args.test_params is not None:
-                test_context = list_to_dict(args.test_params)
-                test_handler = ImportHandler(plan, test_context)
-                logging.info('Starting testing with params:')
-                for key, value in test_context.iteritems():
-                    logging.info('%s --> %s' % (key, value))
-
-                trainer.test(test_handler)
-    else:
-        logging.warn('You must define either an input file or '
-                     'an extraction plan')
-        parser.print_help()
-        return PARAMETERS_REQUIRED
-
-    if args.weights is not None:
-        logging.info('Storing feature weights to %s' % args.weights)
-        with open(args.weights, 'w') as weights_fp:
-            trainer.store_feature_weights(weights_fp)
-
-    if args.store_vect is not None:
-        logging.info('Storing vectorized data to %s' % args.store_vect)
-        if not hasattr(trainer, 'metrics'):
-            logging.warn('Model was trained, but not evaluated. '
-                         'You need to add --test or --test-percent param.')
+                    trainer.test(test_handler)
+        else:
+            logging.warn('You must define either an input file or '
+                         'an extraction plan')
             parser.print_help()
             return PARAMETERS_REQUIRED
-        trainer.store_vect_data(
-            trainer.metrics._true_data.values(), args.store_vect)
 
-    if args.output is not None:
-        logging.info('Storing feature weights to %s' % args.weights)
-        with open(args.output, 'w') as trainer_fp:
-            store_trainer(trainer, trainer_fp)
+        if args.weights is not None:
+            logging.info('Storing feature weights to %s' % args.weights)
+            with open(args.weights, 'w') as weights_fp:
+                trainer.store_feature_weights(weights_fp)
+
+        if args.store_vect is not None:
+            logging.info('Storing vectorized data to %s' % args.store_vect)
+            if not hasattr(trainer, 'metrics'):
+                logging.warn('Model was trained, but not evaluated. '
+                             'You need to add --test or --test-percent param.')
+                parser.print_help()
+                return PARAMETERS_REQUIRED
+            trainer.store_vect_data(
+                trainer.metrics._true_data.values(), args.store_vect)
+
+        if args.output is not None:
+            logging.info('Storing feature weights to %s' % args.weights)
+            with open(args.output, 'w') as trainer_fp:
+                store_trainer(trainer, trainer_fp)
+    except Exception as e:
+        logging.info('Error occurred during training: %s' % e.message)
+        print_exception(e)
+        return TRAINING_ERROR
 
     return DONE
 
